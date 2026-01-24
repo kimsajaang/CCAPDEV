@@ -1,0 +1,113 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> -<1234654><S13>
+****************************************************************************** -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlog Hero | Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">What's the Plan?</h5>
+                        <p class="text-muted small">Enter your available free time to get a suggestion.</p>
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control" placeholder="Minutes">
+                            <button class="btn btn-primary" type="button">Suggest</button>
+                        </div>
+                        <div id="suggestion-result" class="p-3 bg-white border rounded">
+                            <p class="mb-0"><strong>Recommended:</strong> Hades II</p>
+                            <small class="text-success">Estimated: 45 mins/run</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm bg-primary text-white border-0">
+                    <div class="card-body text-center">
+                        <h6>Current Streak</h6>
+                        <h2 class="display-4 fw-bold">5 Days</h2>
+                        <p class="mb-0">Keep it up, Hero!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <h4 class="mb-4">Recent Activity</h4>
+                <div class="list-group shadow-sm">
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Elden Ring: Shadow of the Erdtree</h6>
+                            <p class="mb-1 text-muted small">Logged 3 hours. Explored the Shadow Keep.</p>
+                        </div>
+                        <span class="badge bg-info rounded-pill">75% Complete</span>
+                    </div>
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Stardew Valley</h6>
+                            <p class="mb-1 text-muted small">Finished Year 1. Added to "Playing" folder.</p>
+                        </div>
+                        <span class="badge bg-warning rounded-pill">Playing</span>
+                    </div>
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Balatro</h6>
+                            <p class="mb-1 text-muted small">Won a run with the Red Deck. New high score!</p>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Completed</span>
+                    </div>
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">God of War Ragnarök</h6>
+                            <p class="mb-1 text-muted small">Added to Backlog. Ready to start after finals.</p>
+                        </div>
+                        <span class="badge bg-secondary rounded-pill">Backlog</span>
+                    </div>
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Cyberpunk 2077</h6>
+                            <p class="mb-1 text-muted small">Updated status to 100%. Masterpiece.</p>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
