@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Backlog Hero | Register</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		body {
+			min-height: 100vh;
+			background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.18), transparent 25%),
+						radial-gradient(circle at 80% 0%, rgba(80, 214, 180, 0.14), transparent 22%),
+						#0f1519;
+			color: #ffffff;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+		.navbar {
+			background-color: rgba(28, 37, 46, 0.9) !important;
+			border-bottom: 1px solid #2a3843;
+			backdrop-filter: blur(10px);
+		}
+		.auth-wrapper {
+			min-height: calc(100vh - 72px);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.auth-card {
+			background: linear-gradient(145deg, rgba(28, 37, 46, 0.9), rgba(16, 22, 27, 0.95));
+			border: 1px solid #2a3843;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+			border-radius: 18px;
+		}
+		.form-control, .form-select {
+			background-color: #10171d !important;
+			border: 1px solid #2a3843;
+			color: #ffffff;
+		}
+		.form-control:focus {
+			box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
+			border-color: #5383e8;
+		}
+		.btn-primary {
+			background-color: #5383e8 !important;
+			border-color: #5383e8 !important;
+		}
+		.btn-primary:hover {
+			background-color: #3d6ad2 !important;
+			border-color: #3d6ad2 !important;
+		}
+		.text-muted { color: #9e9e9e !important; }
+		.link-accent { color: #7cb7ff; text-decoration: none; }
+		.link-accent:hover { color: #a8ccff; }
+		.badge-accent {
+			background: linear-gradient(120deg, #50d6b4, #5383e8);
+			color: #0d1217;
+		}
+		.strength-bar {
+			height: 6px;
+			border-radius: 999px;
+			background: #2a3843;
+			overflow: hidden;
+		}
+		.strength-fill {
+			height: 100%;
+			width: 0%;
+			background: linear-gradient(90deg, #ff6b6b, #ffd166, #50d6b4, #5383e8);
+			transition: width 0.25s ease;
+		}
+		.provider-btn img {
+			width: 24px;
+			height: 24px;
+		}
+		.provider-btn span {
+			flex: 1;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+		<div class="container py-2">
+			<a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+					<li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+					<li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+					<li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+					<li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+					<li class="nav-item"><span class="badge badge-accent ms-lg-2">Sign Up</span></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<div class="auth-wrapper">
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-md-8 col-lg-6">
+					<div class="auth-card p-4 p-md-5">
+						<div class="d-flex align-items-start justify-content-between mb-4">
+							<div>
+								<p class="text-uppercase text-muted small mb-1">Create your space</p>
+								<h3 class="fw-bold mb-1">Join Backlog Hero</h3>
+								<p class="text-muted small mb-0">Track, prioritize, and finish your games.</p>
+							</div>
+							<span class="badge badge-accent rounded-pill px-3 py-2">Free</span>
+						</div>
+
+						<form>
+							<div class="row g-3">
+								<div class="col-md-6">
+									<label class="form-label">Display Name</label>
+									<input type="text" class="form-control" placeholder="Artemis" required>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Email</label>
+									<input type="email" class="form-control" placeholder="you@example.com" required>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Password</label>
+									<input id="password" type="password" class="form-control" placeholder="Create a strong password" required>
+									<div class="strength-bar mt-2"><div id="strengthFill" class="strength-fill"></div></div>
+									<small class="text-muted">Use 10+ characters with numbers and symbols.</small>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Confirm Password</label>
+									<input id="confirm" type="password" class="form-control" placeholder="Repeat password" required>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Primary Platform</label>
+									<select class="form-select">
+										<option selected>PC</option>
+										<option>PlayStation</option>
+										<option>Xbox</option>
+										<option>Nintendo</option>
+										<option>Mobile</option>
+									</select>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Region</label>
+									<select class="form-select">
+										<option selected>North America</option>
+										<option>Europe</option>
+										<option>Asia</option>
+										<option>South America</option>
+										<option>Australia</option>
+										<option>Africa</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="form-check mt-4 mb-3">
+								<input class="form-check-input" type="checkbox" value="" id="terms" required>
+								<label class="form-check-label text-muted" for="terms">I agree to the Backlog Hero terms and privacy.</label>
+							</div>
+
+							<div class="d-grid mb-3">
+								<button type="submit" class="btn btn-primary py-2">Create Account</button>
+							</div>
+							<div class="d-grid mb-3">
+								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2">
+									<img src="assets/logos/steam-logo.png" alt="Steam logo">
+									<span>Sign up with Steam</span>
+								</button>
+								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
+									<img src="assets/logos/epic.png" alt="Epic Games logo">
+									<span>Sign up with Epic Games</span>
+								</button>
+								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
+									<img src="assets/logos/riot.png" alt="Riot logo">
+									<span>Sign up with Riot</span>
+								</button>
+								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
+									<img src="assets/logos/google.svg" alt="Google logo">
+									<span>Sign up with Google</span>
+								</button>
+								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
+									<img src="assets/logos/apple.svg" alt="Apple logo">
+									<span>Sign up with Apple</span>
+								</button>
+							</div>
+							<p class="text-center text-muted small mb-0">Steam icons created by <a class="link-accent" href="https://www.flaticon.com/free-icons/steam" title="steam icons">Freepik - Flaticon</a>.</p>
+						</form>
+
+						<p class="text-center text-muted mb-0">Already have an account? <a class="link-accent" href="login.html">Log in</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const passwordInput = document.getElementById('password');
+		const confirmInput = document.getElementById('confirm');
+		const strengthFill = document.getElementById('strengthFill');
+
+		function updateStrength(value) {
+			let score = 0;
+			if (value.length >= 10) score += 25;
+			if (/[A-Z]/.test(value)) score += 25;
+			if (/[0-9]/.test(value)) score += 25;
+			if (/[^A-Za-z0-9]/.test(value)) score += 25;
+			strengthFill.style.width = `${score}%`;
+		}
+
+		if (passwordInput) {
+			passwordInput.addEventListener('input', (e) => updateStrength(e.target.value));
+		}
+
+		if (confirmInput && passwordInput) {
+			confirmInput.addEventListener('input', () => {
+				const match = confirmInput.value === passwordInput.value;
+				confirmInput.classList.toggle('is-valid', match && confirmInput.value.length > 0);
+				confirmInput.classList.toggle('is-invalid', !match && confirmInput.value.length > 0);
+			});
+		}
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

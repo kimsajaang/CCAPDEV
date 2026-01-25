@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Library | Backlog Hero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0f1519; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: #1c252e; border-bottom: 1px solid #2a3843; }
+        .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s, border-color 0.2s; }
+        .card:hover { transform: translateY(-5px); border-color: #5383e8; }
+        .game-cover { height: 280px; object-fit: cover; border-bottom: 1px solid #2a3843; }
+        .status-badge { position: absolute; top: 10px; right: 10px; }
+        .nav-pills .nav-link { color: #9e9e9e; }
+        .nav-pills .nav-link.active { background-color: #5383e8; color: white; }
+        .btn-outline-primary { color: #5383e8; border-color: #5383e8; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>My Collection</h2>
+            <ul class="nav nav-pills" id="libraryTabs">
+                <li class="nav-item"><a class="nav-link active" href="#">All Games</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Backlog</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Playing</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Completed</a></li>
+            </ul>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4">
+            
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-warning text-dark status-badge">Playing</span>
+                    <img src="blackmyth.jpg" class="card-img-top game-cover" alt="Black Myth Wukong">
+                    <div class="card-body">
+                        <h6 class="card-title">Black Myth: Wukong</h6>
+                        <p class="text-muted small mb-3">Action RPG • 2024</p>
+                        <div class="progress mb-2" style="height: 5px;">
+                            <div class="progress-bar bg-info" style="width: 45%"></div>
+                        </div>
+                        <small class="text-info">45% Story</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-secondary status-badge">Backlog</span>
+                    <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/co848r.webp" class="card-img-top game-cover" alt="Elden Ring">
+                    <div class="card-body">
+                        <h6 class="card-title">Elden Ring</h6>
+                        <p class="text-muted small">Open World • 2022</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">Move to Playing</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-success status-badge">Completed</span>
+                    <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/co2mdf.webp" class="card-img-top game-cover" alt="Cyberpunk 2077">
+                    <div class="card-body">
+                        <h6 class="card-title">Cyberpunk 2077</h6>
+                        <p class="text-muted small">Action RPG • 2020</p>
+                        <p class="text-success small mb-0">★★★★★</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-warning text-dark status-badge">Playing</span>
+                    <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/co496f.webp" class="card-img-top game-cover" alt="Hades II">
+                    <div class="card-body">
+                        <h6 class="card-title">Hades II</h6>
+                        <p class="text-muted small">Roguelike • 2024</p>
+                        <div class="progress mb-2" style="height: 5px;">
+                            <div class="progress-bar bg-info" style="width: 15%"></div>
+                        </div>
+                        <small class="text-info">12 Runs Logged</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-secondary status-badge">Backlog</span>
+                    <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/co5v78.webp" class="card-img-top game-cover" alt="Baldur's Gate 3">
+                    <div class="card-body">
+                        <h6 class="card-title">Baldur's Gate 3</h6>
+                        <p class="text-muted small">Tactical RPG • 2023</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">Update Status</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
