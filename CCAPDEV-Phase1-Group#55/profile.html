@@ -1,171 +1,344 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+****************************************************************************** -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Backlog Hero | Profile</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<style>
-		body {
-			min-height: 100vh;
-			background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.18), transparent 25%),
-						radial-gradient(circle at 80% 0%, rgba(80, 214, 180, 0.14), transparent 22%),
-						#0f1519;
-			color: #ffffff;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-		}
-		.navbar {
-			background-color: rgba(28, 37, 46, 0.9) !important;
-			border-bottom: 1px solid #2a3843;
-			backdrop-filter: blur(10px);
-		}
-		.profile-card {
-			background: linear-gradient(145deg, rgba(28, 37, 46, 0.9), rgba(16, 22, 27, 0.95));
-			border: 1px solid #2a3843;
-			border-radius: 18px;
-			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-		}
-		.badge-accent {
-			background: linear-gradient(120deg, #50d6b4, #5383e8);
-			color: #0d1217;
-		}
-		.stat-box {
-			background-color: #10171d;
-			border: 1px solid #2a3843;
-			border-radius: 14px;
-			padding: 1rem;
-			text-align: center;
-		}
-		.stat-box h4 {
-			margin: 0;
-			font-weight: bold;
-		}
-		.stat-box span {
-			color: #9e9e9e;
-			font-size: 0.85rem;
-		}
-		.form-control, .form-select {
-			background-color: #10171d !important;
-			border: 1px solid #2a3843;
-			color: #ffffff;
-		}
-		.form-control:focus, .form-select:focus {
-			box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
-			border-color: #5383e8;
-		}
-		.btn-primary {
-			background-color: #5383e8 !important;
-			border-color: #5383e8 !important;
-		}
-		.btn-outline-secondary {
-			border-color: #2a3843;
-			color: #ffffff;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings | Backlog Hero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background-color: #0f1519;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #1c252e !important;
+            border-bottom: 1px solid #2a3843;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        .nav-status-pill {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #1c252e;
+            background: linear-gradient(90deg, #50d6b4, #5383e8);
+        }
+        .card {
+            background-color: #1c252e !important;
+            border: 1px solid #2a3843 !important;
+        }
+        .profile-banner { 
+            height: 150px; 
+            background: linear-gradient(90deg, #5383e8, #50d6b4); 
+            border-radius: 12px 12px 0 0; 
+        }
+        .avatar-wrapper { 
+            margin-top: -60px; 
+            position: relative; 
+        }
+        .avatar-img { 
+            width: 96px; 
+            height: 96px; 
+            border: 5px solid #1c252e; 
+            background-color: #0f1519; 
+        }
+
+        /* --- New Gradient Pill Status Styles --- */
+        .status-pill {
+            display: inline-block;
+            padding: 4px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #1c252e; /* Dark text for contrast against bright gradients */
+            transition: all 0.4s ease;
+            text-transform: capitalize;
+            min-width: 100px;
+        }
+
+        /* Gradient States */
+        .status-online {
+            background: linear-gradient(90deg, #50d6b4, #5383e8);
+            box-shadow: 0 0 15px rgba(80, 214, 180, 0.3);
+        }
+
+        .status-offline {
+            background: linear-gradient(90deg, #6c757d, #495057);
+            color: #ffffff;
+            box-shadow: none;
+        }
+
+        .status-away {
+            background: linear-gradient(90deg, #ffcc33, #ffb347);
+            box-shadow: 0 0 15px rgba(255, 204, 51, 0.3);
+        }
+
+        .status-invisible {
+            background: transparent;
+            border: 2px solid #2a3843;
+            color: #9e9e9e;
+        }
+
+        .form-control, .form-select {
+            background-color: #10171d !important;
+            border: 1px solid #2a3843;
+            color: #ffffff;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
+            border-color: #5383e8;
+        }
+        .btn-primary {
+            background-color: #5383e8 !important;
+            border-color: #5383e8 !important;
+        }
+        .text-muted { color: #9e9e9e !important; }
+        .section-title {
+            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9e9e9e;
+        }
+        .stat-card {
+            background: #151d24;
+            border: 1px solid #2a3843;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #10171d;
+            border: 1px solid #2a3843;
+            color: #c9d3da;
+            font-size: 0.8rem;
+        }
+        .muted-divider {
+            height: 1px;
+            background: #2a3843;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-	<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-		<div class="container py-2">
-			<a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarNav">
-				<ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-					<li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
-					<li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
-					<li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
-					<li class="nav-item"><a class="nav-link active" href="profile.html">Profile</a></li>
-					<li class="nav-item"><span class="badge badge-accent ms-lg-2">Online</span></li>
-				</ul>
-			</div>
-		</div>
-	</nav>
 
-	<div class="container my-5">
-		<div class="row g-4">
-			<div class="col-lg-4">
-				<div class="profile-card p-4">
-					<div class="text-center mb-3">
-						<img src="assets/avatar-placeholder.png" class="rounded-circle mb-3" width="110" height="110" alt="Avatar">
-						<h4 class="fw-bold mb-0">PlayerOne</h4>
-						<p class="text-muted mb-1">Casual Gamer</p>
-						<span class="badge badge-accent">Backlog Hero</span>
-					</div>
-					<hr class="border-secondary">
-					<div class="row g-3">
-						<div class="col-4">
-							<div class="stat-box">
-								<h4>128</h4>
-								<span>Games</span>
-							</div>
-						</div>
-						<div class="col-4">
-							<div class="stat-box">
-								<h4>42</h4>
-								<span>Completed</span>
-							</div>
-						</div>
-						<div class="col-4">
-							<div class="stat-box">
-								<h4>7</h4>
-								<span>Streak</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><span class="nav-status-pill ms-lg-2">Online</span></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-			<div class="col-lg-8">
-				<div class="profile-card p-4 mb-4">
-					<h5 class="fw-bold mb-3">Profile Settings</h5>
-					<div class="row g-3">
-						<div class="col-md-6">
-							<label class="form-label">Display Name</label>
-							<input type="text" class="form-control" value="PlayerOne">
-						</div>
-						<div class="col-md-6">
-							<label class="form-label">Gaming Identity</label>
-							<select class="form-select">
-								<option selected>Casual</option>
-								<option>Completionist</option>
-								<option>Speedrunner</option>
-							</select>
-						</div>
-						<div class="col-12">
-							<label class="form-label">Bio</label>
-							<textarea class="form-control" rows="3" placeholder="Tell us about your gaming habits..."></textarea>
-						</div>
-					</div>
-					<div class="d-flex justify-content-end mt-4">
-						<button class="btn btn-primary px-4">Save Changes</button>
-					</div>
-				</div>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg">
+                    <div class="profile-banner"></div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-4">
+                                    <div class="text-center text-md-start avatar-wrapper">
+                                        <img src="pfp.jpg" class="rounded-circle avatar-img" alt="Profile Picture">
+                                    </div>
+                                    <div class="flex-grow-1 text-center text-md-start">
+                                        <h3 class="fw-bold mb-1">Kane Joshua</h3>
+                                        <div class="text-muted small mb-2">@kane_joshua • Backlog Curator</div>
+                                        <div class="d-flex flex-wrap justify-content-center justify-content-md-start align-items-center gap-2 mb-2">
+                                            <span id="visualStatusBadge" class="status-pill status-offline">Offline</span>
+                                            <label class="text-muted small mb-0">Status</label>
+                                            <select class="form-select form-select-sm" id="statusSelector" style="width: auto; display: inline-block;">
+                                                <option value="offline" selected>Offline</option>
+                                                <option value="online">Online</option>
+                                                <option value="away">Away</option>
+                                                <option value="invisible">Invisible</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3 text-muted small">
+                                            <span><i class="bi bi-geo-alt"></i> Manila, PH</span>
+                                            <span><i class="bi bi-controller"></i> RPG • Roguelike • Strategy</span>
+                                            <span><i class="bi bi-calendar3"></i> Member since Jan 2024</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-primary btn-sm">Message</button>
+                                        <button class="btn btn-primary btn-sm">Follow</button>
+                                    </div>
+                                </div>
+                            </div>
 
-				<div class="profile-card p-4">
-					<h5 class="fw-bold mb-3">Achievements</h5>
-					<div class="row g-3">
-						<div class="col-md-4">
-							<div class="stat-box">
-								🏆<br><strong>First Finish</strong><br><span>Completed your first game</span>
-							</div>
-						</div>
-						<div class="col-md-4">
-							<div class="stat-box">
-								🔥<br><strong>7-Day Streak</strong><br><span>Played every day</span>
-							</div>
-						</div>
-						<div class="col-md-4">
-							<div class="stat-box">
-								📚<br><strong>Collector</strong><br><span>100+ games added</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                            <div class="col-12">
+                                <div class="row g-3">
+                                    <div class="col-6 col-lg-3">
+                                        <div class="stat-card text-center">
+                                            <div class="text-muted small">Completed</div>
+                                            <div class="fs-4 fw-bold">42</div>
+                                            <div class="text-muted extra-small">Platinum</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-lg-3">
+                                        <div class="stat-card text-center">
+                                            <div class="text-muted small">Backlog</div>
+                                            <div class="fs-4 fw-bold">68</div>
+                                            <div class="text-muted extra-small">Queued</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-lg-3">
+                                        <div class="stat-card text-center">
+                                            <div class="text-muted small">Hours</div>
+                                            <div class="fs-4 fw-bold">1,240</div>
+                                            <div class="text-muted extra-small">Total time</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-lg-3">
+                                        <div class="stat-card text-center">
+                                            <div class="text-muted small">Streak</div>
+                                            <div class="fs-4 fw-bold">7 Days</div>
+                                            <div class="text-muted extra-small">Best 21</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                            <div class="col-12">
+                                <div class="muted-divider"></div>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="section-title mb-2">About</div>
+                                        <p class="text-muted mb-3">
+                                            Completionist who loves tight combat loops, deep lore, and co-op raids. Currently
+                                            optimizing my backlog for shorter evening sessions without losing epic stories.
+                                        </p>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="tag"><i class="bi bi-star"></i> Top 1% Reviewer</span>
+                                            <span class="tag"><i class="bi bi-trophy"></i> 12 Platinum</span>
+                                            <span class="tag"><i class="bi bi-lightning"></i> Speedrun Fan</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="section-title mb-2">Highlights</div>
+                                        <ul class="list-group">
+                                            <li class="list-group-item bg-transparent text-white border border-secondary-subtle">
+                                                <strong>Currently Playing:</strong> Hades II
+                                                <span class="text-muted small d-block">Chapter 3 • 12h logged</span>
+                                            </li>
+                                            <li class="list-group-item bg-transparent text-white border border-secondary-subtle">
+                                                <strong>Last Completed:</strong> Cyberpunk 2077
+                                                <span class="text-muted small d-block">100% Platinum • 120h</span>
+                                            </li>
+                                            <li class="list-group-item bg-transparent text-white border border-secondary-subtle">
+                                                <strong>Next Up:</strong> Elden Ring: Shadow of the Erdtree
+                                                <span class="text-muted small d-block">Backlog priority #1</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="muted-divider"></div>
+                                <div class="section-title mb-3">Recent Activity</div>
+                                <div class="list-group">
+                                    <div class="list-group-item bg-transparent text-white border border-secondary-subtle">
+                                        <div class="d-flex justify-content-between">
+                                            <span><i class="bi bi-controller"></i> Logged 2h in Black Myth: Wukong</span>
+                                            <span class="text-muted small">Today</span>
+                                        </div>
+                                        <span class="text-muted small">Beat the Macaque Chief after 5 tries.</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent text-white border border-secondary-subtle">
+                                        <div class="d-flex justify-content-between">
+                                            <span><i class="bi bi-journal-check"></i> Reviewed Elden Ring DLC</span>
+                                            <span class="text-muted small">Yesterday</span>
+                                        </div>
+                                        <span class="text-muted small">★★★★★ • “Best dungeon design ever.”</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent text-white border border-secondary-subtle">
+                                        <div class="d-flex justify-content-between">
+                                            <span><i class="bi bi-trophy"></i> Completed Cyberpunk 2077</span>
+                                            <span class="text-muted small">2 days ago</span>
+                                        </div>
+                                        <span class="text-muted small">100% Platinum achieved.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-3 text-center">
+                                <a href="profile-edit.html" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-pencil me-2"></i> Edit Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const selector = document.getElementById('statusSelector');
+        const badge = document.getElementById('visualStatusBadge');
+
+        if (selector && badge) {
+            selector.addEventListener('change', function() {
+                const val = this.value;
+                badge.innerText = val;
+                badge.classList.remove('status-online', 'status-offline', 'status-away', 'status-invisible');
+                badge.classList.add('status-' + val);
+            });
+        }
+
+        // Edit flow moved to profile-edit.html
+    </script>
 </body>
 </html>

@@ -1,3 +1,15 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+****************************************************************************** -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,6 +30,33 @@
 			background-color: rgba(28, 37, 46, 0.9) !important;
 			border-bottom: 1px solid #2a3843;
 			backdrop-filter: blur(10px);
+		}
+		.navbar-brand {
+			font-weight: 700;
+			letter-spacing: 0.02em;
+		}
+		.navbar-nav .nav-link {
+			color: #9e9e9e !important;
+			transition: color 0.2s ease;
+			padding: 0.5rem 1rem !important;
+			font-size: 0.75rem;
+			font-weight: 700;
+			letter-spacing: 0.06em;
+		}
+		.navbar-nav .nav-link:hover {
+			color: #ffffff !important;
+		}
+		.navbar-nav .nav-link.active {
+			color: #5383e8 !important;
+		}
+		.nav-status-pill {
+			display: inline-block;
+			padding: 4px 14px;
+			border-radius: 50px;
+			font-weight: 700;
+			font-size: 0.75rem;
+			color: #1c252e;
+			background: linear-gradient(90deg, #50d6b4, #5383e8);
 		}
 		.auth-wrapper {
 			min-height: calc(100vh - 72px);
@@ -73,12 +112,14 @@
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
-				<ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+				<ul class="navbar-nav ms-auto text-uppercase small fw-bold">
 					<li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
 					<li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
 					<li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+					<li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
 					<li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-					<li class="nav-item"><span class="badge badge-accent ms-lg-2">Log In</span></li>
+					<li class="nav-item"><span class="nav-status-pill ms-lg-2">Online</span></li>
+					<li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1 active" href="login.html">Login</a></li>
 				</ul>
 			</div>
 		</div>

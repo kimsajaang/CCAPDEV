@@ -6,38 +6,93 @@ myself. The program was run, tested, and debugged by my own efforts. I
 further certify that I have not copied in part or whole or otherwise
 plagiarized the work of other students and/or persons.
 <Your Full Name> - <ID Number> - <Section>
-    <Ibanez, Kane Joshua> -<1234654><S13>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
 ****************************************************************************** -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Character encoding for proper text display -->
     <meta charset="UTF-8">
-    <!-- Ensures responsive design on mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Backlog Hero | Dashboard</title>
-    <!-- Bootstrap CSS framework for responsive grid and components -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons for UI icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Custom dark theme stylesheet -->
-    <link href="assets/css/theme.css" rel="stylesheet">
-
-    <!-- Page-specific styles for dashboard elements -->
+    
     <style>
-            /* Suggestion box styling using theme variables */
-            #suggestion-result {
-                background-color: var(--bg-base) !important;
-                border: 1px solid var(--border-subtle) !important;
-                color: var(--text-primary);
-            }
-            /* Extra small text for timestamps and metadata */
-            .extra-small { font-size: 0.75rem; }
+        body {
+            background-color: #0f1519 !important;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            background-color: #1c252e !important;
+            border: 1px solid #2a3843 !important;
+            color: #ffffff;
+        }
+        .navbar {
+            background-color: #1c252e !important;
+            border-bottom: 1px solid #2a3843;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        .nav-status-pill {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #1c252e;
+            background: linear-gradient(90deg, #50d6b4, #5383e8);
+        }
+        .btn-primary, .bg-primary, .badge.bg-primary {
+            background-color: #5383e8 !important;
+            border-color: #5383e8 !important;
+        }
+        .btn-outline-primary {
+            color: #5383e8 !important;
+            border-color: #5383e8 !important;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-primary:hover {
+            background-color: #5383e8 !important;
+            color: #ffffff !important;
+        }
+        .list-group-item {
+            background-color: #1c252e !important;
+            border-color: #2a3843 !important;
+            color: #ffffff;
+            transition: 0.2s;
+        }
+        .list-group-item:hover {
+            background-color: #243039 !important;
+        }
+        .avatar-sm {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+        }
+        .text-muted { color: #9e9e9e !important; }
+        .extra-small { font-size: 0.75rem; }
     </style>
 </head>
 <body>
 
-    <!-- Main navigation bar - sticky to top on scroll -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
             <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
@@ -45,24 +100,22 @@ plagiarized the work of other students and/or persons.
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2 text-uppercase small fw-bold">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
                     <li class="nav-item"><a class="nav-link active" href="index.html">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
                     <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
                     <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
                     <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><span class="nav-status-pill ms-lg-2">Online</span></li>
                     <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Main dashboard content -->
     <div class="container my-5">
         <div class="row">
-            <!-- Left sidebar with widgets -->
             <div class="col-md-4">
-                <!-- Game suggestion widget based on available time -->
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title"><i class="bi bi-magic me-2"></i>What's the Plan?</h5>
@@ -78,7 +131,6 @@ plagiarized the work of other students and/or persons.
                     </div>
                 </div>
 
-                <!-- User's current gaming streak tracker -->
                 <div class="card bg-primary text-white border-0 mb-4">
                     <div class="card-body text-center py-4">
                         <h6 class="text-white-50">Current Streak</h6>
@@ -87,7 +139,6 @@ plagiarized the work of other students and/or persons.
                     </div>
                 </div>
 
-                <!-- Community ratings widget -->
                 <div class="card">
                     <div class="card-body">
                         <h6 class="mb-3">Community Quality Scores</h6>
@@ -107,19 +158,16 @@ plagiarized the work of other students and/or persons.
                 </div>
             </div>
 
-            <!-- Main content area - Activity feed -->
             <div class="col-md-8">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4>Friend Activity Feed</h4>
                     <button class="btn btn-sm btn-outline-primary">Post Update</button>
                 </div>
 
-                <!-- List of friend activities and updates -->
                 <div class="list-group shadow-sm">
-                    <!-- Gaming session activity -->
                     <div class="list-group-item p-3 border-start border-primary border-4">
                         <div class="d-flex align-items-center mb-2">
-                            <img src="https://i.pravatar.cc/40?u=kane" class="rounded-circle me-2" alt="User">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
                             <strong class="text-primary">Kane_Joshua</strong> 
                             <span class="text-muted ms-2 small">logged a session</span>
                         </div>
@@ -134,7 +182,7 @@ plagiarized the work of other students and/or persons.
 
                     <div class="list-group-item p-3">
                         <div class="d-flex align-items-center mb-2">
-                            <img src="https://i.pravatar.cc/40?u=justin" class="rounded-circle me-2" alt="Friend">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
                             <strong class="text-primary">Justin_Ice</strong> 
                             <span class="text-muted ms-2 small">reviewed a game</span>
                         </div>
@@ -149,7 +197,7 @@ plagiarized the work of other students and/or persons.
 
                     <div class="list-group-item p-3">
                         <div class="d-flex align-items-center mb-2">
-                            <img src="https://i.pravatar.cc/40?u=seanne" class="rounded-circle me-2" alt="Friend">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
                             <strong class="text-primary">Seanne_C</strong> 
                             <span class="text-muted ms-2 small">moved a game to <strong>Playing</strong></span>
                         </div>
@@ -159,7 +207,7 @@ plagiarized the work of other students and/or persons.
 
                     <div class="list-group-item p-3">
                         <div class="d-flex align-items-center mb-2">
-                            <img src="https://i.pravatar.cc/40?u=kane" class="rounded-circle me-2" alt="User">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
                             <strong class="text-primary">Kane_Joshua</strong> 
                             <span class="text-muted ms-2 small">completed a game</span>
                         </div>
@@ -181,7 +229,6 @@ plagiarized the work of other students and/or persons.
         </div>
     </div>
 
-    <!-- Bootstrap JavaScript for interactive components -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
