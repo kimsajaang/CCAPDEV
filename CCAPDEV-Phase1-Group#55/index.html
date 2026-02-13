@@ -24,10 +24,14 @@ plagiarized the work of other students and/or persons.
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        body.loading {
+            overflow: hidden;
+        }
         .card {
             background-color: #1c252e !important;
             border: 1px solid #2a3843 !important;
             color: #ffffff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
         }
         .navbar {
             background-color: #1c252e !important;
@@ -51,15 +55,6 @@ plagiarized the work of other students and/or persons.
         .navbar-nav .nav-link.active {
             color: #5383e8 !important;
         }
-        .nav-status-pill {
-            display: inline-block;
-            padding: 4px 14px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.75rem;
-            color: #1c252e;
-            background: linear-gradient(90deg, #50d6b4, #5383e8);
-        }
         .btn-primary, .bg-primary, .badge.bg-primary {
             background-color: #5383e8 !important;
             border-color: #5383e8 !important;
@@ -78,6 +73,12 @@ plagiarized the work of other students and/or persons.
             border-color: #2a3843 !important;
             color: #ffffff;
             transition: 0.2s;
+            border-radius: 12px;
+        }
+        .list-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         .list-group-item:hover {
             background-color: #243039 !important;
@@ -87,11 +88,176 @@ plagiarized the work of other students and/or persons.
             height: 32px;
             object-fit: cover;
         }
+        .feed-cover {
+            width: 46px;
+            height: 62px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #2a3843;
+        }
         .text-muted { color: #9e9e9e !important; }
         .extra-small { font-size: 0.75rem; }
+        .loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 21, 25, 0.96);
+            z-index: 2000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-card {
+            background: #1c252e;
+            border: 1px solid #2a3843;
+            border-radius: 14px;
+            padding: 22px 26px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .loader-orb {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 4px solid #2a3843;
+            border-top-color: #5383e8;
+            animation: spin 0.9s linear infinite;
+        }
+        .loader-text {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .loader-sub {
+            font-size: 0.8rem;
+            color: #9e9e9e;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .hero {
+            background: linear-gradient(135deg, rgba(28, 37, 46, 0.95), rgba(15, 21, 25, 0.95));
+            border: 1px solid #2a3843;
+            border-radius: 16px;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+        }
+        .hero-title {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+        .hero-sub {
+            color: #b5c0cc;
+        }
+        .feature-card {
+            background: #1c252e;
+            border: 1px solid #2a3843;
+            border-radius: 14px;
+            padding: 16px;
+            height: 100%;
+        }
+        .hero {
+            background: linear-gradient(135deg, rgba(28, 37, 46, 0.96), rgba(15, 21, 25, 0.96));
+            border: 1px solid #2a3843;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+        }
+        .hero-compact {
+            padding: 18px 22px;
+        }
+        .hero-title {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+        .hero-sub {
+            color: #b5c0cc;
+            max-width: 700px;
+        }
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+        .hero-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(15, 21, 25, 0.55);
+            border: 1px solid rgba(42, 56, 67, 0.7);
+        }
+        .hero-stat-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #b5c0cc;
+            font-size: 0.8rem;
+            letter-spacing: 0.02em;
+        }
+        .hero-stat-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+        .dot-played { background: #ff5aa5; }
+        .dot-games { background: #3ddc84; }
+        .dot-ratings { background: #4f8cff; }
+        .dot-reviews { background: #f2a13b; }
+        .dot-lists { background: #ff6b6b; }
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sticky-cta {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 1200;
+            background: #5383e8;
+            color: #ffffff;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+        }
+        .sticky-cta:hover {
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
-<body>
+<body class="loading">
+
+    <div id="page-loader" class="loader" aria-label="Loading">
+        <div class="loader-card">
+            <div class="loader-orb"></div>
+            <div>
+                <div class="loader-text">Loading your dashboard</div>
+                <div class="loader-sub">Warming up your backlog picks</div>
+            </div>
+        </div>
+    </div>
 
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
@@ -106,7 +272,6 @@ plagiarized the work of other students and/or persons.
                     <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
                     <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
                     <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><span class="nav-status-pill ms-lg-2">Online</span></li>
                     <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
                 </ul>
             </div>
@@ -114,9 +279,40 @@ plagiarized the work of other students and/or persons.
     </nav>
 
     <div class="container my-5">
-        <div class="row">
+        <div class="hero hero-compact mb-4 reveal">
+            <span class="badge bg-primary mb-2">Welcome to Backlog Hero</span>
+            <h2 class="hero-title mb-2">Play smarter, finish more.</h2>
+            <p class="hero-sub mb-3">Quick picks based on your free time.</p>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                <a class="btn btn-primary" href="library.html">Get Started</a>
+                <a class="btn btn-outline-primary" href="search.html">Find Games</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-played"></span>Played</div>
+                    <div class="hero-stat-value">54.3M</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-games"></span>Games</div>
+                    <div class="hero-stat-value">339K</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-ratings"></span>Ratings</div>
+                    <div class="hero-stat-value">32.3M</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-reviews"></span>Reviews</div>
+                    <div class="hero-stat-value">3.74M</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-lists"></span>Lists</div>
+                    <div class="hero-stat-value">681K</div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 reveal">
             <div class="col-md-4">
-                <div class="card mb-4">
+            <div class="card mb-4 reveal">
                     <div class="card-body">
                         <h5 class="card-title"><i class="bi bi-magic me-2"></i>What's the Plan?</h5>
                         <p class="text-muted small">Enter available time for a backlog suggestion.</p>
@@ -125,13 +321,13 @@ plagiarized the work of other students and/or persons.
                             <button class="btn btn-primary" type="button">Suggest</button>
                         </div>
                         <div class="p-3 rounded bg-dark border border-secondary">
-                            <p class="mb-0 small"><strong>Recommended:</strong> Hades II</p>
+                            <p class="mb-0 small"><strong>Recommended:</strong> Red Dead Redemption 2</p>
                             <small class="text-info">Est: 45 mins/run</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="card bg-primary text-white border-0 mb-4">
+                <div class="card bg-primary text-white border-0 mb-4 reveal">
                     <div class="card-body text-center py-4">
                         <h6 class="text-white-50">Current Streak</h6>
                         <h2 class="display-4 fw-bold">5 Days</h2>
@@ -139,7 +335,7 @@ plagiarized the work of other students and/or persons.
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="card reveal">
                     <div class="card-body">
                         <h6 class="mb-3">Community Quality Scores</h6>
                         <div class="d-flex justify-content-between mb-2 small">
@@ -159,19 +355,22 @@ plagiarized the work of other students and/or persons.
             </div>
 
             <div class="col-md-8">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 reveal">
                     <h4>Friend Activity Feed</h4>
                     <button class="btn btn-sm btn-outline-primary">Post Update</button>
                 </div>
 
                 <div class="list-group shadow-sm">
-                    <div class="list-group-item p-3 border-start border-primary border-4">
+                    <div class="list-group-item p-3 border-start border-primary border-4 reveal">
                         <div class="d-flex align-items-center mb-2">
                             <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
                             <strong class="text-primary">Kane_Joshua</strong> 
                             <span class="text-muted ms-2 small">logged a session</span>
                         </div>
-                        <h6 class="mb-1">Black Myth: Wukong</h6>
+                        <div class="d-flex align-items-start gap-3 mb-2">
+                            <img src="blackmyth.jpg" class="feed-cover" alt="Black Myth: Wukong cover">
+                            <h6 class="mb-1">Black Myth: Wukong</h6>
+                        </div>
                         <p class="mb-1 text-white-50 small">"Finally beat the Macaque Chief! Took 5 tries."</p>
                         <div class="d-flex gap-3 text-muted extra-small">
                             <span><i class="bi bi-controller"></i> 3h Active</span>
@@ -180,49 +379,59 @@ plagiarized the work of other students and/or persons.
                         </div>
                     </div>
 
-                    <div class="list-group-item p-3">
+                    <div class="list-group-item p-3 reveal">
                         <div class="d-flex align-items-center mb-2">
                             <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
                             <strong class="text-primary">Justin_Ice</strong> 
                             <span class="text-muted ms-2 small">reviewed a game</span>
                         </div>
                         <div class="d-flex gap-3">
+                            <img src="valorant.jpg" class="feed-cover" alt="Valorant cover">
                             <div class="flex-grow-1">
-                                <h6 class="mb-0 small">Elden Ring: Shadow of the Erdtree</h6>
+                                <h6 class="mb-0 small">Valorant</h6>
                                 <div class="text-warning mb-1 extra-small">★★★★★</div>
-                                <p class="mb-0 small text-white-50">"Shadow Keep is the best dungeon FromSoft has ever made. Navigating this verticality is insane."</p>
+                                <p class="mb-0 small text-white-50">"Finally hit a new rank today. The clutch round was wild."</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="list-group-item p-3">
+                    <div class="list-group-item p-3 reveal">
                         <div class="d-flex align-items-center mb-2">
                             <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
                             <strong class="text-primary">Seanne_C</strong> 
                             <span class="text-muted ms-2 small">moved a game to <strong>Playing</strong></span>
                         </div>
-                        <p class="mb-0 small">Stardew Valley (PC)</p>
-                        <small class="text-muted extra-small">Goal: Complete Greenhouse by Winter.</small>
+                        <div class="d-flex align-items-start gap-3">
+                            <img src="farcrt.jpg" class="feed-cover" alt="Far Cry cover">
+                            <p class="mb-0 small">Far Cry 5 (PC)</p>
+                        </div>
+                        <small class="text-muted extra-small">Goal: Clear Holland Valley outposts.</small>
                     </div>
 
-                    <div class="list-group-item p-3">
+                    <div class="list-group-item p-3 reveal">
                         <div class="d-flex align-items-center mb-2">
                             <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
                             <strong class="text-primary">Kane_Joshua</strong> 
                             <span class="text-muted ms-2 small">completed a game</span>
                         </div>
-                        <h6 class="mb-0 small">Cyberpunk 2077</h6>
+                        <div class="d-flex align-items-start gap-3">
+                            <img src="leagueoflegends.jpg" class="feed-cover" alt="League of Legends cover">
+                            <h6 class="mb-0 small">League of Legends</h6>
+                        </div>
                         <span class="badge bg-success extra-small">100% PLATINUM</span>
-                        <p class="mt-2 mb-0 small text-white-50">"120 hours later... what a journey."</p>
+                        <p class="mt-2 mb-0 small text-white-50">"Season grind complete. Time to try a new role."</p>
                     </div>
 
-                    <div class="list-group-item p-3">
+                    <div class="list-group-item p-3 reveal">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-list-stars text-primary me-2"></i>
                             <strong class="text-primary">Justin_Ice</strong> 
                             <span class="text-muted ms-2 small">shared a list: <strong>Top Roguelikes 2026</strong></span>
                         </div>
-                        <p class="mb-0 small text-muted">Includes Balatro, Hades II, and Dead Cells.</p>
+                        <div class="d-flex align-items-start gap-3">
+                            <img src="reddead.jpg" class="feed-cover" alt="Red Dead Redemption 2 cover">
+                            <p class="mb-0 small text-muted">Includes Red Dead Redemption 2, Valorant, and League of Legends.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -230,5 +439,28 @@ plagiarized the work of other students and/or persons.
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener("load", () => {
+            const loader = document.getElementById("page-loader");
+            setTimeout(() => {
+                loader.classList.add("hidden");
+                document.body.classList.remove("loading");
+            }, 1200);
+        });
+        const revealItems = document.querySelectorAll(".reveal");
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("is-visible");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.12 }
+        );
+        revealItems.forEach((item) => observer.observe(item));
+    </script>
+    <a class="sticky-cta" href="library.html">Get Started</a>
 </body>
 </html>
