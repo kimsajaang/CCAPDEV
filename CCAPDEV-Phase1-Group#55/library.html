@@ -1,0 +1,171 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+****************************************************************************** -->
+<!-- library.html — User's personal game collection page.
+     Shows all games with status badges (Playing, Backlog, Completed). -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Library | Backlog Hero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Dark theme overrides — same color palette as all other pages (#0f1519 base, #1c252e cards) -->
+    <style>
+        body { background-color: #0f1519; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: #1c252e; border-bottom: 1px solid #2a3843; }
+        .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        /* Game cards — dark bg with subtle border, hover effect lifts card up */
+        .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s, border-color 0.2s; }
+        .card-title { color: #dbe7ff; font-weight: 600; }
+        .card:hover { transform: translateY(-5px); border-color: #5383e8; }
+        /* Fixed height for game cover images so all cards align evenly */
+        .game-cover { height: 280px; object-fit: cover; border-bottom: 1px solid #2a3843; }
+        .status-badge { position: absolute; top: 10px; right: 10px; }
+        /* Tab pills for filtering — All Games / Backlog / Playing / Completed
+           These don't actually filter yet, just visual for now */
+        .nav-pills .nav-link { color: #9e9e9e; transition: all 0.2s ease; }
+        .nav-pills .nav-link:hover { color: #ffffff; }
+        .nav-pills .nav-link.active { background-color: #5383e8; color: white; }
+        .btn-outline-primary { color: #5383e8; border-color: #5383e8; transition: all 0.2s ease; }
+        .btn-outline-primary:hover { background-color: #5383e8; color: #ffffff; }
+        .text-muted {
+            color: #a8c0e0 !important; /* brighter, readable on dark bg */
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navbar — identical to other pages, "My Library" is set as active here -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Page header with collection title and filter tabs -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>My Collection</h2>
+            <ul class="nav nav-pills" id="libraryTabs">
+                <li class="nav-item"><a class="nav-link active" href="#">All Games</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Backlog</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Playing</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Completed</a></li>
+            </ul>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4">
+            
+            <!-- Game: Black Myth Wukong — currently playing, 45% progress -->
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-warning text-dark status-badge">Playing</span>
+                    <img src="blackmyth.jpg" class="card-img-top game-cover" alt="Black Myth Wukong">
+                    <div class="card-body">
+                        <h6 class="card-title">Black Myth: Wukong</h6>
+                        <p class="text-muted small mb-3">Action RPG • 2024</p>
+                        <p class="small text-info mb-0">Recently Played: 2 days ago</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game: Red Dead Redemption 2 — in backlog, hasn't started yet -->
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-secondary status-badge">Backlog</span>
+                    <img src="reddead.jpg" class="card-img-top game-cover" alt="Red Dead Redemption 2">
+                    <div class="card-body">
+                        <h6 class="card-title">Red Dead Redemption 2</h6>
+                        <p class="text-muted small">Open World • 2018</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">Move to Playing</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game: Far Cry 5 — completed with 5 star rating -->
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-success status-badge">Completed</span>
+                    <img src="farcrt.jpg" class="card-img-top game-cover" alt="Far Cry 5">
+                    <div class="card-body">
+                        <h6 class="card-title">Far Cry 5</h6>
+                        <p class="text-muted small">Action • 2018</p>
+                        <p class="text-success small mb-0">Rating: ★★★★★</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game: Valorant — ongoing ranked progress -->
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-warning text-dark status-badge">Playing</span>
+                    <img src="valorant.jpg" class="card-img-top game-cover" alt="Valorant">
+                    <div class="card-body">
+                        <h6 class="card-title">Valorant</h6>
+                        <p class="text-muted small">Tactical Shooter • 2020</p>
+                        <p class="small text-info mb-0">Recently Played: 3 days ago</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game: League of Legends — backlog item
+                 LoL doesn't really have a "backlog" status but we included it 
+                 to show the button variant -->
+            <div class="col">
+                <div class="card h-100 position-relative">
+                    <span class="badge bg-secondary status-badge">Backlog</span>
+                    <img src="leagueoflegends.jpg" class="card-img-top game-cover" alt="League of Legends">
+                    <div class="card-body">
+                        <h6 class="card-title">League of Legends</h6>
+                        <p class="text-muted small">MOBA • 2009</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">Update Status</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

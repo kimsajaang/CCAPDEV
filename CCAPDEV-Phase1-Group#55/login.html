@@ -1,0 +1,227 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+	<Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+
+<!-- login.html — Login page for Backlog Hero.
+     Centered auth card layout, matches the register page style.
+     Only Steam and Google SSO for now — might add more later. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Backlog Hero | Login</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		/* Login page dark theme with subtle radial gradient bg.
+		   Same gradient as register page for visual consistency */
+		body {
+			min-height: 100vh;
+			background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.18), transparent 25%),
+						radial-gradient(circle at 80% 0%, rgba(80, 214, 180, 0.14), transparent 22%),
+						#0f1519;
+			color: #ffffff;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+		.navbar {
+			background-color: rgba(28, 37, 46, 0.9) !important;
+			border-bottom: 1px solid #2a3843;
+			backdrop-filter: blur(10px);
+		}
+		.navbar-brand {
+			font-weight: 700;
+			letter-spacing: 0.02em;
+		}
+		.navbar-nav .nav-link {
+			color: #9e9e9e !important;
+			transition: color 0.2s ease;
+			padding: 0.5rem 1rem !important;
+			font-size: 0.75rem;
+			font-weight: 700;
+			letter-spacing: 0.06em;
+		}
+		.navbar-nav .nav-link:hover {
+			color: #ffffff !important;
+		}
+		.navbar-nav .nav-link.active {
+			color: #5383e8 !important;
+		}
+		.auth-wrapper {
+			min-height: calc(100vh - 72px);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		/* Auth card — glassmorphism-ish card for the login form.
+		   The 60px box-shadow gives it a nice floating effect */
+		.auth-card {
+			background: linear-gradient(145deg, rgba(28, 37, 46, 0.9), rgba(16, 22, 27, 0.95));
+			border: 1px solid #2a3843;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+			border-radius: 18px;
+		}
+		.form-control, .form-select {
+			background-color: #10171d !important;
+			border: 1px solid #2a3843;
+			color: #ffffff;
+		}
+		.form-control::placeholder {
+			color: #6f7d8a;
+		}
+		.form-control:focus {
+			box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
+			border-color: #5383e8;
+		}
+		.form-label {
+			color: #cbd5df;
+		}
+		.btn-primary {
+			background-color: #5383e8 !important;
+			border-color: #5383e8 !important;
+		}
+		.btn-primary:hover {
+			background-color: #3d6ad2 !important;
+			border-color: #3d6ad2 !important;
+		}
+		.btn-outline-primary {
+			color: #5383e8 !important;
+			border-color: #5383e8 !important;
+			transition: all 0.2s ease;
+		}
+		.btn-outline-primary:hover {
+			background-color: #5383e8 !important;
+			color: #ffffff !important;
+		}
+		/* Override so the navbar Login button doesn't have a filled background
+		   when we're already on the login page — looks cleaner this way */
+		.navbar .btn-outline-primary,
+		.navbar .btn-outline-primary.active {
+			background-color: transparent !important;
+		}
+		.text-muted { color: #9e9e9e !important; }
+		.link-accent { color: #7cb7ff; text-decoration: none; }
+		.link-accent:hover { color: #a8ccff; }
+		.badge-accent {
+			background: transparent;
+			border: 1px solid #50d6b4;
+			color: #9ee8d8;
+		}
+		.provider-btn img {
+			width: 24px;
+			height: 24px;
+		}
+		.provider-btn span {
+			flex: 1;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<!-- Navbar — Login button is active on this page -->
+	<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+		<div class="container py-2">
+			<a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+					<li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+					<li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+					<li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+					<li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+					<li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+					<li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1 active" href="login.html">Login</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<div class="auth-wrapper">
+		<div class="container">
+			<div class="row justify-content-center">
+				<!-- Login form card — col-lg-5 keeps it narrow and centered.
+				     p-md-5 adds extra padding on desktop for breathing room -->
+				<div class="col-md-7 col-lg-5">
+					<div class="auth-card p-4 p-md-5">
+						<div class="d-flex align-items-start justify-content-between mb-4">
+							<div>
+								<p class="text-uppercase text-muted small mb-1">Welcome back</p>
+								<h3 class="fw-bold mb-1">Log in to your backlog</h3>
+								<p class="text-muted small mb-0">Stay on top of your gaming goals.</p>
+							</div>
+						</div>
+
+						<!-- Login form — email/password + SSO providers.
+						     No real validation yet, just required attributes -->
+						<form>
+							<div class="mb-3">
+								<label class="form-label">Email or Username</label>
+								<input type="text" class="form-control" placeholder="you@example.com" required>
+							</div>
+							<div class="mb-3">
+								<div class="d-flex justify-content-between align-items-center">
+									<label class="form-label mb-0">Password</label>
+									<a href="#" class="link-accent small">Forgot?</a>
+								</div>
+								<div class="input-group">
+									<input id="password" type="password" class="form-control" placeholder="••••••••" required>
+									<button class="btn btn-outline-secondary text-white" type="button" id="togglePassword">Show</button>
+								</div>
+							</div>
+							<div class="d-flex align-items-center justify-content-between mb-4">
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" value="" id="remember">
+									<label class="form-check-label text-muted" for="remember">Keep me signed in</label>
+								</div>
+								<span class="text-muted small">2FA ready</span>
+							</div>
+							<div class="d-grid mb-3">
+								<button type="submit" class="btn btn-primary py-2">Log In</button>
+							</div>							<!-- SSO provider buttons — Steam and Google only for now.
+							     Logos are in assets/logos/ folder -->							<div class="d-grid mb-3">
+								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2">
+									<img src="assets/logos/steam-logo.png" alt="Steam logo">
+									<span>Continue with Steam</span>
+								</button>
+								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
+									<img src="assets/logos/google.svg" alt="Google logo">
+									<span>Continue with Google</span>
+								</button>
+							</div>
+							<p class="text-center text-muted small mb-0">Steam icons created by <a class="link-accent" href="https://www.flaticon.com/free-icons/steam" title="steam icons">Freepik - Flaticon</a>.</p>
+						</form>
+
+						<p class="text-center text-muted mb-0">New to Backlog Hero? <a class="link-accent" href="register.html">Create an account</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Password show/hide toggle script.
+	     Toggles between text and password input type, no libraries needed -->
+	<script>
+		const togglePassword = document.getElementById('togglePassword');
+		const passwordInput = document.getElementById('password');
+		if (togglePassword && passwordInput) {
+			togglePassword.addEventListener('click', () => {
+				const isHidden = passwordInput.type === 'password';
+				passwordInput.type = isHidden ? 'text' : 'password';
+				togglePassword.textContent = isHidden ? 'Hide' : 'Show';
+			});
+		}
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

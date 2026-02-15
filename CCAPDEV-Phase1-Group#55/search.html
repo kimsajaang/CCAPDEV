@@ -1,0 +1,273 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+
+<!-- search.html — Game search & discovery page.
+     Users can search through the game catalog and add titles to their library.
+     The "Based on your library" recommendations are hardcoded for now. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Games | Backlog Hero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Dark theme base — matches all other pages */
+        body { background-color: #0f1519; color: #ffffff; }
+        .navbar { background-color: #1c252e; border-bottom: 1px solid #2a3843; }
+        .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        /* Game result cards — same hover lift as library page for consistency */
+        .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s; }
+        .card-title { color: #dbe7ff; font-weight: 600; }
+        .card:hover { transform: translateY(-5px); border-color: #5383e8; }
+        .btn-primary { background-color: #5383e8; border: none; }
+        .btn-outline-primary { color: #5383e8; border-color: #5383e8; transition: all 0.2s ease; }
+        .btn-outline-primary:hover { background-color: #5383e8; color: #ffffff; }
+        /* Search header bar — dark panel below the navbar.
+           border-bottom separates it from the card results below */
+        .search-container { background: #1c252e; padding: 40px 0; border-bottom: 1px solid #2a3843; }
+        .game-cover { height: 250px; object-fit: cover; }
+        .text-muted { color: #9e9e9e !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar — "Search Games" is active on this page -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search bar section — centered large input with search button.
+         Uses input-group-lg so it feels prominent.
+         The placeholder text "400,000+ games" is just flavor text for now. -->
+    <header class="search-container text-center">
+        <div class="container">
+            <h2 class="mb-4">Find your next adventure</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="input-group input-group-lg">
+                        <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Search 400,000+ games...">
+                        <button class="btn btn-primary px-4" type="button">Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Recommended games grid — shown below the search bar.
+         These are the same games from the library page to keep it consistent.
+         "Based on your library" label implies personalization but it's all static for now. -->
+    <main class="container my-5">
+        <h4 class="mb-4 text-muted">Based on your library</h4>
+        <div class="row row-cols-1 row-cols-md-5 g-4">
+            
+            <!-- Recommended game cards — same 5 games we have images for -->
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="blackmyth.jpg" class="card-img-top game-cover" alt="Black Myth Wukong">
+                    <div class="card-body">
+                        <h6 class="card-title">Black Myth: Wukong</h6>
+                        <p class="card-text small text-muted">Action RPG • 2024</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="reddead.jpg" class="card-img-top game-cover" alt="Red Dead Redemption 2">
+                    <div class="card-body">
+                        <h6 class="card-title">Red Dead Redemption 2</h6>
+                        <p class="card-text small text-muted">Open World • 2018</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="farcrt.jpg" class="card-img-top game-cover" alt="Far Cry 5">
+                    <div class="card-body">
+                        <h6 class="card-title">Far Cry 5</h6>
+                        <p class="card-text small text-muted">Action • 2018</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="valorant.jpg" class="card-img-top game-cover" alt="Valorant">
+                    <div class="card-body">
+                        <h6 class="card-title">Valorant</h6>
+                        <p class="card-text small text-muted">Tactical Shooter • 2020</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="leagueoflegends.jpg" class="card-img-top game-cover" alt="League of Legends">
+                    <div class="card-body">
+                        <h6 class="card-title">League of Legends</h6>
+                        <p class="card-text small text-muted">MOBA • 2009</p>
+                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- IGDB search integration script.
+         Calls our Express proxy at /api/games/search.
+         The proxy handles Twitch auth + IGDB API so we don't expose keys in the browser.
+         If the server isn't running, the static cards stay visible as fallback. -->
+    <script>
+      const searchInput = document.querySelector('.search-container input');
+      const searchBtn = document.querySelector('.search-container .btn-primary');
+      const resultsGrid = document.querySelector('main .row');
+      const sectionTitle = document.querySelector('main h4');
+
+      // keep the original static cards so we can restore them
+      const originalCards = resultsGrid.innerHTML;
+
+      async function searchGames(query) {
+        if (!query.trim()) {
+          // if search is empty, show the default recommendations again
+          sectionTitle.textContent = 'Based on your library';
+          resultsGrid.innerHTML = originalCards;
+          return;
+        }
+
+        // show loading state
+        sectionTitle.textContent = `Searching for "${query}"...`;
+        resultsGrid.innerHTML = `
+          <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-3">Searching IGDB...</p>
+          </div>
+        `;
+
+        try {
+          const res = await fetch('/api/games/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query.trim(), limit: 20 })
+          });
+
+          if (!res.ok) throw new Error('Server error');
+          const games = await res.json();
+
+          if (games.length === 0) {
+            sectionTitle.textContent = `No results for "${query}"`;
+            resultsGrid.innerHTML = `
+              <div class="col-12 text-center py-5">
+                <p class="text-muted">No games found. Try a different search term.</p>
+              </div>
+            `;
+            return;
+          }
+
+          sectionTitle.textContent = `Results for "${query}" (${games.length} found)`;
+
+          // IGDB cover URLs come as //images.igdb.com/... so we prepend https:
+          // and swap t_thumb for t_cover_big to get higher resolution images
+          resultsGrid.innerHTML = games.map(game => {
+            const coverUrl = game.cover
+              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big')
+              : 'https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover';
+
+            const year = game.first_release_date
+              ? new Date(game.first_release_date * 1000).getFullYear()
+              : 'TBA';
+
+            const genres = game.genres
+              ? game.genres.map(g => g.name).slice(0, 2).join(' • ')
+              : 'Game';
+
+            const rating = game.rating
+              ? Math.round(game.rating) + '/100'
+              : '';
+
+            return `
+              <div class="col">
+                <div class="card h-100 shadow-sm">
+                  <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}"
+                       onerror="this.src='https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover'">
+                  <div class="card-body">
+                    <h6 class="card-title">${game.name}</h6>
+                    <p class="card-text small text-muted">${genres} • ${year} ${rating ? '• ' + rating : ''}</p>
+                    <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+        } catch (err) {
+          console.error('Search failed:', err);
+          // If the API call fails, show a message but don't wipe the static cards
+          sectionTitle.textContent = 'Search unavailable';
+          resultsGrid.innerHTML = `
+            <div class="col-12 text-center py-5">
+              <p class="text-muted">Could not connect to the game database.</p>
+              <p class="text-muted small">Make sure the server is running: <code>npm start</code></p>
+            </div>
+          `;
+        }
+      }
+
+      // Search on button click
+      searchBtn.addEventListener('click', () => searchGames(searchInput.value));
+
+      // Search on Enter key
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') searchGames(searchInput.value);
+      });
+    </script>
+</body>
+</html>

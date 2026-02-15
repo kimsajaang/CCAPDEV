@@ -1,0 +1,192 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+****************************************************************************** -->
+<!-- profile-edit.html — Edit profile form page.
+     Split this out from profile.html because having the edit form in a modal was messy.
+     The form doesn't actually save anywhere yet — just shows an alert. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile | Backlog Hero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        /* Edit profile styles — simpler than the profile page since it's just a form.
+           Same dark palette and card styling as other pages */
+        body {
+            background-color: #0f1519;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #1c252e !important;
+            border-bottom: 1px solid #2a3843;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        .card {
+            background-color: #1c252e !important;
+            border: 1px solid #2a3843 !important;
+        }
+        /* Form inputs — dark bg with blue focus glow to match the site theme */
+        .form-control, .form-select {
+            background-color: #10171d !important;
+            border: 1px solid #2a3843;
+            color: #ffffff;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
+            border-color: #5383e8;
+        }
+        .btn-primary {
+            background-color: #5383e8 !important;
+            border-color: #5383e8 !important;
+        }
+        .text-muted { color: #9e9e9e !important; }
+        .section-title {
+            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9e9e9e;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar — no active link highlighted since this is a sub-page of Profile -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <!-- Edit form card — centered on the page, max col-md-8 so it doesn't stretch too wide -->
+            <div class="col-md-8">
+                <div class="card shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                            <div>
+                                <div class="section-title mb-2">Edit Profile</div>
+                                <h3 class="fw-bold mb-1">Kane Joshua</h3>
+                                <p class="text-muted mb-0">Update your gaming identity and preferences.</p>
+                            </div>
+                            <a href="profile.html" class="btn btn-outline-secondary">Back to Profile</a>
+                        </div>
+
+                        <!-- Profile edit form — fields pre-filled with hardcoded data.
+                             Gaming identity and timezone add fun profile details -->
+                        <form id="profileForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Display Name</label>
+                                    <input type="text" class="form-control" id="inputName" value="Kane Joshua">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="inputEmail" value="kane@example.com">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Bio</label>
+                                    <textarea class="form-control" rows="3" id="inputBio" placeholder="Tell us about yourself...">Completionist and night owl. I love deep lore, tight combat loops, and co-op raids.</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Gaming Identity</label>
+                                    <select class="form-select" id="inputIdentity">
+                                        <option selected>Completionist</option>
+                                        <option>Casual</option>
+                                        <option>Speedrunner</option>
+                                        <option>Explorer</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Timezone</label>
+                                    <select class="form-select" id="inputTimezone">
+                                        <option selected>GMT+8 (Manila)</option>
+                                        <option>GMT+0 (UTC)</option>
+                                        <option>GMT-5 (New York)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Favorite Platform</label>
+                                    <select class="form-select" id="inputPlatform">
+                                        <option selected>PC</option>
+                                        <option>PlayStation</option>
+                                        <option>Xbox</option>
+                                        <option>Switch</option>
+                                    </select>
+                                </div>
+                                <!-- Privacy toggle — controls whether activity shows on the community feed.
+                                     Defaults to checked (public) -->
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="privacyToggle" checked>
+                                        <label class="form-check-label" for="privacyToggle">Show activity on community feed</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <a href="profile.html" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simple form handler — just shows an alert for now since there's no backend.
+        // The alert is a placeholder until a real save endpoint is added.
+        const form = document.getElementById('profileForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Settings saved successfully!');
+            });
+        }
+    </script>
+</body>
+</html>
