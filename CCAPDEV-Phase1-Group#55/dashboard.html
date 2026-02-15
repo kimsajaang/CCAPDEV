@@ -252,6 +252,41 @@ plagiarized the work of other students and/or persons.
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        /* Post Update modal styling */
+        .modal-content {
+          background-color: #1c252e;
+          border: 1px solid #2a3843;
+          color: #ffffff;
+        }
+        .modal-header, .modal-footer {
+          border-color: #2a3843;
+        }
+        .btn-close {
+          filter: invert(1) grayscale(1);
+        }
+        .form-control, .form-select {
+          background-color: #141b21;
+          border-color: #2a3843;
+          color: #ffffff;
+        }
+        .form-control::placeholder { color: #76828c; }
+        .form-control:focus, .form-select:focus {
+          border-color: #5383e8;
+          box-shadow: 0 0 0 0.2rem rgba(83, 131, 232, 0.25);
+        }
+        .form-text { color: #9e9e9e; }
+        /* Suggestion result animation */
+        .suggest-result {
+          transition: all 0.3s ease;
+        }
+        .suggest-result.highlight {
+          border-color: #5383e8 !important;
+          box-shadow: 0 0 12px rgba(83, 131, 232, 0.3);
+        }
+        /* User-posted feed item accent */
+        .user-post-item {
+          border-left: 4px solid #5383e8 !important;
+        }
     </style>
 </head>
 <body class="loading">
@@ -332,12 +367,11 @@ plagiarized the work of other students and/or persons.
                         <h5 class="card-title"><i class="bi bi-magic me-2"></i>What's the Plan?</h5>
                         <p class="text-muted small">Enter available time for a backlog suggestion.</p>
                         <div class="input-group mb-3">
-                            <input type="number" class="form-control bg-dark text-white border-secondary" placeholder="Minutes">
-                            <button class="btn btn-primary" type="button">Suggest</button>
+                            <input id="planMinutes" type="number" min="1" class="form-control bg-dark text-white border-secondary" placeholder="Minutes">
+                            <button id="planSuggestBtn" class="btn btn-primary" type="button">Suggest</button>
                         </div>
-                        <div class="p-3 rounded bg-dark border border-secondary">
-                            <p class="mb-0 small"><strong>Recommended:</strong> Red Dead Redemption 2</p>
-                            <small class="text-info">Est: 45 mins/run</small>
+                        <div id="planResult" class="suggest-result p-3 rounded bg-dark border border-secondary">
+                            <p class="mb-0 small text-muted">Enter your free time and hit Suggest!</p>
                         </div>
                     </div>
                 </div>
@@ -380,7 +414,7 @@ plagiarized the work of other students and/or persons.
      Data is static HTML for now. -->
                 <div class="d-flex justify-content-between align-items-center mb-4 reveal">
                     <h4>Friend Activity Feed</h4>
-                    <button class="btn btn-sm btn-outline-primary">Post Update</button>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#postUpdateModal">Post Update</button>
                 </div>
 
                 <div class="list-group shadow-sm">
@@ -461,6 +495,58 @@ plagiarized the work of other students and/or persons.
         </div>
     </div>
 
+    <!-- Post Update Modal -->
+    <div class="modal fade" id="postUpdateModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Post Update</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label small">What type of update?</label>
+              <select id="updateType" class="form-select">
+                <option value="session">Logged a session</option>
+                <option value="review">Reviewed a game</option>
+                <option value="completed">Completed a game</option>
+                <option value="playing">Started playing</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Game</label>
+              <select id="updateGame" class="form-select">
+                <option value="Black Myth: Wukong">Black Myth: Wukong</option>
+                <option value="Red Dead Redemption 2">Red Dead Redemption 2</option>
+                <option value="Far Cry 5">Far Cry 5</option>
+                <option value="Valorant">Valorant</option>
+                <option value="League of Legends">League of Legends</option>
+              </select>
+            </div>
+            <div class="mb-3" id="ratingGroup" style="display:none;">
+              <label class="form-label small">Rating</label>
+              <select id="updateRating" class="form-select">
+                <option value="5">★★★★★</option>
+                <option value="4">★★★★☆</option>
+                <option value="3">★★★☆☆</option>
+                <option value="2">★★☆☆☆</option>
+                <option value="1">★☆☆☆☆</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Comment</label>
+              <textarea id="updateComment" class="form-control" rows="3" maxlength="300" placeholder="What happened in your session?"></textarea>
+            </div>
+            <div id="updateError" class="small text-danger" style="display:none;"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button id="submitUpdateBtn" type="button" class="btn btn-primary">Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bootstrap JS bundle (includes Popper) for navbar toggle and other components -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Page scripts:
@@ -488,6 +574,162 @@ plagiarized the work of other students and/or persons.
             { threshold: 0.12 }
         );
         revealItems.forEach((item) => observer.observe(item));
+
+        // ============================================================
+        // What's the Plan — backlog suggestion engine
+        // ============================================================
+        const backlogGames = [
+          { name: "Black Myth: Wukong", img: "blackmyth.jpg", genre: "Action RPG", minSession: 30, avgSession: 60, note: "Boss fights require focus" },
+          { name: "Red Dead Redemption 2", img: "reddead.jpg", genre: "Open World", minSession: 45, avgSession: 90, note: "Great for long sessions" },
+          { name: "Far Cry 5", img: "farcrt.jpg", genre: "Action", minSession: 20, avgSession: 45, note: "Quick outpost runs" },
+          { name: "Valorant", img: "valorant.jpg", genre: "Tactical Shooter", minSession: 15, avgSession: 35, note: "One comp match ~30 min" },
+          { name: "League of Legends", img: "leagueoflegends.jpg", genre: "MOBA", minSession: 25, avgSession: 40, note: "ARAM for quick games" },
+          { name: "Hades", img: "", genre: "Roguelike", minSession: 15, avgSession: 25, note: "Perfect for short runs" },
+          { name: "Stardew Valley", img: "", genre: "Farming Sim", minSession: 15, avgSession: 30, note: "Relaxed pace, save anytime" },
+          { name: "Balatro", img: "", genre: "Roguelike Deckbuilder", minSession: 10, avgSession: 20, note: "One run = one sitting" },
+          { name: "Hollow Knight", img: "", genre: "Metroidvania", minSession: 20, avgSession: 45, note: "Bench saves are frequent" },
+          { name: "Slay the Spire", img: "", genre: "Deckbuilder", minSession: 15, avgSession: 30, note: "Turn-based, pause anytime" }
+        ];
+
+        const planInput = document.getElementById("planMinutes");
+        const planBtn = document.getElementById("planSuggestBtn");
+        const planResult = document.getElementById("planResult");
+
+        planBtn.addEventListener("click", suggestGame);
+        planInput.addEventListener("keydown", (e) => { if (e.key === "Enter") suggestGame(); });
+
+        function suggestGame() {
+          const mins = parseInt(planInput.value);
+          if (!mins || mins < 1) {
+            planResult.innerHTML = `<p class="mb-0 small text-warning">Please enter a valid number of minutes.</p>`;
+            return;
+          }
+
+          // Filter games that fit within the available time
+          const fits = backlogGames.filter(g => g.minSession <= mins);
+          if (fits.length === 0) {
+            planResult.innerHTML = `<p class="mb-0 small text-warning">No games fit in ${mins} minutes. Try at least 10 minutes!</p>`;
+            return;
+          }
+
+          // Pick random from fitting games, weighted toward those closest to the time
+          const pick = fits[Math.floor(Math.random() * fits.length)];
+          const sessions = Math.max(1, Math.floor(mins / pick.avgSession));
+          const imgTag = pick.img
+            ? `<img src="${pick.img}" style="width:42px;height:56px;border-radius:6px;object-fit:cover;border:1px solid #2a3843;" alt="${pick.name}">`
+            : `<div style="width:42px;height:56px;border-radius:6px;background:#2a3843;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#6f7d8a;"><i class="bi bi-controller"></i></div>`;
+
+          planResult.innerHTML = `
+            <div class="d-flex align-items-center gap-3">
+              ${imgTag}
+              <div>
+                <p class="mb-0 small"><strong>Recommended:</strong> ${pick.name}</p>
+                <small class="text-info">~${pick.avgSession} mins/session · ${sessions > 1 ? sessions + ' sessions fit' : '1 session'}</small><br/>
+                <small class="text-muted">${pick.genre} · ${pick.note}</small>
+              </div>
+            </div>
+          `;
+
+          // Highlight animation
+          planResult.classList.add("highlight");
+          setTimeout(() => planResult.classList.remove("highlight"), 1200);
+        }
+
+        // ============================================================
+        // Post Update — adds new feed items to the activity feed
+        // ============================================================
+        const gameCovers = {
+          "Black Myth: Wukong": "blackmyth.jpg",
+          "Red Dead Redemption 2": "reddead.jpg",
+          "Far Cry 5": "farcrt.jpg",
+          "Valorant": "valorant.jpg",
+          "League of Legends": "leagueoflegends.jpg"
+        };
+
+        const typeLabels = {
+          "session": "logged a session",
+          "review": "reviewed a game",
+          "completed": "completed a game",
+          "playing": "started playing"
+        };
+
+        const updateType = document.getElementById("updateType");
+        const ratingGroup = document.getElementById("ratingGroup");
+
+        // Show/hide rating when type changes
+        updateType.addEventListener("change", () => {
+          ratingGroup.style.display = updateType.value === "review" ? "block" : "none";
+        });
+
+        document.getElementById("submitUpdateBtn").addEventListener("click", () => {
+          const type = updateType.value;
+          const game = document.getElementById("updateGame").value;
+          const comment = document.getElementById("updateComment").value.trim();
+          const rating = document.getElementById("updateRating").value;
+          const errorEl = document.getElementById("updateError");
+
+          if (!comment) {
+            errorEl.textContent = "Please write a comment.";
+            errorEl.style.display = "block";
+            return;
+          }
+
+          errorEl.style.display = "none";
+          const cover = gameCovers[game] || "pfp.jpg";
+          const stars = "★".repeat(parseInt(rating)) + "☆".repeat(5 - parseInt(rating));
+
+          let extraHTML = "";
+          if (type === "review") {
+            extraHTML = `<div class="text-warning mb-1 extra-small">${stars}</div>`;
+          } else if (type === "completed") {
+            extraHTML = `<span class="badge bg-success extra-small">COMPLETED</span>`;
+          } else if (type === "playing") {
+            extraHTML = `<span class="badge bg-info text-dark extra-small">NOW PLAYING</span>`;
+          }
+
+          const now = new Date();
+          const timeStr = now.toLocaleString(undefined, { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+          const newItem = document.createElement("div");
+          newItem.className = "list-group-item p-3 user-post-item";
+          newItem.style.opacity = "0";
+          newItem.style.transform = "translateY(-10px)";
+          newItem.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+          newItem.innerHTML = `
+            <div class="d-flex align-items-center mb-2">
+              <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
+              <strong class="text-primary">Kane_Joshua</strong>
+              <span class="text-muted ms-2 small">${typeLabels[type]}</span>
+              <span class="text-muted ms-auto extra-small">${timeStr}</span>
+            </div>
+            <div class="d-flex align-items-start gap-3 mb-1">
+              <img src="${cover}" class="feed-cover" alt="${game} cover">
+              <div>
+                <h6 class="mb-1 small">${game}</h6>
+                ${extraHTML}
+              </div>
+            </div>
+            <p class="mb-0 small text-white-50">"${comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</p>
+          `;
+
+          const feedList = document.querySelector(".list-group");
+          feedList.insertBefore(newItem, feedList.firstChild);
+
+          // Animate in
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              newItem.style.opacity = "1";
+              newItem.style.transform = "translateY(0)";
+            });
+          });
+
+          // Close modal and reset form
+          const modal = bootstrap.Modal.getInstance(document.getElementById("postUpdateModal"));
+          modal.hide();
+          document.getElementById("updateComment").value = "";
+          updateType.value = "session";
+          ratingGroup.style.display = "none";
+        });
     </script>
     <!-- Floating CTA button — always visible in bottom-right corner
      Always visible so new users have a clear next step -->
