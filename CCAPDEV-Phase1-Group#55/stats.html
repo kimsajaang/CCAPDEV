@@ -1,0 +1,672 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+
+<!-- stats.html — Community / forum page.
+     This is the most JS-heavy page in the project. Posts, comments, voting,
+     and sorting are all done client-side with localStorage.
+     Originally called "stats" because we planned to show gaming statistics here,
+     but we pivoted to a community feed instead. Kept the filename to avoid breaking links. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Backlog Hero | Community</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Community page styles — dark theme matching the rest of the site.
+       Overrides several bootstrap defaults for dark cards and modals.
+       The modal was showing up white before adding the modal-content overrides */
+    body {
+      background-color: #0f1519;
+      color: #ffffff;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .navbar {
+      background-color: #1c252e !important;
+      border-bottom: 1px solid #2a3843;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .navbar-nav .nav-link {
+      color: #9e9e9e !important;
+      transition: color 0.2s ease;
+      padding: 0.5rem 1rem !important;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .navbar-nav .nav-link:hover {
+      color: #ffffff !important;
+    }
+    .navbar-nav .nav-link.active {
+      color: #5383e8 !important;
+    }
+    .btn-primary, .bg-primary, .badge.bg-primary {
+      background-color: #5383e8 !important;
+      border-color: #5383e8 !important;
+    }
+    .btn-outline-primary {
+      color: #5383e8 !important;
+      border-color: #5383e8 !important;
+      transition: all 0.2s ease;
+    }
+    .btn-outline-primary:hover {
+      background-color: #5383e8 !important;
+      color: #ffffff !important;
+    }
+    .card {
+      background-color: #1c252e !important;
+      border: 1px solid #2a3843 !important;
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    }
+    .text-muted { color: #9e9e9e !important; }
+    .form-control, .form-select {
+      background-color: #141b21;
+      border-color: #2a3843;
+      color: #ffffff;
+    }
+    .form-control::placeholder { color: #76828c; }
+    .form-control:focus, .form-select:focus {
+      border-color: #5383e8;
+      box-shadow: 0 0 0 0.2rem rgba(83, 131, 232, 0.25);
+    }
+    .badge.bg-info {
+      background-color: #2dd4bf !important;
+    }
+    .container {
+      max-width: 1200px;
+    }
+    /* Comment section panel — slightly darker than cards so it looks nested */
+    .comment-panel {
+      background-color: #141b21;
+      border-color: #2a3843;
+    }
+    /* Modal dark theme fix — bootstrap modals default to white so we override everything here */
+    .modal-content {
+      background-color: #1c252e;
+      border: 1px solid #2a3843;
+      color: #ffffff;
+    }
+    .modal-header,
+    .modal-footer {
+      border-color: #2a3843;
+    }
+    .modal-backdrop.show {
+      opacity: 0.7;
+    }
+    .btn-close {
+      filter: invert(1) grayscale(1);
+    }
+    .form-text {
+      color: #9e9e9e;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar — "Community" is the active link on this page -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container py-2">
+      <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+          <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+          <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+          <li class="nav-item"><a class="nav-link active" href="stats.html">Community</a></li>
+          <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+
+    <!-- Community header with sort dropdown, search bar, and new post button.
+         Uses d-flex with flex-wrap so it doesn't break on mobile -->
+    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-4">
+      <div>
+        <h2 class="mb-1">Community</h2>
+        <div class="text-muted small">Post updates, ask questions, share recommendations.</div>
+      </div>
+
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <select id="sortSelect" class="form-select form-select-sm" style="width: 140px;">
+          <option value="hot" selected>Hot</option>
+          <option value="new">New</option>
+          <option value="top">Top</option>
+        </select>
+
+        <input id="searchInput" class="form-control form-control-sm" style="width: 220px;" placeholder="Search posts"/>
+
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal">
+          New Post
+        </button>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Main feed column — posts get rendered here by JS -->
+      <div class="col-lg-8">
+        <div id="feed" class="d-grid gap-3"></div>
+
+        <div id="emptyState" class="card shadow-sm d-none">
+          <div class="card-body">
+            <div class="fw-semibold mb-1">No posts yet.</div>
+            <div class="text-muted small mb-3">Create the first post for your community.</div>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal">New Post</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar — quick rules + demo data controls.
+           Sticky on desktop, scrolls on mobile -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <div class="fw-semibold mb-2">Quick Rules</div>
+            <ul class="small text-muted mb-0">
+              <li>Keep posts about games and backlogs.</li>
+              <li>No personal info.</li>
+              <li>Be respectful.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="fw-semibold mb-2">Demo Data</div>
+            <div class="small text-muted mb-3">
+              This page saves posts and comments in your browser (localStorage).
+              If you clear site data, posts reset.
+            </div>
+            <div class="d-flex gap-2">
+              <button id="seedBtn" class="btn btn-outline-secondary btn-sm">Add sample posts</button>
+              <button id="clearBtn" class="btn btn-outline-danger btn-sm">Clear all</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- New Post Modal — opens when user clicks "New Post" button.
+       Uses modal-lg so users have room to type longer posts.
+       The form has title, body, flair, and optional game tag fields. -->
+  <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input id="postTitle" class="form-control" maxlength="120" placeholder="Example: Best 30-minute games for busy weeks"/>
+            <div class="form-text">Keep it short and clear.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Body</label>
+            <textarea id="postBody" class="form-control" rows="5" maxlength="2000" placeholder="Write your post..."></textarea>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Flair</label>
+              <select id="postFlair" class="form-select">
+                <option value="Discussion" selected>Discussion</option>
+                <option value="Recommendation">Recommendation</option>
+                <option value="Help">Help</option>
+                <option value="Progress">Progress</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Game (optional)</label>
+              <input id="postGame" class="form-control" maxlength="80" placeholder="Example: Hades, Balatro, Stardew Valley"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div class="me-auto small text-muted" id="postError" style="display:none;"></div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="createPostBtn" type="button" class="btn btn-primary">Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ============================================================
+    // Community Feed Script
+    // Handles: posts CRUD, voting, comments, sorting, search, seed data
+    // Everything is stored in localStorage under one key
+    // ============================================================
+
+    // localStorage key — versioned so we can change the schema without breaking old data
+    const STORAGE_KEY = "bh_community_posts_v1";
+
+    const nowIso = () => new Date().toISOString();
+    const fmtTime = (iso) => {
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    };
+    const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
+
+    // --- Data layer: load, save, validate ---
+    // Wrapped in try-catch because localStorage can throw if storage is full
+    function loadPosts() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function savePosts(posts) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+    }
+
+    // Migration helper — makes sure every post has an id, comments array, and vote counts.
+    // Needed because early test data didn't have all fields and it was crashing
+    function ensureIds(posts) {
+      let changed = false;
+      for (const p of posts) {
+        if (!p.id) { p.id = crypto.randomUUID(); changed = true; }
+        if (!Array.isArray(p.comments)) { p.comments = []; changed = true; }
+        if (typeof p.up !== "number") { p.up = 0; changed = true; }
+        if (typeof p.down !== "number") { p.down = 0; changed = true; }
+      }
+      if (changed) savePosts(posts);
+      return posts;
+    }
+
+    function score(post) {
+      return (post.up || 0) - (post.down || 0);
+    }
+
+    // Hot score algorithm — loosely based on Reddit's formula.
+    // Divides net votes by age^0.7 so newer posts with fewer votes can still rank high
+    function hotScore(post) {
+      const votes = score(post);
+      const ageHours = Math.max(1, (Date.now() - new Date(post.createdAt).getTime()) / 36e5);
+      return votes / Math.pow(ageHours, 0.7);
+    }
+
+    function sortPosts(posts, mode) {
+      const list = [...posts];
+      if (mode === "new") {
+        list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (mode === "top") {
+        list.sort((a,b) => score(b) - score(a));
+      } else {
+        list.sort((a,b) => hotScore(b) - hotScore(a));
+      }
+      return list;
+    }
+
+    function matchesSearch(post, q) {
+      if (!q) return true;
+      const hay = (post.title + " " + (post.body||"") + " " + (post.game||"") + " " + (post.flair||"")).toLowerCase();
+      return hay.includes(q.toLowerCase());
+    }
+
+    const feedEl = document.getElementById("feed");
+    const emptyEl = document.getElementById("emptyState");
+    const sortSelect = document.getElementById("sortSelect");
+    const searchInput = document.getElementById("searchInput");
+
+    // --- Main render function ---
+    // Re-reads localStorage every time so we always show fresh data.
+    // Re-renders the entire feed on every action (vote, comment, delete).
+    function render() {
+      let posts = ensureIds(loadPosts());
+      const mode = sortSelect.value;
+      const q = searchInput.value.trim();
+
+      posts = sortPosts(posts, mode).filter(p => matchesSearch(p, q));
+
+      feedEl.innerHTML = "";
+      if (posts.length === 0) {
+        emptyEl.classList.remove("d-none");
+        return;
+      }
+      emptyEl.classList.add("d-none");
+
+      for (const post of posts) {
+        feedEl.appendChild(postCard(post));
+      }
+    }
+
+    // Builds one post card element with vote buttons, comments toggle, delete, share.
+    // This function is large because each card has a lot of interactive parts.
+    function postCard(post) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "card shadow-sm";
+      wrapper.dataset.postId = post.id;
+
+      const flairBadge = `<span class="badge bg-secondary">${escapeHtml(post.flair || "Discussion")}</span>`;
+      const gameTag = post.game ? `<span class="badge bg-info text-dark ms-2">${escapeHtml(post.game)}</span>` : "";
+
+      wrapper.innerHTML = `
+        <div class="card-body">
+          <div class="d-flex gap-3">
+            <div class="text-center" style="width:72px;">
+              <button class="btn btn-outline-success btn-sm w-100 mb-1" data-act="up">▲</button>
+              <div class="fw-bold" data-score>${score(post)}</div>
+              <button class="btn btn-outline-danger btn-sm w-100 mt-1" data-act="down">▼</button>
+            </div>
+
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                ${flairBadge}
+                ${gameTag}
+                <span class="text-muted small">Posted ${fmtTime(post.createdAt)}</span>
+              </div>
+
+              <h5 class="mt-2 mb-1">${escapeHtml(post.title)}</h5>
+
+              ${post.body ? `<div class="text-muted">${escapeHtml(post.body).replace(/\n/g, "<br/>")}</div>` : ""}
+
+              <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
+                <button class="btn btn-outline-primary btn-sm" data-act="toggleComments">
+                  Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${(post.comments||[]).length}</span>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
+                <button class="btn btn-outline-danger btn-sm ms-auto" data-act="delete">Delete</button>
+              </div>
+
+              <div class="mt-3 d-none" data-comments>
+                <div class="border rounded p-3 comment-panel">
+                  <div class="mb-3">
+                    <label class="form-label small mb-1">Add a comment</label>
+                    <div class="input-group">
+                      <input class="form-control" maxlength="300" placeholder="Write a comment..."/>
+                      <button class="btn btn-primary" data-act="addComment">Post</button>
+                    </div>
+                  </div>
+
+                  <div class="d-grid gap-2" data-commentlist></div>
+                  <div class="text-muted small mt-2" data-nocomments style="display:none;">No comments yet.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      `;
+
+      wrapper.querySelector('[data-act="up"]').addEventListener("click", () => vote(post.id, +1));
+      wrapper.querySelector('[data-act="down"]').addEventListener("click", () => vote(post.id, -1));
+      wrapper.querySelector('[data-act="toggleComments"]').addEventListener("click", () => toggleComments(wrapper));
+      wrapper.querySelector('[data-act="delete"]').addEventListener("click", () => deletePost(post.id));
+      wrapper.querySelector('[data-act="share"]').addEventListener("click", () => copyLink(post.id));
+
+      const addBtn = wrapper.querySelector('[data-act="addComment"]');
+      addBtn.addEventListener("click", () => {
+        const input = addBtn.parentElement.querySelector("input");
+        const text = input.value.trim();
+        if (!text) return;
+        addComment(post.id, text);
+        input.value = "";
+        render();
+        location.hash = "post-" + post.id;
+        setTimeout(() => openCommentsForHash(), 50);
+      });
+
+      const commentList = wrapper.querySelector("[data-commentlist]");
+      const noComments = wrapper.querySelector("[data-nocomments]");
+      const comments = post.comments || [];
+      if (comments.length === 0) {
+        noComments.style.display = "block";
+      } else {
+        noComments.style.display = "none";
+        for (const c of comments.slice().sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))) {
+          commentList.appendChild(commentRow(post.id, c));
+        }
+      }
+
+      return wrapper;
+    }
+
+    function commentRow(postId, comment) {
+      const row = document.createElement("div");
+      row.className = "border rounded p-2";
+      row.innerHTML = `
+        <div class="d-flex align-items-start justify-content-between gap-2">
+          <div class="flex-grow-1">
+            <div class="small text-muted mb-1">${fmtTime(comment.createdAt)}</div>
+            <div>${escapeHtml(comment.text).replace(/\n/g, "<br/>")}</div>
+          </div>
+          <button class="btn btn-sm btn-outline-danger" title="Delete comment">✕</button>
+        </div>
+      `;
+
+      row.querySelector("button").addEventListener("click", () => {
+        deleteComment(postId, comment.id);
+      });
+
+      return row;
+    }
+
+    // --- Actions: vote, comment, delete, share ---
+    // No auth yet so anyone can vote unlimited times.
+    function vote(postId, dir) {
+      const posts = ensureIds(loadPosts());
+      const p = posts.find(x => x.id === postId);
+      if (!p) return;
+
+      if (dir > 0) p.up = (p.up || 0) + 1;
+      else p.down = (p.down || 0) + 1;
+
+      savePosts(posts);
+      render();
+      openCommentsForHash();
+    }
+
+    function toggleComments(cardEl) {
+      const commentsWrap = cardEl.querySelector("[data-comments]");
+      commentsWrap.classList.toggle("d-none");
+    }
+
+    function addComment(postId, text) {
+      const posts = ensureIds(loadPosts());
+      const p = posts.find(x => x.id === postId);
+      if (!p) return;
+
+      p.comments.push({ id: crypto.randomUUID(), text, createdAt: nowIso() });
+      savePosts(posts);
+    }
+
+    function deleteComment(postId, commentId) {
+      const posts = ensureIds(loadPosts());
+      const p = posts.find(x => x.id === postId);
+      if (!p) return;
+
+      p.comments = (p.comments || []).filter(c => c.id !== commentId);
+      savePosts(posts);
+      render();
+      openCommentsForHash();
+    }
+
+    function deletePost(postId) {
+      const posts = ensureIds(loadPosts());
+      const next = posts.filter(p => p.id !== postId);
+      savePosts(next);
+      render();
+    }
+
+    function copyLink(postId) {
+      const url = new URL(window.location.href);
+      url.hash = "post-" + postId;
+      (navigator.clipboard?.writeText(url.toString()) || Promise.reject()).then(() => {
+        const card = document.querySelector(`[data-post-id="${postId}"]`);
+        const btn = card ? card.querySelector('[data-act="share"]') : null;
+        if (!btn) return;
+        const old = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(() => btn.textContent = old, 900);
+      }).catch(() => {
+        alert("Copy failed. You can manually copy the URL from the address bar.");
+      });
+    }
+
+    const postTitle = document.getElementById("postTitle");
+    const postBody = document.getElementById("postBody");
+    const postFlair = document.getElementById("postFlair");
+    const postGame = document.getElementById("postGame");
+    const postError = document.getElementById("postError");
+    const createPostBtn = document.getElementById("createPostBtn");
+    const newPostModalEl = document.getElementById("newPostModal");
+    const newPostModal = bootstrap.Modal.getOrCreateInstance(newPostModalEl);
+
+    createPostBtn.addEventListener("click", () => {
+      const title = postTitle.value.trim();
+      const body = postBody.value.trim();
+      const flair = postFlair.value;
+      const game = postGame.value.trim();
+
+      if (title.length < 3) {
+        postError.style.display = "block";
+        postError.textContent = "Title must be at least 3 characters.";
+        return;
+      }
+
+      const posts = ensureIds(loadPosts());
+      const id = crypto.randomUUID();
+
+      posts.push({
+        id,
+        title,
+        body,
+        flair,
+        game,
+        up: 0,
+        down: 0,
+        comments: [],
+        createdAt: nowIso()
+      });
+
+      savePosts(posts);
+
+      postTitle.value = "";
+      postBody.value = "";
+      postGame.value = "";
+      postFlair.value = "Discussion";
+      postError.style.display = "none";
+      postError.textContent = "";
+
+      newPostModal.hide();
+
+      location.hash = "post-" + id;
+      render();
+      setTimeout(() => openCommentsForHash(), 50);
+    });
+
+    sortSelect.addEventListener("change", render);
+    searchInput.addEventListener("input", () => {
+      clearTimeout(window.__bhSearchT);
+      window.__bhSearchT = setTimeout(render, 150);
+    });
+
+    // --- Seed data: pre-made sample posts for demo purposes ---
+    // Only adds samples if the feed is empty so it doesn't duplicate
+    document.getElementById("seedBtn").addEventListener("click", () => {
+      const posts = ensureIds(loadPosts());
+      if (posts.length > 0) return;
+
+      const sample = [
+        {
+          id: crypto.randomUUID(),
+          title: "What do you play when you only have 30 minutes?",
+          body: "I want fast sessions before sleep. What games work for you?",
+          flair: "Discussion",
+          game: "",
+          up: 12,
+          down: 1,
+          comments: [
+            { id: crypto.randomUUID(), text: "Balatro. One run feels clean and quick.", createdAt: nowIso() },
+            { id: crypto.randomUUID(), text: "Hades. Short runs, easy to stop.", createdAt: nowIso() }
+          ],
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString()
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Backlog tip: keep a 'small wins' list",
+          body: "I track games I can finish in 5 to 10 hours. I clear one each week and my backlog feels lighter.",
+          flair: "Progress",
+          game: "",
+          up: 19,
+          down: 0,
+          comments: [],
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString()
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Need a cozy game after exams",
+          body: "Looking for something low stress. Farming or life sim is fine.",
+          flair: "Help",
+          game: "Stardew Valley",
+          up: 7,
+          down: 0,
+          comments: [{ id: crypto.randomUUID(), text: "Stardew is perfect. Also try Spiritfarer.", createdAt: nowIso() }],
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+        }
+      ];
+
+      savePosts(sample);
+      render();
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      savePosts([]);
+      render();
+    });
+
+    // Deep-link handler — if URL has #post-<id>, scroll to that post and open its comments.
+    // Used by the "Copy Link" share feature
+    function openCommentsForHash() {
+      if (!location.hash.startsWith("#post-")) return;
+      const id = location.hash.replace("#post-", "");
+      const card = document.querySelector(`[data-post-id="${id}"]`);
+      if (!card) return;
+
+      const commentsWrap = card.querySelector("[data-comments]");
+      if (commentsWrap) commentsWrap.classList.remove("d-none");
+
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    render();
+    setTimeout(() => openCommentsForHash(), 150);
+  </script>
+</body>
+</html>

@@ -8,9 +8,12 @@ plagiarized the work of other students and/or persons.
 <Your Full Name> - <ID Number> - <Section>
     <Ibanez, Kane Joshua> - <1234654> - <S13>
     <David, Justin Ice> - <12411574> - <S13>
+	<Fortea, Seanne Clarence - <12410969> -<S22>
 ****************************************************************************** -->
 
-
+<!-- register.html — Account registration page for Backlog Hero.
+     Form is kept short — just the essentials for signing up.
+     The password strength meter uses a simple scoring system. -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -22,6 +25,8 @@ plagiarized the work of other students and/or persons.
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	<!-- Page-specific styles for registration form -->
 	<style>
+		/* Registration page styles — matches login page dark theme.
+		   Both auth pages share the same radial gradient bg and card style */
 		body {
 			min-height: 100vh;
 			background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.18), transparent 25%),
@@ -81,6 +86,9 @@ plagiarized the work of other students and/or persons.
 			background: linear-gradient(120deg, #50d6b4, #5383e8);
 			color: #0d1217;
 		}
+		/* Password strength meter — gradient bar that fills based on password quality.
+		   Goes from red (weak) → yellow → green → blue (strong).
+		   999px border-radius makes it fully rounded like a progress pill */
 		.strength-bar {
 			height: 6px;
 			border-radius: 999px;
@@ -119,6 +127,7 @@ plagiarized the work of other students and/or persons.
 	</style>
 </head>
 <body>
+	<!-- Navbar — same as all other pages, no link is "active" here -->
 	<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
 		<div class="container py-2">
 			<a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
@@ -127,7 +136,7 @@ plagiarized the work of other students and/or persons.
 			</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-					<li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+					<li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
 					<li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
 					<li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
 					<li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
@@ -141,6 +150,8 @@ plagiarized the work of other students and/or persons.
 	<div class="auth-wrapper">
 		<div class="container">
 			<div class="row justify-content-center">
+				<!-- Registration card — wider than login (col-lg-6) to fit the 2-column form layout.
+				     The "Free" badge is just a visual touch -->
 				<div class="col-md-8 col-lg-6">
 					<div class="auth-card p-4 p-md-5">
 						<div class="d-flex align-items-start justify-content-between mb-4">
@@ -152,6 +163,9 @@ plagiarized the work of other students and/or persons.
 								<span class="badge badge-accent rounded-pill px-3 py-2">Free</span>
 						</div>
 
+						<!-- Registration form — 2-column grid layout for the fields.
+						     Display name + email on top row, password + confirm below,
+						     then platform + region. Keeps it compact without scrolling too much -->
 						<form>
 							<div class="row g-3">
 								<div class="col-md-6">
@@ -171,8 +185,8 @@ plagiarized the work of other students and/or persons.
 								<div class="col-md-6">
 									<label class="form-label">Confirm Password</label>
 									<input id="confirm" type="password" class="form-control" placeholder="Repeat password" required>
-								</div>
-								<div class="col-md-6">
+								</div>								<!-- Platform and Region selects — helps with matchmaking / community filtering later.
+								     Defaulted to PC and North America since that's most of our testers -->								<div class="col-md-6">
 									<label class="form-label">Primary Platform</label>
 									<select class="form-select">
 										<option selected>PC</option>
@@ -195,6 +209,8 @@ plagiarized the work of other students and/or persons.
 								</div>
 							</div>
 
+							<!-- Terms checkbox — required before submitting.
+							     No actual terms page yet, just a placeholder for now -->
 							<div class="form-check mt-4 mb-3">
 								<input class="form-check-input" type="checkbox" value="" id="terms" required>
 								<label class="form-check-label text-muted" for="terms">I agree to the Backlog Hero terms and privacy.</label>

@@ -8,7 +8,12 @@ plagiarized the work of other students and/or persons.
 <Your Full Name> - <ID Number> - <Section>
     <Ibanez, Kane Joshua> - <1234654> - <S13>
     <David, Justin Ice> - <12411574> - <S13>
+	<Fortea, Seanne Clarence - <12410969> -<S22>
 ****************************************************************************** -->
+
+<!-- login.html — Login page for Backlog Hero.
+     Centered auth card layout, matches the register page style.
+     Only Steam and Google SSO for now — might add more later. -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +23,8 @@ plagiarized the work of other students and/or persons.
 	<title>Backlog Hero | Login</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	<style>
+		/* Login page dark theme with subtle radial gradient bg.
+		   Same gradient as register page for visual consistency */
 		body {
 			min-height: 100vh;
 			background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.18), transparent 25%),
@@ -55,6 +62,8 @@ plagiarized the work of other students and/or persons.
 			align-items: center;
 			justify-content: center;
 		}
+		/* Auth card — glassmorphism-ish card for the login form.
+		   The 60px box-shadow gives it a nice floating effect */
 		.auth-card {
 			background: linear-gradient(145deg, rgba(28, 37, 46, 0.9), rgba(16, 22, 27, 0.95));
 			border: 1px solid #2a3843;
@@ -93,12 +102,19 @@ plagiarized the work of other students and/or persons.
 			background-color: #5383e8 !important;
 			color: #ffffff !important;
 		}
+		/* Override so the navbar Login button doesn't have a filled background
+		   when we're already on the login page — looks cleaner this way */
+		.navbar .btn-outline-primary,
+		.navbar .btn-outline-primary.active {
+			background-color: transparent !important;
+		}
 		.text-muted { color: #9e9e9e !important; }
 		.link-accent { color: #7cb7ff; text-decoration: none; }
 		.link-accent:hover { color: #a8ccff; }
 		.badge-accent {
-			background: linear-gradient(120deg, #50d6b4, #5383e8);
-			color: #0d1217;
+			background: transparent;
+			border: 1px solid #50d6b4;
+			color: #9ee8d8;
 		}
 		.provider-btn img {
 			width: 24px;
@@ -111,6 +127,7 @@ plagiarized the work of other students and/or persons.
 	</style>
 </head>
 <body>
+	<!-- Navbar — Login button is active on this page -->
 	<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
 		<div class="container py-2">
 			<a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
@@ -119,7 +136,7 @@ plagiarized the work of other students and/or persons.
 			</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-					<li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+					<li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
 					<li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
 					<li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
 					<li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
@@ -133,6 +150,8 @@ plagiarized the work of other students and/or persons.
 	<div class="auth-wrapper">
 		<div class="container">
 			<div class="row justify-content-center">
+				<!-- Login form card — col-lg-5 keeps it narrow and centered.
+				     p-md-5 adds extra padding on desktop for breathing room -->
 				<div class="col-md-7 col-lg-5">
 					<div class="auth-card p-4 p-md-5">
 						<div class="d-flex align-items-start justify-content-between mb-4">
@@ -141,9 +160,10 @@ plagiarized the work of other students and/or persons.
 								<h3 class="fw-bold mb-1">Log in to your backlog</h3>
 								<p class="text-muted small mb-0">Stay on top of your gaming goals.</p>
 							</div>
-							<span class="badge badge-accent rounded-pill px-3 py-2">Secure</span>
 						</div>
 
+						<!-- Login form — email/password + SSO providers.
+						     No real validation yet, just required attributes -->
 						<form>
 							<div class="mb-3">
 								<label class="form-label">Email or Username</label>
@@ -168,27 +188,15 @@ plagiarized the work of other students and/or persons.
 							</div>
 							<div class="d-grid mb-3">
 								<button type="submit" class="btn btn-primary py-2">Log In</button>
-							</div>
-							<div class="d-grid mb-3">
+							</div>							<!-- SSO provider buttons — Steam and Google only for now.
+							     Logos are in assets/logos/ folder -->							<div class="d-grid mb-3">
 								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2">
 									<img src="assets/logos/steam-logo.png" alt="Steam logo">
 									<span>Continue with Steam</span>
 								</button>
 								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
-									<img src="assets/logos/epic.png" alt="Epic Games logo">
-									<span>Continue with Epic Games</span>
-								</button>
-								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
-									<img src="assets/logos/riot.png" alt="Riot logo">
-									<span>Continue with Riot</span>
-								</button>
-								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
 									<img src="assets/logos/google.svg" alt="Google logo">
 									<span>Continue with Google</span>
-								</button>
-								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
-									<img src="assets/logos/apple.svg" alt="Apple logo">
-									<span>Continue with Apple</span>
 								</button>
 							</div>
 							<p class="text-center text-muted small mb-0">Steam icons created by <a class="link-accent" href="https://www.flaticon.com/free-icons/steam" title="steam icons">Freepik - Flaticon</a>.</p>
@@ -201,6 +209,8 @@ plagiarized the work of other students and/or persons.
 		</div>
 	</div>
 
+	<!-- Password show/hide toggle script.
+	     Toggles between text and password input type, no libraries needed -->
 	<script>
 		const togglePassword = document.getElementById('togglePassword');
 		const passwordInput = document.getElementById('password');

@@ -9,6 +9,8 @@ plagiarized the work of other students and/or persons.
     <Ibanez, Kane Joshua> - <1234654> - <S13>
     <David, Justin Ice> - <12411574> - <S13>
 ****************************************************************************** -->
+<!-- library.html — User's personal game collection page.
+     Shows all games with status badges (Playing, Backlog, Completed). -->
 
 
 <!DOCTYPE html>
@@ -18,6 +20,7 @@ plagiarized the work of other students and/or persons.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Library | Backlog Hero</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Dark theme overrides — same color palette as all other pages (#0f1519 base, #1c252e cards) -->
     <style>
         body { background-color: #0f1519; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
         .navbar { background-color: #1c252e; border-bottom: 1px solid #2a3843; }
@@ -36,11 +39,15 @@ plagiarized the work of other students and/or persons.
         .navbar-nav .nav-link.active {
             color: #5383e8 !important;
         }
+        /* Game cards — dark bg with subtle border, hover effect lifts card up */
         .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s, border-color 0.2s; }
         .card-title { color: #dbe7ff; font-weight: 600; }
         .card:hover { transform: translateY(-5px); border-color: #5383e8; }
+        /* Fixed height for game cover images so all cards align evenly */
         .game-cover { height: 280px; object-fit: cover; border-bottom: 1px solid #2a3843; }
         .status-badge { position: absolute; top: 10px; right: 10px; }
+        /* Tab pills for filtering — All Games / Backlog / Playing / Completed
+           These don't actually filter yet, just visual for now */
         .nav-pills .nav-link { color: #9e9e9e; transition: all 0.2s ease; }
         .nav-pills .nav-link:hover { color: #ffffff; }
         .nav-pills .nav-link.active { background-color: #5383e8; color: white; }
@@ -50,6 +57,7 @@ plagiarized the work of other students and/or persons.
 </head>
 <body>
 
+    <!-- Navbar — identical to other pages, "My Library" is set as active here -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
             <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
@@ -58,7 +66,7 @@ plagiarized the work of other students and/or persons.
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link active" href="library.html">My Library</a></li>
                     <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
                     <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
@@ -70,6 +78,7 @@ plagiarized the work of other students and/or persons.
     </nav>
 
     <div class="container my-5">
+        <!-- Page header with collection title and filter tabs -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>My Collection</h2>
             <ul class="nav nav-pills" id="libraryTabs">
@@ -82,6 +91,7 @@ plagiarized the work of other students and/or persons.
 
         <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4">
             
+            <!-- Game: Black Myth Wukong — currently playing, 45% progress -->
             <div class="col">
                 <div class="card h-100 position-relative">
                     <span class="badge bg-warning text-dark status-badge">Playing</span>
@@ -90,13 +100,14 @@ plagiarized the work of other students and/or persons.
                         <h6 class="card-title">Black Myth: Wukong</h6>
                         <p class="text-muted small mb-3">Action RPG • 2024</p>
                         <div class="progress mb-2" style="height: 5px;">
-                            <div class="progress-bar bg-info" style="width: 45%"></div>
+                        
                         </div>
-                        <small class="text-info">45% Story</small>
+                    
                     </div>
                 </div>
             </div>
 
+            <!-- Game: Red Dead Redemption 2 — in backlog, hasn't started yet -->
             <div class="col">
                 <div class="card h-100 position-relative">
                     <span class="badge bg-secondary status-badge">Backlog</span>
@@ -109,6 +120,7 @@ plagiarized the work of other students and/or persons.
                 </div>
             </div>
 
+            <!-- Game: Far Cry 5 — completed with 5 star rating -->
             <div class="col">
                 <div class="card h-100 position-relative">
                     <span class="badge bg-success status-badge">Completed</span>
@@ -121,6 +133,7 @@ plagiarized the work of other students and/or persons.
                 </div>
             </div>
 
+            <!-- Game: Valorant — ongoing ranked progress -->
             <div class="col">
                 <div class="card h-100 position-relative">
                     <span class="badge bg-warning text-dark status-badge">Playing</span>
@@ -136,6 +149,9 @@ plagiarized the work of other students and/or persons.
                 </div>
             </div>
 
+            <!-- Game: League of Legends — backlog item
+                 LoL doesn't really have a "backlog" status but we included it 
+                 to show the button variant -->
             <div class="col">
                 <div class="card h-100 position-relative">
                     <span class="badge bg-secondary status-badge">Backlog</span>
@@ -150,6 +166,7 @@ plagiarized the work of other students and/or persons.
 
         </div>
     </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

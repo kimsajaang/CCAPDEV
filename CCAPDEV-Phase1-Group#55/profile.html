@@ -9,6 +9,10 @@ plagiarized the work of other students and/or persons.
     <Ibanez, Kane Joshua> - <1234654> - <S13>
     <David, Justin Ice> - <12411574> - <S13>
 ****************************************************************************** -->
+<!-- profile.html — User profile page.
+     Shows stats, highlights, recent activity in a card shell layout.
+     The design is inspired by gaming profile pages like op.gg and steam profiles.
+     All data here is hardcoded for now. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,6 +23,9 @@ plagiarized the work of other students and/or persons.
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
     <style>
+        /* Profile page styles — dark theme with radial gradient bg.
+           Radial gradients add subtle color without being distracting.
+           Matches the same palette used across login and register pages */
         body {
             min-height: 100vh;
             background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.18), transparent 25%),
@@ -71,6 +78,9 @@ plagiarized the work of other students and/or persons.
             display: flex;
             gap: 8px;
         }
+        /* Profile shell — the main card container with gradient bg and rounded corners.
+           overflow:hidden clips the cover image gradient at the top.
+           fade-in animation makes the whole card slide up on page load */
         .profile-shell {
             background: linear-gradient(145deg, rgba(28, 37, 46, 0.92), rgba(16, 22, 27, 0.95));
             border: 1px solid #2a3843;
@@ -131,6 +141,8 @@ plagiarized the work of other students and/or persons.
             gap: 10px;
             margin-top: 14px;
         }
+        /* Stat cards — 2x2 grid showing completed, backlog, hours, streak.
+           Each card has a hover lift effect and border glow on hover */
         .stat-card {
             background: #151d24;
             border: 1px solid #2a3843;
@@ -193,6 +205,9 @@ plagiarized the work of other students and/or persons.
             background: #2a3843;
             margin: 20px 0;
         }
+        /* Staggered reveal animation — items fade in one by one.
+           nth-child delays above make each card appear with a slight offset.
+           Gives the page a polished feel without needing any JavaScript for it */
         .reveal-item {
             opacity: 0;
             transform: translateY(14px);
@@ -218,6 +233,8 @@ plagiarized the work of other students and/or persons.
             from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Mobile responsive — stack the 2-column grid into 1 column.
+           Centers the profile header and actions on mobile */
         @media (max-width: 991px) {
             .profile-grid {
                 grid-template-columns: 1fr;
@@ -244,6 +261,7 @@ plagiarized the work of other students and/or persons.
 </head>
 <body>
 
+    <!-- Navbar — "Profile" is active on this page -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
             <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
@@ -252,7 +270,7 @@ plagiarized the work of other students and/or persons.
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
                     <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
                     <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
@@ -265,6 +283,8 @@ plagiarized the work of other students and/or persons.
 
     <div class="container my-5">
         <div class="row justify-content-center">
+            <!-- Profile shell — contains the cover gradient, avatar, stats, and info sections.
+                 Wrapped in a single card-like container -->
             <div class="col-lg-10">
                 <div class="profile-shell">
                     <div class="profile-cover"></div>
@@ -292,7 +312,10 @@ plagiarized the work of other students and/or persons.
                         </div>
 
                         <div class="profile-grid mt-3">
+                            <!-- Left column: stat cards + about + highlights -->
                             <div>
+                                <!-- Stat grid — 4 stat cards in a 2x2 layout.
+                                     Numbers are placeholder/hardcoded for now -->
                                 <div class="stat-grid">
                                     <div class="stat-card reveal-item">
                                         <div class="text-muted small">Completed</div>
@@ -316,6 +339,7 @@ plagiarized the work of other students and/or persons.
                                     </div>
                                 </div>
 
+                                <!-- About + Highlights sections stacked below stats -->
                                 <div class="section-grid">
                                     <div class="section-card reveal-item">
                                         <div class="section-title mb-2">About</div>
@@ -346,6 +370,8 @@ plagiarized the work of other students and/or persons.
                                     </div>
                                 </div>
                             </div>
+                            <!-- Right column: recent activity feed.
+                                 Shows last 3 activities -->
                             <div>
                                 <div class="section-card reveal-item">
                                     <div class="section-title mb-3">Recent Activity</div>
@@ -383,6 +409,8 @@ plagiarized the work of other students and/or persons.
     
     <script>
         // Edit flow moved to profile-edit.html
+        // Originally had the edit form in a modal here but it was getting messy
+        // so it was split into its own page (profile-edit.html)
     </script>
 </body>
 </html>
