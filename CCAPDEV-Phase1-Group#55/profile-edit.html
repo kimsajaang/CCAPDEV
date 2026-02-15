@@ -61,10 +61,20 @@ plagiarized the work of other students and/or persons.
             border: 1px solid #2a3843;
             color: #ffffff;
         }
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
             border-color: #5383e8;
+            color: #ffffff;
+            background-color: #10171d;
         }
+        .form-control,
+		.form-control:focus,
+		.form-control:active {
+			color: #ffffff !important;
+		}
+		.form-select {
+			color: #ffffff !important;
+		}
         .btn-primary {
             background-color: #5383e8 !important;
             border-color: #5383e8 !important;

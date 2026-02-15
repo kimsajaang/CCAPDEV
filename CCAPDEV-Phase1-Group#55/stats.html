@@ -85,6 +85,8 @@ plagiarized the work of other students and/or persons.
     .form-control:focus, .form-select:focus {
       border-color: #5383e8;
       box-shadow: 0 0 0 0.2rem rgba(83, 131, 232, 0.25);
+      color: #ffffff;
+      background-color: #141b21;
     }
     .badge.bg-info {
       background-color: #2dd4bf !important;
@@ -93,6 +95,65 @@ plagiarized the work of other students and/or persons.
     .comment-panel {
       background-color: #141b21;
       border-color: #2a3843;
+      border-radius: 12px;
+    }
+    .comment-item {
+      background: #10171d;
+      border: 1px solid #1e2a34;
+      border-radius: 10px;
+      padding: 12px 14px;
+      transition: border-color 0.2s ease;
+    }
+    .comment-item:hover {
+      border-color: rgba(83, 131, 232, 0.4);
+    }
+    .comment-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .comment-author {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .comment-time {
+      font-size: 0.72rem;
+      color: #6f7d8a;
+    }
+    .comment-text {
+      font-size: 0.9rem;
+      color: #c8d1db;
+      line-height: 1.5;
+    }
+    .comment-input-wrap {
+      background: #10171d;
+      border: 1px solid #2a3843;
+      border-radius: 10px;
+      padding: 10px 12px;
+      transition: border-color 0.2s ease;
+    }
+    .comment-input-wrap:focus-within {
+      border-color: #5383e8;
+    }
+    .comment-input-wrap input {
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0;
+      font-size: 0.88rem;
+      color: #ffffff !important;
+    }
+    .comment-input-wrap .btn {
+      border-radius: 8px;
+      font-size: 0.8rem;
+      padding: 4px 14px;
     }
     /* Modal dark theme fix — bootstrap modals default to white so we override everything here */
     .modal-content {
@@ -177,31 +238,40 @@ plagiarized the work of other students and/or persons.
         </div>
       </div>
 
-      <!-- Sidebar — quick rules + demo data controls.
-           Sticky on desktop, scrolls on mobile -->
+      <!-- Sidebar — community info, active members, stats -->
       <div class="col-lg-4">
         <div class="card shadow-sm mb-4">
           <div class="card-body">
-            <div class="fw-semibold mb-2">Quick Rules</div>
+            <div class="fw-semibold mb-2">🛡️ Community Guidelines</div>
             <ul class="small text-muted mb-0">
               <li>Keep posts about games and backlogs.</li>
-              <li>No personal info.</li>
-              <li>Be respectful.</li>
+              <li>Be respectful and constructive.</li>
+              <li>No spam or self-promotion.</li>
+              <li>Tag your posts with the right flair.</li>
+              <li>Have fun and help each other clear backlogs!</li>
             </ul>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <div class="fw-semibold mb-3">👥 Active Members</div>
+            <div class="d-grid gap-2">
+              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#5383e8;width:28px;height:28px;font-size:0.6rem;">KJ</div><span class="small"><strong>Kane_Joshua</strong></span><span class="badge bg-success" style="font-size:0.6rem;">Online</span></div>
+              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#2dd4bf;color:#0d1217;width:28px;height:28px;font-size:0.6rem;">JI</div><span class="small"><strong>Justin_Ice</strong></span><span class="badge bg-success" style="font-size:0.6rem;">Online</span></div>
+              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#e85383;width:28px;height:28px;font-size:0.6rem;">SC</div><span class="small"><strong>Seanne_C</strong></span><span class="text-muted" style="font-size:0.65rem;">2h ago</span></div>
+              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#febc2e;color:#0d1217;width:28px;height:28px;font-size:0.6rem;">MR</div><span class="small"><strong>MarcusRPG</strong></span><span class="text-muted" style="font-size:0.65rem;">5h ago</span></div>
+              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#a78bfa;width:28px;height:28px;font-size:0.6rem;">NO</div><span class="small"><strong>NightOwlAria</strong></span><span class="text-muted" style="font-size:0.65rem;">1d ago</span></div>
+            </div>
           </div>
         </div>
 
         <div class="card shadow-sm">
           <div class="card-body">
-            <div class="fw-semibold mb-2">Demo Data</div>
-            <div class="small text-muted mb-3">
-              This page saves posts and comments in your browser (localStorage).
-              If you clear site data, posts reset.
-            </div>
-            <div class="d-flex gap-2">
-              <button id="seedBtn" class="btn btn-outline-secondary btn-sm">Add sample posts</button>
-              <button id="clearBtn" class="btn btn-outline-danger btn-sm">Clear all</button>
-            </div>
+            <div class="fw-semibold mb-2">📊 Community Stats</div>
+            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Posts</span><strong class="text-white">10</strong></div>
+            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Comments</span><strong class="text-white">24</strong></div>
+            <div class="d-flex justify-content-between small text-muted"><span>Active Members</span><strong class="text-white">5</strong></div>
           </div>
         </div>
       </div>
@@ -387,7 +457,10 @@ plagiarized the work of other students and/or persons.
               <div class="d-flex align-items-center gap-2 flex-wrap">
                 ${flairBadge}
                 ${gameTag}
-                <span class="text-muted small">Posted ${fmtTime(post.createdAt)}</span>
+                <span class="text-muted small d-flex align-items-center gap-1">
+                  <span class="comment-avatar" style="background:${getAuthorColor(post.author)};color:${['#febc2e'].includes(getAuthorColor(post.author)) ? '#0d1217' : '#fff'};width:22px;height:22px;font-size:0.55rem;">${getInitials(post.author)}</span>
+                  <strong class="text-white">${escapeHtml(post.author || 'Anonymous')}</strong> · ${fmtTime(post.createdAt)}
+                </span>
               </div>
 
               <h5 class="mt-2 mb-1">${escapeHtml(post.title)}</h5>
@@ -399,21 +472,18 @@ plagiarized the work of other students and/or persons.
                   Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${(post.comments||[]).length}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
-                <button class="btn btn-outline-danger btn-sm ms-auto" data-act="delete">Delete</button>
               </div>
 
               <div class="mt-3 d-none" data-comments>
-                <div class="border rounded p-3 comment-panel">
-                  <div class="mb-3">
-                    <label class="form-label small mb-1">Add a comment</label>
-                    <div class="input-group">
-                      <input class="form-control" maxlength="300" placeholder="Write a comment..."/>
-                      <button class="btn btn-primary" data-act="addComment">Post</button>
-                    </div>
+                <div class="comment-panel p-3">
+                  <div class="comment-input-wrap d-flex align-items-center gap-2 mb-3">
+                    <div class="comment-avatar" style="background:#5383e8;">KJ</div>
+                    <input class="form-control flex-grow-1" maxlength="300" placeholder="Write a comment..."/>
+                    <button class="btn btn-primary" data-act="addComment">Post</button>
                   </div>
 
                   <div class="d-grid gap-2" data-commentlist></div>
-                  <div class="text-muted small mt-2" data-nocomments style="display:none;">No comments yet.</div>
+                  <div class="text-muted small mt-2 text-center" data-nocomments style="display:none;">No comments yet. Be the first to reply.</div>
                 </div>
               </div>
 
@@ -425,7 +495,6 @@ plagiarized the work of other students and/or persons.
       wrapper.querySelector('[data-act="up"]').addEventListener("click", () => vote(post.id, +1));
       wrapper.querySelector('[data-act="down"]').addEventListener("click", () => vote(post.id, -1));
       wrapper.querySelector('[data-act="toggleComments"]').addEventListener("click", () => toggleComments(wrapper));
-      wrapper.querySelector('[data-act="delete"]').addEventListener("click", () => deletePost(post.id));
       wrapper.querySelector('[data-act="share"]').addEventListener("click", () => copyLink(post.id));
 
       const addBtn = wrapper.querySelector('[data-act="addComment"]');
@@ -455,22 +524,42 @@ plagiarized the work of other students and/or persons.
       return wrapper;
     }
 
+    // Author-to-color map for consistent avatar colors across the page
+    const authorColors = {
+      "Kane_Joshua": "#5383e8",
+      "Justin_Ice": "#2dd4bf",
+      "Seanne_C": "#e85383",
+      "MarcusRPG": "#febc2e",
+      "NightOwlAria": "#a78bfa"
+    };
+
+    function getInitials(name) {
+      if (!name) return "??";
+      return name.split(/[_\s]+/).map(w => w[0]).join("").toUpperCase().slice(0, 2);
+    }
+
+    function getAuthorColor(name) {
+      return authorColors[name] || "#5383e8";
+    }
+
     function commentRow(postId, comment) {
       const row = document.createElement("div");
-      row.className = "border rounded p-2";
+      row.className = "comment-item";
+      const initials = getInitials(comment.author);
+      const color = getAuthorColor(comment.author);
+      const textColor = ["#febc2e"].includes(color) ? "#0d1217" : "#fff";
       row.innerHTML = `
-        <div class="d-flex align-items-start justify-content-between gap-2">
+        <div class="d-flex gap-2">
+          <div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>
           <div class="flex-grow-1">
-            <div class="small text-muted mb-1">${fmtTime(comment.createdAt)}</div>
-            <div>${escapeHtml(comment.text).replace(/\n/g, "<br/>")}</div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="comment-author" style="color:${color};">${escapeHtml(comment.author || 'Anonymous')}</span>
+              <span class="comment-time">${fmtTime(comment.createdAt)}</span>
+            </div>
+            <div class="comment-text">${escapeHtml(comment.text).replace(/\n/g, "<br/>")}</div>
           </div>
-          <button class="btn btn-sm btn-outline-danger" title="Delete comment">✕</button>
         </div>
       `;
-
-      row.querySelector("button").addEventListener("click", () => {
-        deleteComment(postId, comment.id);
-      });
 
       return row;
     }
@@ -500,26 +589,8 @@ plagiarized the work of other students and/or persons.
       const p = posts.find(x => x.id === postId);
       if (!p) return;
 
-      p.comments.push({ id: crypto.randomUUID(), text, createdAt: nowIso() });
+      p.comments.push({ id: crypto.randomUUID(), text, author: "Kane_Joshua", createdAt: nowIso() });
       savePosts(posts);
-    }
-
-    function deleteComment(postId, commentId) {
-      const posts = ensureIds(loadPosts());
-      const p = posts.find(x => x.id === postId);
-      if (!p) return;
-
-      p.comments = (p.comments || []).filter(c => c.id !== commentId);
-      savePosts(posts);
-      render();
-      openCommentsForHash();
-    }
-
-    function deletePost(postId) {
-      const posts = ensureIds(loadPosts());
-      const next = posts.filter(p => p.id !== postId);
-      savePosts(next);
-      render();
     }
 
     function copyLink(postId) {
@@ -567,6 +638,7 @@ plagiarized the work of other students and/or persons.
         body,
         flair,
         game,
+        author: "Kane_Joshua",
         up: 0,
         down: 0,
         comments: [],
@@ -595,59 +667,145 @@ plagiarized the work of other students and/or persons.
       window.__bhSearchT = setTimeout(render, 150);
     });
 
-    // --- Seed data: pre-made sample posts for demo purposes ---
-    // Only adds samples if the feed is empty so it doesn't duplicate
-    document.getElementById("seedBtn").addEventListener("click", () => {
+    // --- Auto-seed: pre-made sample posts seeded on first visit ---
+    function seedDefaultPosts() {
       const posts = ensureIds(loadPosts());
       if (posts.length > 0) return;
+
+      const h = (hrs) => new Date(Date.now() - 1000 * 60 * 60 * hrs).toISOString();
 
       const sample = [
         {
           id: crypto.randomUUID(),
           title: "What do you play when you only have 30 minutes?",
-          body: "I want fast sessions before sleep. What games work for you?",
-          flair: "Discussion",
-          game: "",
-          up: 12,
-          down: 1,
+          body: "I've been super busy with school lately and can only squeeze in short sessions before bed. What games do you guys play when you only have like half an hour? I need something I can pick up and put down easily.",
+          flair: "Discussion", game: "", author: "Kane_Joshua",
+          up: 18, down: 1,
           comments: [
-            { id: crypto.randomUUID(), text: "Balatro. One run feels clean and quick.", createdAt: nowIso() },
-            { id: crypto.randomUUID(), text: "Hades. Short runs, easy to stop.", createdAt: nowIso() }
+            { id: crypto.randomUUID(), author: "Justin_Ice", text: "Balatro all the way. One run is like 20 minutes and it scratches that strategy itch perfectly.", createdAt: h(5.5) },
+            { id: crypto.randomUUID(), author: "NightOwlAria", text: "Hades is my go-to. Each escape attempt is short and if you die you just restart. The story progresses either way.", createdAt: h(5) },
+            { id: crypto.randomUUID(), author: "MarcusRPG", text: "Slay the Spire. Turn-based so you can pause anytime, and runs are quick.", createdAt: h(4) }
           ],
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString()
+          createdAt: h(6)
         },
         {
           id: crypto.randomUUID(),
           title: "Backlog tip: keep a 'small wins' list",
-          body: "I track games I can finish in 5 to 10 hours. I clear one each week and my backlog feels lighter.",
-          flair: "Progress",
-          game: "",
-          up: 19,
-          down: 0,
-          comments: [],
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString()
+          body: "Started tracking games I can finish in 5-10 hours separately from my main backlog. I clear one every week or two and it genuinely makes the whole thing feel more manageable. Highly recommend this approach if you're feeling overwhelmed.",
+          flair: "Progress", game: "", author: "Seanne_C",
+          up: 24, down: 0,
+          comments: [
+            { id: crypto.randomUUID(), author: "Kane_Joshua", text: "This is actually genius. I've been staring at my 200+ game library feeling paralyzed. Going to try this tonight.", createdAt: h(24) },
+            { id: crypto.randomUUID(), author: "NightOwlAria", text: "I do something similar! I have a 'weekend games' playlist for shorter titles. Makes a huge difference mentally.", createdAt: h(22) }
+          ],
+          createdAt: h(26)
         },
         {
           id: crypto.randomUUID(),
-          title: "Need a cozy game after exams",
-          body: "Looking for something low stress. Farming or life sim is fine.",
-          flair: "Help",
-          game: "Stardew Valley",
-          up: 7,
-          down: 0,
-          comments: [{ id: crypto.randomUUID(), text: "Stardew is perfect. Also try Spiritfarer.", createdAt: nowIso() }],
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+          title: "Need a cozy game recommendation after finals",
+          body: "Just survived finals week and I'm completely burnt out. Looking for something low stress, maybe farming sim or life sim vibes. Already played Animal Crossing to death so need something different.",
+          flair: "Help", game: "Stardew Valley", author: "Justin_Ice",
+          up: 11, down: 0,
+          comments: [
+            { id: crypto.randomUUID(), author: "Seanne_C", text: "Stardew Valley is the obvious answer but also try Spiritfarer. It's beautiful and the story is so heartfelt.", createdAt: h(1.5) },
+            { id: crypto.randomUUID(), author: "MarcusRPG", text: "Unpacking! Super chill puzzle game about moving into new homes. Zero stress, very satisfying.", createdAt: h(1) }
+          ],
+          createdAt: h(2)
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Finally finished Red Dead Redemption 2 after 3 years",
+          body: "Started this game back in 2022 and kept putting it down and picking it back up. Finally saw the credits roll last night and I'm genuinely emotional. Arthur Morgan's story is one of the best in gaming. If it's sitting in your backlog, please push through Chapter 3 — it gets SO much better.",
+          flair: "Progress", game: "Red Dead Redemption 2", author: "MarcusRPG",
+          up: 31, down: 2,
+          comments: [
+            { id: crypto.randomUUID(), author: "Kane_Joshua", text: "Chapter 6 wrecked me emotionally. Congrats on finishing it, that's a massive game to complete.", createdAt: h(10) },
+            { id: crypto.randomUUID(), author: "Justin_Ice", text: "This is sitting in my backlog too honestly. You're making me want to boot it up again.", createdAt: h(9) },
+            { id: crypto.randomUUID(), author: "NightOwlAria", text: "The epilogue is worth playing through too! Don't skip it.", createdAt: h(8) }
+          ],
+          createdAt: h(12)
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Is Elden Ring worth it for someone bad at Souls games?",
+          body: "I bounced off Dark Souls 3 pretty hard but everyone keeps saying Elden Ring is different. Is the open world aspect enough to make it accessible for someone who isn't great at these types of games? Don't want to waste ₱3,000 if I'm just going to rage quit.",
+          flair: "Discussion", game: "Elden Ring", author: "NightOwlAria",
+          up: 15, down: 1,
+          comments: [
+            { id: crypto.randomUUID(), author: "MarcusRPG", text: "YES. The open world changes everything. If a boss is too hard, just go explore somewhere else and come back when you're stronger. It's way more forgiving than DS3.", createdAt: h(35) },
+            { id: crypto.randomUUID(), author: "Seanne_C", text: "I was in the exact same boat. 85 hours in now and loving it. Spirit ashes basically give you an AI companion for tough fights.", createdAt: h(33) },
+            { id: crypto.randomUUID(), author: "Kane_Joshua", text: "Also co-op makes boss fights way easier if you summon help. The community is super helpful.", createdAt: h(30) }
+          ],
+          createdAt: h(38)
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Black Myth Wukong — first impressions after 10 hours",
+          body: "Finally got around to playing this and WOW the combat is so satisfying. The visuals are insane, every chapter feels like a different world. Boss designs are creative and challenging without being unfair. If you're on the fence, just get it.",
+          flair: "Discussion", game: "Black Myth Wukong", author: "Kane_Joshua",
+          up: 22, down: 0,
+          comments: [
+            { id: crypto.randomUUID(), author: "Justin_Ice", text: "The Wandering Wight boss literally made me put my controller down and take a walk lmao. But yeah it's an incredible game.", createdAt: h(47) },
+            { id: crypto.randomUUID(), author: "MarcusRPG", text: "Chapter 3 is where it really picks up. The Yellow Loong fight is one of the best boss fights I've ever played.", createdAt: h(45) }
+          ],
+          createdAt: h(48)
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "How do you decide what to play next from your backlog?",
+          body: "I have like 150 unplayed games across Steam, PS5, and Switch. Every time I sit down to play I just scroll for 20 minutes then watch YouTube instead. How do you guys actually pick what to play next?",
+          flair: "Discussion", game: "", author: "Seanne_C",
+          up: 20, down: 0,
+          comments: [
+            { id: crypto.randomUUID(), author: "NightOwlAria", text: "I use a random wheel spinner honestly. Takes the decision paralysis out of it completely.", createdAt: h(70) },
+            { id: crypto.randomUUID(), author: "Kane_Joshua", text: "I pick based on mood. Action mood = something fast. Chill mood = RPG or sim. Having categories helps.", createdAt: h(68) }
+          ],
+          createdAt: h(72)
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Valorant players — is it worth getting back into?",
+          body: "Stopped playing Valorant around Episode 5 because the ranked grind was burning me out. Has anything changed to make it more casual-friendly? Or is it still sweaty 24/7?",
+          flair: "Discussion", game: "Valorant", author: "Justin_Ice",
+          up: 9, down: 2,
+          comments: [
+            { id: crypto.randomUUID(), author: "Kane_Joshua", text: "Still sweaty in ranked tbh but they added more casual modes. Swift Play is pretty fun for quick games.", createdAt: h(90) },
+            { id: crypto.randomUUID(), author: "Seanne_C", text: "I only play unrated now and it's actually fun again. Just don't touch competitive if you want to stay sane.", createdAt: h(88) }
+          ],
+          createdAt: h(96)
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Just discovered Hollow Knight and I'm obsessed",
+          body: "Picked this up on sale for like ₱300 and I cannot stop playing. The atmosphere, the music, the exploration — everything is so polished. I'm about 15 hours in and apparently I've barely scratched the surface. Why did nobody tell me about this game sooner?",
+          flair: "Recommendation", game: "Hollow Knight", author: "NightOwlAria",
+          up: 17, down: 0,
+          comments: [
+            { id: crypto.randomUUID(), author: "MarcusRPG", text: "Wait until you get to the Mantis Lords fight. One of the most satisfying boss battles in any game ever.", createdAt: h(120) },
+            { id: crypto.randomUUID(), author: "Justin_Ice", text: "Silksong when 😭 Been waiting for years at this point", createdAt: h(118) }
+          ],
+          createdAt: h(130)
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Unpopular opinion: it's okay to never finish a game",
+          body: "We put so much pressure on ourselves to 'complete' every game but honestly, if you got 10 enjoyable hours out of a game and then lost interest, that's fine. You got your money's worth. Not every game needs to be finished to be worthwhile. Stop guilting yourselves into playing games you're not enjoying anymore.",
+          flair: "Discussion", game: "", author: "MarcusRPG",
+          up: 28, down: 3,
+          comments: [
+            { id: crypto.randomUUID(), author: "Seanne_C", text: "NEEDED to hear this. I've been forcing myself through games I stopped enjoying just to 'clear the backlog'. What's even the point then?", createdAt: h(150) },
+            { id: crypto.randomUUID(), author: "NightOwlAria", text: "Hard agree. Gaming is supposed to be fun, not a chore. Life's too short to play games you don't enjoy.", createdAt: h(148) },
+            { id: crypto.randomUUID(), author: "Kane_Joshua", text: "Counterpoint: some games have slow starts but amazing endings. RDR2 is a great example. But yeah generally I agree.", createdAt: h(145) }
+          ],
+          createdAt: h(160)
         }
       ];
 
       savePosts(sample);
       render();
-    });
+    }
 
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      savePosts([]);
-      render();
-    });
+    seedDefaultPosts();
 
     // Deep-link handler — if URL has #post-<id>, scroll to that post and open its comments.
     // Used by the "Copy Link" share feature
