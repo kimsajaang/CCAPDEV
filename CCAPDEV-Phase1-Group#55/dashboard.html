@@ -296,6 +296,44 @@ plagiarized the work of other students and/or persons.
         .user-post-item {
           border-left: 4px solid #5383e8 !important;
         }
+        /* Photo upload styles */
+        .photo-upload-area {
+          border: 2px dashed #2a3843;
+          border-radius: 12px;
+          padding: 20px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          background: rgba(83, 131, 232, 0.05);
+        }
+        .photo-upload-area:hover {
+          border-color: #5383e8;
+          background: rgba(83, 131, 232, 0.1);
+        }
+        .photo-upload-area.has-photo {
+          border: 1px solid #2a3843;
+          padding: 8px;
+          background: transparent;
+        }
+        .photo-preview-img {
+          max-width: 100%;
+          max-height: 300px;
+          border-radius: 8px;
+          object-fit: cover;
+          margin-bottom: 10px;
+        }
+        .photo-remove-btn {
+          font-size: 0.8rem;
+          padding: 4px 8px;
+        }
+        .feed-photo {
+          width: 100%;
+          max-height: 400px;
+          border-radius: 8px;
+          object-fit: cover;
+          margin: 10px 0;
+          border: 1px solid #2a3843;
+        }
     </style>
 </head>
 <body class="loading">
@@ -376,7 +414,8 @@ plagiarized the work of other students and/or persons.
                         <h5 class="card-title"><i class="bi bi-magic me-2"></i>What's the Plan?</h5>
                         <p class="text-muted small">Enter available time for a backlog suggestion.</p>
                         <div class="input-group mb-3">
-                            <input id="planMinutes" type="number" min="1" class="form-control bg-dark text-white border-secondary" placeholder="Minutes">
+                            <input id="planHours" type="number" min="0" class="form-control bg-dark text-white border-secondary" placeholder="Hours">
+                            <input id="planMinutes" type="number" min="0" max="59" class="form-control bg-dark text-white border-secondary" placeholder="Minutes">
                             <button id="planSuggestBtn" class="btn btn-primary" type="button">Suggest</button>
                         </div>
                         <div id="planResult" class="suggest-result p-3 rounded bg-dark border border-secondary">
@@ -432,16 +471,18 @@ plagiarized the work of other students and/or persons.
                             <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
                             <strong class="text-primary">Kane_Joshua</strong> 
                             <span class="text-muted ms-2 small">logged a session</span>
+                            <span class="text-muted ms-auto extra-small">Feb 15, 11:24 PM</span>
                         </div>
                         <div class="d-flex align-items-start gap-3 mb-2">
-                            <img src="blackmyth.jpg" class="feed-cover" alt="Black Myth: Wukong cover">
-                            <h6 class="mb-1">Black Myth: Wukong</h6>
+                            <img src="reddead.jpg" class="feed-cover" alt="Red Dead Redemption 2 cover">
+                            <h6 class="mb-1">Red Dead Redemption 2</h6>
                         </div>
-                        <p class="mb-1 text-white-50 small">"Finally beat the Macaque Chief! Took 5 tries."</p>
-                        <div class="d-flex gap-3 text-muted extra-small">
-                            <span><i class="bi bi-controller"></i> 3h Active</span>
-                            <span><i class="bi bi-cup-hot"></i> 1.5h AFK (Dinner)</span>
-                            <span class="text-info">Chapter 3</span>
+                        <p class="mb-2 text-white-50 small">"Just survived an unarmed encounter with some bandits. The witness mechanic is wild - gotta be careful who sees me out here in the frontier!"</p>
+                        <img src="gamelaypic.png" class="feed-photo" alt="Session screenshot" style="max-height: 400px;">
+                        <div class="d-flex gap-3 text-muted extra-small mt-2">
+                            <span><i class="bi bi-controller"></i> 2h Active</span>
+                            <span><i class="bi bi-cup-hot"></i> 0.5h AFK</span>
+                            <span class="text-info">Chapter 2</span>
                         </div>
                     </div>
 
@@ -546,6 +587,15 @@ plagiarized the work of other students and/or persons.
               <label class="form-label small">Comment</label>
               <textarea id="updateComment" class="form-control" rows="3" maxlength="300" placeholder="What happened in your session?"></textarea>
             </div>
+            <div class="mb-3">
+              <label class="form-label small">Add Photo (Optional)</label>
+              <div id="photoUploadArea" class="photo-upload-area">
+                <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
+                <p class="mb-0 mt-2 small">Click to upload a screenshot</p>
+                <input type="file" id="photoInput" accept="image/*" style="display: none;">
+              </div>
+              <div id="photoPreviewContainer" style="display: none;"></div>
+            </div>
             <div id="updateError" class="small text-danger" style="display:none;"></div>
           </div>
           <div class="modal-footer">
@@ -603,27 +653,32 @@ plagiarized the work of other students and/or persons.
         const planInput = document.getElementById("planMinutes");
         const planBtn = document.getElementById("planSuggestBtn");
         const planResult = document.getElementById("planResult");
+        const planHours = document.getElementById("planHours");
 
         planBtn.addEventListener("click", suggestGame);
         planInput.addEventListener("keydown", (e) => { if (e.key === "Enter") suggestGame(); });
+        planHours.addEventListener("keydown", (e) => { if (e.key === "Enter") suggestGame(); });
 
         function suggestGame() {
-          const mins = parseInt(planInput.value);
-          if (!mins || mins < 1) {
-            planResult.innerHTML = `<p class="mb-0 small text-warning">Please enter a valid number of minutes.</p>`;
+          const hours = parseInt(planHours.value) || 0;
+          const mins = parseInt(planInput.value) || 0;
+          const totalMins = (hours * 60) + mins;
+          
+          if (totalMins < 1) {
+            planResult.innerHTML = `<p class="mb-0 small text-warning">Please enter at least 1 minute of available time.</p>`;
             return;
           }
 
           // Filter games that fit within the available time
-          const fits = backlogGames.filter(g => g.minSession <= mins);
+          const fits = backlogGames.filter(g => g.minSession <= totalMins);
           if (fits.length === 0) {
-            planResult.innerHTML = `<p class="mb-0 small text-warning">No games fit in ${mins} minutes. Try at least 10 minutes!</p>`;
+            planResult.innerHTML = `<p class="mb-0 small text-warning">No games fit in ${hours}h ${mins}m. Try at least 10 minutes!</p>`;
             return;
           }
 
           // Pick random from fitting games, weighted toward those closest to the time
           const pick = fits[Math.floor(Math.random() * fits.length)];
-          const sessions = Math.max(1, Math.floor(mins / pick.avgSession));
+          const sessions = Math.max(1, Math.floor(totalMins / pick.avgSession));
           const imgTag = pick.img
             ? `<img src="${pick.img}" style="width:42px;height:56px;border-radius:6px;object-fit:cover;border:1px solid #2a3843;" alt="${pick.name}">`
             : `<div style="width:42px;height:56px;border-radius:6px;background:#2a3843;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#6f7d8a;"><i class="bi bi-controller"></i></div>`;
@@ -665,6 +720,42 @@ plagiarized the work of other students and/or persons.
         const updateType = document.getElementById("updateType");
         const ratingGroup = document.getElementById("ratingGroup");
 
+        // Photo upload handling
+        let selectedPhoto = null;
+        const photoUploadArea = document.getElementById("photoUploadArea");
+        const photoInput = document.getElementById("photoInput");
+        const photoPreviewContainer = document.getElementById("photoPreviewContainer");
+
+        photoUploadArea.addEventListener("click", () => photoInput.click());
+        photoInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+              alert("Photo must be less than 5MB");
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              selectedPhoto = event.target.result;
+              photoUploadArea.classList.add("has-photo");
+              photoUploadArea.innerHTML = `<img src="${selectedPhoto}" class="photo-preview-img" alt="Preview">`;
+              const removeBtn = document.createElement("button");
+              removeBtn.type = "button";
+              removeBtn.className = "btn btn-sm btn-outline-danger photo-remove-btn";
+              removeBtn.textContent = "Remove Photo";
+              removeBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                selectedPhoto = null;
+                photoInput.value = "";
+                photoUploadArea.classList.remove("has-photo");
+                photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
+              });
+              photoUploadArea.appendChild(removeBtn);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
         // Show/hide rating when type changes
         updateType.addEventListener("change", () => {
           ratingGroup.style.display = updateType.value === "review" ? "block" : "none";
@@ -704,6 +795,12 @@ plagiarized the work of other students and/or persons.
           newItem.style.opacity = "0";
           newItem.style.transform = "translateY(-10px)";
           newItem.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+          
+          let photoHTML = "";
+          if (selectedPhoto) {
+            photoHTML = `<img src="${selectedPhoto}" class="feed-photo" alt="Session screenshot">`;
+          }
+          
           newItem.innerHTML = `
             <div class="d-flex align-items-center mb-2">
               <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
@@ -718,7 +815,8 @@ plagiarized the work of other students and/or persons.
                 ${extraHTML}
               </div>
             </div>
-            <p class="mb-0 small text-white-50">"${comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</p>
+            <p class="mb-2 small text-white-50">"${comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</p>
+            ${photoHTML}
           `;
 
           const feedList = document.querySelector(".list-group");
@@ -738,6 +836,12 @@ plagiarized the work of other students and/or persons.
           document.getElementById("updateComment").value = "";
           updateType.value = "session";
           ratingGroup.style.display = "none";
+          
+          // Reset photo
+          selectedPhoto = null;
+          photoInput.value = "";
+          photoUploadArea.classList.remove("has-photo");
+          photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
         });
     </script>
     <!-- Floating CTA button — always visible in bottom-right corner

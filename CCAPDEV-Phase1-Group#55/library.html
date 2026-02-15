@@ -224,9 +224,43 @@ plagiarized the work of other students and/or persons.
        Key: bh_library_v1
     ====================================================================== */
     const STORAGE_KEY = 'bh_library_v1';
+    const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
     const grid = document.getElementById('libraryGrid');
     let currentFilter = 'all';
     let addRating = 0;
+
+    /* Achievement checking */
+    function loadAchievements() {
+        const stored = localStorage.getItem(ACHIEVEMENTS_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+    }
+
+    function saveAchievements(achievements) {
+        localStorage.setItem(ACHIEVEMENTS_STORAGE_KEY, JSON.stringify(achievements));
+    }
+
+    function checkAchievements() {
+        const games = loadLibrary();
+        const unlockedAchievements = loadAchievements();
+        
+        const conditions = [
+            { id: 'first_game', condition: games.length >= 1 },
+            { id: 'collector', condition: games.length >= 10 },
+            { id: 'hoarder', condition: games.length >= 25 },
+            { id: 'completionist_badge', condition: games.filter(g => g.status === 'completed').length >= 5 },
+            { id: 'platinum', condition: games.filter(g => g.status === 'completed').length >= 10 },
+            { id: 'backlog_master', condition: games.filter(g => g.status === 'backlog').length >= 20 },
+            { id: 'multitasker', condition: games.filter(g => g.status === 'playing').length >= 5 },
+        ];
+
+        conditions.forEach(ach => {
+            if (!unlockedAchievements.some(a => a.id === ach.id) && ach.condition) {
+                unlockedAchievements.push({ id: ach.id, unlockedAt: new Date().toISOString() });
+            }
+        });
+
+        saveAchievements(unlockedAchievements);
+    }
 
     /* ---------- default seed data ---------- */
     const defaultGames = [
@@ -359,6 +393,7 @@ plagiarized the work of other students and/or persons.
         if (newStatus !== 'completed') game.rating = 0;
 
         saveLibrary(games);
+        checkAchievements();
         showToast(`${game.name} moved to ${statusLabel[newStatus]}`, 'bg-primary');
         render();
     }
@@ -383,6 +418,7 @@ plagiarized the work of other students and/or persons.
         const name = game ? game.name : 'Game';
         games = games.filter(g => g.id !== pendingRemoveId);
         saveLibrary(games);
+        checkAchievements();
         pendingRemoveId = null;
         removeModal().hide();
         showToast(`${name} removed`, 'bg-danger');
@@ -441,6 +477,7 @@ plagiarized the work of other students and/or persons.
         };
         games.unshift(newGame);
         saveLibrary(games);
+        checkAchievements();
 
         bootstrap.Modal.getInstance(document.getElementById('addGameModal')).hide();
         showToast(`${name} added to ${statusLabel[newGame.status]}!`, 'bg-success');
@@ -454,6 +491,7 @@ plagiarized the work of other students and/or persons.
 
     /* ---------- init ---------- */
     render();
+    checkAchievements();
 
     /* ---------- page-exit transitions ---------- */
     document.addEventListener('click', e => {
