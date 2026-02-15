@@ -30,7 +30,7 @@ plagiarized the work of other students and/or persons.
         .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
         .navbar-nav .nav-link {
             color: #9e9e9e !important;
-            transition: color 0.2s ease;
+            transition: color 0.2s ease, transform 0.2s ease;
             padding: 0.5rem 1rem !important;
             font-size: 0.75rem;
             font-weight: 700;
@@ -38,10 +38,17 @@ plagiarized the work of other students and/or persons.
         }
         .navbar-nav .nav-link:hover {
             color: #ffffff !important;
+            transform: translateY(-3px);
         }
         .navbar-nav .nav-link.active {
             color: #5383e8 !important;
         }
+        @keyframes pageSlideIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body { animation: pageSlideIn 0.5s ease both; }
+        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
         /* Game result cards — same hover lift as library page for consistency */
         .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s; }
         .card-title { color: #dbe7ff; font-weight: 600; }
@@ -141,7 +148,7 @@ plagiarized the work of other students and/or persons.
                     <div class="card-body">
                         <h6 class="card-title">Black Myth: Wukong</h6>
                         <p class="card-text small text-muted">Action RPG • 2024</p>
-                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                        <button class="btn btn-sm btn-outline-primary w-100 add-lib-btn" data-name="Black Myth: Wukong" data-genre="Action RPG" data-year="2024" data-cover="blackmyth.jpg">+ Add to Library</button>
                     </div>
                 </div>
             </div>
@@ -152,7 +159,7 @@ plagiarized the work of other students and/or persons.
                     <div class="card-body">
                         <h6 class="card-title">Red Dead Redemption 2</h6>
                         <p class="card-text small text-muted">Open World • 2018</p>
-                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                        <button class="btn btn-sm btn-outline-primary w-100 add-lib-btn" data-name="Red Dead Redemption 2" data-genre="Open World" data-year="2018" data-cover="reddead.jpg">+ Add to Library</button>
                     </div>
                 </div>
             </div>
@@ -163,7 +170,7 @@ plagiarized the work of other students and/or persons.
                     <div class="card-body">
                         <h6 class="card-title">Far Cry 5</h6>
                         <p class="card-text small text-muted">Action • 2018</p>
-                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                        <button class="btn btn-sm btn-outline-primary w-100 add-lib-btn" data-name="Far Cry 5" data-genre="Action" data-year="2018" data-cover="farcrt.jpg">+ Add to Library</button>
                     </div>
                 </div>
             </div>
@@ -174,7 +181,7 @@ plagiarized the work of other students and/or persons.
                     <div class="card-body">
                         <h6 class="card-title">Valorant</h6>
                         <p class="card-text small text-muted">Tactical Shooter • 2020</p>
-                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                        <button class="btn btn-sm btn-outline-primary w-100 add-lib-btn" data-name="Valorant" data-genre="Tactical Shooter" data-year="2020" data-cover="valorant.jpg">+ Add to Library</button>
                     </div>
                 </div>
             </div>
@@ -185,13 +192,20 @@ plagiarized the work of other students and/or persons.
                     <div class="card-body">
                         <h6 class="card-title">League of Legends</h6>
                         <p class="card-text small text-muted">MOBA • 2009</p>
-                        <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                        <button class="btn btn-sm btn-outline-primary w-100 add-lib-btn" data-name="League of Legends" data-genre="MOBA" data-year="2009" data-cover="leagueoflegends.jpg">+ Add to Library</button>
                     </div>
                 </div>
             </div>
 
         </div>
     </main>
+
+    <!-- Toast -->
+    <div style="position:fixed;bottom:20px;right:20px;z-index:1080">
+        <div class="toast align-items-center border-0" id="searchToast" role="alert">
+            <div class="d-flex"><div class="toast-body" id="searchToastMsg"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -274,7 +288,11 @@ plagiarized the work of other students and/or persons.
                   <div class="card-body">
                     <h6 class="card-title">${game.name}</h6>
                     <p class="card-text small text-muted">${genres} • ${year} ${rating ? '• ' + rating : ''}</p>
-                    <button class="btn btn-sm btn-outline-primary w-100">+ Add to Library</button>
+                    <button class="btn btn-sm btn-outline-primary w-100 add-lib-btn"
+                            data-name="${game.name}"
+                            data-genre="${genres}"
+                            data-year="${year}"
+                            data-cover="${coverUrl}">+ Add to Library</button>
                   </div>
                 </div>
               </div>
@@ -300,6 +318,58 @@ plagiarized the work of other students and/or persons.
       // Search on Enter key
       searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') searchGames(searchInput.value);
+      });
+
+      /* ---- Add to Library integration (shared localStorage key with library.html) ---- */
+      const LIB_KEY = 'bh_library_v1';
+      function getLibrary() {
+        try { return JSON.parse(localStorage.getItem(LIB_KEY)) || []; } catch { return []; }
+      }
+      function saveLibrary(games) { localStorage.setItem(LIB_KEY, JSON.stringify(games)); }
+
+      function searchToast(msg, bg) {
+        const el = document.getElementById('searchToast');
+        el.className = 'toast align-items-center border-0 text-white ' + bg;
+        document.getElementById('searchToastMsg').textContent = msg;
+        bootstrap.Toast.getOrCreateInstance(el, { delay: 2500 }).show();
+      }
+
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.add-lib-btn');
+        if (!btn) return;
+        const name = btn.dataset.name;
+        const games = getLibrary();
+        if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+          searchToast(`"${name}" is already in your library!`, 'bg-warning');
+          return;
+        }
+        games.unshift({
+          id: 'search_' + Date.now(),
+          name: name,
+          genre: btn.dataset.genre || '',
+          year: parseInt(btn.dataset.year) || 0,
+          status: 'backlog',
+          cover: btn.dataset.cover || '',
+          rating: 0,
+          addedAt: Date.now()
+        });
+        saveLibrary(games);
+        btn.textContent = '✓ Added';
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success', 'disabled');
+        searchToast(`${name} added to Backlog!`, 'bg-success');
+      });
+
+      // Page exit transition
+      document.querySelectorAll('a[href]').forEach(a => {
+        if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            const dest = a.href;
+            document.body.classList.add('page-exit');
+            setTimeout(() => window.location = dest, 300);
+          });
+        }
       });
     </script>
 </body>

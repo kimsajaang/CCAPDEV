@@ -45,7 +45,7 @@ plagiarized the work of other students and/or persons.
 		}
 		.navbar-nav .nav-link {
 			color: #9e9e9e !important;
-			transition: color 0.2s ease;
+			transition: color 0.2s ease, transform 0.2s ease;
 			padding: 0.5rem 1rem !important;
 			font-size: 0.75rem;
 			font-weight: 700;
@@ -53,10 +53,17 @@ plagiarized the work of other students and/or persons.
 		}
 		.navbar-nav .nav-link:hover {
 			color: #ffffff !important;
+			transform: translateY(-3px);
 		}
 		.navbar-nav .nav-link.active {
 			color: #5383e8 !important;
 		}
+		@keyframes pageSlideIn {
+			from { opacity: 0; transform: translateY(18px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+		body { animation: pageSlideIn 0.5s ease both; }
+		body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
 		.auth-wrapper {
 			min-height: calc(100vh - 72px);
 			display: flex;
@@ -127,9 +134,11 @@ plagiarized the work of other students and/or persons.
 			border: 1px solid #50d6b4;
 			color: #9ee8d8;
 		}
-		.provider-btn img {
+		.provider-btn img,
+		.provider-btn svg {
 			width: 24px;
 			height: 24px;
+			flex-shrink: 0;
 		}
 		.provider-btn span {
 			flex: 1;
@@ -199,18 +208,17 @@ plagiarized the work of other students and/or persons.
 							</div>
 							<div class="d-grid mb-3">
 								<button type="submit" class="btn btn-primary py-2">Log In</button>
-							</div>							<!-- SSO provider buttons — Steam and Google only for now.
-							     Logos are in assets/logos/ folder -->							<div class="d-grid mb-3">
+							</div>							<!-- SSO provider buttons — Steam and Google -->
+							<div class="d-grid mb-3">
 								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2">
-									<img src="assets/logos/steam-logo.png" alt="Steam logo">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 259" fill="none"><path d="M127.779 0C60.42 0 5.24 52.412 0 119.014l68.724 28.674a35.872 35.872 0 0 1 20.426-6.366l30.64-44.74v-.627c0-26.903 21.69-48.795 48.345-48.795 26.655 0 48.345 21.892 48.345 48.795 0 26.903-21.69 48.795-48.345 48.795h-1.13l-43.68 31.413c0 .418-.04.837-.04 1.255 0 20.178-16.268 36.59-36.263 36.59-17.702 0-32.434-12.738-35.558-29.57L4.93 162.96C22.612 217.266 70.946 258.107 128.736 258.107c70.96 0 128.488-57.93 128.488-129.382C257.224 57.321 199.696 0 128.736 0z" fill="#ffffff"/><path d="M81.218 191.398l-15.612-6.508c5.558 11.56 17.295 19.583 30.908 19.583 18.825 0 34.106-15.422 34.106-34.422 0-18.998-15.281-34.421-34.106-34.421-6.507 0-12.573 1.88-17.736 5.056l16.14 6.729c12.28 5.118 18.109 19.14 13.026 31.323-5.082 12.182-19.002 17.977-31.282 12.86z" fill="#ffffff" opacity="0.8"/><path d="M200.186 144.755c0-17.895-14.432-32.463-32.233-32.463-17.8 0-32.233 14.568-32.233 32.463 0 17.894 14.432 32.463 32.233 32.463 17.8 0 32.233-14.569 32.233-32.463zm-56.085.07c0-13.268 10.666-24.034 23.852-24.034 13.186 0 23.852 10.766 23.852 24.034 0 13.267-10.666 24.032-23.852 24.032-13.186 0-23.852-10.765-23.852-24.032z" fill="#ffffff" opacity="0.8"/></svg>
 									<span>Continue with Steam</span>
 								</button>
 								<button type="button" class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center gap-2 mt-2">
-									<img src="assets/logos/google.svg" alt="Google logo">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
 									<span>Continue with Google</span>
 								</button>
 							</div>
-							<p class="text-center text-muted small mb-0">Steam icons created by <a class="link-accent" href="https://www.flaticon.com/free-icons/steam" title="steam icons">Freepik - Flaticon</a>.</p>
 						</form>
 
 						<p class="text-center text-muted mb-0">New to Backlog Hero? <a class="link-accent" href="register.html">Create an account</a></p>
@@ -234,5 +242,17 @@ plagiarized the work of other students and/or persons.
 		}
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		document.querySelectorAll('a[href]').forEach(a => {
+			if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+				a.addEventListener('click', e => {
+					e.preventDefault();
+					const dest = a.href;
+					document.body.classList.add('page-exit');
+					setTimeout(() => window.location = dest, 300);
+				});
+			}
+		});
+	</script>
 </body>
 </html>
