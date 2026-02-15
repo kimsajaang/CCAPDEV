@@ -98,6 +98,44 @@ plagiarized the work of other students and/or persons.
     .badge.bg-info {
       background-color: #2dd4bf !important;
     }
+    /* Photo upload styles for community posts */
+    .community-photo-upload-area {
+      border: 2px dashed #2a3843;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(83, 131, 232, 0.05);
+    }
+    .community-photo-upload-area:hover {
+      border-color: #5383e8;
+      background: rgba(83, 131, 232, 0.1);
+    }
+    .community-photo-upload-area.has-photo {
+      border: 1px solid #2a3843;
+      padding: 8px;
+      background: transparent;
+    }
+    .community-photo-preview-img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+    .community-photo-remove-btn {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+    }
+    .community-post-photo {
+      width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin: 12px 0;
+      border: 1px solid #2a3843;
+    }
     /* Comment section panel — slightly darker than cards so it looks nested */
     .comment-panel {
       background-color: #141b21;
@@ -325,6 +363,16 @@ plagiarized the work of other students and/or persons.
               <input id="postGame" class="form-control" maxlength="80" placeholder="Example: Hades, Balatro, Stardew Valley"/>
             </div>
           </div>
+
+          <div class="mb-3">
+            <label class="form-label">Add Photo (Optional)</label>
+            <div id="communityPhotoUploadArea" class="community-photo-upload-area">
+              <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
+              <p class="mb-0 mt-2 small">Click to upload a screenshot or photo</p>
+              <input type="file" id="communityPhotoInput" accept="image/*" style="display: none;">
+            </div>
+            <div id="communityPhotoPreviewContainer" style="display: none;"></div>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -450,6 +498,7 @@ plagiarized the work of other students and/or persons.
 
       const flairBadge = `<span class="badge bg-secondary">${escapeHtml(post.flair || "Discussion")}</span>`;
       const gameTag = post.game ? `<span class="badge bg-info text-dark ms-2">${escapeHtml(post.game)}</span>` : "";
+      const photoHtml = post.photo ? `<img src="${post.photo}" class="community-post-photo" alt="Post photo">` : "";
 
       wrapper.innerHTML = `
         <div class="card-body">
@@ -473,6 +522,8 @@ plagiarized the work of other students and/or persons.
               <h5 class="mt-2 mb-1">${escapeHtml(post.title)}</h5>
 
               ${post.body ? `<div class="text-muted">${escapeHtml(post.body).replace(/\n/g, "<br/>")}</div>` : ""}
+
+              ${photoHtml}
 
               <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
                 <button class="btn btn-outline-primary btn-sm" data-act="toggleComments">
@@ -624,6 +675,44 @@ plagiarized the work of other students and/or persons.
     const newPostModalEl = document.getElementById("newPostModal");
     const newPostModal = bootstrap.Modal.getOrCreateInstance(newPostModalEl);
 
+    // Photo upload handling for community posts
+    let communitySelectedPhoto = null;
+    const communityPhotoUploadArea = document.getElementById("communityPhotoUploadArea");
+    const communityPhotoInput = document.getElementById("communityPhotoInput");
+    const communityPhotoPreviewContainer = document.getElementById("communityPhotoPreviewContainer");
+
+    communityPhotoUploadArea.addEventListener("click", () => communityPhotoInput.click());
+    communityPhotoInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          postError.style.display = "block";
+          postError.textContent = "Photo must be less than 5MB";
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          communitySelectedPhoto = event.target.result;
+          communityPhotoUploadArea.classList.add("has-photo");
+          communityPhotoUploadArea.innerHTML = `<img src="${communitySelectedPhoto}" class="community-photo-preview-img" alt="Preview">`;
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn";
+          removeBtn.textContent = "Remove Photo";
+          removeBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            communitySelectedPhoto = null;
+            communityPhotoInput.value = "";
+            communityPhotoUploadArea.classList.remove("has-photo");
+            communityPhotoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot or photo</p>`;
+          });
+          communityPhotoUploadArea.appendChild(removeBtn);
+          postError.style.display = "none";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
     createPostBtn.addEventListener("click", () => {
       const title = postTitle.value.trim();
       const body = postBody.value.trim();
@@ -645,6 +734,7 @@ plagiarized the work of other students and/or persons.
         body,
         flair,
         game,
+        photo: communitySelectedPhoto,
         author: "Kane_Joshua",
         up: 0,
         down: 0,
@@ -660,6 +750,12 @@ plagiarized the work of other students and/or persons.
       postFlair.value = "Discussion";
       postError.style.display = "none";
       postError.textContent = "";
+
+      // Reset photo
+      communitySelectedPhoto = null;
+      communityPhotoInput.value = "";
+      communityPhotoUploadArea.classList.remove("has-photo");
+      communityPhotoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot or photo</p>`;
 
       newPostModal.hide();
 
@@ -677,9 +773,13 @@ plagiarized the work of other students and/or persons.
     // --- Auto-seed: pre-made sample posts seeded on first visit ---
     function seedDefaultPosts() {
       const posts = ensureIds(loadPosts());
-      if (posts.length > 0) return;
-
-      const h = (hrs) => new Date(Date.now() - 1000 * 60 * 60 * hrs).toISOString();
+      
+      // Check if Phasmophobia post already exists
+      const hasPhasmophobia = posts.some(p => p.title && p.title.includes("Phasmophobia"));
+      
+      // If no posts at all, seed everything
+      if (posts.length === 0) {
+        const h = (hrs) => new Date(Date.now() - 1000 * 60 * 60 * hrs).toISOString();
 
       const sample = [
         {
@@ -687,6 +787,7 @@ plagiarized the work of other students and/or persons.
           title: "What do you play when you only have 30 minutes?",
           body: "I've been super busy with school lately and can only squeeze in short sessions before bed. What games do you guys play when you only have like half an hour? I need something I can pick up and put down easily.",
           flair: "Discussion", game: "", author: "Kane_Joshua",
+          photo: null,
           up: 18, down: 1,
           comments: [
             { id: crypto.randomUUID(), author: "Justin_Ice", text: "Balatro all the way. One run is like 20 minutes and it scratches that strategy itch perfectly.", createdAt: h(5.5) },
@@ -700,6 +801,7 @@ plagiarized the work of other students and/or persons.
           title: "Backlog tip: keep a 'small wins' list",
           body: "Started tracking games I can finish in 5-10 hours separately from my main backlog. I clear one every week or two and it genuinely makes the whole thing feel more manageable. Highly recommend this approach if you're feeling overwhelmed.",
           flair: "Progress", game: "", author: "Seanne_C",
+          photo: null,
           up: 24, down: 0,
           comments: [
             { id: crypto.randomUUID(), author: "Kane_Joshua", text: "This is actually genius. I've been staring at my 200+ game library feeling paralyzed. Going to try this tonight.", createdAt: h(24) },
@@ -712,6 +814,7 @@ plagiarized the work of other students and/or persons.
           title: "Need a cozy game recommendation after finals",
           body: "Just survived finals week and I'm completely burnt out. Looking for something low stress, maybe farming sim or life sim vibes. Already played Animal Crossing to death so need something different.",
           flair: "Help", game: "Stardew Valley", author: "Justin_Ice",
+          photo: null,
           up: 11, down: 0,
           comments: [
             { id: crypto.randomUUID(), author: "Seanne_C", text: "Stardew Valley is the obvious answer but also try Spiritfarer. It's beautiful and the story is so heartfelt.", createdAt: h(1.5) },
@@ -724,6 +827,7 @@ plagiarized the work of other students and/or persons.
           title: "Finally finished Red Dead Redemption 2 after 3 years",
           body: "Started this game back in 2022 and kept putting it down and picking it back up. Finally saw the credits roll last night and I'm genuinely emotional. Arthur Morgan's story is one of the best in gaming. If it's sitting in your backlog, please push through Chapter 3 — it gets SO much better.",
           flair: "Progress", game: "Red Dead Redemption 2", author: "MarcusRPG",
+          photo: null,
           up: 31, down: 2,
           comments: [
             { id: crypto.randomUUID(), author: "Kane_Joshua", text: "Chapter 6 wrecked me emotionally. Congrats on finishing it, that's a massive game to complete.", createdAt: h(10) },
@@ -737,6 +841,7 @@ plagiarized the work of other students and/or persons.
           title: "Is Elden Ring worth it for someone bad at Souls games?",
           body: "I bounced off Dark Souls 3 pretty hard but everyone keeps saying Elden Ring is different. Is the open world aspect enough to make it accessible for someone who isn't great at these types of games? Don't want to waste ₱3,000 if I'm just going to rage quit.",
           flair: "Discussion", game: "Elden Ring", author: "NightOwlAria",
+          photo: null,
           up: 15, down: 1,
           comments: [
             { id: crypto.randomUUID(), author: "MarcusRPG", text: "YES. The open world changes everything. If a boss is too hard, just go explore somewhere else and come back when you're stronger. It's way more forgiving than DS3.", createdAt: h(35) },
@@ -750,6 +855,7 @@ plagiarized the work of other students and/or persons.
           title: "Black Myth Wukong — first impressions after 10 hours",
           body: "Finally got around to playing this and WOW the combat is so satisfying. The visuals are insane, every chapter feels like a different world. Boss designs are creative and challenging without being unfair. If you're on the fence, just get it.",
           flair: "Discussion", game: "Black Myth Wukong", author: "Kane_Joshua",
+          photo: null,
           up: 22, down: 0,
           comments: [
             { id: crypto.randomUUID(), author: "Justin_Ice", text: "The Wandering Wight boss literally made me put my controller down and take a walk lmao. But yeah it's an incredible game.", createdAt: h(47) },
@@ -762,6 +868,7 @@ plagiarized the work of other students and/or persons.
           title: "How do you decide what to play next from your backlog?",
           body: "I have like 150 unplayed games across Steam, PS5, and Switch. Every time I sit down to play I just scroll for 20 minutes then watch YouTube instead. How do you guys actually pick what to play next?",
           flair: "Discussion", game: "", author: "Seanne_C",
+          photo: null,
           up: 20, down: 0,
           comments: [
             { id: crypto.randomUUID(), author: "NightOwlAria", text: "I use a random wheel spinner honestly. Takes the decision paralysis out of it completely.", createdAt: h(70) },
@@ -774,6 +881,7 @@ plagiarized the work of other students and/or persons.
           title: "Valorant players — is it worth getting back into?",
           body: "Stopped playing Valorant around Episode 5 because the ranked grind was burning me out. Has anything changed to make it more casual-friendly? Or is it still sweaty 24/7?",
           flair: "Discussion", game: "Valorant", author: "Justin_Ice",
+          photo: null,
           up: 9, down: 2,
           comments: [
             { id: crypto.randomUUID(), author: "Kane_Joshua", text: "Still sweaty in ranked tbh but they added more casual modes. Swift Play is pretty fun for quick games.", createdAt: h(90) },
@@ -808,8 +916,28 @@ plagiarized the work of other students and/or persons.
         }
       ];
 
-      savePosts(sample);
-      render();
+        savePosts(sample);
+        render();
+      } else if (!hasPhasmophobia) {
+        // Add Phasmophobia post to existing posts
+        const h = (hrs) => new Date(Date.now() - 1000 * 60 * 60 * hrs).toISOString();
+        posts.push({
+          id: crypto.randomUUID(),
+          title: "Phasmophobia — Just uploaded a video on all 10 ghost types!",
+          body: "Finally finished editing my video guide on Phasmophobia! It covers all 10 different ghost types, how to identify them, and what equipment works best against each one. If you're new to the game or stuck on certain hunts, definitely check it out on YouTube. Link in my profile! The ghost mechanics in this game are so detailed and rewarding once you learn them.",
+          flair: "Recommendation", game: "Phasmophobia", author: "Justin_Ice",
+          photo: "321.jpg",
+          up: 14, down: 0,
+          comments: [
+            { id: crypto.randomUUID(), author: "Kane_Joshua", text: "Dude I'm totally watching this. Phasmophobia has been sitting in my library and I keep dying because I don't know what ghosts are what.", createdAt: h(40) },
+            { id: crypto.randomUUID(), author: "Seanne_C", text: "Links to your channel? This looks really helpful. Love seeing detailed guides like this.", createdAt: h(38) },
+            { id: crypto.randomUUID(), author: "MarcusRPG", text: "The cinematography on that thumbnail is insane btw. Really draws you in. Good stuff!", createdAt: h(35) }
+          ],
+          createdAt: h(50)
+        });
+        savePosts(posts);
+        render();
+      }
     }
 
     seedDefaultPosts();
