@@ -8,10 +8,10 @@ plagiarized the work of other students and/or persons.
 <Your Full Name> - <ID Number> - <Section>
     <Ibanez, Kane Joshua> - <1234654> - <S13>
     <David, Justin Ice> - <12411574> - <S13>
+          <Fortea, Seanne Clarence - <12410969> -<S22>
 ****************************************************************************** -->
 <!-- library.html — User's personal game collection page.
-     Shows all games with status badges (Playing, Backlog, Completed). -->
-
+     Fully interactive: add games, change status, filter by tab, localStorage persistence. -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -20,7 +20,7 @@ plagiarized the work of other students and/or persons.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Library | Backlog Hero</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Dark theme overrides — same color palette as all other pages (#0f1519 base, #1c252e cards) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         html { overflow-y: scroll; }
         body { background-color: #0f1519; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
@@ -28,41 +28,91 @@ plagiarized the work of other students and/or persons.
         .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
         .navbar-nav .nav-link {
             color: #9e9e9e !important;
-            transition: color 0.2s ease;
+            transition: color 0.2s ease, transform 0.2s ease;
             padding: 0.5rem 1rem !important;
             font-size: 0.75rem;
             font-weight: 700;
             letter-spacing: 0.06em;
         }
-        .navbar-nav .nav-link:hover {
-            color: #ffffff !important;
-        }
-        .navbar-nav .nav-link.active {
-            color: #5383e8 !important;
-        }
-        /* Game cards — dark bg with subtle border, hover effect lifts card up */
+        .navbar-nav .nav-link:hover { color: #ffffff !important; transform: translateY(-3px); }
+        .navbar-nav .nav-link.active { color: #5383e8 !important; }
+
+        @keyframes pageSlideIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        body { animation: pageSlideIn 0.5s ease both; }
+        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+
+        /* Cards */
         .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s, border-color 0.2s; }
         .card-title { color: #dbe7ff; font-weight: 600; }
         .card:hover { transform: translateY(-5px); border-color: #5383e8; }
-        /* Fixed height for game cover images so all cards align evenly */
         .game-cover { height: 280px; object-fit: cover; border-bottom: 1px solid #2a3843; }
-        .status-badge { position: absolute; top: 10px; right: 10px; }
-        /* Tab pills for filtering — All Games / Backlog / Playing / Completed
-           These don't actually filter yet, just visual for now */
+        .cover-placeholder { height: 280px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1c252e, #0f1519); border-bottom: 1px solid #2a3843; }
+        .cover-placeholder i { font-size: 3rem; color: #2a3843; }
+        .status-badge { position: absolute; top: 10px; right: 10px; z-index: 2; }
+
+        /* Remove button */
+        .remove-btn { position: absolute; top: 10px; left: 10px; z-index: 2; width: 28px; height: 28px; border-radius: 50%; background: rgba(220,53,69,0.85); border: none; color: #fff; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; }
+        .card:hover .remove-btn { opacity: 1; }
+        .remove-btn:hover { background: #dc3545; }
+
+        /* Tabs */
         .nav-pills .nav-link { color: #9e9e9e; transition: all 0.2s ease; }
         .nav-pills .nav-link:hover { color: #ffffff; }
         .nav-pills .nav-link.active { background-color: #5383e8; color: white; }
+        .tab-count { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 0 7px; font-size: 0.7rem; margin-left: 6px; }
+        .nav-pills .nav-link.active .tab-count { background: rgba(255,255,255,0.25); }
+
+        /* Buttons & forms */
         .btn-outline-primary { color: #5383e8; border-color: #5383e8; transition: all 0.2s ease; }
         .btn-outline-primary:hover { background-color: #5383e8; color: #ffffff; }
-        .text-muted {
-            color: #a8c0e0 !important; /* brighter, readable on dark bg */
+        .btn-primary { background-color: #5383e8; border-color: #5383e8; }
+        .btn-primary:hover { background-color: #4572d4; border-color: #4572d4; }
+        .text-muted { color: #a8c0e0 !important; }
+        .form-control, .form-select {
+            background-color: #141b21; border-color: #2a3843; color: #ffffff;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #5383e8; box-shadow: 0 0 0 0.2rem rgba(83,131,232,0.25);
+            color: #ffffff; background-color: #141b21;
         }
 
+        /* Status dropdown on card */
+        .status-select { background-color: #141b21; border-color: #2a3843; color: #9e9e9e; font-size: 0.78rem; padding: 4px 8px; cursor: pointer; }
+        .status-select:focus { border-color: #5383e8; box-shadow: 0 0 0 0.15rem rgba(83,131,232,0.25); color: #fff; background-color: #141b21; }
+
+        /* Rating stars */
+        .star-rating { display: inline-flex; gap: 2px; }
+        .star-rating i { cursor: pointer; font-size: 1rem; color: #2a3843; transition: color 0.15s; }
+        .star-rating i.active { color: #febc2e; }
+        .star-rating i:hover, .star-rating i:hover ~ i { color: #febc2e; }
+
+        /* Card animation */
+        @keyframes cardFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .game-card-anim { animation: cardFadeIn 0.4s ease both; }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 80px 20px; }
+        .empty-state i { font-size: 4rem; color: #2a3843; margin-bottom: 1rem; }
+        .empty-state h5 { color: #a8c0e0; }
+        .empty-state p { color: #6b7b8d; }
+
+        /* Toast */
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1080; }
+
+        /* Modal dark theme */
+        .modal-content { background-color: #1c252e; border: 1px solid #2a3843; color: #ffffff; }
+        .modal-header { border-bottom: 1px solid #2a3843; }
+        .modal-footer { border-top: 1px solid #2a3843; }
+        .btn-close { filter: invert(1); }
+
+        /* Add game button */
+        .add-game-btn { border: 2px dashed #2a3843; background: transparent; color: #5383e8; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        .add-game-btn:hover { border-color: #5383e8; background: rgba(83,131,232,0.05); }
+        .add-game-btn i { font-size: 2.5rem; }
     </style>
 </head>
 <body>
 
-    <!-- Navbar — identical to other pages, "My Library" is set as active here -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
             <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
@@ -83,90 +133,377 @@ plagiarized the work of other students and/or persons.
     </nav>
 
     <div class="container my-5">
-        <!-- Page header with collection title and filter tabs -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>My Collection</h2>
+        <!-- Header: title + filter tabs -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <h2 class="mb-0">My Collection</h2>
             <ul class="nav nav-pills" id="libraryTabs">
-                <li class="nav-item"><a class="nav-link active" href="#">All Games</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Backlog</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Playing</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Completed</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#" data-filter="all">All Games <span class="tab-count" id="count-all">0</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-filter="backlog">Backlog <span class="tab-count" id="count-backlog">0</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-filter="playing">Playing <span class="tab-count" id="count-playing">0</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-filter="completed">Completed <span class="tab-count" id="count-completed">0</span></a></li>
             </ul>
         </div>
 
-        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4">
-            
-            <!-- Game: Black Myth Wukong — currently playing, 45% progress -->
-            <div class="col">
-                <div class="card h-100 position-relative">
-                    <span class="badge bg-warning text-dark status-badge">Playing</span>
-                    <img src="blackmyth.jpg" class="card-img-top game-cover" alt="Black Myth Wukong">
-                    <div class="card-body">
-                        <h6 class="card-title">Black Myth: Wukong</h6>
-                        <p class="text-muted small mb-3">Action RPG • 2024</p>
-                        <p class="small text-info mb-0">Recently Played: 2 days ago</p>
+        <!-- Game grid — dynamically rendered -->
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4" id="libraryGrid"></div>
+    </div>
+
+    <!-- Add Game Modal -->
+    <div class="modal fade" id="addGameModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Game to Library</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Game Title *</label>
+                        <input type="text" class="form-control" id="addGameName" placeholder="e.g. Elden Ring" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Status *</label>
+                        <select class="form-select" id="addGameStatus">
+                            <option value="backlog">Backlog</option>
+                            <option value="playing">Playing</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-0" id="addRatingWrap" style="display:none;">
+                        <label class="form-label small text-muted">Rating</label>
+                        <div class="star-rating" id="addGameRating">
+                            <i class="bi bi-star-fill" data-val="1"></i>
+                            <i class="bi bi-star-fill" data-val="2"></i>
+                            <i class="bi bi-star-fill" data-val="3"></i>
+                            <i class="bi bi-star-fill" data-val="4"></i>
+                            <i class="bi bi-star-fill" data-val="5"></i>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Game: Red Dead Redemption 2 — in backlog, hasn't started yet -->
-            <div class="col">
-                <div class="card h-100 position-relative">
-                    <span class="badge bg-secondary status-badge">Backlog</span>
-                    <img src="reddead.jpg" class="card-img-top game-cover" alt="Red Dead Redemption 2">
-                    <div class="card-body">
-                        <h6 class="card-title">Red Dead Redemption 2</h6>
-                        <p class="text-muted small">Open World • 2018</p>
-                        <button class="btn btn-sm btn-outline-primary w-100">Move to Playing</button>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="addGameSave"><i class="bi bi-plus-lg me-1"></i>Add to Library</button>
                 </div>
             </div>
-
-            <!-- Game: Far Cry 5 — completed with 5 star rating -->
-            <div class="col">
-                <div class="card h-100 position-relative">
-                    <span class="badge bg-success status-badge">Completed</span>
-                    <img src="farcrt.jpg" class="card-img-top game-cover" alt="Far Cry 5">
-                    <div class="card-body">
-                        <h6 class="card-title">Far Cry 5</h6>
-                        <p class="text-muted small">Action • 2018</p>
-                        <p class="text-success small mb-0">Rating: ★★★★★</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Game: Valorant — ongoing ranked progress -->
-            <div class="col">
-                <div class="card h-100 position-relative">
-                    <span class="badge bg-warning text-dark status-badge">Playing</span>
-                    <img src="valorant.jpg" class="card-img-top game-cover" alt="Valorant">
-                    <div class="card-body">
-                        <h6 class="card-title">Valorant</h6>
-                        <p class="text-muted small">Tactical Shooter • 2020</p>
-                        <p class="small text-info mb-0">Recently Played: 3 days ago</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Game: League of Legends — backlog item
-                 LoL doesn't really have a "backlog" status but we included it 
-                 to show the button variant -->
-            <div class="col">
-                <div class="card h-100 position-relative">
-                    <span class="badge bg-secondary status-badge">Backlog</span>
-                    <img src="leagueoflegends.jpg" class="card-img-top game-cover" alt="League of Legends">
-                    <div class="card-body">
-                        <h6 class="card-title">League of Legends</h6>
-                        <p class="text-muted small">MOBA • 2009</p>
-                        <button class="btn btn-sm btn-outline-primary w-100">Update Status</button>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 
+    <!-- Confirm Remove Modal -->
+    <div class="modal fade" id="removeGameModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content text-center" style="border-color:#dc3545;">
+                <div class="modal-body pt-4 pb-2">
+                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(220,53,69,0.12);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                        <i class="bi bi-trash3" style="font-size:1.5rem;color:#dc3545;"></i>
+                    </div>
+                    <h6 class="mb-1">Remove Game</h6>
+                    <p class="text-muted small mb-0" id="removeGameText">Are you sure?</p>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pt-0 pb-4" style="gap:10px;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-danger px-4" id="confirmRemoveBtn"><i class="bi bi-trash3 me-1"></i>Remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast for notifications -->
+    <div class="toast-container">
+        <div class="toast align-items-center border-0" id="libToast" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="libToastMsg"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    /* ======================================================================
+       Library — localStorage-backed game collection with full CRUD
+       Key: bh_library_v1
+    ====================================================================== */
+    const STORAGE_KEY = 'bh_library_v1';
+    const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
+    const grid = document.getElementById('libraryGrid');
+    let currentFilter = 'all';
+    let addRating = 0;
+
+    /* Achievement checking */
+    function loadAchievements() {
+        const stored = localStorage.getItem(ACHIEVEMENTS_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+    }
+
+    function saveAchievements(achievements) {
+        localStorage.setItem(ACHIEVEMENTS_STORAGE_KEY, JSON.stringify(achievements));
+    }
+
+    function checkAchievements() {
+        const games = loadLibrary();
+        const unlockedAchievements = loadAchievements();
+        
+        const conditions = [
+            { id: 'first_game', condition: games.length >= 1 },
+            { id: 'collector', condition: games.length >= 10 },
+            { id: 'hoarder', condition: games.length >= 25 },
+            { id: 'completionist_badge', condition: games.filter(g => g.status === 'completed').length >= 5 },
+            { id: 'platinum', condition: games.filter(g => g.status === 'completed').length >= 10 },
+            { id: 'backlog_master', condition: games.filter(g => g.status === 'backlog').length >= 20 },
+            { id: 'multitasker', condition: games.filter(g => g.status === 'playing').length >= 5 },
+        ];
+
+        conditions.forEach(ach => {
+            if (!unlockedAchievements.some(a => a.id === ach.id) && ach.condition) {
+                unlockedAchievements.push({ id: ach.id, unlockedAt: new Date().toISOString() });
+            }
+        });
+
+        saveAchievements(unlockedAchievements);
+    }
+
+    /* ---------- default seed data ---------- */
+    const defaultGames = [
+        { id: 'seed_1', name: 'Black Myth: Wukong', genre: 'Action RPG', year: 2024, status: 'playing', cover: 'blackmyth.jpg', rating: 0, addedAt: Date.now() - 86400000 * 5 },
+        { id: 'seed_2', name: 'Red Dead Redemption 2', genre: 'Open World', year: 2018, status: 'backlog', cover: 'reddead.jpg', rating: 0, addedAt: Date.now() - 86400000 * 12 },
+        { id: 'seed_3', name: 'Far Cry 5', genre: 'Action', year: 2018, status: 'completed', cover: 'farcrt.jpg', rating: 5, addedAt: Date.now() - 86400000 * 30 },
+        { id: 'seed_4', name: 'Valorant', genre: 'Tactical Shooter', year: 2020, status: 'playing', cover: 'valorant.jpg', rating: 0, addedAt: Date.now() - 86400000 * 3 },
+        { id: 'seed_5', name: 'League of Legends', genre: 'MOBA', year: 2009, status: 'backlog', cover: 'leagueoflegends.jpg', rating: 0, addedAt: Date.now() - 86400000 * 7 },
+        { id: 'seed_6', name: 'Elden Ring', genre: 'Action RPG', year: 2022, status: 'completed', cover: '', rating: 5, addedAt: Date.now() - 86400000 * 60 },
+        { id: 'seed_7', name: 'Cyberpunk 2077', genre: 'RPG', year: 2020, status: 'completed', cover: '', rating: 4, addedAt: Date.now() - 86400000 * 45 },
+        { id: 'seed_8', name: 'Hollow Knight', genre: 'Metroidvania', year: 2017, status: 'backlog', cover: '', rating: 0, addedAt: Date.now() - 86400000 * 20 },
+    ];
+
+    /* ---------- localStorage helpers ---------- */
+    function loadLibrary() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) { saveLibrary(defaultGames); return defaultGames; }
+        try { return JSON.parse(raw); } catch { saveLibrary(defaultGames); return defaultGames; }
+    }
+    function saveLibrary(games) { localStorage.setItem(STORAGE_KEY, JSON.stringify(games)); }
+
+    /* ---------- toast ---------- */
+    function showToast(msg, bg = 'bg-success') {
+        const el = document.getElementById('libToast');
+        el.className = 'toast align-items-center border-0 text-white ' + bg;
+        document.getElementById('libToastMsg').textContent = msg;
+        bootstrap.Toast.getOrCreateInstance(el, { delay: 2500 }).show();
+    }
+
+    /* ---------- status helpers ---------- */
+    const statusLabel = { backlog: 'Backlog', playing: 'Playing', completed: 'Completed' };
+    const statusBg    = { backlog: 'bg-secondary', playing: 'bg-warning text-dark', completed: 'bg-success' };
+
+    function renderStars(rating) {
+        let s = '';
+        for (let i = 1; i <= 5; i++) s += `<i class="bi bi-star-fill ${i <= rating ? 'active' : ''}" style="color:${i <= rating ? '#febc2e' : '#2a3843'}; font-size:0.8rem;"></i>`;
+        return s;
+    }
+
+    /* ---------- render grid ---------- */
+    function render() {
+        const games = loadLibrary();
+        const filtered = currentFilter === 'all' ? games : games.filter(g => g.status === currentFilter);
+
+        // update tab counts
+        document.getElementById('count-all').textContent = games.length;
+        document.getElementById('count-backlog').textContent = games.filter(g => g.status === 'backlog').length;
+        document.getElementById('count-playing').textContent = games.filter(g => g.status === 'playing').length;
+        document.getElementById('count-completed').textContent = games.filter(g => g.status === 'completed').length;
+
+        // empty state
+        if (filtered.length === 0) {
+            const filterName = currentFilter === 'all' ? 'library' : statusLabel[currentFilter].toLowerCase() + ' list';
+            grid.innerHTML = `
+                <div class="col-12 empty-state">
+                    <i class="bi bi-controller d-block"></i>
+                    <h5>No games in your ${filterName}</h5>
+                    <p>Click the <strong>+ Add Game</strong> card or add games from the <a href="search.html" class="text-decoration-none" style="color:#5383e8">Search</a> page.</p>
+                </div>`;
+            // still add the "add game" card
+            grid.innerHTML += addGameCard();
+            return;
+        }
+
+        let html = '';
+        filtered.forEach((game, i) => {
+            const coverHtml = game.cover
+                ? `<img src="${game.cover}" class="card-img-top game-cover" alt="${game.name}" onerror="this.outerHTML='<div class=\\'cover-placeholder\\'><i class=\\'bi bi-controller\\'></i></div>'">`
+                : `<div class="cover-placeholder"><i class="bi bi-controller"></i></div>`;
+
+            html += `
+            <div class="col game-card-anim" style="animation-delay:${i * 0.06}s" data-id="${game.id}">
+                <div class="card h-100 position-relative">
+                    <button class="remove-btn" onclick="removeGame('${game.id}')" title="Remove from library">&times;</button>
+                    <span class="badge ${statusBg[game.status]} status-badge">${statusLabel[game.status]}</span>
+                    ${coverHtml}
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title mb-1">${game.name}</h6>
+                        <p class="text-muted small mb-2">${game.genre || 'Game'}${game.year ? ' • ' + game.year : ''}</p>
+                        ${game.status === 'completed' && game.rating ? `<div class="mb-2">${renderStars(game.rating)}</div>` : ''}
+                        <div class="mt-auto">
+                            <select class="form-select form-select-sm status-select" onchange="changeStatus('${game.id}', this.value)">
+                                <option value="backlog" ${game.status === 'backlog' ? 'selected' : ''}>Backlog</option>
+                                <option value="playing" ${game.status === 'playing' ? 'selected' : ''}>Playing</option>
+                                <option value="completed" ${game.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        // "Add Game" card at the end
+        html += addGameCard();
+        grid.innerHTML = html;
+    }
+
+    function addGameCard() {
+        return `
+        <div class="col game-card-anim" style="animation-delay:0s">
+            <div class="add-game-btn h-100" onclick="openAddModal()">
+                <i class="bi bi-plus-circle"></i>
+                <span class="fw-semibold">Add Game</span>
+            </div>
+        </div>`;
+    }
+
+    function openAddModal() {
+        document.getElementById('addGameName').value = '';
+        document.getElementById('addGameStatus').value = 'backlog';
+        addRating = 0;
+        updateAddStars();
+        addRatingWrap.style.display = 'none';
+        new bootstrap.Modal(document.getElementById('addGameModal')).show();
+    }
+
+    /* ---------- change status ---------- */
+    function changeStatus(id, newStatus) {
+        const games = loadLibrary();
+        const game = games.find(g => g.id === id);
+        if (!game) return;
+        const oldStatus = game.status;
+        game.status = newStatus;
+
+        // If changed to completed and no rating, prompt for one
+        if (newStatus === 'completed' && !game.rating) {
+            game.rating = 4; // default rating
+        }
+        // If moved from completed, clear rating
+        if (newStatus !== 'completed') game.rating = 0;
+
+        saveLibrary(games);
+        checkAchievements();
+        showToast(`${game.name} moved to ${statusLabel[newStatus]}`, 'bg-primary');
+        render();
+    }
+
+    /* ---------- remove game ---------- */
+    let pendingRemoveId = null;
+    const removeModal = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('removeGameModal'));
+
+    function removeGame(id) {
+        const games = loadLibrary();
+        const game = games.find(g => g.id === id);
+        if (!game) return;
+        pendingRemoveId = id;
+        document.getElementById('removeGameText').innerHTML = `<strong>${game.name}</strong> will be removed from your library.`;
+        removeModal().show();
+    }
+
+    document.getElementById('confirmRemoveBtn').addEventListener('click', () => {
+        if (!pendingRemoveId) return;
+        let games = loadLibrary();
+        const game = games.find(g => g.id === pendingRemoveId);
+        const name = game ? game.name : 'Game';
+        games = games.filter(g => g.id !== pendingRemoveId);
+        saveLibrary(games);
+        checkAchievements();
+        pendingRemoveId = null;
+        removeModal().hide();
+        showToast(`${name} removed`, 'bg-danger');
+        render();
+    });
+
+    /* ---------- tab filtering ---------- */
+    document.querySelectorAll('#libraryTabs .nav-link').forEach(tab => {
+        tab.addEventListener('click', e => {
+            e.preventDefault();
+            document.querySelectorAll('#libraryTabs .nav-link').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentFilter = tab.dataset.filter;
+            render();
+        });
+    });
+
+    /* ---------- add game modal ---------- */
+    const addStatusSel = document.getElementById('addGameStatus');
+    const addRatingWrap = document.getElementById('addRatingWrap');
+    addStatusSel.addEventListener('change', () => {
+        addRatingWrap.style.display = addStatusSel.value === 'completed' ? 'block' : 'none';
+    });
+
+    // Star rating in modal
+    function updateAddStars() {
+        document.querySelectorAll('#addGameRating i').forEach(star => {
+            star.classList.toggle('active', parseInt(star.dataset.val) <= addRating);
+        });
+    }
+    document.querySelectorAll('#addGameRating i').forEach(star => {
+        star.addEventListener('click', () => { addRating = parseInt(star.dataset.val); updateAddStars(); });
+    });
+
+    document.getElementById('addGameSave').addEventListener('click', () => {
+        const name = document.getElementById('addGameName').value.trim();
+        if (!name) { document.getElementById('addGameName').classList.add('is-invalid'); return; }
+        document.getElementById('addGameName').classList.remove('is-invalid');
+
+        const games = loadLibrary();
+        // Check for duplicates
+        if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+            showToast(`"${name}" is already in your library!`, 'bg-warning');
+            return;
+        }
+
+        const newGame = {
+            id: 'game_' + Date.now(),
+            name: name,
+            genre: '',
+            year: 0,
+            status: document.getElementById('addGameStatus').value,
+            cover: '',
+            rating: addStatusSel.value === 'completed' ? (addRating || 0) : 0,
+            addedAt: Date.now()
+        };
+        games.unshift(newGame);
+        saveLibrary(games);
+        checkAchievements();
+
+        bootstrap.Modal.getInstance(document.getElementById('addGameModal')).hide();
+        showToast(`${name} added to ${statusLabel[newGame.status]}!`, 'bg-success');
+        render();
+    });
+
+    // Allow Enter to submit modal
+    document.getElementById('addGameName').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('addGameSave').click();
+    });
+
+    /* ---------- init ---------- */
+    render();
+    checkAchievements();
+
+    /* ---------- page-exit transitions ---------- */
+    document.addEventListener('click', e => {
+        const a = e.target.closest('a[href]');
+        if (!a) return;
+        if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+            e.preventDefault();
+            const dest = a.href;
+            document.body.classList.add('page-exit');
+            setTimeout(() => window.location = dest, 300);
+        }
+    });
+    </script>
 </body>
 </html>
