@@ -126,22 +126,31 @@ plagiarized the work of other students and/or persons.
                     <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
                     <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
                     <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
     <div class="container my-5">
-        <!-- Header: title + filter tabs -->
+        <!-- Header: title + filter tabs + search -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h2 class="mb-0">My Collection</h2>
+            <div style="flex: 1; max-width: 250px;">
+                <input type="text" class="form-control form-control-sm" id="librarySearch" placeholder="Search your library..." style="background-color: #141b21; border-color: #2a3843; color: #ffffff;">
+            </div>
             <ul class="nav nav-pills" id="libraryTabs">
                 <li class="nav-item"><a class="nav-link active" href="#" data-filter="all">All Games <span class="tab-count" id="count-all">0</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-filter="backlog">Backlog <span class="tab-count" id="count-backlog">0</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-filter="playing">Playing <span class="tab-count" id="count-playing">0</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-filter="completed">Completed <span class="tab-count" id="count-completed">0</span></a></li>
             </ul>
+        </div>
+
+        <!-- Suggested games section (shown above library when searching) -->
+        <div id="suggestedSection" style="display: none; margin-bottom: 2rem;">
+            <h5 class="text-muted mb-3">Suggested for you</h5>
+            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4" id="suggestedGrid"></div>
         </div>
 
         <!-- Game grid — dynamically rendered -->
@@ -226,8 +235,13 @@ plagiarized the work of other students and/or persons.
     const STORAGE_KEY = 'bh_library_v1';
     const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
     const grid = document.getElementById('libraryGrid');
+    const searchInput = document.getElementById('librarySearch');
+    const suggestedSection = document.getElementById('suggestedSection');
+    const suggestedGrid = document.getElementById('suggestedGrid');
     let currentFilter = 'all';
+    let currentSearch = '';
     let addRating = 0;
+    let suggestSuggestions = [];
 
     /* Achievement checking */
     function loadAchievements() {
@@ -303,13 +317,70 @@ plagiarized the work of other students and/or persons.
     /* ---------- render grid ---------- */
     function render() {
         const games = loadLibrary();
-        const filtered = currentFilter === 'all' ? games : games.filter(g => g.status === currentFilter);
+        
+        // Filter by status
+        let filtered = currentFilter === 'all' ? games : games.filter(g => g.status === currentFilter);
+        
+        // Filter by search query
+        if (currentSearch.trim()) {
+            filtered = filtered.filter(g => 
+                g.name.toLowerCase().includes(currentSearch.toLowerCase()) || 
+                g.genre.toLowerCase().includes(currentSearch.toLowerCase())
+            );
+        }
 
         // update tab counts
         document.getElementById('count-all').textContent = games.length;
         document.getElementById('count-backlog').textContent = games.filter(g => g.status === 'backlog').length;
         document.getElementById('count-playing').textContent = games.filter(g => g.status === 'playing').length;
         document.getElementById('count-completed').textContent = games.filter(g => g.status === 'completed').length;
+
+        // Show suggested games section if searching
+        if (currentSearch.trim() && suggestSuggestions.length > 0) {
+            suggestedSection.style.display = 'block';
+            suggestedGrid.innerHTML = suggestSuggestions.slice(0, 5).map(game => {
+                const coverUrl = game.cover
+                    ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big')
+                    : 'https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover';
+
+                const year = game.first_release_date
+                    ? new Date(game.first_release_date * 1000).getFullYear()
+                    : 'TBA';
+
+                const genres = game.genres
+                    ? game.genres.map(g => g.name).slice(0, 1).join(' • ')
+                    : 'Game';
+
+                const games = loadLibrary();
+                const alreadyAdded = games.some(g => g.name.toLowerCase() === game.name.toLowerCase());
+                const gameId = `add-igdb-${game.id || game.name.replace(/\s+/g, '-')}`;
+
+                return `
+                  <div class="col">
+                    <div class="card h-100 shadow-sm" style="border-color: #5383e8; border-width: 2px;">
+                      <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
+                           onerror="this.src='https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover'">
+                      <div class="card-body">
+                        <h6 class="card-title">${game.name}</h6>
+                        <p class="card-text small text-muted">${genres} • ${year}</p>
+                        <button class="btn btn-sm ${alreadyAdded ? 'btn-success disabled' : 'btn-outline-primary'} w-100 add-igdb-btn"
+                                id="${gameId}"
+                                data-name="${game.name}"
+                                data-genre="${genres}"
+                                data-year="${year}"
+                                data-cover="${coverUrl}"
+                                data-game-id="${game.id}"
+                                ${alreadyAdded ? 'disabled' : ''}>
+                                ${alreadyAdded ? '✓ In Library' : '+ Add to Library'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+            }).join('');
+        } else {
+            suggestedSection.style.display = 'none';
+        }
 
         // empty state
         if (filtered.length === 0) {
@@ -338,7 +409,7 @@ plagiarized the work of other students and/or persons.
                     <span class="badge ${statusBg[game.status]} status-badge">${statusLabel[game.status]}</span>
                     ${coverHtml}
                     <div class="card-body d-flex flex-column">
-                        <h6 class="card-title mb-1">${game.name}</h6>
+                        <h6 class="card-title mb-1" style="cursor: pointer; color: #5383e8; transition: all 0.2s;" onclick="goToSearch('${game.name}')" onmouseover="this.style.textDecoration='underline'; this.style.opacity='0.8'" onmouseout="this.style.textDecoration='none'; this.style.opacity='1'">${game.name}</h6>
                         <p class="text-muted small mb-2">${game.genre || 'Game'}${game.year ? ' • ' + game.year : ''}</p>
                         ${game.status === 'completed' && game.rating ? `<div class="mb-2">${renderStars(game.rating)}</div>` : ''}
                         <div class="mt-auto">
@@ -361,7 +432,7 @@ plagiarized the work of other students and/or persons.
     function addGameCard() {
         return `
         <div class="col game-card-anim" style="animation-delay:0s">
-            <div class="add-game-btn h-100" onclick="openAddModal()">
+            <div class="add-game-btn h-100" onclick="window.location.href='search.html'">
                 <i class="bi bi-plus-circle"></i>
                 <span class="fw-semibold">Add Game</span>
             </div>
@@ -436,6 +507,46 @@ plagiarized the work of other students and/or persons.
         });
     });
 
+    /* ---------- library search ---------- */
+    let searchTimeout;
+    searchInput.addEventListener('input', async (e) => {
+        currentSearch = e.target.value;
+        
+        // Get IGDB suggestions if search has text
+        if (currentSearch.trim().length > 2) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch('/api/games/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: currentSearch.trim(), limit: 10 })
+                    });
+                    if (res.ok) {
+                        suggestSuggestions = await res.json();
+                    }
+                } catch (err) {
+                    console.error('IGDB suggestion fetch failed:', err);
+                }
+            }, 400);
+        } else {
+            suggestSuggestions = [];
+        }
+        
+        render();
+    });
+
+    // Clear search on focus (optional)
+    document.getElementById('librarySearch').addEventListener('focus', function() {
+        if (!this.value) render();
+    });
+
+    /* ---------- redirect to search with game name ---------- */
+    function goToSearch(gameName) {
+        localStorage.setItem('bh_search_query', gameName);
+        window.location.href = 'search.html';
+    }
+
     /* ---------- add game modal ---------- */
     const addStatusSel = document.getElementById('addGameStatus');
     const addRatingWrap = document.getElementById('addRatingWrap');
@@ -489,9 +600,70 @@ plagiarized the work of other students and/or persons.
         if (e.key === 'Enter') document.getElementById('addGameSave').click();
     });
 
+    /* ---------- add suggested games from IGDB ---------- */
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.add-igdb-btn');
+        if (!btn) return;
+        
+        const name = btn.dataset.name;
+        const games = loadLibrary();
+        
+        if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+            showToast(`"${name}" is already in your library!`, 'bg-warning');
+            return;
+        }
+        
+        const newGame = {
+            id: 'igdb_' + Date.now(),
+            name: name,
+            genre: btn.dataset.genre || '',
+            year: parseInt(btn.dataset.year) || 0,
+            status: 'backlog',
+            cover: btn.dataset.cover || '',
+            rating: 0,
+            addedAt: Date.now()
+        };
+        
+        games.unshift(newGame);
+        saveLibrary(games);
+        checkAchievements();
+        
+        // Update button state immediately in DOM and re-render
+        btn.textContent = '✓ In Library';
+        btn.classList.add('btn-success', 'disabled');
+        btn.classList.remove('btn-outline-primary');
+        btn.disabled = true;
+        
+        // Also update any other instances of this game button in suggested section
+        document.querySelectorAll(`.add-igdb-btn[data-name="${name}"]`).forEach(otherBtn => {
+            otherBtn.textContent = '✓ In Library';
+            otherBtn.classList.add('btn-success', 'disabled');
+            otherBtn.classList.remove('btn-outline-primary');
+            otherBtn.disabled = true;
+        });
+        
+        showToast(`${name} added to Backlog!`, 'bg-success');
+        render();
+    });
+
     /* ---------- init ---------- */
     render();
     checkAchievements();
+
+    // Logout function
+    async function logout(event) {
+        event.preventDefault();
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            window.location.href = 'login.html';
+        } catch (err) {
+            console.error('Logout failed:', err);
+            window.location.href = 'login.html';
+        }
+    }
 
     /* ---------- page-exit transitions ---------- */
     document.addEventListener('click', e => {

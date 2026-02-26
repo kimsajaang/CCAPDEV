@@ -181,18 +181,21 @@ plagiarized the work of other students and/or persons.
 								<span class="badge badge-accent rounded-pill px-3 py-2">Free</span>
 						</div>
 
-						<!-- Registration form — 2-column grid layout for the fields.
-						     Display name + email on top row, password + confirm below,
-						     then platform + region. Keeps it compact without scrolling too much -->
-						<form>
+						<!-- Registration form — connects to backend API.
+						     2-column grid layout for better UX -->
+						<form id="registerForm">
+							<div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+							<div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+
 							<div class="row g-3">
 								<div class="col-md-6">
-									<label class="form-label">Display Name</label>
-									<input type="text" class="form-control" placeholder="Artemis" required>
+									<label class="form-label">Username</label>
+									<input type="text" class="form-control" id="username" placeholder="gaminglead" required>
+									<small class="text-muted">3+ characters, letters/numbers only</small>
 								</div>
 								<div class="col-md-6">
 									<label class="form-label">Email</label>
-									<input type="email" class="form-control" placeholder="you@example.com" required>
+									<input type="email" class="form-control" id="email" placeholder="you@example.com" required>
 								</div>
 								<div class="col-md-6">
 									<label class="form-label">Password</label>
@@ -203,39 +206,21 @@ plagiarized the work of other students and/or persons.
 								<div class="col-md-6">
 									<label class="form-label">Confirm Password</label>
 									<input id="confirm" type="password" class="form-control" placeholder="Repeat password" required>
-								</div>								<!-- Platform and Region selects — helps with matchmaking / community filtering later.
-								     Defaulted to PC and North America since that's most of our testers -->								<div class="col-md-6">
-									<label class="form-label">Primary Platform</label>
-									<select class="form-select">
-										<option selected>PC</option>
-										<option>PlayStation</option>
-										<option>Xbox</option>
-										<option>Nintendo</option>
-										<option>Mobile</option>
-									</select>
 								</div>
-								<div class="col-md-6">
-									<label class="form-label">Region</label>
-									<select class="form-select">
-										<option selected>North America</option>
-										<option>Europe</option>
-										<option>Asia</option>
-										<option>South America</option>
-										<option>Australia</option>
-										<option>Africa</option>
-									</select>
+								<div class="col-md-12">
+									<label class="form-label">Display Name (Optional)</label>
+									<input type="text" class="form-control" id="displayName" placeholder="Your Full Name">
 								</div>
 							</div>
 
-							<!-- Terms checkbox — required before submitting.
-							     No actual terms page yet, just a placeholder for now -->
+							<!-- Terms checkbox — required before submitting -->
 							<div class="form-check mt-4 mb-3">
 								<input class="form-check-input" type="checkbox" value="" id="terms" required>
 								<label class="form-check-label text-muted" for="terms">I agree to the Backlog Hero terms and privacy.</label>
 							</div>
 
 							<div class="d-grid mb-3">
-								<button type="submit" class="btn btn-primary py-2">Create Account</button>
+								<button type="submit" class="btn btn-primary py-2" id="registerBtn">Create Account</button>
 							</div>
 							<p class="text-center text-muted mb-0">Already have an account? <a class="link-accent" href="login.html">Log in</a></p>
 						</form>
@@ -246,26 +231,25 @@ plagiarized the work of other students and/or persons.
 		</div>
 	</div>
 
-	<!-- Password validation and strength meter script -->
+	<!-- Password validation and registration API script -->
 	<script>
 		// Get references to form elements
 		const passwordInput = document.getElementById('password');
 		const confirmInput = document.getElementById('confirm');
 		const strengthFill = document.getElementById('strengthFill');
+		const registerForm = document.getElementById('registerForm');
 
 		// Function to calculate password strength based on criteria
 		function updateStrength(value) {
-			let score = 0;  // Start with 0 points
-			// Each criterion adds 25% to the strength bar
-			if (value.length >= 10) score += 25;        // Length check
-			if (/[A-Z]/.test(value)) score += 25;       // Uppercase letter check
-			if (/[0-9]/.test(value)) score += 25;       // Number check
-			if (/[^A-Za-z0-9]/.test(value)) score += 25; // Special character check
-			// Update the visual strength bar width
+			let score = 0;
+			if (value.length >= 10) score += 25;
+			if (/[A-Z]/.test(value)) score += 25;
+			if (/[0-9]/.test(value)) score += 25;
+			if (/[^A-Za-z0-9]/.test(value)) score += 25;
 			strengthFill.style.width = `${score}%`;
 		}
 
-		// Listen for password input and update strength meter in real-time
+		// Update strength meter in real-time
 		if (passwordInput) {
 			passwordInput.addEventListener('input', (e) => updateStrength(e.target.value));
 		}
@@ -273,16 +257,76 @@ plagiarized the work of other students and/or persons.
 		// Password confirmation validation
 		if (confirmInput && passwordInput) {
 			confirmInput.addEventListener('input', () => {
-				// Check if both passwords match
 				const match = confirmInput.value === passwordInput.value;
-				// Add Bootstrap validation classes for visual feedback
 				confirmInput.classList.toggle('is-valid', match && confirmInput.value.length > 0);
 				confirmInput.classList.toggle('is-invalid', !match && confirmInput.value.length > 0);
+			});
+		}
+
+		// Register form submission to backend
+		if (registerForm) {
+			registerForm.addEventListener('submit', async (e) => {
+				e.preventDefault();
+
+				const username = document.getElementById('username').value;
+				const email = document.getElementById('email').value;
+				const password = document.getElementById('password').value;
+				const confirm = document.getElementById('confirm').value;
+				const displayName = document.getElementById('displayName').value || username;
+				const registerBtn = document.getElementById('registerBtn');
+				const errorAlert = document.getElementById('errorAlert');
+				const successAlert = document.getElementById('successAlert');
+
+				// Reset alerts
+				errorAlert.classList.add('d-none');
+				successAlert.classList.add('d-none');
+
+				// Validate password match
+				if (password !== confirm) {
+					errorAlert.textContent = '✗ Passwords do not match';
+					errorAlert.classList.remove('d-none');
+					return;
+				}
+
+				// Disable button during submission
+				registerBtn.disabled = true;
+				registerBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating account...';
+
+				try {
+					const response = await fetch('/api/users/register', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						credentials: 'include',
+						body: JSON.stringify({ username, email, password, displayName })
+					});
+
+					const data = await response.json();
+
+					if (!response.ok) {
+						throw new Error(data.error || 'Registration failed');
+					}
+
+					// Show success message
+					successAlert.innerHTML = '✓ Account created! Redirecting to dashboard...';
+					successAlert.classList.remove('d-none');
+
+					// Redirect to dashboard
+					setTimeout(() => {
+						window.location.href = 'dashboard.html';
+					}, 1500);
+
+				} catch (err) {
+					errorAlert.textContent = '✗ ' + err.message;
+					errorAlert.classList.remove('d-none');
+					registerBtn.disabled = false;
+					registerBtn.innerHTML = 'Create Account';
+				}
 			});
 		}
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 	<script>
+		// Page transition animation
 		document.querySelectorAll('a[href]').forEach(a => {
 			if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
 				a.addEventListener('click', e => {

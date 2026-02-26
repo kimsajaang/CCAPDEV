@@ -241,7 +241,7 @@ plagiarized the work of other students and/or persons.
           <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
           <li class="nav-item"><a class="nav-link active" href="stats.html">Community</a></li>
           <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-          <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
         </ul>
       </div>
     </div>
@@ -961,6 +961,21 @@ plagiarized the work of other students and/or persons.
 
     render();
     setTimeout(() => openCommentsForHash(), 150);
+
+    // Logout function
+    async function logout(event) {
+      event.preventDefault();
+      try {
+          await fetch('/api/auth/logout', {
+              method: 'POST',
+              credentials: 'include'
+          });
+          window.location.href = 'login.html';
+      } catch (err) {
+          console.error('Logout failed:', err);
+          window.location.href = 'login.html';
+      }
+    }
 
     // Page exit transition
     document.querySelectorAll('a[href]').forEach(a => {

@@ -364,43 +364,42 @@ plagiarized the work of other students and/or persons.
                     <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
                     <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
                     <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
     <div class="container my-5">
-        <!-- Welcome hero card with global stats (placeholder numbers for now)
-     These are hardcoded stats for now. -->
+        <!-- Welcome hero card with user stats -->
         <div class="hero hero-compact mb-4 reveal">
             <span class="badge bg-primary mb-2">Welcome to Backlog Hero</span>
-            <h2 class="hero-title mb-2">Play smarter, finish more.</h2>
+            <h2 class="hero-title mb-2" id="welcomeTitle">Play smarter, finish more.</h2>
             <p class="hero-sub mb-3">Quick picks based on your free time.</p>
             <div class="d-flex flex-wrap gap-2 mb-2">
-                <a class="btn btn-primary" href="index.html">Get Started</a>
-                <a class="btn btn-outline-primary" href="search.html">Find Games</a>
+                <a class="btn btn-primary" href="search.html">Find Games</a>
+                <a class="btn btn-outline-primary" href="library.html">My Library</a>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat">
-                    <div class="hero-stat-label"><span class="dot dot-played"></span>Played</div>
-                    <div class="hero-stat-value">54.3M</div>
+                    <div class="hero-stat-label"><span class="dot dot-played"></span>Completed</div>
+                    <div class="hero-stat-value" id="statCompleted">0</div>
                 </div>
                 <div class="hero-stat">
                     <div class="hero-stat-label"><span class="dot dot-games"></span>Games</div>
-                    <div class="hero-stat-value">339K</div>
+                    <div class="hero-stat-value" id="statTotal">0</div>
                 </div>
                 <div class="hero-stat">
-                    <div class="hero-stat-label"><span class="dot dot-ratings"></span>Ratings</div>
-                    <div class="hero-stat-value">32.3M</div>
+                    <div class="hero-stat-label"><span class="dot dot-ratings"></span>Backlog</div>
+                    <div class="hero-stat-value" id="statBacklog">0</div>
                 </div>
                 <div class="hero-stat">
-                    <div class="hero-stat-label"><span class="dot dot-reviews"></span>Reviews</div>
-                    <div class="hero-stat-value">3.74M</div>
+                    <div class="hero-stat-label"><span class="dot dot-reviews"></span>Playing</div>
+                    <div class="hero-stat-value" id="statPlaying">0</div>
                 </div>
                 <div class="hero-stat">
-                    <div class="hero-stat-label"><span class="dot dot-lists"></span>Lists</div>
-                    <div class="hero-stat-value">681K</div>
+                    <div class="hero-stat-label"><span class="dot dot-lists"></span>Hours</div>
+                    <div class="hero-stat-value" id="statHours">0</div>
                 </div>
             </div>
         </div>
@@ -424,13 +423,12 @@ plagiarized the work of other students and/or persons.
                     </div>
                 </div>
 
-                <!-- Daily streak counter — gamification element to keep users coming back
-     The streak data is static for now, will need user session tracking later -->
+                <!-- Daily streak counter — gamification element to keep users coming back. -->
                 <div class="card bg-primary text-white border-0 mb-4 reveal">
                     <div class="card-body text-center py-4">
                         <h6 class="text-white-50">Current Streak</h6>
-                        <h2 class="display-4 fw-bold">5 Days</h2>
-                        <p class="mb-0 small">Don't break the chain, Kane!</p>
+                        <h2 class="display-4 fw-bold" id="streakDays">0 Days</h2>
+                        <p class="mb-0 small" id="streakMessage">Start playing to build your streak!</p>
                     </div>
                 </div>
 
@@ -702,13 +700,8 @@ plagiarized the work of other students and/or persons.
         // ============================================================
         // Post Update — adds new feed items to the activity feed
         // ============================================================
-        const gameCovers = {
-          "Black Myth: Wukong": "blackmyth.jpg",
-          "Red Dead Redemption 2": "reddead.jpg",
-          "Far Cry 5": "farcrt.jpg",
-          "Valorant": "valorant.jpg",
-          "League of Legends": "leagueoflegends.jpg"
-        };
+
+        let currentUser = null;
 
         const typeLabels = {
           "session": "logged a session",
@@ -775,7 +768,7 @@ plagiarized the work of other students and/or persons.
           }
 
           errorEl.style.display = "none";
-          const cover = gameCovers[game] || "pfp.jpg";
+          const cover = document.getElementById("updateGame").value; // Just use the game name for now
           const stars = "★".repeat(parseInt(rating)) + "☆".repeat(5 - parseInt(rating));
 
           let extraHTML = "";
@@ -801,15 +794,17 @@ plagiarized the work of other students and/or persons.
             photoHTML = `<img src="${selectedPhoto}" class="feed-photo" alt="Session screenshot">`;
           }
           
+          // Get user avatar or use default
+          const userAvatar = currentUser?.avatar || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E";
+          
           newItem.innerHTML = `
             <div class="d-flex align-items-center mb-2">
-              <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
-              <strong class="text-primary">Kane_Joshua</strong>
+              <img src="${userAvatar}" class="rounded-circle me-2 avatar-sm" alt="User" style="width: 32px; height: 32px;">
+              <strong class="text-primary">${currentUser?.displayName || 'Gamer'}</strong>
               <span class="text-muted ms-2 small">${typeLabels[type]}</span>
               <span class="text-muted ms-auto extra-small">${timeStr}</span>
             </div>
             <div class="d-flex align-items-start gap-3 mb-1">
-              <img src="${cover}" class="feed-cover" alt="${game} cover">
               <div>
                 <h6 class="mb-1 small">${game}</h6>
                 ${extraHTML}
@@ -844,10 +839,70 @@ plagiarized the work of other students and/or persons.
           photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
         });
     </script>
-    <!-- Floating CTA button — always visible in bottom-right corner
-     Always visible so new users have a clear next step -->
-    <a class="sticky-cta" href="index.html">Get Started</a>
+    <!-- Floating CTA button — always visible in bottom-right corner -->
+    <a class="sticky-cta" href="search.html">Find Games</a>
     <script>
+      // Logout function
+      async function logout(event) {
+        event.preventDefault();
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+          window.location.href = 'login.html';
+        } catch (err) {
+          console.error('Logout failed:', err);
+          window.location.href = 'login.html';
+        }
+      }
+
+      // Check if user is logged in and fetch data
+      async function initDashboard() {
+        try {
+          // Fetch current user data
+          const userRes = await fetch('/api/auth/current', {
+            credentials: 'include'
+          });
+
+          if (!userRes.ok) {
+            // Redirect to login if not authenticated
+            window.location.href = 'login.html';
+            return;
+          }
+
+          currentUser = await userRes.json();
+          document.getElementById('welcomeTitle').textContent = `Welcome back, ${currentUser.displayName}!`;
+
+          // Fetch user stats
+          const statsRes = await fetch('/api/auth/stats', {
+            credentials: 'include'
+          });
+
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            document.getElementById('statCompleted').textContent = stats.completed;
+            document.getElementById('statTotal').textContent = stats.total;
+            document.getElementById('statBacklog').textContent = stats.backlog;
+            document.getElementById('statPlaying').textContent = stats.playing;
+            document.getElementById('statHours').textContent = Math.round(stats.totalHours);
+            document.getElementById('streakMessage').textContent = `Keep it up, ${currentUser.displayName}!`;
+          }
+        } catch (err) {
+          console.error('Failed to load dashboard:', err);
+          window.location.href = 'login.html';
+        }
+      }
+
+      // Hide loader after initialization
+      window.addEventListener('load', () => {
+        initDashboard();
+        setTimeout(() => {
+          const loader = document.getElementById('page-loader');
+          if (loader) loader.classList.add('hidden');
+        }, 1200);
+      });
+
       // Page exit transition
       document.querySelectorAll('a[href]').forEach(a => {
         if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {

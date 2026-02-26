@@ -1,16 +1,20 @@
 {
-  "_comment": "FOR TESTING ONLY — not part of Phase 1. This is for testing IGDB API integration for future phases.",
   "name": "backlog-hero",
-  "version": "1.0.0",
-  "description": "CCAPDEV Phase 1 - Backlog Hero game tracker",
+  "version": "2.0.0",
+  "description": "CCAPDEV Phase 2 - Backlog Hero game tracker with MongoDB backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "seed": "node model/seed.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "dotenv": "^16.3.1",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "mongoose": "^7.0.0",
+    "bcryptjs": "^2.4.3",
+    "express-session": "^1.17.3",
+    "body-parser": "^1.20.2"
   }
 }
