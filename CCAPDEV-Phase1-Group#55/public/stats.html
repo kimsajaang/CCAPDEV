@@ -226,22 +226,31 @@ plagiarized the work of other students and/or persons.
 </head>
 <body>
 
-  <!-- Navbar — "Community" is the active link on this page -->
+  <!-- Navbar — Clean version, "Community" is the active link on this page -->
   <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container py-2">
-      <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+      <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-          <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+          <li class="nav-item" data-auth-required="true"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+          <li class="nav-item" data-auth-required="true"><a class="nav-link" href="library.html">My Library</a></li>
+          <li class="nav-item" data-preview-only="true"><a class="nav-link" href="index.html">← Back Home</a></li>
           <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
           <li class="nav-item"><a class="nav-link active" href="stats.html">Community</a></li>
-          <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-          <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
+          <li class="nav-item" data-auth-required="true"><a class="nav-link" href="profile.html">Profile</a></li>
+          <li class="nav-item" id="authNavItems" data-preview-only="true" style="display: none;">
+            <a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a>
+          </li>
+          <li class="nav-item" id="signupNavItem" data-preview-only="true" style="display: none;">
+            <a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="register.html">Sign Up</a>
+          </li>
+          <li class="nav-item" id="logoutNavItem" data-auth-required="true" style="display: none;">
+            <a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" href="#" id="logoutBtn" onclick="logout(event)">Logout</a>
+          </li>
         </ul>
       </div>
     </div>
@@ -257,7 +266,7 @@ plagiarized the work of other students and/or persons.
         <div class="text-muted small">Post updates, ask questions, share recommendations.</div>
       </div>
 
-      <div class="d-flex gap-2 align-items-center flex-wrap">
+      <div class="d-flex gap-2 align-items-center flex-wrap" data-auth-required="true">
         <select id="sortSelect" class="form-select form-select-sm" style="width: 140px;">
           <option value="hot" selected>Hot</option>
           <option value="new">New</option>
@@ -266,9 +275,13 @@ plagiarized the work of other students and/or persons.
 
         <input id="searchInput" class="form-control form-control-sm" style="width: 220px;" placeholder="Search posts"/>
 
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal">
+        <button id="newPostTopBtn" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal">
           New Post
         </button>
+      </div>
+
+      <div class="alert alert-info alert-sm mb-0" data-preview-only="true" style="display: none; font-size: 0.9rem;">
+        <a href="login.html" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> to create posts and engage with the community!
       </div>
     </div>
 
@@ -281,7 +294,7 @@ plagiarized the work of other students and/or persons.
           <div class="card-body">
             <div class="fw-semibold mb-1">No posts yet.</div>
             <div class="text-muted small mb-3">Create the first post for your community.</div>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal">New Post</button>
+            <button id="newPostEmptyBtn" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal" data-auth-required="true" style="display: none;">New Post</button>
           </div>
         </div>
       </div>
@@ -330,7 +343,7 @@ plagiarized the work of other students and/or persons.
   <!-- New Post Modal — opens when user clicks "New Post" button.
        Uses modal-lg so users have room to type longer posts.
        The form has title, body, flair, and optional game tag fields. -->
-  <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true" data-auth-required="true" style="display: none;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -397,6 +410,58 @@ plagiarized the work of other students and/or persons.
 
     // localStorage key — versioned so we can change the schema without breaking old data
     const STORAGE_KEY = "bh_community_posts_v1";
+
+    // Track login status globally
+    let isUserLoggedIn = false;
+
+    // Check authentication status and show/hide content accordingly
+    async function checkAuthAndShowContent() {
+      try {
+        const response = await fetch('/api/auth/current', {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        isUserLoggedIn = response.ok;
+        const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
+        const previewSections = document.querySelectorAll('[data-preview-only="true"]');
+
+        if (isUserLoggedIn) {
+          protectedSections.forEach(el => el.style.display = '');
+          previewSections.forEach(el => el.style.display = 'none');
+        } else {
+          protectedSections.forEach(el => el.style.display = 'none');
+          previewSections.forEach(el => el.style.display = '');
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        isUserLoggedIn = false;
+        document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = '');
+      }
+    }
+
+    // Check auth on page load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkAuthAndShowContent);
+    } else {
+      checkAuthAndShowContent();
+    }
+
+    // Handle New Post button clicks - redirect to login if not logged in
+    document.querySelectorAll('#newPostTopBtn, #newPostEmptyBtn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (!isUserLoggedIn) {
+          e.preventDefault();
+          e.stopPropagation();
+          // Close modal if it was about to open
+          const modal = bootstrap.Modal.getInstance(document.getElementById('newPostModal'));
+          if (modal) modal.hide();
+          // Redirect to login
+          window.location.href = 'login.html';
+        }
+      });
+    });
 
     const nowIso = () => new Date().toISOString();
     const fmtTime = (iso) => {
@@ -482,7 +547,12 @@ plagiarized the work of other students and/or persons.
 
       feedEl.innerHTML = "";
       if (posts.length === 0) {
-        emptyEl.classList.remove("d-none");
+        // Only show empty state if user is logged in
+        if (isUserLoggedIn) {
+          emptyEl.classList.remove("d-none");
+        } else {
+          emptyEl.classList.add("d-none");
+        }
         return;
       }
       emptyEl.classList.add("d-none");
@@ -974,6 +1044,20 @@ plagiarized the work of other students and/or persons.
       } catch (err) {
           console.error('Logout failed:', err);
           window.location.href = 'login.html';
+      }
+    }
+
+    // Smart home navigation - if logged in go to dashboard, else go to index
+    async function smartHomeClick(e) {
+      e.preventDefault();
+      try {
+        const res = await fetch('/api/auth/current', { credentials: 'include' });
+        const dest = res.ok ? 'dashboard.html' : 'index.html';
+        document.body.classList.add('page-exit');
+        setTimeout(() => window.location = dest, 300);
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location = 'index.html';
       }
     }
 

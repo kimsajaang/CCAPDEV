@@ -97,21 +97,30 @@ plagiarized the work of other students and/or persons.
 </head>
 <body>
 
-    <!-- Navbar — "Search Games" is active on this page -->
+    <!-- Navbar — Clean version, "Search Games" is active on this page -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item" data-auth-required="true"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item" data-auth-required="true"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item" data-preview-only="true"><a class="nav-link" href="index.html">← Back Home</a></li>
                     <li class="nav-item"><a class="nav-link active" href="search.html">Search Games</a></li>
                     <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
-                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
+                    <li class="nav-item" data-auth-required="true"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item" id="authNavItems" data-preview-only="true" style="display: none;">
+                        <a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item" id="signupNavItem" data-preview-only="true" style="display: none;">
+                        <a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="register.html">Sign Up</a>
+                    </li>
+                    <li class="nav-item" id="logoutNavItem" data-auth-required="true" style="display: none;">
+                        <a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" href="#" id="logoutBtn" onclick="logout(event)">Logout</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -222,6 +231,44 @@ plagiarized the work of other students and/or persons.
       let autocompleteCache = new Map();
       let autocompleteTimeout;
       let currentGameDetail = null;
+      let isLoggedIn = false;
+
+      // Check authentication status
+      async function checkAuth() {
+        try {
+          const response = await fetch('/api/auth/current', {
+            method: 'GET',
+            credentials: 'include'
+          });
+          isLoggedIn = response.ok;
+          
+          // Update ALL navbar visibility based on auth status
+          if (isLoggedIn) {
+            // Show auth-required elements, hide preview-only
+            document.querySelectorAll('[data-auth-required="true"]').forEach(el => {
+              el.style.display = '';
+            });
+            document.querySelectorAll('[data-preview-only="true"]').forEach(el => {
+              el.style.display = 'none';
+            });
+          } else {
+            // Hide auth-required elements, show preview-only
+            document.querySelectorAll('[data-auth-required="true"]').forEach(el => {
+              el.style.display = 'none';
+            });
+            document.querySelectorAll('[data-preview-only="true"]').forEach(el => {
+              el.style.display = '';
+            });
+          }
+        } catch (err) {
+          isLoggedIn = false;
+        }
+      }
+
+      // Initialize auth check
+      window.addEventListener('load', () => {
+        checkAuth();
+      });
 
       // Check if coming from library with a search query
       const storedQuery = localStorage.getItem('bh_search_query');
@@ -304,7 +351,7 @@ plagiarized the work of other students and/or persons.
             
             // Cover image
             const coverUrl = game.cover
-              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big')
+              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
               : 'https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover';
             document.getElementById('gameCover').src = coverUrl;
             
@@ -447,10 +494,10 @@ plagiarized the work of other students and/or persons.
           sectionTitle.textContent = `Results for "${query}" (${games.length} found)`;
 
           // IGDB cover URLs come as //images.igdb.com/... so we prepend https:
-          // and swap t_thumb for t_cover_big to get HD quality (360x480px)
+          // and swap t_thumb for t_cover_big_2x to get HD quality (528x704px)
           resultsGrid.innerHTML = games.map(game => {
             const coverUrl = game.cover
-              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big')
+              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
               : 'https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover';
 
             const year = game.first_release_date
@@ -524,6 +571,14 @@ plagiarized the work of other students and/or persons.
 
       // Add from detail modal
       document.getElementById('addFromDetailBtn').addEventListener('click', () => {
+        if (!isLoggedIn) {
+          searchToast('Please log in to add games to your library', 'bg-warning');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+          return;
+        }
+
         if (!currentGameDetail) return;
         
         const name = currentGameDetail.name;
@@ -534,7 +589,7 @@ plagiarized the work of other students and/or persons.
           ? new Date(currentGameDetail.first_release_date * 1000).getFullYear()
           : 0;
         const cover = currentGameDetail.cover
-          ? 'https:' + currentGameDetail.cover.url.replace('t_thumb', 't_cover_big')
+          ? 'https:' + currentGameDetail.cover.url.replace('t_thumb', 't_cover_big_2x')
           : '';
         
         const games = getLibrary();
@@ -564,6 +619,15 @@ plagiarized the work of other students and/or persons.
       document.addEventListener('click', e => {
         const btn = e.target.closest('.add-lib-btn');
         if (!btn) return;
+
+        if (!isLoggedIn) {
+          searchToast('Please log in to add games to your library', 'bg-warning');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+          return;
+        }
+
         const name = btn.dataset.name;
         const games = getLibrary();
         if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
@@ -586,6 +650,20 @@ plagiarized the work of other students and/or persons.
         btn.classList.add('btn-success', 'disabled');
         searchToast(`${name} added to Backlog!`, 'bg-success');
       });
+
+      // Smart home navigation - if logged in go to dashboard, else go to index
+      async function smartHomeClick(e) {
+        e.preventDefault();
+        try {
+          const res = await fetch('/api/auth/current', { credentials: 'include' });
+          const dest = res.ok ? 'dashboard.html' : 'index.html';
+          document.body.classList.add('page-exit');
+          setTimeout(() => window.location = dest, 300);
+        } catch (err) {
+          console.error('Auth check failed:', err);
+          window.location = 'index.html';
+        }
+      }
 
       // Page exit transition
       document.querySelectorAll('a[href]').forEach(a => {

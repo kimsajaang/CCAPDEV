@@ -353,7 +353,7 @@ plagiarized the work of other students and/or persons.
     <!-- Navigation bar — same structure on every page, just the active class changes -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -860,37 +860,76 @@ plagiarized the work of other students and/or persons.
       // Check if user is logged in and fetch data
       async function initDashboard() {
         try {
-          // Fetch current user data
-          const userRes = await fetch('/api/auth/current', {
-            credentials: 'include'
-          });
+          console.log('[Dashboard] Fetching current user...');
+          // Fetch current user data with retry logic - more lenient
+          let retries = 5;
+          let currentUserData = null;
+          
+          while (retries > 0) {
+            try {
+              // Use AbortController for proper timeout
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+              
+              const userRes = await fetch('/api/auth/current', {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal
+              });
+              
+              clearTimeout(timeoutId);
 
-          if (!userRes.ok) {
-            // Redirect to login if not authenticated
+              console.log('[Dashboard] Auth response:', userRes.status);
+
+              if (userRes.ok) {
+                currentUserData = await userRes.json();
+                console.log('[Dashboard] User logged in:', currentUserData.displayName);
+                currentUser = currentUserData;
+                document.getElementById('welcomeTitle').textContent = `Welcome back, ${currentUser.displayName}!`;
+
+                // Fetch user stats
+                try {
+                  const statsRes = await fetch('/api/auth/stats', {
+                    credentials: 'include'
+                  });
+
+                  if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    document.getElementById('statCompleted').textContent = stats.completed;
+                    document.getElementById('statTotal').textContent = stats.total;
+                    document.getElementById('statBacklog').textContent = stats.backlog;
+                    document.getElementById('statPlaying').textContent = stats.playing;
+                    document.getElementById('statHours').textContent = Math.round(stats.totalHours);
+                    document.getElementById('streakMessage').textContent = `Keep it up, ${currentUser.displayName}!`;
+                  }
+                } catch (statsErr) {
+                  console.warn('[Dashboard] Could not fetch stats:', statsErr);
+                }
+                return; // Success - exit function
+              }
+              // Retry on any non-200 status
+            } catch (fetchErr) {
+              console.warn('[Dashboard] Fetch attempt ' + (6 - retries) + ' failed:', fetchErr.message);
+              // Network errors are temporary - retry
+            }
+            retries--;
+            if (retries > 0) {
+              await new Promise(r => setTimeout(r, 500)); // Longer wait before retry
+            }
+          }
+          
+          // If all retries exhausted, do one final redirect attempt
+          console.error('[Dashboard] Auth check failed after all retries - redirecting');
+          setTimeout(() => {
             window.location.href = 'login.html';
-            return;
-          }
-
-          currentUser = await userRes.json();
-          document.getElementById('welcomeTitle').textContent = `Welcome back, ${currentUser.displayName}!`;
-
-          // Fetch user stats
-          const statsRes = await fetch('/api/auth/stats', {
-            credentials: 'include'
-          });
-
-          if (statsRes.ok) {
-            const stats = await statsRes.json();
-            document.getElementById('statCompleted').textContent = stats.completed;
-            document.getElementById('statTotal').textContent = stats.total;
-            document.getElementById('statBacklog').textContent = stats.backlog;
-            document.getElementById('statPlaying').textContent = stats.playing;
-            document.getElementById('statHours').textContent = Math.round(stats.totalHours);
-            document.getElementById('streakMessage').textContent = `Keep it up, ${currentUser.displayName}!`;
-          }
+          }, 500);
+          
         } catch (err) {
-          console.error('Failed to load dashboard:', err);
-          window.location.href = 'login.html';
+          console.error('[Dashboard] Failed to load dashboard:', err);
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 500);
         }
       }
 
@@ -902,6 +941,20 @@ plagiarized the work of other students and/or persons.
           if (loader) loader.classList.add('hidden');
         }, 1200);
       });
+
+      // Smart home navigation - if logged in go to dashboard, else go to index
+      async function smartHomeClick(e) {
+        e.preventDefault();
+        try {
+          const res = await fetch('/api/auth/current', { credentials: 'include' });
+          const dest = res.ok ? 'dashboard.html' : 'index.html';
+          document.body.classList.add('page-exit');
+          setTimeout(() => window.location = dest, 300);
+        } catch (err) {
+          console.error('Auth check failed:', err);
+          window.location = 'index.html';
+        }
+      }
 
       // Page exit transition
       document.querySelectorAll('a[href]').forEach(a => {

@@ -247,18 +247,19 @@ plagiarized the work of other students and/or persons.
     <!-- ═══════════ Navbar ═══════════ -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
-                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
-                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
-                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                    <li class="nav-item" data-auth-required="true"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item" data-auth-required="true"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item" data-preview-only="true"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item" data-preview-only="true"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item" data-auth-required="true"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item" data-preview-only="true"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                    <li class="nav-item" data-auth-required="true"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="#" id="logoutBtn">Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -313,16 +314,18 @@ plagiarized the work of other students and/or persons.
                             <div class="mockup-dot" style="background:#28c840;"></div>
                         </div>
                         <div class="mockup-body">
-                            <div class="mockup-line" style="width:40%;"></div>
-                            <div class="mockup-line" style="width:70%;"></div>
-                            <div class="mockup-line" style="width:55%;"></div>
-                            <div class="row g-3 mt-2">
-                                <div class="col-4"><div class="mockup-card-sm"></div></div>
-                                <div class="col-4"><div class="mockup-card-sm"></div></div>
-                                <div class="col-4"><div class="mockup-card-sm"></div></div>
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px; background: linear-gradient(135deg, rgba(83, 131, 232, 0.1), rgba(80, 214, 180, 0.08)); border-radius: 8px; padding: 24px; position: relative; overflow: hidden;">
+                                <!-- Animated background circles -->
+                                <div style="position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, rgba(83, 131, 232, 0.2), transparent); border-radius: 50%; top: -50px; right: -50px; animation: float 6s ease-in-out infinite;"></div>
+                                <div style="position: absolute; width: 150px; height: 150px; background: radial-gradient(circle, rgba(80, 214, 180, 0.15), transparent); border-radius: 50%; bottom: -40px; left: -40px; animation: float 8s ease-in-out infinite 1s;"></div>
+                                
+                                <div style="text-align: center; position: relative; z-index: 1; animation: fadeInUp 0.8s ease forwards;">
+                                    <div style="font-size: 3.2rem; margin-bottom: 16px; animation: bounce 2s ease-in-out infinite;">👋</div>
+                                    <h3 style="font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; background: linear-gradient(135deg, #5383e8, #2dd4bf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 2px 10px rgba(83, 131, 232, 0.2);">Hello</h3>
+                                    <p style="font-size: 1.4rem; color: #b5c0cc; font-weight: 600; letter-spacing: 0.05em; margin: 0;">Welcome to Backlog</p>
+                                    <div style="width: 50px; height: 3px; background: linear-gradient(90deg, #5383e8, #2dd4bf); margin: 16px auto 0; border-radius: 2px;"></div>
+                                </div>
                             </div>
-                            <div class="mockup-line mt-4" style="width:60%;"></div>
-                            <div class="mockup-line" style="width:85%;"></div>
                         </div>
                     </div>
                 </div>
@@ -334,7 +337,7 @@ plagiarized the work of other students and/or persons.
      The mockup is placed on the left here to alternate layout direction
      so it doesn't feel repetitive scrolling down. -->
     <!-- ═══════════ What is Backlog Hero? ═══════════ -->
-    <section class="section-block">
+    <section class="section-block" data-preview-only="true">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 order-lg-2">
@@ -357,15 +360,8 @@ plagiarized the work of other students and/or persons.
                             <div class="mockup-dot" style="background:#febc2e;"></div>
                             <div class="mockup-dot" style="background:#28c840;"></div>
                         </div>
-                        <div class="mockup-body">
-                            <div class="row g-3">
-                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
-                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
-                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
-                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
-                            </div>
-                            <div class="mockup-line mt-3" style="width:50%;"></div>
-                            <div class="mockup-line" style="width:80%;"></div>
+                        <div class="mockup-body" id="gameCardsContainer" style="overflow: hidden; padding: 16px 0;">
+                            <!-- Scrolling game titles will populate here -->
                         </div>
                     </div>
                 </div>
@@ -376,7 +372,7 @@ plagiarized the work of other students and/or persons.
     <!-- Collection tracking pitch. This ties to the library.html page functionality.
      Uses the same mockup component but with different card layout inside -->
     <!-- ═══════════ Track Your Collection ═══════════ -->
-    <section class="section-block">
+    <section class="section-block" data-auth-required="true">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
@@ -403,9 +399,36 @@ plagiarized the work of other students and/or persons.
                         <div class="mockup-body">
                             <div class="mockup-line" style="width:35%;"></div>
                             <div class="row g-3">
-                                <div class="col-4"><div class="mockup-card-sm" style="height:140px;"></div></div>
-                                <div class="col-4"><div class="mockup-card-sm" style="height:140px;"></div></div>
-                                <div class="col-4"><div class="mockup-card-sm" style="height:140px;"></div></div>
+                                <div class="col-4">
+                                    <div style="background: linear-gradient(135deg, #1a2a3a, #2a3a4a); border-radius: 10px; height: 140px; border: 1px solid #2a3843; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+                                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(135deg, rgba(83, 131, 232, 0.3), rgba(80, 214, 180, 0.1)); z-index: 0;"></div>
+                                        <div style="position: relative; z-index: 1;">
+                                            <div style="font-size: 0.7rem; color: #9e9e9e; font-weight: 600; margin-bottom: 4px;">PSX/PS5</div>
+                                            <div style="font-size: 0.75rem; font-weight: 700; color: #ffffff; line-height: 1.2;">Black Myth: Wukong</div>
+                                        </div>
+                                        <div style="position: relative; z-index: 1; background: #febc2e; color: #0f1519; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-align: center; width: fit-content;">Playing</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div style="background: linear-gradient(135deg, #1a2a3a, #2a3a4a); border-radius: 10px; height: 140px; border: 1px solid #2a3843; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+                                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(135deg, rgba(108, 117, 125, 0.3), rgba(80, 214, 180, 0.1)); z-index: 0;"></div>
+                                        <div style="position: relative; z-index: 1;">
+                                            <div style="font-size: 0.7rem; color: #9e9e9e; font-weight: 600; margin-bottom: 4px;">Multi</div>
+                                            <div style="font-size: 0.75rem; font-weight: 700; color: #ffffff; line-height: 1.2;">Final Fantasy XV</div>
+                                        </div>
+                                        <div style="position: relative; z-index: 1; background: #6c757d; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-align: center; width: fit-content;">Backlog</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div style="background: linear-gradient(135deg, #1a2a3a, #2a3a4a); border-radius: 10px; height: 140px; border: 1px solid #2a3843; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+                                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(135deg, rgba(40, 200, 64, 0.3), rgba(80, 214, 180, 0.1)); z-index: 0;"></div>
+                                        <div style="position: relative; z-index: 1;">
+                                            <div style="font-size: 0.7rem; color: #9e9e9e; font-weight: 600; margin-bottom: 4px;">Xbox 360</div>
+                                            <div style="font-size: 0.75rem; font-weight: 700; color: #ffffff; line-height: 1.2;">Resident Evil 5</div>
+                                        </div>
+                                        <div style="position: relative; z-index: 1; background: #28c840; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-align: center; width: fit-content;">Completed</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -416,7 +439,7 @@ plagiarized the work of other students and/or persons.
 
     <!-- Community section — links conceptually to stats.html (our community/forum page) -->
     <!-- ═══════════ Community ═══════════ -->
-    <section class="section-block">
+    <section class="section-block" data-preview-only="true">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 order-lg-2">
@@ -437,12 +460,8 @@ plagiarized the work of other students and/or persons.
                             <div class="mockup-dot" style="background:#febc2e;"></div>
                             <div class="mockup-dot" style="background:#28c840;"></div>
                         </div>
-                        <div class="mockup-body">
-                            <div class="d-flex flex-column gap-3">
-                                <div class="mockup-card-sm" style="height:70px;"></div>
-                                <div class="mockup-card-sm" style="height:70px;"></div>
-                                <div class="mockup-card-sm" style="height:70px;"></div>
-                            </div>
+                        <div class="mockup-body" id="communityFeed" style="overflow:hidden; height:200px;">
+                            <!-- Comments will be auto-populated and scrolled -->
                         </div>
                     </div>
                 </div>
@@ -453,7 +472,7 @@ plagiarized the work of other students and/or persons.
     <!-- Search feature highlight. References search.html.
      TODO: add actual screenshots once we finalize the search page design -->
     <!-- ═══════════ Search & Discover ═══════════ -->
-    <section class="section-block">
+    <section class="section-block" data-preview-only="true">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
@@ -474,14 +493,8 @@ plagiarized the work of other students and/or persons.
                             <div class="mockup-dot" style="background:#febc2e;"></div>
                             <div class="mockup-dot" style="background:#28c840;"></div>
                         </div>
-                        <div class="mockup-body">
-                            <div class="mockup-line" style="width:100%;height:14px;margin-bottom:18px;"></div>
-                            <div class="row g-3">
-                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
-                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
-                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
-                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
-                            </div>
+                        <div class="mockup-body" id="searchAnimation" style="min-height:200px;">
+                            <!-- Search animation will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -493,7 +506,7 @@ plagiarized the work of other students and/or persons.
      These 6 features match our actual pages.
      If we add more features later, just add another col-md-4 card. -->
     <!-- ═══════════ Feature Highlights ═══════════ -->
-    <section class="section-block" style="padding-bottom:60px;">
+    <section class="section-block" data-auth-required="true" style="padding-bottom:60px;">
         <div class="container text-center mb-5">
             <h2 class="section-title">Everything you need in one place</h2>
             <p class="section-desc mx-auto" style="max-width:600px;">
@@ -583,6 +596,323 @@ plagiarized the work of other students and/or persons.
      since it's all static content. -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+      let allGames = [];
+      let currentGameSet = [];
+
+      // Randomize array
+      function shuffleArray(arr) {
+        return arr.sort(() => Math.random() - 0.5);
+      }
+
+      // Display random games with smooth auto-scroll animation
+      function displayRandomGames() {
+        const gameCardsContainer = document.getElementById('gameCardsContainer');
+        
+        if (!allGames || allGames.length === 0) return;
+
+        // Get 12 highest-rated games for premium carousel
+        const topGames = allGames
+          .filter(g => g.rating && g.rating > 85)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 12);
+        
+        if (topGames.length === 0) return;
+        currentGameSet = topGames;
+
+        // Animate: scroll down + fade out
+        gameCardsContainer.style.opacity = '0';
+        gameCardsContainer.style.transform = 'translateY(30px)';
+        gameCardsContainer.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+
+        setTimeout(() => {
+          // Create premium horizontal scrolling carousel
+          let html = `<div style="display: flex; gap: 14px; overflow-x: hidden; padding: 8px 0; animation: scrollGamesIn 0.6s ease forwards; opacity: 0; position: relative;" class="gameCarousel">`;
+          
+          // Add games twice for infinite scroll effect
+          [...topGames, ...topGames].forEach(game => {
+            const coverUrl = game.cover?.url ? 
+              'https://images.igdb.com/igdb/image/upload/t_cover_big/' + game.cover.url.split('/').pop() : 
+              'https://via.placeholder.com/130x180?text=' + encodeURIComponent(game.name);
+            
+            const rating = game.rating ? Math.round(game.rating * 10) / 10 : 'N/A';
+            
+            html += `
+              <div style="flex: 0 0 auto; min-width: 110px; position: relative;">
+                <img src="${coverUrl}" alt="${game.name}" 
+                     style="width: 110px; height: 155px; object-fit: cover; border-radius: 12px; border: 2px solid rgba(83, 131, 232, 0.4); transition: all 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.4);"
+                     title="${game.name} - Rating: ${rating}/100"
+                     onmouseover="this.style.transform='scale(1.12) translateZ(0)'; this.style.boxShadow='0 12px 30px rgba(83, 131, 232, 0.6)';"
+                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.4)'">
+                <div style="position: absolute; top: 6px; right: 6px; background: rgba(254, 188, 46, 0.95); color: #0f1519; padding: 3px 7px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${rating}★</div>
+              </div>`;
+          });
+          
+          html += '</div>';
+          gameCardsContainer.innerHTML = html;
+          
+          // Fade in animation
+          gameCardsContainer.style.opacity = '1';
+          gameCardsContainer.style.transform = 'translateY(0)';
+
+          // Smooth infinite auto-scroll
+          const carousel = gameCardsContainer.querySelector('.gameCarousel');
+          if (carousel) {
+            let scrollPos = 0;
+            const gameWidth = 110 + 14; // width + gap
+            const singleSetWidth = topGames.length * gameWidth;
+
+            setInterval(() => {
+              scrollPos += 1.5;
+              
+              if (scrollPos >= singleSetWidth) {
+                scrollPos = 0;
+              }
+              
+              carousel.scrollLeft = scrollPos;
+            }, 30);
+          }
+        }, 500);
+      }
+
+      // Fetch featured games from IGDB API
+      async function loadFeaturedGames() {
+        try {
+          const response = await fetch('/api/igdb/games', {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (!response.ok) {
+            console.warn('Could not fetch games from IGDB');
+            return;
+          }
+
+          allGames = await response.json();
+          
+          if (allGames && allGames.length > 0) {
+            // Display initial random games
+            displayRandomGames();
+
+            // Change games every 6 seconds
+            setInterval(displayRandomGames, 6000);
+          }
+        } catch (err) {
+          console.error('Error loading featured games:', err);
+        }
+      }
+
+      // Sample games for search animation
+      const sampleGamesForSearch = [
+        'Red Dead Redemption', 'The Witcher 3', 'Cyberpunk 2077', 'Starfield',
+        'Baldur\'s Gate 3', 'Elden Ring', 'Palworld', 'Final Fantasy VII Rebirth'
+      ];
+
+      // Sample comments for community feed
+      const sampleComments = [
+        { user: 'GamerPro', comment: 'Just finished my backlog! 🎮', upvotes: 124 },
+        { user: 'CasualPlayer', comment: 'Anyone else struggling with their backlog?', upvotes: 89 },
+        { user: 'SpeedRunner99', comment: 'Finally got all achievements!', upvotes: 256 },
+        { user: 'IndieGames', comment: 'Indie games hitting different lately', upvotes: 142 },
+        { user: 'RetroFan', comment: 'Revisiting classic games from 2010s', upvotes: 78 },
+        { user: 'CompetitiveKing', comment: 'Playing multiplayer with friends was epic', upvotes: 195 }
+      ];
+
+      // Animate search for Red Dead Redemption
+      function animateSearch() {
+        const searchDiv = document.getElementById('searchAnimation');
+        if (!searchDiv) return;
+
+        const targetGame = 'Red Dead Redemption';
+        let searchIndex = 0;
+        searchDiv.innerHTML = '';
+
+        function updateSearch() {
+          const displayText = targetGame.substring(0, Math.min(targetGame.length, searchIndex));
+          const progress = (searchIndex / targetGame.length) * 100;
+          
+          searchDiv.innerHTML = `
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <i class="bi bi-search" style="color:#febc2e; font-size:1.2rem;"></i>
+                <div style="flex:1; height:16px; background:#2a3843; border-radius:6px; overflow:hidden;">
+                  <div style="height:100%; width:${progress}%; background:#febc2e; transition: width 0.2s ease;">
+                  </div>
+                </div>
+              </div>
+              <div style="color:#b5c0cc; font-size:0.9rem; padding:8px 0; font-weight:500;">Searching: <strong style="color:#febc2e;">${displayText}${displayText.length < targetGame.length ? '|' : ''}</strong></div>
+            </div>
+            ${searchIndex >= targetGame.length ? `
+            <div style="margin-top:16px;">
+              <div style="font-size:0.8rem; color:#9e9e9e; margin-bottom:8px;">← Results</div>
+              <div style="background:#243039; padding:12px; border-radius:8px; border:1px solid #2a3843; margin-bottom:8px; animation: fadeIn 0.4s ease;">
+                <div style="font-weight:600; color:#5383e8; margin-bottom:4px;">${targetGame}</div>
+                <div style="font-size:0.75rem; color:#9e9e9e;">2010 • Action Adventure</div>
+              </div>
+            </div>
+            ` : ''}
+          `;
+          
+          if (searchIndex < targetGame.length) {
+            searchIndex++;
+            setTimeout(updateSearch, 80);
+          } else {
+            searchIndex = 0;
+            setTimeout(updateSearch, 4000);
+          }
+        }
+        updateSearch();
+      }
+
+      // Animate community feed
+      function animateCommunityFeed() {
+        const feedDiv = document.getElementById('communityFeed');
+        if (!feedDiv) return;
+
+        let commentIndex = 0;
+        let scrollPos = 0;
+
+        function updateFeed() {
+          const comments = [
+            sampleComments[commentIndex % sampleComments.length],
+            sampleComments[(commentIndex + 1) % sampleComments.length],
+            sampleComments[(commentIndex + 2) % sampleComments.length]
+          ];
+
+          let html = '';
+          comments.forEach((c, i) => {
+            html += `
+              <div style="padding:10px; border-bottom:1px solid #2a3843; animation: slideUp ${0.3 + i * 0.15}s ease forwards; opacity:0; transform:translateY(20px);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                  <strong style="color:#5383e8; font-size:0.85rem;">${c.user}</strong>
+                  <span style="color:#9e9e9e; font-size:0.75rem;">👍 ${c.upvotes}</span>
+                </div>
+                <div style="color:#b5c0cc; font-size:0.85rem;">${c.comment}</div>
+              </div>
+            `;
+          });
+
+          feedDiv.innerHTML = html;
+          commentIndex++;
+          setTimeout(updateFeed, 4000);
+        }
+
+        updateFeed();
+      }
+
+      // Add animations to style
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes searchWidth {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+        @keyframes scrollGamesIn {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(20px); }
+        }
+        /* Hide scrollbar but keep scrolling */
+        .gameCarousel {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .gameCarousel::-webkit-scrollbar {
+          display: none;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Check user authentication and show/hide sections accordingly
+      async function checkAuthAndShowContent() {
+        try {
+          const response = await fetch('/api/auth/current', {
+            method: 'GET',
+            credentials: 'include'
+          });
+
+          const isLoggedIn = response.ok;
+          
+          // Elements to hide if not logged in
+          const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
+          // Elements to hide if logged in
+          const previewSections = document.querySelectorAll('[data-preview-only="true"]');
+
+          if (isLoggedIn) {
+            // User is logged in - show all features
+            protectedSections.forEach(el => el.style.display = '');
+            previewSections.forEach(el => el.style.display = 'none');
+            
+            // Add logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+              logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                  await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                  });
+                  window.location.href = 'index.html';
+                } catch (err) {
+                  console.error('Logout failed:', err);
+                }
+              });
+            }
+          } else {
+            // User is not logged in - show only preview features
+            protectedSections.forEach(el => el.style.display = 'none');
+            previewSections.forEach(el => el.style.display = '');
+          }
+        } catch (err) {
+          console.error('Auth check failed:', err);
+          // Show preview by default on error
+          document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = 'none');
+          document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = '');
+        }
+      }
+
+      // Check auth on page load
+      window.addEventListener('load', () => {
+        checkAuthAndShowContent();
+        loadFeaturedGames();
+        animateSearch();
+        animateCommunityFeed();
+      });
+
+      // Smart home navigation - if logged in go to dashboard, else go to index
+      async function smartHomeClick(e) {
+        e.preventDefault();
+        try {
+          const res = await fetch('/api/auth/current', { credentials: 'include' });
+          const dest = res.ok ? 'dashboard.html' : 'index.html';
+          document.body.classList.add('page-exit');
+          setTimeout(() => window.location = dest, 300);
+        } catch (err) {
+          console.error('Auth check failed:', err);
+          window.location = 'index.html';
+        }
+      }
+
+      // Page exit animation
       document.querySelectorAll('a[href]').forEach(a => {
         if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
           a.addEventListener('click', e => {

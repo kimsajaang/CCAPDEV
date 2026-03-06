@@ -231,7 +231,7 @@ plagiarized the work of other students and/or persons.
     <!-- Navbar — no active link highlighted since this is a sub-page of Profile -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -539,6 +539,76 @@ plagiarized the work of other students and/or persons.
           }
         }
 
+        // Smart home navigation - if logged in go to dashboard, else go to index
+        async function smartHomeClick(e) {
+          e.preventDefault();
+          try {
+            const res = await fetch('/api/auth/current', { credentials: 'include' });
+            const dest = res.ok ? 'dashboard.html' : 'index.html';
+            document.body.classList.add('page-exit');
+            setTimeout(() => window.location = dest, 300);
+          } catch (err) {
+            console.error('Auth check failed:', err);
+            window.location = 'index.html';
+          }
+        }
+
+        // Auth check with enhanced retry logic
+        async function initProfileEdit() {
+          try {
+            console.log('[ProfileEdit] Fetching current user...');
+            let retries = 5;
+            
+            while (retries > 0) {
+              try {
+                // Use AbortController for proper timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                
+                const res = await fetch('/api/auth/current', {
+                  method: 'GET',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+
+                console.log('[ProfileEdit] Response status:', res.status);
+                
+                if (res.ok) {
+                  console.log('[ProfileEdit] User authenticated');
+                  initializeForm();
+                  return;
+                } else if (res.status === 401 || res.status === 403) {
+                  // Explicit auth failure - don't retry
+                  console.error('[ProfileEdit] Unauthorized (' + res.status + ') - redirecting to login');
+                  setTimeout(() => {
+                    window.location.href = 'login.html';
+                  }, 500);
+                  return;
+                }
+                // Other status codes (5xx, etc) - try again
+              } catch (fetchErr) {
+                console.warn('[ProfileEdit] Fetch attempt ' + (6 - retries) + ' failed:', fetchErr.message);
+                // Network errors are temporary - retry
+              }
+              retries--;
+              if (retries > 0) {
+                await new Promise(r => setTimeout(r, 500)); // Longer wait before retry
+              }
+            }
+            
+            // If all retries exhausted, redirect
+            console.error('[ProfileEdit] Auth check failed after all retries - redirecting');
+            window.location.href = 'login.html';
+            
+          } catch (err) {
+            console.error('[ProfileEdit] Failed to load:', err);
+            window.location.href = 'login.html';
+          }
+        }
+
         // Page exit transition
         document.querySelectorAll('a[href]').forEach(a => {
           if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
@@ -552,7 +622,7 @@ plagiarized the work of other students and/or persons.
         });
 
         // Initialize on page load
-        initializeForm();
+        window.addEventListener('load', initProfileEdit);
     </script>
 </body>
 </html>
