@@ -50,7 +50,7 @@ plagiarized the work of other students and/or persons.
         body { animation: pageSlideIn 0.5s ease both; }
         body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
         /* Game result cards — same hover lift as library page for consistency */
-        .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s; }
+        .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s, border-color 0.2s; }
         .card-title { color: #dbe7ff; font-weight: 600; }
         .card:hover { transform: translateY(-5px); border-color: #5383e8; }
         .btn-primary { background-color: #5383e8; border: none; }
@@ -59,7 +59,7 @@ plagiarized the work of other students and/or persons.
         /* Search header bar — dark panel below the navbar.
            border-bottom separates it from the card results below */
         .search-container { background: #1c252e; padding: 40px 0; border-bottom: 1px solid #2a3843; }
-        .game-cover { height: 250px; object-fit: cover; }
+        .game-cover { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
         .text-muted { color: #9e9e9e !important; }
         .form-control, .form-select {
           background-color: #141b21;
@@ -232,6 +232,8 @@ plagiarized the work of other students and/or persons.
       let autocompleteTimeout;
       let currentGameDetail = null;
       let isLoggedIn = false;
+      let searchUserId = null;
+      let searchUserLibrary = [];
 
       // Check authentication status
       async function checkAuth() {
@@ -242,6 +244,16 @@ plagiarized the work of other students and/or persons.
           });
           isLoggedIn = response.ok;
           
+          if (isLoggedIn) {
+            const userData = await response.json();
+            searchUserId = userData._id || userData.id;
+            // Fetch server library for "already added" checks
+            try {
+              const libRes = await fetch('/api/library/' + searchUserId, { credentials: 'include' });
+              if (libRes.ok) searchUserLibrary = await libRes.json();
+            } catch (e) { /* ignore */ }
+          }
+
           // Update ALL navbar visibility based on auth status
           if (isLoggedIn) {
             // Show auth-required elements, hide preview-only
@@ -495,6 +507,7 @@ plagiarized the work of other students and/or persons.
 
           // IGDB cover URLs come as //images.igdb.com/... so we prepend https:
           // and swap t_thumb for t_cover_big_2x to get HD quality (528x704px)
+
           resultsGrid.innerHTML = games.map(game => {
             const coverUrl = game.cover
               ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
@@ -512,20 +525,22 @@ plagiarized the work of other students and/or persons.
               ? Math.round(game.rating) + '/100'
               : '';
 
+          const alreadyAdded = searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === game.name.toLowerCase());
+
             return `
               <div class="col">
-                <div class="card h-100 shadow-sm" style="cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#5383e8'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='#2a3843'; this.style.transform='translateY(0)'" onclick="openGameDetail(${JSON.stringify(game).replace(/"/g, '&quot;')})">
+                <div class="card h-100 shadow-sm game-result-card" style="cursor: pointer; transition: all 0.2s;" data-game='${JSON.stringify(game).replace(/'/g, "&#39;")}'>
                   <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
                        onerror="this.src='https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover'">
                   <div class="card-body">
                     <h6 class="card-title">${game.name}</h6>
                     <p class="card-text small text-muted">${genres} • ${year} ${rating ? '• ' + rating : ''}</p>
-                    <button class="btn btn-sm btn-outline-primary w-100 add-lib-btn"
+                    <button class="btn btn-sm ${alreadyAdded ? 'btn-success disabled' : 'btn-outline-primary'} w-100 add-lib-btn"
                             data-name="${game.name}"
                             data-genre="${genres}"
                             data-year="${year}"
                             data-cover="${coverUrl}"
-                            onclick="event.stopPropagation();">+ Add to Library</button>
+                            ${alreadyAdded ? 'disabled' : ''}>${alreadyAdded ? '✓ Already in Library' : '+ Add to Library'}</button>
                   </div>
                 </div>
               </div>
@@ -555,12 +570,35 @@ plagiarized the work of other students and/or persons.
         }
       });
 
-      /* ---- Add to Library integration (shared localStorage key with library.html) ---- */
-      const LIB_KEY = 'bh_library_v1';
-      function getLibrary() {
-        try { return JSON.parse(localStorage.getItem(LIB_KEY)) || []; } catch { return []; }
+      /* ---- Add to Library integration (server API) ---- */
+      async function addGameToServer(name, genres, year, coverUrl) {
+        const genresArr = genres ? genres.split(' \u2022 ').map(g => g.trim()) : [];
+        const yearNum = parseInt(year) || 0;
+        const releaseDate = yearNum ? new Date(yearNum, 0, 1).toISOString() : null;
+
+        // Create Game document
+        const gameRes = await fetch('/api/games', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, coverUrl: coverUrl || '', genres: genresArr, releaseDate })
+        });
+        if (!gameRes.ok) throw new Error('Failed to create game');
+        const { game } = await gameRes.json();
+
+        // Add to library
+        const libRes = await fetch('/api/library', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: searchUserId, gameId: game._id, status: 'backlog' })
+        });
+        if (!libRes.ok) throw new Error('Failed to add to library');
+
+        // Refresh the cached library
+        try {
+          const lr = await fetch('/api/library/' + searchUserId, { credentials: 'include' });
+          if (lr.ok) searchUserLibrary = await lr.json();
+        } catch (e) { /* ignore */ }
       }
-      function saveLibrary(games) { localStorage.setItem(LIB_KEY, JSON.stringify(games)); }
 
       function searchToast(msg, bg) {
         const el = document.getElementById('searchToast');
@@ -570,7 +608,7 @@ plagiarized the work of other students and/or persons.
       }
 
       // Add from detail modal
-      document.getElementById('addFromDetailBtn').addEventListener('click', () => {
+      document.getElementById('addFromDetailBtn').addEventListener('click', async () => {
         if (!isLoggedIn) {
           searchToast('Please log in to add games to your library', 'bg-warning');
           setTimeout(() => {
@@ -592,63 +630,66 @@ plagiarized the work of other students and/or persons.
           ? 'https:' + currentGameDetail.cover.url.replace('t_thumb', 't_cover_big_2x')
           : '';
         
-        const games = getLibrary();
-        if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+        if (searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === name.toLowerCase())) {
           searchToast(`"${name}" is already in your library!`, 'bg-warning');
           return;
         }
         
-        games.unshift({
-          id: 'search_' + Date.now(),
-          name: name,
-          genre: genres || '',
-          year: year || 0,
-          status: 'backlog',
-          cover: cover || '',
-          rating: 0,
-          addedAt: Date.now()
-        });
-        saveLibrary(games);
-        document.getElementById('addFromDetailBtn').textContent = '✓ Added';
-        document.getElementById('addFromDetailBtn').classList.add('btn-success', 'disabled');
-        document.getElementById('addFromDetailBtn').classList.remove('btn-primary');
-        document.getElementById('addFromDetailBtn').disabled = true;
-        searchToast(`${name} added to Backlog!`, 'bg-success');
+        try {
+          await addGameToServer(name, genres, String(year), cover);
+          document.getElementById('addFromDetailBtn').textContent = '✓ Added';
+          document.getElementById('addFromDetailBtn').classList.add('btn-success', 'disabled');
+          document.getElementById('addFromDetailBtn').classList.remove('btn-primary');
+          document.getElementById('addFromDetailBtn').disabled = true;
+          searchToast(`${name} added to Backlog!`, 'bg-success');
+        } catch (err) {
+          console.error('[Search] Add error:', err);
+          searchToast('Failed to add game', 'bg-danger');
+        }
       });
 
-      document.addEventListener('click', e => {
+      document.addEventListener('click', async e => {
+        // Handle Add to Library button
         const btn = e.target.closest('.add-lib-btn');
-        if (!btn) return;
+        if (btn) {
+          e.stopPropagation();
 
-        if (!isLoggedIn) {
-          searchToast('Please log in to add games to your library', 'bg-warning');
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 1500);
+          if (!isLoggedIn) {
+            searchToast('Please log in to add games to your library', 'bg-warning');
+            setTimeout(() => {
+              window.location.href = 'login.html';
+            }, 1500);
+            return;
+          }
+
+          const name = btn.dataset.name;
+          if (searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === name.toLowerCase())) {
+            searchToast(`"${name}" is already in your library!`, 'bg-warning');
+            return;
+          }
+          try {
+            await addGameToServer(name, btn.dataset.genre || '', btn.dataset.year || '0', btn.dataset.cover || '');
+            btn.textContent = '✓ Added';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success', 'disabled');
+            searchToast(`${name} added to Backlog!`, 'bg-success');
+          } catch (err) {
+            console.error('[Search] Add error:', err);
+            searchToast('Failed to add game', 'bg-danger');
+          }
           return;
         }
 
-        const name = btn.dataset.name;
-        const games = getLibrary();
-        if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
-          searchToast(`"${name}" is already in your library!`, 'bg-warning');
-          return;
+        // Handle card click to open game detail
+        const card = e.target.closest('.game-result-card');
+        if (card) {
+          try {
+            const game = JSON.parse(card.dataset.game);
+            openGameDetail(game);
+          } catch (err) {
+            console.error('Failed to parse game data:', err);
+          }
         }
-        games.unshift({
-          id: 'search_' + Date.now(),
-          name: name,
-          genre: btn.dataset.genre || '',
-          year: parseInt(btn.dataset.year) || 0,
-          status: 'backlog',
-          cover: btn.dataset.cover || '',
-          rating: 0,
-          addedAt: Date.now()
-        });
-        saveLibrary(games);
-        btn.textContent = '✓ Added';
-        btn.classList.remove('btn-outline-primary');
-        btn.classList.add('btn-success', 'disabled');
-        searchToast(`${name} added to Backlog!`, 'bg-success');
       });
 
       // Smart home navigation - if logged in go to dashboard, else go to index

@@ -682,6 +682,7 @@ plagiarized the work of other students and/or persons.
                             <div>
                                 <div class="section-card reveal-item">
                                     <div class="section-title mb-3">Recent Activity</div>
+                                    <div id="activityContainer">
                                     <div class="activity-item reveal-item">
                                         <div class="d-flex justify-content-between">
                                             <span><i class="bi bi-controller"></i> Logged 2h in Black Myth: Wukong</span>
@@ -702,6 +703,7 @@ plagiarized the work of other students and/or persons.
                                             <span class="text-muted small">2 days ago</span>
                                         </div>
                                         <span class="text-muted small">100% Platinum achieved.</span>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
@@ -962,53 +964,53 @@ plagiarized the work of other students and/or persons.
 
     // Initialize profile on page load
     async function initProfile() {
-        try {
-            console.log('[Profile] Fetching current user...');
-            // Fetch current user data with retry logic - more lenient
-            let retries = 5;
-            let userProfile = null;
+        console.log('[Profile] Fetching current user...');
+        // Fetch current user data with retry logic
+        let retries = 5;
+        let userProfile = null;
+        
+        while (retries > 0) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
             
-            while (retries > 0) {
-              try {
-                // Use AbortController for proper timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-                
-                const res = await fetch('/api/auth/current', {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-
-                console.log('[Profile] Response status:', res.status);
-                
-                if (res.ok) {
-                    userProfile = await res.json();
-                    console.log('[Profile] User data loaded:', userProfile.displayName);
-                    renderProfile(userProfile);
-                    return;
-                }
-                // Retry on any non-200 status
-              } catch (fetchErr) {
-                console.warn('[Profile] Fetch attempt ' + (6 - retries) + ' failed:', fetchErr.message);
-                // Network errors are temporary - retry
-              }
-              retries--;
-              if (retries > 0) {
-                await new Promise(r => setTimeout(r, 500)); // Longer wait before retry
-              }
+            const res = await fetch('/api/auth/current', {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            console.log('[Profile] Response status:', res.status);
+            
+            if (res.ok) {
+                userProfile = await res.json();
+                console.log('[Profile] User data loaded:', userProfile.displayName);
+                break; // Got user data, exit retry loop
             }
-            
-            // If all retries exhausted, do one final redirect attempt
+            // Non-200 status — retry
+          } catch (fetchErr) {
+            console.warn('[Profile] Fetch attempt ' + (6 - retries) + ' failed:', fetchErr.message);
+          }
+          retries--;
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 500));
+          }
+        }
+        
+        // If we never got user data, redirect to login
+        if (!userProfile) {
             console.error('[Profile] Auth check failed after all retries - redirecting');
             window.location.href = 'login.html';
-            
-        } catch (err) {
-            console.error('[Profile] Failed to load profile:', err);
-            window.location.href = 'login.html';
+            return;
+        }
+
+        // Render profile — errors here should NOT redirect to login
+        try {
+            renderProfile(userProfile);
+        } catch (renderErr) {
+            console.error('[Profile] Render error:', renderErr);
         }
     }
 

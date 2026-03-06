@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema(
       type: [String], // array of game names
       default: [],
     },
+    steamId: {
+      type: String,
+      default: '',
+    },
     createdAt: {
       type: Date,
       default: Date.now,

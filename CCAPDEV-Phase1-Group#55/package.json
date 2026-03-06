@@ -16,6 +16,8 @@
     "express-session": "^1.17.3",
     "mongodb": "^7.1.0",
     "mongoose": "^7.0.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "passport": "^0.7.0",
+    "passport-steam": "^1.0.18"
   }
 }

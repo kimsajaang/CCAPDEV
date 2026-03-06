@@ -37,9 +37,9 @@ plagiarized the work of other students and/or persons.
         .navbar-nav .nav-link:hover { color: #ffffff !important; transform: translateY(-3px); }
         .navbar-nav .nav-link.active { color: #5383e8 !important; }
 
-        @keyframes pageSlideIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-        body { animation: pageSlideIn 0.5s ease both; }
-        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        @keyframes pageSlideIn { from { opacity: 0; } to { opacity: 1; } }
+        body { animation: pageSlideIn 0.4s ease both; }
+        body.page-exit { opacity: 0; transition: opacity 0.3s ease; }
 
         /* Cards */
         .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s, border-color 0.2s; }
@@ -254,8 +254,10 @@ plagiarized the work of other students and/or persons.
             console.log('[Library] Auth response:', res.status);
 
             if (res.ok) {
-              console.log('[Library] User authenticated');
-              return true; // User is logged in
+              const userData = await res.json();
+              currentUserId = userData._id || userData.id;
+              console.log('[Library] User authenticated, id:', currentUserId);
+              return true;
             } else if (res.status === 401 || res.status === 403) {
               // Explicit auth failure - don't retry
               console.error('[Library] Unauthorized (' + res.status + ') - redirecting to login');
@@ -291,10 +293,16 @@ plagiarized the work of other students and/or persons.
 
     // Initialize on page load
     let pageInitComplete = false;
+    let currentUserId = null;
     window.addEventListener('load', async () => {
       if (!pageInitComplete) {
         pageInitComplete = true;
-        await initializePage();
+        const authOk = await initializePage();
+        if (authOk) {
+          await fetchLibrary();
+          render();
+          checkAchievements();
+        }
       }
     });
 
@@ -302,8 +310,8 @@ plagiarized the work of other students and/or persons.
        Library — localStorage-backed game collection with full CRUD
        Key: bh_library_v1
     ====================================================================== */
-    const STORAGE_KEY = 'bh_library_v1';
     const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
+    let libraryCache = [];
     const grid = document.getElementById('libraryGrid');
     const searchInput = document.getElementById('librarySearch');
     const suggestedSection = document.getElementById('suggestedSection');
@@ -346,25 +354,39 @@ plagiarized the work of other students and/or persons.
         saveAchievements(unlockedAchievements);
     }
 
-    /* ---------- default seed data ---------- */
-    const defaultGames = [
-        { id: 'seed_1', name: 'Black Myth: Wukong', genre: 'Action RPG', year: 2024, status: 'playing', cover: 'blackmyth.jpg', rating: 0, addedAt: Date.now() - 86400000 * 5 },
-        { id: 'seed_2', name: 'Red Dead Redemption 2', genre: 'Open World', year: 2018, status: 'backlog', cover: 'reddead.jpg', rating: 0, addedAt: Date.now() - 86400000 * 12 },
-        { id: 'seed_3', name: 'Far Cry 5', genre: 'Action', year: 2018, status: 'completed', cover: 'farcrt.jpg', rating: 5, addedAt: Date.now() - 86400000 * 30 },
-        { id: 'seed_4', name: 'Valorant', genre: 'Tactical Shooter', year: 2020, status: 'playing', cover: 'valorant.jpg', rating: 0, addedAt: Date.now() - 86400000 * 3 },
-        { id: 'seed_5', name: 'League of Legends', genre: 'MOBA', year: 2009, status: 'backlog', cover: 'leagueoflegends.jpg', rating: 0, addedAt: Date.now() - 86400000 * 7 },
-        { id: 'seed_6', name: 'Elden Ring', genre: 'Action RPG', year: 2022, status: 'completed', cover: '', rating: 5, addedAt: Date.now() - 86400000 * 60 },
-        { id: 'seed_7', name: 'Cyberpunk 2077', genre: 'RPG', year: 2020, status: 'completed', cover: '', rating: 4, addedAt: Date.now() - 86400000 * 45 },
-        { id: 'seed_8', name: 'Hollow Knight', genre: 'Metroidvania', year: 2017, status: 'backlog', cover: '', rating: 0, addedAt: Date.now() - 86400000 * 20 },
-    ];
-
-    /* ---------- localStorage helpers ---------- */
-    function loadLibrary() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) { saveLibrary(defaultGames); return defaultGames; }
-        try { return JSON.parse(raw); } catch { saveLibrary(defaultGames); return defaultGames; }
+    /* ---------- server-backed library helpers ---------- */
+    function mapEntry(entry) {
+        const g = entry.gameId || {};
+        return {
+            id: String(entry._id),
+            gameDbId: g._id ? String(g._id) : null,
+            name: g.name || 'Unknown',
+            genre: (g.genres || []).join(' \u2022 ') || 'Game',
+            year: g.releaseDate ? new Date(g.releaseDate).getFullYear() : 0,
+            status: entry.status || 'backlog',
+            cover: g.coverUrl || '',
+            rating: entry.rating || 0,
+            playtime: entry.playtime || 0,
+            addedAt: entry.addedAt ? new Date(entry.addedAt).getTime() : Date.now()
+        };
     }
-    function saveLibrary(games) { localStorage.setItem(STORAGE_KEY, JSON.stringify(games)); }
+
+    async function fetchLibrary() {
+        if (!currentUserId) return [];
+        try {
+            const res = await fetch('/api/library/' + currentUserId, { credentials: 'include' });
+            if (!res.ok) return libraryCache;
+            const entries = await res.json();
+            libraryCache = entries.filter(e => e.gameId).map(mapEntry);
+        } catch (err) {
+            console.error('[Library] Fetch failed:', err);
+        }
+        return libraryCache;
+    }
+
+    function loadLibrary() {
+        return libraryCache;
+    }
 
     /* ---------- toast ---------- */
     function showToast(msg, bg = 'bg-success') {
@@ -421,8 +443,7 @@ plagiarized the work of other students and/or persons.
                     ? game.genres.map(g => g.name).slice(0, 1).join(' • ')
                     : 'Game';
 
-                const games = loadLibrary();
-                const alreadyAdded = games.some(g => g.name.toLowerCase() === game.name.toLowerCase());
+                const alreadyAdded = libraryCache.some(g => g.name.toLowerCase() === game.name.toLowerCase());
                 const gameId = `add-igdb-${game.id || game.name.replace(/\s+/g, '-')}`;
 
                 return `
@@ -468,22 +489,23 @@ plagiarized the work of other students and/or persons.
 
         let html = '';
         filtered.forEach((game, i) => {
+            const displayName = game.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             const coverHtml = game.cover
-                ? `<img src="${game.cover}" class="card-img-top game-cover" alt="${game.name}" onerror="this.outerHTML='<div class=\\'cover-placeholder\\'><i class=\\'bi bi-controller\\'></i></div>'">`
+                ? `<img src="${game.cover}" class="card-img-top game-cover" alt="${displayName}" onerror="this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<div class=cover-placeholder><i class=bi bi-controller></i></div>')">`
                 : `<div class="cover-placeholder"><i class="bi bi-controller"></i></div>`;
 
             html += `
             <div class="col game-card-anim" style="animation-delay:${i * 0.06}s" data-id="${game.id}">
                 <div class="card h-100 position-relative">
-                    <button class="remove-btn" onclick="removeGame('${game.id}')" title="Remove from library">&times;</button>
+                    <button class="remove-btn lib-remove-btn" data-entry-id="${game.id}" onclick="removeGame('${game.id}')" title="Remove from library">&times;</button>
                     <span class="badge ${statusBg[game.status]} status-badge">${statusLabel[game.status]}</span>
                     ${coverHtml}
                     <div class="card-body d-flex flex-column">
-                        <h6 class="card-title mb-1" style="cursor: pointer; color: #5383e8; transition: all 0.2s;" onclick="goToSearch('${game.name}')" onmouseover="this.style.textDecoration='underline'; this.style.opacity='0.8'" onmouseout="this.style.textDecoration='none'; this.style.opacity='1'">${game.name}</h6>
+                        <h6 class="card-title mb-1 lib-game-link" data-game-name="${displayName}" style="cursor: pointer; color: #5383e8; transition: all 0.2s;">${displayName}</h6>
                         <p class="text-muted small mb-2">${game.genre || 'Game'}${game.year ? ' • ' + game.year : ''}</p>
                         ${game.status === 'completed' && game.rating ? `<div class="mb-2">${renderStars(game.rating)}</div>` : ''}
                         <div class="mt-auto">
-                            <select class="form-select form-select-sm status-select" onchange="changeStatus('${game.id}', this.value)">
+                            <select class="form-select form-select-sm status-select lib-status-select" data-entry-id="${game.id}">
                                 <option value="backlog" ${game.status === 'backlog' ? 'selected' : ''}>Backlog</option>
                                 <option value="playing" ${game.status === 'playing' ? 'selected' : ''}>Playing</option>
                                 <option value="completed" ${game.status === 'completed' ? 'selected' : ''}>Completed</option>
@@ -519,51 +541,79 @@ plagiarized the work of other students and/or persons.
     }
 
     /* ---------- change status ---------- */
-    function changeStatus(id, newStatus) {
-        const games = loadLibrary();
-        const game = games.find(g => g.id === id);
+    async function changeStatus(id, newStatus) {
+        const game = libraryCache.find(g => g.id === id);
         if (!game) return;
-        const oldStatus = game.status;
-        game.status = newStatus;
-
-        // If changed to completed and no rating, prompt for one
-        if (newStatus === 'completed' && !game.rating) {
-            game.rating = 4; // default rating
+        const body = { status: newStatus };
+        if (newStatus === 'completed' && !game.rating) body.rating = 4;
+        if (newStatus !== 'completed') body.rating = 0;
+        try {
+            const res = await fetch('/api/library/' + id, {
+                method: 'PUT', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error('Update failed');
+            await fetchLibrary();
+            checkAchievements();
+            showToast(`${game.name} moved to ${statusLabel[newStatus]}`, 'bg-primary');
+            render();
+        } catch (err) {
+            console.error('[Library] Status update error:', err);
+            showToast('Failed to update status', 'bg-danger');
         }
-        // If moved from completed, clear rating
-        if (newStatus !== 'completed') game.rating = 0;
-
-        saveLibrary(games);
-        checkAchievements();
-        showToast(`${game.name} moved to ${statusLabel[newStatus]}`, 'bg-primary');
-        render();
     }
+
+    /* ---------- event delegation for card actions ---------- */
+    document.getElementById('libraryGrid').addEventListener('click', e => {
+        const removeBtn = e.target.closest('.lib-remove-btn');
+        if (removeBtn) {
+            e.stopPropagation();
+            removeGame(removeBtn.dataset.entryId);
+            return;
+        }
+        const gameLink = e.target.closest('.lib-game-link');
+        if (gameLink) {
+            goToSearch(gameLink.dataset.gameName);
+            return;
+        }
+    });
+    document.getElementById('libraryGrid').addEventListener('change', e => {
+        const sel = e.target.closest('.lib-status-select');
+        if (sel) changeStatus(sel.dataset.entryId, sel.value);
+    });
 
     /* ---------- remove game ---------- */
     let pendingRemoveId = null;
     const removeModal = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('removeGameModal'));
 
     function removeGame(id) {
-        const games = loadLibrary();
-        const game = games.find(g => g.id === id);
-        if (!game) return;
+        const game = libraryCache.find(g => String(g.id) === String(id));
+        if (!game) { console.error('[Library] removeGame: no game found for id', id); return; }
         pendingRemoveId = id;
         document.getElementById('removeGameText').innerHTML = `<strong>${game.name}</strong> will be removed from your library.`;
         removeModal().show();
     }
 
-    document.getElementById('confirmRemoveBtn').addEventListener('click', () => {
+    document.getElementById('confirmRemoveBtn').addEventListener('click', async () => {
         if (!pendingRemoveId) return;
-        let games = loadLibrary();
-        const game = games.find(g => g.id === pendingRemoveId);
+        const game = libraryCache.find(g => g.id === pendingRemoveId);
         const name = game ? game.name : 'Game';
-        games = games.filter(g => g.id !== pendingRemoveId);
-        saveLibrary(games);
-        checkAchievements();
-        pendingRemoveId = null;
-        removeModal().hide();
-        showToast(`${name} removed`, 'bg-danger');
-        render();
+        try {
+            const res = await fetch('/api/library/' + pendingRemoveId, {
+                method: 'DELETE', credentials: 'include'
+            });
+            if (!res.ok) throw new Error('Delete failed');
+            await fetchLibrary();
+            checkAchievements();
+            pendingRemoveId = null;
+            removeModal().hide();
+            showToast(`${name} removed`, 'bg-danger');
+            render();
+        } catch (err) {
+            console.error('[Library] Remove error:', err);
+            showToast('Failed to remove game', 'bg-danger');
+        }
     });
 
     /* ---------- tab filtering ---------- */
@@ -634,35 +684,55 @@ plagiarized the work of other students and/or persons.
         star.addEventListener('click', () => { addRating = parseInt(star.dataset.val); updateAddStars(); });
     });
 
-    document.getElementById('addGameSave').addEventListener('click', () => {
+    document.getElementById('addGameSave').addEventListener('click', async () => {
         const name = document.getElementById('addGameName').value.trim();
         if (!name) { document.getElementById('addGameName').classList.add('is-invalid'); return; }
         document.getElementById('addGameName').classList.remove('is-invalid');
 
-        const games = loadLibrary();
-        // Check for duplicates
-        if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+        if (libraryCache.some(g => g.name.toLowerCase() === name.toLowerCase())) {
             showToast(`"${name}" is already in your library!`, 'bg-warning');
             return;
         }
 
-        const newGame = {
-            id: 'game_' + Date.now(),
-            name: name,
-            genre: '',
-            year: 0,
-            status: document.getElementById('addGameStatus').value,
-            cover: '',
-            rating: addStatusSel.value === 'completed' ? (addRating || 0) : 0,
-            addedAt: Date.now()
-        };
-        games.unshift(newGame);
-        saveLibrary(games);
-        checkAchievements();
+        const status = document.getElementById('addGameStatus').value;
+        const rating = addStatusSel.value === 'completed' ? (addRating || 0) : 0;
 
-        bootstrap.Modal.getInstance(document.getElementById('addGameModal')).hide();
-        showToast(`${name} added to ${statusLabel[newGame.status]}!`, 'bg-success');
-        render();
+        try {
+            // Create Game document
+            const gameRes = await fetch('/api/games', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (!gameRes.ok) throw new Error('Failed to create game');
+            const { game } = await gameRes.json();
+
+            // Add to library
+            const libRes = await fetch('/api/library', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId, gameId: game._id, status })
+            });
+            if (!libRes.ok) throw new Error('Failed to add to library');
+
+            if (rating) {
+                const entry = await libRes.json();
+                await fetch('/api/library/' + entry.entry._id, {
+                    method: 'PUT', credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating })
+                });
+            }
+
+            await fetchLibrary();
+            checkAchievements();
+            bootstrap.Modal.getInstance(document.getElementById('addGameModal')).hide();
+            showToast(`${name} added to ${statusLabel[status]}!`, 'bg-success');
+            render();
+        } catch (err) {
+            console.error('[Library] Add game error:', err);
+            showToast('Failed to add game', 'bg-danger');
+        }
     });
 
     // Allow Enter to submit modal
@@ -671,32 +741,42 @@ plagiarized the work of other students and/or persons.
     });
 
     /* ---------- add suggested games from IGDB ---------- */
-    document.addEventListener('click', e => {
+    document.addEventListener('click', async e => {
         const btn = e.target.closest('.add-igdb-btn');
         if (!btn) return;
         
         const name = btn.dataset.name;
-        const games = loadLibrary();
         
-        if (games.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+        if (libraryCache.some(g => g.name.toLowerCase() === name.toLowerCase())) {
             showToast(`"${name}" is already in your library!`, 'bg-warning');
             return;
         }
-        
-        const newGame = {
-            id: 'igdb_' + Date.now(),
-            name: name,
-            genre: btn.dataset.genre || '',
-            year: parseInt(btn.dataset.year) || 0,
-            status: 'backlog',
-            cover: btn.dataset.cover || '',
-            rating: 0,
-            addedAt: Date.now()
-        };
-        
-        games.unshift(newGame);
-        saveLibrary(games);
-        checkAchievements();
+
+        try {
+            const genres = btn.dataset.genre ? btn.dataset.genre.split(' \u2022 ').map(g => g.trim()) : [];
+            const year = parseInt(btn.dataset.year) || 0;
+            const coverUrl = btn.dataset.cover || '';
+            const releaseDate = year ? new Date(year, 0, 1).toISOString() : null;
+
+            // Create Game document
+            const gameRes = await fetch('/api/games', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, coverUrl, genres, releaseDate })
+            });
+            if (!gameRes.ok) throw new Error('Failed to create game');
+            const { game } = await gameRes.json();
+
+            // Add to library
+            const libRes = await fetch('/api/library', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId, gameId: game._id, status: 'backlog' })
+            });
+            if (!libRes.ok) throw new Error('Failed to add to library');
+
+            await fetchLibrary();
+            checkAchievements();
         
         // Update button state immediately in DOM and re-render
         btn.textContent = '✓ In Library';
@@ -714,11 +794,11 @@ plagiarized the work of other students and/or persons.
         
         showToast(`${name} added to Backlog!`, 'bg-success');
         render();
+        } catch (err) {
+            console.error('[Library] IGDB add error:', err);
+            showToast('Failed to add game', 'bg-danger');
+        }
     });
-
-    /* ---------- init ---------- */
-    render();
-    checkAchievements();
 
     // Logout function
     async function logout(event) {
