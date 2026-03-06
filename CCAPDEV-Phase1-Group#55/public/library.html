@@ -8,7 +8,7 @@ plagiarized the work of other students and/or persons.
 <Your Full Name> - <ID Number> - <Section>
     <Ibanez, Kane Joshua> - <1234654> - <S13>
     <David, Justin Ice> - <12411574> - <S13>
-          <Fortea, Seanne Clarence - <12410969> -<S22>
+    <Fortea, Seanne Clarence - <12410969> -<S22>
 ****************************************************************************** -->
 <!-- library.html — User's personal game collection page.
      Fully interactive: add games, change status, filter by tab, localStorage persistence. -->
@@ -115,7 +115,7 @@ plagiarized the work of other students and/or persons.
 
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -228,6 +228,76 @@ plagiarized the work of other students and/or persons.
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    /* ======================================================================
+       AUTH & PAGE INITIALIZATION
+    ====================================================================== */
+    
+    // Check if user is logged in with retry logic
+    async function initializePage() {
+      try {
+        let retries = 5;
+        while (retries > 0) {
+          try {
+            // Use AbortController for proper timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+            
+            const res = await fetch('/api/auth/current', {
+              method: 'GET',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+
+            console.log('[Library] Auth response:', res.status);
+
+            if (res.ok) {
+              console.log('[Library] User authenticated');
+              return true; // User is logged in
+            } else if (res.status === 401 || res.status === 403) {
+              // Explicit auth failure - don't retry
+              console.error('[Library] Unauthorized (' + res.status + ') - redirecting to login');
+              setTimeout(() => {
+                window.location.href = 'login.html';
+              }, 500);
+              return false;
+            }
+            // Other status codes (5xx, etc) - try again
+          } catch (err) {
+            console.warn('[Library] Auth attempt ' + (6 - retries) + ' failed:', err.message);
+            // Network errors are temporary - retry
+          }
+          retries--;
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 500)); // Longer wait before retry
+          }
+        }
+        
+        console.error('[Library] Auth check failed after all retries - redirecting');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 500);
+        return false;
+      } catch (err) {
+        console.error('[Library] Failed to initialize:', err);
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 500);
+        return false;
+      }
+    }
+
+    // Initialize on page load
+    let pageInitComplete = false;
+    window.addEventListener('load', async () => {
+      if (!pageInitComplete) {
+        pageInitComplete = true;
+        await initializePage();
+      }
+    });
+
     /* ======================================================================
        Library — localStorage-backed game collection with full CRUD
        Key: bh_library_v1
@@ -662,6 +732,20 @@ plagiarized the work of other students and/or persons.
         } catch (err) {
             console.error('Logout failed:', err);
             window.location.href = 'login.html';
+        }
+    }
+
+    // Smart home navigation - if logged in go to dashboard, else go to index
+    async function smartHomeClick(e) {
+        e.preventDefault();
+        try {
+            const res = await fetch('/api/auth/current', { credentials: 'include' });
+            const dest = res.ok ? 'dashboard.html' : 'index.html';
+            document.body.classList.add('page-exit');
+            setTimeout(() => window.location = dest, 300);
+        } catch (err) {
+            console.error('Auth check failed:', err);
+            window.location = 'index.html';
         }
     }
 

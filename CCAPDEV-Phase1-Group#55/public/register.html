@@ -145,7 +145,7 @@ plagiarized the work of other students and/or persons.
 	</style>
 </head>
 <body>
-	<!-- Navbar — same as all other pages, no link is "active" here -->
+	<!-- Navbar — Clean version for login/register pages -->
 	<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
 		<div class="container py-2">
 			<a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
@@ -154,12 +154,9 @@ plagiarized the work of other students and/or persons.
 			</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-					<li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-					<li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
-					<li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
-					<li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
-					<li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+					<li class="nav-item"><a class="nav-link" href="index.html">← Back to Home</a></li>
 					<li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+					<li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1 active" href="register.html">Sign Up</a></li>
 				</ul>
 			</div>
 		</div>
@@ -293,6 +290,7 @@ plagiarized the work of other students and/or persons.
 				registerBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating account...';
 
 				try {
+					console.log('[Register] Submitting registration...');
 					const response = await fetch('/api/users/register', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
@@ -300,11 +298,15 @@ plagiarized the work of other students and/or persons.
 						body: JSON.stringify({ username, email, password, displayName })
 					});
 
+					console.log('[Register] Response status:', response.status);
+					
 					const data = await response.json();
 
 					if (!response.ok) {
 						throw new Error(data.error || 'Registration failed');
 					}
+
+					console.log('[Register] Account created successfully:', data.displayName);
 
 					// Show success message
 					successAlert.innerHTML = '✓ Account created! Redirecting to dashboard...';

@@ -30,17 +30,40 @@ app.use(express.static(__dirname + '/public')); // serve HTML, CSS, images from 
 // --- Auth Middleware ---
 const isLoggedIn = (req, res, next) => {
   if (req.session && req.session.userId) {
+    console.log('[AUTH] User authenticated. Session ID:', req.sessionID);
     next();
   } else {
+    console.log('[AUTH] Unauthorized access. Session:', req.session, 'SessionID:', req.sessionID);
     res.status(401).json({ error: 'Unauthorized. Please log in.' });
   }
 };
 
 // --- Database Connection ---
 let dbConnected = false;
-connectDB().then(() => {
-  dbConnected = true;
-});
+
+const initializeServer = async () => {
+  try {
+    await connectDB();
+    dbConnected = true;
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection failed:', err.message);
+  }
+
+  // --- Start Server ---
+  const PORT_NUM = process.env.PORT || 3001;
+  app.listen(PORT_NUM, () => {
+    console.log(`\n  🛡️  Backlog Hero server running at http://localhost:${PORT_NUM}`);
+    console.log(`  📂 Open that URL in your browser to use the site.\n`);
+    console.log(`  Database: ${dbConnected ? 'Connected' : 'Not connected'}`);
+
+    if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
+      console.log('  ⚠️  IGDB search requires TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in .env\n');
+    }
+  });
+};
+
+initializeServer();
 
 // --- Twitch OAuth token management ---
 let accessToken = null;
@@ -102,13 +125,22 @@ app.post('/api/users/register', async (req, res) => {
     // Set session
     req.session.userId = newUser._id;
     req.session.username = newUser.username;
+    console.log('[REGISTER] Session set for user:', newUser.displayName, '| Session ID:', req.sessionID);
     
-    res.status(201).json({
-      message: 'User registered successfully',
-      userId: newUser._id,
-      username: newUser.username,
-      email: newUser.email,
-      displayName: newUser.displayName,
+    // Save session before responding
+    req.session.save((err) => {
+      if (err) {
+        console.error('[REGISTER] Session save failed:', err.message);
+        return res.status(500).json({ error: 'Session save failed' });
+      }
+
+      res.status(201).json({
+        message: 'User registered successfully',
+        userId: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        displayName: newUser.displayName,
+      });
     });
   } catch (err) {
     console.error('[REGISTER] Error:', err.message);
@@ -138,13 +170,22 @@ app.post('/api/users/login', async (req, res) => {
     // Set session
     req.session.userId = user._id;
     req.session.username = user.username;
+    console.log('[LOGIN] Session set for user:', user.displayName, '| Session ID:', req.sessionID);
 
-    res.json({
-      message: 'Login successful',
-      userId: user._id,
-      username: user.username,
-      email: user.email,
-      displayName: user.displayName,
+    // Save session before responding
+    req.session.save((err) => {
+      if (err) {
+        console.error('[LOGIN] Session save failed:', err.message);
+        return res.status(500).json({ error: 'Session save failed' });
+      }
+
+      res.json({
+        message: 'Login successful',
+        userId: user._id,
+        username: user.username,
+        email: user.email,
+        displayName: user.displayName,
+      });
     });
   } catch (err) {
     console.error('[LOGIN] Error:', err.message);
@@ -155,11 +196,14 @@ app.post('/api/users/login', async (req, res) => {
 // GET /api/auth/current - Get current logged-in user
 app.get('/api/auth/current', isLoggedIn, async (req, res) => {
   try {
+    console.log('[GET CURRENT USER] Session userId:', req.session.userId);
     const user = await User.findById(req.session.userId);
     if (!user) {
+      console.error('[GET CURRENT USER] User not found in DB');
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log('[GET CURRENT USER] Retrieved user:', user.displayName);
     res.json({
       _id: user._id,
       username: user.username,
@@ -468,6 +512,28 @@ app.get('/api/games/popular', async (req, res) => {
   }
 });
 
+// GET /api/igdb/games - Alias for getting popular games (for homepage)
+app.get('/api/igdb/games', async (req, res) => {
+  try {
+    const token = await getAccessToken();
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain'
+      },
+      body: `fields name,cover.url,rating,genres.name,first_release_date,summary; where rating > 85 & cover != null; sort rating desc; limit 10;`
+    });
+
+    const data = await igdbRes.json();
+    res.json(data);
+  } catch (err) {
+    console.error('[IGDB GAMES] Error:', err.message);
+    res.status(500).json({ error: 'Failed to get games' });
+  }
+});
+
 // GET /api/games/igdb/:id - Get single game details by IGDB ID
 app.get('/api/games/igdb/:id', async (req, res) => {
   try {
@@ -490,14 +556,4 @@ app.get('/api/games/igdb/:id', async (req, res) => {
   }
 });
 
-// --- Start Server ---
-const PORT_NUM = process.env.PORT || 3001;
-app.listen(PORT_NUM, () => {
-  console.log(`\n  🛡️  Backlog Hero server running at http://localhost:${PORT_NUM}`);
-  console.log(`  📂 Open that URL in your browser to use the site.\n`);
-  console.log(`  Database: ${dbConnected ? '✓ Connected' : '✗ Not connected'}`);
 
-  if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
-    console.log('  ⚠️  IGDB search requires TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in .env\n');
-  }
-});

@@ -1,8 +1,8 @@
-# 🛡️ Backlog Hero - Phase 2
+# Backlog Hero - Phase 2
 
 A game collection tracker web application built with Node.js, Express, and MongoDB. Users can search for games, manage their personal game library, and track their gaming progress.
 
-## 📋 Project Structure
+##  Project Structure
 
 ```
 CCAPDEV-Phase2-Group#55/
@@ -24,7 +24,7 @@ CCAPDEV-Phase2-Group#55/
 └── README.md                  # This file
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -80,7 +80,7 @@ CCAPDEV-Phase2-Group#55/
    http://localhost:3000
    ```
 
-## 📦 Sample Data
+##  Sample Data
 
 The database includes pre-loaded sample data:
 
@@ -97,7 +97,7 @@ Users can log in with sample accounts:
 - Username: `indiegames` | Password: `password123`
 - Username: `competitiveking` | Password: `password123`
 
-## 🛣️ API Endpoints
+##  API Endpoints
 
 ### User Management
 
@@ -129,7 +129,7 @@ Users can log in with sample accounts:
 | PUT | `/api/library/:entryId` | Update library entry |
 | DELETE | `/api/library/:entryId` | Remove game from library |
 
-## 🔑 Authentication
+##  Authentication
 
 **Note**: Session management and password hashing are implemented for Phase 2. Full OAuth integration (Steam/Google SSO) is planned for future phases.
 
@@ -197,7 +197,7 @@ Response:
 }
 ```
 
-## 🌟 Features
+## Features
 
 ✅ User registration and login with password hashing
 ✅ Personal game library management
@@ -208,7 +208,6 @@ Response:
 ✅ Customizable user profiles
 ✅ Responsive dark-themed UI
 
-## 🛠️ Tech Stack
 
 - **Frontend**: HTML5, Bootstrap 5, JavaScript
 - **Backend**: Node.js, Express.js
@@ -216,7 +215,6 @@ Response:
 - **Authentication**: bcryptjs for password hashing
 - **External API**: IGDB (via Twitch OAuth)
 
-## 📄 Environment Configuration
 
 Create a `.env` file in the root directory:
 
@@ -232,7 +230,6 @@ TWITCH_CLIENT_SECRET=your_secret_here
 PORT=3000
 ```
 
-## 🧪 Testing the API
 
 ### Register a new user
 ```bash
@@ -262,7 +259,6 @@ curl -X POST http://localhost:3000/api/library \
 curl http://localhost:3000/api/library/507f1f77bcf86cd799439011
 ```
 
-## 📚 Navigation
 
 All pages are accessible from the main navbar:
 - **Dashboard**: Activity feed and game recommendations
@@ -271,13 +267,13 @@ All pages are accessible from the main navbar:
 - **Community**: Stats and community discussions
 - **Profile**: User profile customization
 
-## 🤝 Team Members
+## Team Members
 
 - **Ibanez, Kane Joshua** - 1234654 - S13
 - **David, Justin Ice** - 12411574 - S13
 - **Fortea, Seanne Clarence** - 12410969 - S22
 
-## 📝 Notes
+##  Notes
 
 - Form validation is implemented on the frontend (Phase 2 requirement: validation not yet implemented on backend)
 - Session management implemented with bcryptjs
@@ -285,7 +281,7 @@ All pages are accessible from the main navbar:
 - All routes follow RESTful API conventions
 - Comprehensive error handling with appropriate HTTP status codes
 
-## ⚠️ Troubleshooting
+##  Troubleshooting
 
 **MongoDB connection failed?**
 - Ensure MongoDB is running: `mongod`
@@ -303,7 +299,7 @@ All pages are accessible from the main navbar:
 - Change PORT in `.env` to an available port
 - Or kill the process: `lsof -ti:3000 | xargs kill -9` (Linux/Mac)
 
-## 📄 License
+##  License
 
 CCAPDEV Machine Project - Phase 2
 
