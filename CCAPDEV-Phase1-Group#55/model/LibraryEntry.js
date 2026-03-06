@@ -40,6 +40,10 @@ const libraryEntrySchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    hidden: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -323,6 +323,11 @@ plagiarized the work of other students and/or persons.
                                         <div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">Loading your library...</div>
                                     </div>
                                 </div>
+                                <div class="col-12">
+                                    <label class="form-label"><i class="bi bi-steam me-1"></i>Steam ID</label>
+                                    <input type="text" class="form-control" id="inputSteamId" placeholder="Your 17-digit Steam ID (e.g. 76561198012345678)">
+                                    <small class="text-muted">Find your Steam ID at <a href="https://steamid.io" target="_blank" rel="noopener" style="color:#5383e8;">steamid.io</a>. Needed to sync playtime from Steam.</small>
+                                </div>
                                 <!-- Privacy toggle — controls whether activity shows on the community feed.
                                      Defaults to checked (public) -->
                                 <div class="col-12">
@@ -414,6 +419,7 @@ plagiarized the work of other students and/or persons.
             document.getElementById('inputIdentity').value = profile.gamingIdentity;
             document.getElementById('inputPlatform').value = profile.favoritePlatform;
             document.getElementById('avatarPreview').src = profile.avatar;
+            document.getElementById('inputSteamId').value = profile.steamId || '';
 
             // Render games grid
             const gamesGrid = document.getElementById('gamesGrid');
@@ -485,7 +491,7 @@ plagiarized the work of other students and/or persons.
         });
 
         // Form submission
-        document.getElementById('profileForm').addEventListener('submit', (e) => {
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const displayName = document.getElementById('inputName').value.trim();
@@ -502,10 +508,29 @@ plagiarized the work of other students and/or persons.
                 gamingIdentity: document.getElementById('inputIdentity').value,
                 favoritePlatform: document.getElementById('inputPlatform').value,
                 favoriteGames: selectedFavoriteGames,
+                steamId: document.getElementById('inputSteamId').value.trim(),
                 joinDate: loadProfile().joinDate
             };
 
             saveProfile(profile);
+
+            // Also save steamId to the server DB
+            try {
+              const authRes = await fetch('/api/auth/current', { credentials: 'include' });
+              if (authRes.ok) {
+                const me = await authRes.json();
+                await fetch('/api/users/' + me._id, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    displayName: profile.displayName,
+                    bio: profile.bio,
+                    steamId: profile.steamId
+                  })
+                });
+              }
+            } catch (e) { console.warn('Could not sync profile to server:', e); }
 
             // Check for achievements
             const games = loadLibrary();

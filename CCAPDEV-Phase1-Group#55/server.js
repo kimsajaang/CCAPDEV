@@ -6,6 +6,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const fetch = require('node-fetch');
+const passport = require('passport');
+const SteamStrategy = require('passport-steam').Strategy;
 const connectDB = require('./model/db');
 const User = require('./model/User');
 const Game = require('./model/Game');
@@ -26,6 +28,56 @@ app.use(session({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public')); // serve HTML, CSS, images from public folder
+
+// --- Passport Configuration ---
+passport.serializeUser((user, done) => done(null, user._id.toString()));
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
+
+const STEAM_API_KEY = process.env.STEAM_API_KEY || 'F89327857A7FC98A53F87A6099FC1D2D';
+
+passport.use(new SteamStrategy({
+    returnURL: `http://localhost:${PORT}/auth/steam/callback`,
+    realm: `http://localhost:${PORT}/`,
+    apiKey: STEAM_API_KEY
+  },
+  async (identifier, profile, done) => {
+    try {
+      const steamId = profile.id;
+      // Find existing user with this Steam ID
+      let user = await User.findOne({ steamId });
+      if (!user) {
+        // Create a new user from Steam profile
+        user = new User({
+          username: 'steam_' + steamId,
+          email: steamId + '@steam.local',
+          password: require('crypto').randomBytes(32).toString('hex'),
+          displayName: profile.displayName || 'Steam User',
+          avatar: profile.photos && profile.photos[2] ? profile.photos[2].value
+                : profile.photos && profile.photos[0] ? profile.photos[0].value
+                : undefined,
+          steamId: steamId,
+        });
+        await user.save();
+        console.log('[STEAM AUTH] Created new user:', user.displayName, '| Steam ID:', steamId);
+      } else {
+        console.log('[STEAM AUTH] Existing user found:', user.displayName, '| Steam ID:', steamId);
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err, null);
+    }
+  }
+));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // --- Auth Middleware ---
 const isLoggedIn = (req, res, next) => {
@@ -51,9 +103,8 @@ const initializeServer = async () => {
   }
 
   // --- Start Server ---
-  const PORT_NUM = process.env.PORT || 3001;
-  app.listen(PORT_NUM, () => {
-    console.log(`\n  🛡️  Backlog Hero server running at http://localhost:${PORT_NUM}`);
+  app.listen(PORT, () => {
+    console.log(`\n  🛡️  Backlog Hero server running at http://localhost:${PORT}`);
     console.log(`  📂 Open that URL in your browser to use the site.\n`);
     console.log(`  Database: ${dbConnected ? 'Connected' : 'Not connected'}`);
 
@@ -212,6 +263,7 @@ app.get('/api/auth/current', isLoggedIn, async (req, res) => {
       bio: user.bio,
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
+      steamId: user.steamId || '',
       createdAt: user.createdAt,
     });
   } catch (err) {
@@ -231,11 +283,104 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+// ─── STEAM AUTH ROUTES ───
+
+// Helper: import a user's Steam games into their Backlog Hero library
+async function importSteamGames(user) {
+  const steamUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${encodeURIComponent(user.steamId)}&format=json&include_appinfo=1&include_played_free_games=1`;
+  const steamRes = await fetch(steamUrl);
+  const steamData = await steamRes.json();
+
+  if (!steamData.response || !steamData.response.games) {
+    console.log('[STEAM IMPORT] No games found (profile may be private). Steam ID:', user.steamId);
+    return { imported: 0, updated: 0 };
+  }
+
+  const steamGames = steamData.response.games;
+  let imported = 0, updated = 0;
+
+  for (const sg of steamGames) {
+    if (!sg.name) continue;
+
+    // Find or create the Game document
+    let game = await Game.findOne({ name: { $regex: new RegExp('^' + sg.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') } });
+    const portraitCover = `https://cdn.cloudflare.steamstatic.com/steam/apps/${sg.appid}/library_600x900_2x.jpg`;
+    if (!game) {
+      game = new Game({
+        name: sg.name,
+        coverUrl: portraitCover,
+        platforms: ['PC'],
+      });
+      await game.save();
+    } else if (game.coverUrl && game.coverUrl.includes('/header.jpg')) {
+      // Upgrade old landscape header to portrait cover
+      game.coverUrl = portraitCover;
+      await game.save();
+    }
+
+    // Check if already in library (including hidden/removed entries)
+    const existing = await LibraryEntry.findOne({ userId: user._id, gameId: game._id });
+    const steamHours = Math.round((sg.playtime_forever / 60) * 10) / 10;
+
+    if (!existing) {
+      // Determine status based on playtime
+      let status = 'backlog';
+      if (steamHours > 0) status = 'playing';
+
+      const entry = new LibraryEntry({
+        userId: user._id,
+        gameId: game._id,
+        status,
+        playtime: steamHours,
+      });
+      await entry.save();
+      imported++;
+    } else if (existing.hidden) {
+      // User previously removed this game — don't re-import, just update playtime silently
+      if (steamHours > (existing.playtime || 0)) {
+        existing.playtime = steamHours;
+        await existing.save();
+      }
+    } else if (steamHours > (existing.playtime || 0)) {
+      // Update playtime if Steam has more
+      existing.playtime = steamHours;
+      await existing.save();
+      updated++;
+    }
+  }
+
+  console.log(`[STEAM IMPORT] ${user.displayName}: imported ${imported} new games, updated ${updated} playtimes (${steamGames.length} total Steam games)`);
+  return { imported, updated, total: steamGames.length };
+}
+
+// GET /auth/steam - Redirect to Steam login page
+app.get('/auth/steam', passport.authenticate('steam', { failureRedirect: '/login.html' }));
+
+// GET /auth/steam/callback - Steam redirects back here after login
+app.get('/auth/steam/callback',
+  passport.authenticate('steam', { failureRedirect: '/login.html' }),
+  async (req, res) => {
+    // Set our session userId so existing auth middleware works
+    req.session.userId = req.user._id.toString();
+    console.log('[STEAM AUTH] Login successful. User:', req.user.displayName);
+
+    // Auto-import Steam games into library
+    try {
+      const result = await importSteamGames(req.user);
+      console.log('[STEAM AUTH] Import result:', result);
+    } catch (err) {
+      console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
+    }
+
+    res.redirect('/dashboard.html');
+  }
+);
+
 // GET /api/auth/stats - Get user library stats
 app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
   try {
     const userId = req.session.userId;
-    const entries = await LibraryEntry.find({ userId });
+    const entries = await LibraryEntry.find({ userId, hidden: { $ne: true } });
     
     const stats = {
       total: entries.length,
@@ -271,6 +416,7 @@ app.get('/api/users/:userId', isLoggedIn, async (req, res) => {
       bio: user.bio,
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
+      steamId: user.steamId || '',
       createdAt: user.createdAt,
     });
   } catch (err) {
@@ -287,7 +433,7 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden. You can only edit your own profile.' });
     }
 
-    const { displayName, bio, avatar, favoriteGames } = req.body;
+    const { displayName, bio, avatar, favoriteGames, steamId } = req.body;
     const user = await User.findById(req.params.userId);
 
     if (!user) {
@@ -298,6 +444,7 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
     if (bio !== undefined) user.bio = bio;
     if (avatar) user.avatar = avatar;
     if (favoriteGames) user.favoriteGames = favoriteGames;
+    if (steamId !== undefined) user.steamId = steamId;
 
     await user.save();
     res.json({ message: 'Profile updated', user });
@@ -366,7 +513,7 @@ app.post('/api/games', async (req, res) => {
 // GET /api/library/:userId - Get user's library
 app.get('/api/library/:userId', async (req, res) => {
   try {
-    const entries = await LibraryEntry.find({ userId: req.params.userId })
+    const entries = await LibraryEntry.find({ userId: req.params.userId, hidden: { $ne: true } })
       .populate('gameId')
       .sort({ addedAt: -1 });
 
@@ -385,7 +532,7 @@ app.get('/api/library/:userId/status/:status', async (req, res) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
-    const entries = await LibraryEntry.find({ userId, status })
+    const entries = await LibraryEntry.find({ userId, status, hidden: { $ne: true } })
       .populate('gameId')
       .sort({ addedAt: -1 });
 
@@ -450,11 +597,15 @@ app.put('/api/library/:entryId', async (req, res) => {
 // DELETE /api/library/:entryId - Remove game from library
 app.delete('/api/library/:entryId', async (req, res) => {
   try {
-    const entry = await LibraryEntry.findByIdAndDelete(req.params.entryId);
+    const entry = await LibraryEntry.findById(req.params.entryId);
 
     if (!entry) {
       return res.status(404).json({ error: 'Library entry not found' });
     }
+
+    // Soft-delete: mark hidden so Steam sync won't re-import
+    entry.hidden = true;
+    await entry.save();
 
     res.json({ message: 'Game removed from library' });
   } catch (err) {
@@ -557,3 +708,31 @@ app.get('/api/games/igdb/:id', async (req, res) => {
 });
 
 
+// ─── STEAM INTEGRATION ───
+
+// POST /api/steam/sync - Sync playtime from Steam (also imports new games)
+app.post('/api/steam/sync', isLoggedIn, async (req, res) => {
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user || !user.steamId) {
+      return res.status(400).json({ error: 'No Steam ID linked. Add your Steam ID in Profile Edit.' });
+    }
+
+    const result = await importSteamGames(user);
+
+    // Recalculate total hours
+    const allEntries = await LibraryEntry.find({ userId: user._id, hidden: { $ne: true } });
+    const totalHours = allEntries.reduce((sum, e) => sum + (e.playtime || 0), 0);
+
+    res.json({
+      message: `Synced! Imported ${result.imported} new game${result.imported !== 1 ? 's' : ''}, updated ${result.updated} playtime${result.updated !== 1 ? 's' : ''}.`,
+      imported: result.imported,
+      updated: result.updated,
+      totalHours: Math.round(totalHours),
+      steamGamesCount: result.total || 0
+    });
+  } catch (err) {
+    console.error('[STEAM SYNC] Error:', err.message);
+    res.status(500).json({ error: 'Steam sync failed. Please try again.' });
+  }
+});
