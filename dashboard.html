@@ -1,0 +1,864 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+          <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+<!-- dashboard.html — Main dashboard page after login.
+     Shows friend activity feed, backlog suggestions, and streak counter. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlog Hero | Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom dark theme styles. We tried using a shared stylesheet first but
+         each page needed too many overrides so we kept them inline for now. -->
+    <style>
+        body {
+            background-color: #0f1519 !important;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body.loading {
+            overflow: hidden;
+        }
+        .card {
+            background-color: #1c252e !important;
+            border: 1px solid #2a3843 !important;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+        }
+        .navbar {
+            background-color: #1c252e !important;
+            border-bottom: 1px solid #2a3843;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease, transform 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+            transform: translateY(-3px);
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        @keyframes pageSlideIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .btn-primary, .bg-primary, .badge.bg-primary {
+            background-color: #5383e8 !important;
+            border-color: #5383e8 !important;
+        }
+        .btn-outline-primary {
+            color: #5383e8 !important;
+            border-color: #5383e8 !important;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-primary:hover {
+            background-color: #5383e8 !important;
+            color: #ffffff !important;
+        }
+        .list-group-item {
+            background-color: #1c252e !important;
+            border-color: #2a3843 !important;
+            color: #ffffff;
+            transition: 0.2s;
+            border-radius: 12px;
+        }
+        .list-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .list-group-item:hover {
+            background-color: #243039 !important;
+        }
+        .avatar-sm {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+        }
+        .feed-cover {
+            width: 46px;
+            height: 62px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #2a3843;
+        }
+        .text-muted { color: #9e9e9e !important; }
+        .extra-small { font-size: 0.75rem; }
+        /* Loading spinner — shows for 1.2 seconds while the page "loads".
+           Faked the loading screen to make it feel more app-like.
+           The timeout is in the JS at the bottom of the page. */
+        .loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 21, 25, 0.96);
+            z-index: 2000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-card {
+            background: #1c252e;
+            border: 1px solid #2a3843;
+            border-radius: 14px;
+            padding: 22px 26px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .loader-orb {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 4px solid #2a3843;
+            border-top-color: #5383e8;
+            animation: spin 0.9s linear infinite;
+        }
+        .loader-text {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .loader-sub {
+            font-size: 0.8rem;
+            color: #9e9e9e;
+        }
+        
+        /* Hero banner at the top of the dashboard — quick stats + CTA buttons */
+        .hero {
+            background: linear-gradient(135deg, rgba(28, 37, 46, 0.95), rgba(15, 21, 25, 0.95));
+            border: 1px solid #2a3843;
+            border-radius: 16px;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+        }
+        .hero-title {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+        .hero-sub {
+            color: #b5c0cc;
+        }
+        .feature-card {
+            background: #1c252e;
+            border: 1px solid #2a3843;
+            border-radius: 14px;
+            padding: 16px;
+            height: 100%;
+        }
+        .hero {
+            background: linear-gradient(135deg, rgba(28, 37, 46, 0.96), rgba(15, 21, 25, 0.96));
+            border: 1px solid #2a3843;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+        }
+        .hero-compact {
+            padding: 18px 22px;
+        }
+        .hero-title {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+        .hero-sub {
+            color: #b5c0cc;
+            max-width: 700px;
+        }
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+        .hero-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(15, 21, 25, 0.55);
+            border: 1px solid rgba(42, 56, 67, 0.7);
+        }
+        .hero-stat-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #b5c0cc;
+            font-size: 0.8rem;
+            letter-spacing: 0.02em;
+        }
+        .hero-stat-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+        .dot-played { background: #ff5aa5; }
+        .dot-games { background: #3ddc84; }
+        .dot-ratings { background: #4f8cff; }
+        .dot-reviews { background: #f2a13b; }
+        .dot-lists { background: #ff6b6b; }
+        /* Scroll-triggered reveal animations — cards fade in as you scroll down.
+           Uses IntersectionObserver for this, see the script at bottom */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sticky-cta {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 1200;
+            background: #5383e8;
+            color: #ffffff;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+        }
+        .sticky-cta:hover {
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Post Update modal styling */
+        .modal-content {
+          background-color: #1c252e;
+          border: 1px solid #2a3843;
+          color: #ffffff;
+        }
+        .modal-header, .modal-footer {
+          border-color: #2a3843;
+        }
+        .btn-close {
+          filter: invert(1) grayscale(1);
+        }
+        .form-control, .form-select {
+          background-color: #141b21;
+          border-color: #2a3843;
+          color: #ffffff;
+        }
+        .form-control::placeholder { color: #76828c; }
+        .form-control:focus, .form-select:focus {
+          border-color: #5383e8;
+          box-shadow: 0 0 0 0.2rem rgba(83, 131, 232, 0.25);
+          color: #ffffff;
+          background-color: #141b21;
+        }
+        .form-text { color: #9e9e9e; }
+        /* Suggestion result animation */
+        .suggest-result {
+          transition: all 0.3s ease;
+        }
+        .suggest-result.highlight {
+          border-color: #5383e8 !important;
+          box-shadow: 0 0 12px rgba(83, 131, 232, 0.3);
+        }
+        /* User-posted feed item accent */
+        .user-post-item {
+          border-left: 4px solid #5383e8 !important;
+        }
+        /* Photo upload styles */
+        .photo-upload-area {
+          border: 2px dashed #2a3843;
+          border-radius: 12px;
+          padding: 20px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          background: rgba(83, 131, 232, 0.05);
+        }
+        .photo-upload-area:hover {
+          border-color: #5383e8;
+          background: rgba(83, 131, 232, 0.1);
+        }
+        .photo-upload-area.has-photo {
+          border: 1px solid #2a3843;
+          padding: 8px;
+          background: transparent;
+        }
+        .photo-preview-img {
+          max-width: 100%;
+          max-height: 300px;
+          border-radius: 8px;
+          object-fit: cover;
+          margin-bottom: 10px;
+        }
+        .photo-remove-btn {
+          font-size: 0.8rem;
+          padding: 4px 8px;
+        }
+        .feed-photo {
+          width: 100%;
+          max-height: 400px;
+          border-radius: 8px;
+          object-fit: cover;
+          margin: 10px 0;
+          border: 1px solid #2a3843;
+        }
+    </style>
+</head>
+<body class="loading">
+
+    <!-- Fake loading screen. Purely cosmetic — just makes the dashboard feel polished.
+     We remove it after 1.2s in the JS below. -->
+    <div id="page-loader" class="loader" aria-label="Loading">
+        <div class="loader-card">
+            <div class="loader-orb"></div>
+            <div>
+                <div class="loader-text">Loading your dashboard</div>
+                <div class="loader-sub">Warming up your backlog picks</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation bar — same structure on every page, just the active class changes -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link active" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Welcome hero card with global stats (placeholder numbers for now)
+     These are hardcoded stats for now. -->
+        <div class="hero hero-compact mb-4 reveal">
+            <span class="badge bg-primary mb-2">Welcome to Backlog Hero</span>
+            <h2 class="hero-title mb-2">Play smarter, finish more.</h2>
+            <p class="hero-sub mb-3">Quick picks based on your free time.</p>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                <a class="btn btn-primary" href="index.html">Get Started</a>
+                <a class="btn btn-outline-primary" href="search.html">Find Games</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-played"></span>Played</div>
+                    <div class="hero-stat-value">54.3M</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-games"></span>Games</div>
+                    <div class="hero-stat-value">339K</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-ratings"></span>Ratings</div>
+                    <div class="hero-stat-value">32.3M</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-reviews"></span>Reviews</div>
+                    <div class="hero-stat-value">3.74M</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label"><span class="dot dot-lists"></span>Lists</div>
+                    <div class="hero-stat-value">681K</div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 reveal">
+            <div class="col-md-4">
+            <!-- Backlog suggestion tool — user enters available minutes, gets a game pick.
+     Right now the recommendation is hardcoded
+     based on the user's actual library and avg session lengths. -->
+            <div class="card mb-4 reveal">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-magic me-2"></i>What's the Plan?</h5>
+                        <p class="text-muted small">Enter available time for a backlog suggestion.</p>
+                        <div class="input-group mb-3">
+                            <input id="planHours" type="number" min="0" class="form-control bg-dark text-white border-secondary" placeholder="Hours">
+                            <input id="planMinutes" type="number" min="0" max="59" class="form-control bg-dark text-white border-secondary" placeholder="Minutes">
+                            <button id="planSuggestBtn" class="btn btn-primary" type="button">Suggest</button>
+                        </div>
+                        <div id="planResult" class="suggest-result p-3 rounded bg-dark border border-secondary">
+                            <p class="mb-0 small text-muted">Enter your free time and hit Suggest!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily streak counter — gamification element to keep users coming back
+     The streak data is static for now, will need user session tracking later -->
+                <div class="card bg-primary text-white border-0 mb-4 reveal">
+                    <div class="card-body text-center py-4">
+                        <h6 class="text-white-50">Current Streak</h6>
+                        <h2 class="display-4 fw-bold">5 Days</h2>
+                        <p class="mb-0 small">Don't break the chain, Kane!</p>
+                    </div>
+                </div>
+
+                <!-- Community ratings sidebar — just showing top-rated games from the community
+     TODO: pull these from actual community reviews when backend is ready -->
+                <div class="card reveal">
+                    <div class="card-body">
+                        <h6 class="mb-3">Community Quality Scores</h6>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span>Elden Ring</span>
+                            <span class="text-warning">★ 4.9</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span>Cyberpunk 2077</span>
+                            <span class="text-warning">★ 4.5</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span>Balatro</span>
+                            <span class="text-warning">★ 4.8</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Friend Activity Feed — the main content area of the dashboard.
+     Shows what friends are playing, reviewing, completing, etc.
+     Each feed item has a different left-border color to indicate type.
+     Data is static HTML for now. -->
+                <div class="d-flex justify-content-between align-items-center mb-4 reveal">
+                    <h4>Friend Activity Feed</h4>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#postUpdateModal">Post Update</button>
+                </div>
+
+                <div class="list-group shadow-sm">
+                    <div class="list-group-item p-3 border-start border-primary border-4 reveal">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
+                            <strong class="text-primary">Kane_Joshua</strong> 
+                            <span class="text-muted ms-2 small">logged a session</span>
+                            <span class="text-muted ms-auto extra-small">Feb 15, 11:24 PM</span>
+                        </div>
+                        <div class="d-flex align-items-start gap-3 mb-2">
+                            <img src="reddead.jpg" class="feed-cover" alt="Red Dead Redemption 2 cover">
+                            <h6 class="mb-1">Red Dead Redemption 2</h6>
+                        </div>
+                        <p class="mb-2 text-white-50 small">"Just survived an unarmed encounter with some bandits. The witness mechanic is wild - gotta be careful who sees me out here in the frontier!"</p>
+                        <img src="gamelaypic.png" class="feed-photo" alt="Session screenshot" style="max-height: 400px;">
+                        <div class="d-flex gap-3 text-muted extra-small mt-2">
+                            <span><i class="bi bi-controller"></i> 2h Active</span>
+                            <span><i class="bi bi-cup-hot"></i> 0.5h AFK</span>
+                            <span class="text-info">Chapter 2</span>
+                        </div>
+                    </div>
+
+                    <div class="list-group-item p-3 reveal">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
+                            <strong class="text-primary">Justin_Ice</strong> 
+                            <span class="text-muted ms-2 small">reviewed a game</span>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <img src="valorant.jpg" class="feed-cover" alt="Valorant cover">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 small">Valorant</h6>
+                                <div class="text-warning mb-1 extra-small">★★★★★</div>
+                                <p class="mb-0 small text-white-50">"Finally hit a new rank today. The clutch round was wild."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-group-item p-3 reveal">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
+                            <strong class="text-primary">Seanne_C</strong> 
+                            <span class="text-muted ms-2 small">moved a game to <strong>Playing</strong></span>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <img src="farcrt.jpg" class="feed-cover" alt="Far Cry cover">
+                            <p class="mb-0 small">Far Cry 5 (PC)</p>
+                        </div>
+                        <small class="text-muted extra-small">Goal: Clear Holland Valley outposts.</small>
+                    </div>
+
+                    <div class="list-group-item p-3 reveal">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
+                            <strong class="text-primary">Kane_Joshua</strong> 
+                            <span class="text-muted ms-2 small">completed a game</span>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <img src="leagueoflegends.jpg" class="feed-cover" alt="League of Legends cover">
+                            <h6 class="mb-0 small">League of Legends</h6>
+                        </div>
+                        <span class="badge bg-success extra-small">100% PLATINUM</span>
+                        <p class="mt-2 mb-0 small text-white-50">"Season grind complete. Time to try a new role."</p>
+                    </div>
+
+                    <div class="list-group-item p-3 reveal">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-list-stars text-primary me-2"></i>
+                            <strong class="text-primary">Justin_Ice</strong> 
+                            <span class="text-muted ms-2 small">shared a list: <strong>Top Roguelikes 2026</strong></span>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <img src="reddead.jpg" class="feed-cover" alt="Red Dead Redemption 2 cover">
+                            <p class="mb-0 small text-muted">Includes Red Dead Redemption 2, Valorant, and League of Legends.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Update Modal -->
+    <div class="modal fade" id="postUpdateModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Post Update</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label small">What type of update?</label>
+              <select id="updateType" class="form-select">
+                <option value="session">Logged a session</option>
+                <option value="review">Reviewed a game</option>
+                <option value="completed">Completed a game</option>
+                <option value="playing">Started playing</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Game</label>
+              <select id="updateGame" class="form-select">
+                <option value="Black Myth: Wukong">Black Myth: Wukong</option>
+                <option value="Red Dead Redemption 2">Red Dead Redemption 2</option>
+                <option value="Far Cry 5">Far Cry 5</option>
+                <option value="Valorant">Valorant</option>
+                <option value="League of Legends">League of Legends</option>
+              </select>
+            </div>
+            <div class="mb-3" id="ratingGroup" style="display:none;">
+              <label class="form-label small">Rating</label>
+              <select id="updateRating" class="form-select">
+                <option value="5">★★★★★</option>
+                <option value="4">★★★★☆</option>
+                <option value="3">★★★☆☆</option>
+                <option value="2">★★☆☆☆</option>
+                <option value="1">★☆☆☆☆</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Comment</label>
+              <textarea id="updateComment" class="form-control" rows="3" maxlength="300" placeholder="What happened in your session?"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Add Photo (Optional)</label>
+              <div id="photoUploadArea" class="photo-upload-area">
+                <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
+                <p class="mb-0 mt-2 small">Click to upload a screenshot</p>
+                <input type="file" id="photoInput" accept="image/*" style="display: none;">
+              </div>
+              <div id="photoPreviewContainer" style="display: none;"></div>
+            </div>
+            <div id="updateError" class="small text-danger" style="display:none;"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button id="submitUpdateBtn" type="button" class="btn btn-primary">Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS bundle (includes Popper) for navbar toggle and other components -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Page scripts:
+     1) Fake loader — hides after 1.2s timeout
+     2) Scroll reveal — uses IntersectionObserver to fade in cards as they enter viewport
+     The threshold 0.12 means the animation triggers when 12% of the card is visible -->
+    <script>
+        window.addEventListener("load", () => {
+            const loader = document.getElementById("page-loader");
+            setTimeout(() => {
+                loader.classList.add("hidden");
+                document.body.classList.remove("loading");
+            }, 1200);
+        });
+        const revealItems = document.querySelectorAll(".reveal");
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("is-visible");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.12 }
+        );
+        revealItems.forEach((item) => observer.observe(item));
+
+        // ============================================================
+        // What's the Plan — backlog suggestion engine
+        // ============================================================
+        const backlogGames = [
+          { name: "Black Myth: Wukong", img: "blackmyth.jpg", genre: "Action RPG", minSession: 30, avgSession: 60, note: "Boss fights require focus" },
+          { name: "Red Dead Redemption 2", img: "reddead.jpg", genre: "Open World", minSession: 45, avgSession: 90, note: "Great for long sessions" },
+          { name: "Far Cry 5", img: "farcrt.jpg", genre: "Action", minSession: 20, avgSession: 45, note: "Quick outpost runs" },
+          { name: "Valorant", img: "valorant.jpg", genre: "Tactical Shooter", minSession: 15, avgSession: 35, note: "One comp match ~30 min" },
+          { name: "League of Legends", img: "leagueoflegends.jpg", genre: "MOBA", minSession: 25, avgSession: 40, note: "ARAM for quick games" },
+          { name: "Hades", img: "", genre: "Roguelike", minSession: 15, avgSession: 25, note: "Perfect for short runs" },
+          { name: "Stardew Valley", img: "", genre: "Farming Sim", minSession: 15, avgSession: 30, note: "Relaxed pace, save anytime" },
+          { name: "Balatro", img: "", genre: "Roguelike Deckbuilder", minSession: 10, avgSession: 20, note: "One run = one sitting" },
+          { name: "Hollow Knight", img: "", genre: "Metroidvania", minSession: 20, avgSession: 45, note: "Bench saves are frequent" },
+          { name: "Slay the Spire", img: "", genre: "Deckbuilder", minSession: 15, avgSession: 30, note: "Turn-based, pause anytime" }
+        ];
+
+        const planInput = document.getElementById("planMinutes");
+        const planBtn = document.getElementById("planSuggestBtn");
+        const planResult = document.getElementById("planResult");
+        const planHours = document.getElementById("planHours");
+
+        planBtn.addEventListener("click", suggestGame);
+        planInput.addEventListener("keydown", (e) => { if (e.key === "Enter") suggestGame(); });
+        planHours.addEventListener("keydown", (e) => { if (e.key === "Enter") suggestGame(); });
+
+        function suggestGame() {
+          const hours = parseInt(planHours.value) || 0;
+          const mins = parseInt(planInput.value) || 0;
+          const totalMins = (hours * 60) + mins;
+          
+          if (totalMins < 1) {
+            planResult.innerHTML = `<p class="mb-0 small text-warning">Please enter at least 1 minute of available time.</p>`;
+            return;
+          }
+
+          // Filter games that fit within the available time
+          const fits = backlogGames.filter(g => g.minSession <= totalMins);
+          if (fits.length === 0) {
+            planResult.innerHTML = `<p class="mb-0 small text-warning">No games fit in ${hours}h ${mins}m. Try at least 10 minutes!</p>`;
+            return;
+          }
+
+          // Pick random from fitting games, weighted toward those closest to the time
+          const pick = fits[Math.floor(Math.random() * fits.length)];
+          const sessions = Math.max(1, Math.floor(totalMins / pick.avgSession));
+          const imgTag = pick.img
+            ? `<img src="${pick.img}" style="width:42px;height:56px;border-radius:6px;object-fit:cover;border:1px solid #2a3843;" alt="${pick.name}">`
+            : `<div style="width:42px;height:56px;border-radius:6px;background:#2a3843;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#6f7d8a;"><i class="bi bi-controller"></i></div>`;
+
+          planResult.innerHTML = `
+            <div class="d-flex align-items-center gap-3">
+              ${imgTag}
+              <div>
+                <p class="mb-0 small"><strong>Recommended:</strong> ${pick.name}</p>
+                <small class="text-info">~${pick.avgSession} mins/session · ${sessions > 1 ? sessions + ' sessions fit' : '1 session'}</small><br/>
+                <small class="text-muted">${pick.genre} · ${pick.note}</small>
+              </div>
+            </div>
+          `;
+
+          // Highlight animation
+          planResult.classList.add("highlight");
+          setTimeout(() => planResult.classList.remove("highlight"), 1200);
+        }
+
+        // ============================================================
+        // Post Update — adds new feed items to the activity feed
+        // ============================================================
+        const gameCovers = {
+          "Black Myth: Wukong": "blackmyth.jpg",
+          "Red Dead Redemption 2": "reddead.jpg",
+          "Far Cry 5": "farcrt.jpg",
+          "Valorant": "valorant.jpg",
+          "League of Legends": "leagueoflegends.jpg"
+        };
+
+        const typeLabels = {
+          "session": "logged a session",
+          "review": "reviewed a game",
+          "completed": "completed a game",
+          "playing": "started playing"
+        };
+
+        const updateType = document.getElementById("updateType");
+        const ratingGroup = document.getElementById("ratingGroup");
+
+        // Photo upload handling
+        let selectedPhoto = null;
+        const photoUploadArea = document.getElementById("photoUploadArea");
+        const photoInput = document.getElementById("photoInput");
+        const photoPreviewContainer = document.getElementById("photoPreviewContainer");
+
+        photoUploadArea.addEventListener("click", () => photoInput.click());
+        photoInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+              alert("Photo must be less than 5MB");
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              selectedPhoto = event.target.result;
+              photoUploadArea.classList.add("has-photo");
+              photoUploadArea.innerHTML = `<img src="${selectedPhoto}" class="photo-preview-img" alt="Preview">`;
+              const removeBtn = document.createElement("button");
+              removeBtn.type = "button";
+              removeBtn.className = "btn btn-sm btn-outline-danger photo-remove-btn";
+              removeBtn.textContent = "Remove Photo";
+              removeBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                selectedPhoto = null;
+                photoInput.value = "";
+                photoUploadArea.classList.remove("has-photo");
+                photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
+              });
+              photoUploadArea.appendChild(removeBtn);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+        // Show/hide rating when type changes
+        updateType.addEventListener("change", () => {
+          ratingGroup.style.display = updateType.value === "review" ? "block" : "none";
+        });
+
+        document.getElementById("submitUpdateBtn").addEventListener("click", () => {
+          const type = updateType.value;
+          const game = document.getElementById("updateGame").value;
+          const comment = document.getElementById("updateComment").value.trim();
+          const rating = document.getElementById("updateRating").value;
+          const errorEl = document.getElementById("updateError");
+
+          if (!comment) {
+            errorEl.textContent = "Please write a comment.";
+            errorEl.style.display = "block";
+            return;
+          }
+
+          errorEl.style.display = "none";
+          const cover = gameCovers[game] || "pfp.jpg";
+          const stars = "★".repeat(parseInt(rating)) + "☆".repeat(5 - parseInt(rating));
+
+          let extraHTML = "";
+          if (type === "review") {
+            extraHTML = `<div class="text-warning mb-1 extra-small">${stars}</div>`;
+          } else if (type === "completed") {
+            extraHTML = `<span class="badge bg-success extra-small">COMPLETED</span>`;
+          } else if (type === "playing") {
+            extraHTML = `<span class="badge bg-info text-dark extra-small">NOW PLAYING</span>`;
+          }
+
+          const now = new Date();
+          const timeStr = now.toLocaleString(undefined, { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+          const newItem = document.createElement("div");
+          newItem.className = "list-group-item p-3 user-post-item";
+          newItem.style.opacity = "0";
+          newItem.style.transform = "translateY(-10px)";
+          newItem.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+          
+          let photoHTML = "";
+          if (selectedPhoto) {
+            photoHTML = `<img src="${selectedPhoto}" class="feed-photo" alt="Session screenshot">`;
+          }
+          
+          newItem.innerHTML = `
+            <div class="d-flex align-items-center mb-2">
+              <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
+              <strong class="text-primary">Kane_Joshua</strong>
+              <span class="text-muted ms-2 small">${typeLabels[type]}</span>
+              <span class="text-muted ms-auto extra-small">${timeStr}</span>
+            </div>
+            <div class="d-flex align-items-start gap-3 mb-1">
+              <img src="${cover}" class="feed-cover" alt="${game} cover">
+              <div>
+                <h6 class="mb-1 small">${game}</h6>
+                ${extraHTML}
+              </div>
+            </div>
+            <p class="mb-2 small text-white-50">"${comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</p>
+            ${photoHTML}
+          `;
+
+          const feedList = document.querySelector(".list-group");
+          feedList.insertBefore(newItem, feedList.firstChild);
+
+          // Animate in
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              newItem.style.opacity = "1";
+              newItem.style.transform = "translateY(0)";
+            });
+          });
+
+          // Close modal and reset form
+          const modal = bootstrap.Modal.getInstance(document.getElementById("postUpdateModal"));
+          modal.hide();
+          document.getElementById("updateComment").value = "";
+          updateType.value = "session";
+          ratingGroup.style.display = "none";
+          
+          // Reset photo
+          selectedPhoto = null;
+          photoInput.value = "";
+          photoUploadArea.classList.remove("has-photo");
+          photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
+        });
+    </script>
+    <!-- Floating CTA button — always visible in bottom-right corner
+     Always visible so new users have a clear next step -->
+    <a class="sticky-cta" href="index.html">Get Started</a>
+    <script>
+      // Page exit transition
+      document.querySelectorAll('a[href]').forEach(a => {
+        if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            const dest = a.href;
+            document.body.classList.add('page-exit');
+            setTimeout(() => window.location = dest, 300);
+          });
+        }
+      });
+    </script>
+</body>
+</html>

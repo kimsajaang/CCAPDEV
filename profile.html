@@ -1,0 +1,931 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+****************************************************************************** -->
+<!-- profile.html — User profile page.
+     Shows stats, highlights, recent activity in a card shell layout.
+     The design is inspired by gaming profile pages like op.gg and steam profiles.
+     All data here is hardcoded for now. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings | Backlog Hero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        html { overflow-y: scroll; }
+        /* Profile page styles — dark theme with radial gradient bg.
+           Radial gradients add subtle color without being distracting.
+           Matches the same palette used across login and register pages */
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.18), transparent 25%),
+                        radial-gradient(circle at 80% 0%, rgba(80, 214, 180, 0.14), transparent 22%),
+                        #0f1519;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: rgba(28, 37, 46, 0.9) !important;
+            border-bottom: 1px solid #2a3843;
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease, transform 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+            transform: translateY(-3px);
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        @keyframes pageSlideIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body { animation: pageSlideIn 0.5s ease both; }
+        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .btn-primary, .bg-primary, .badge.bg-primary {
+            background-color: #5383e8 !important;
+            border-color: #5383e8 !important;
+        }
+        .btn-outline-primary {
+            color: #5383e8 !important;
+            border-color: #5383e8 !important;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-primary:hover {
+            background-color: #5383e8 !important;
+            color: #ffffff !important;
+        }
+        .text-muted { color: #9e9e9e !important; }
+        .extra-small { font-size: 0.75rem; }
+        .profile-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+        /* Profile shell — the main card container with gradient bg and rounded corners.
+           overflow:hidden clips the cover image gradient at the top.
+           fade-in animation makes the whole card slide up on page load */
+        .profile-shell {
+            background: linear-gradient(145deg, rgba(28, 37, 46, 0.92), rgba(16, 22, 27, 0.95));
+            border: 1px solid #2a3843;
+            border-radius: 18px;
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            animation: fade-in 0.6s ease both;
+        }
+        /* Favourite games section */
+        .fav-games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .fav-game-card {
+            background: #151d24;
+            border: 2px solid #2a3843;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .fav-game-card:hover {
+            border-color: #5383e8;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(83, 131, 232, 0.2);
+        }
+        .fav-game-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .fav-game-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #dbe7ff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .bio-section {
+            background: rgba(21, 29, 36, 0.6);
+            border-left: 3px solid #5383e8;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            line-height: 1.6;
+            color: #a8c0e0;
+        }
+        .empty-state-text {
+            text-align: center;
+            color: #6b7b8d;
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+        /* Achievements section */
+        .achievements-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+        .achievement-badge {
+            background: linear-gradient(135deg, rgba(21, 29, 36, 0.8), rgba(15, 21, 25, 0.9));
+            border: 2px solid #2a3843;
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+        .achievement-badge::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .achievement-badge.unlocked::after {
+            left: 100%;
+        }
+        .achievement-badge.unlocked {
+            border-color: #febc2e;
+            background: linear-gradient(135deg, rgba(254, 188, 46, 0.15), rgba(255, 165, 0, 0.08));
+            box-shadow: 0 0 20px rgba(254, 188, 46, 0.3), inset 0 0 20px rgba(254, 188, 46, 0.08);
+        }
+        .achievement-badge.locked {
+            opacity: 0.45;
+            filter: grayscale(80%);
+        }
+        .achievement-badge:hover:not(.locked) {
+            transform: translateY(-6px);
+            border-color: #5383e8;
+            box-shadow: 0 12px 28px rgba(83, 131, 232, 0.35), inset 0 0 20px rgba(254, 188, 46, 0.08);
+        }
+        .achievement-icon {
+            font-size: 3.2rem;
+            margin-bottom: 8px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .achievement-badge:hover:not(.locked) .achievement-icon {
+            transform: scale(1.15) rotate(-15deg);
+        }
+        .achievement-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #dbe7ff;
+            margin-bottom: 4px;
+        }
+        .achievement-desc {
+            font-size: 0.7rem;
+            color: #9e9e9e;
+            line-height: 1.4;
+        }
+        .achievement-locked-text {
+            font-size: 0.7rem;
+            color: #6b7b8d;
+            font-style: italic;
+        }
+        .unlock-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #febc2e, #ffa500);
+            color: #0f1519;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(254, 188, 46, 0.25);
+        }
+        /* Action buttons styling */
+        .profile-actions .btn {
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .profile-actions .btn-primary {
+            background: linear-gradient(135deg, #5383e8, #4572d4);
+            border: none;
+            box-shadow: 0 4px 12px rgba(83, 131, 232, 0.3);
+        }
+        .profile-actions .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(83, 131, 232, 0.4);
+        }
+        .profile-actions .btn-outline-primary {
+            border-width: 2px;
+        }
+        .profile-actions .btn-outline-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(83, 131, 232, 0.3);
+        }
+        .profile-cover {
+            height: 96px;
+            background: linear-gradient(120deg, rgba(83, 131, 232, 0.35), rgba(34, 48, 64, 0.9) 55%, rgba(15, 21, 25, 1));
+        }
+        .profile-body {
+            padding: 22px 24px 26px;
+        }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 18px;
+        }
+        .profile-header {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .avatar-img {
+            width: 72px;
+            height: 72px;
+            border: 3px solid #5383e8;
+            background-color: #0f1519;
+            box-shadow: 0 0 20px rgba(83, 131, 232, 0.3);
+            transition: all 0.3s ease;
+        }
+        .avatar-img:hover {
+            box-shadow: 0 0 30px rgba(83, 131, 232, 0.5), 0 0 50px rgba(80, 214, 180, 0.2);
+            transform: scale(1.05);
+        }
+        .profile-name {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            margin-bottom: 4px;
+            font-size: 1.8rem;
+        }
+        .profile-handle {
+            color: #9e9e9e;
+            font-size: 0.85rem;
+        }
+        .profile-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .profile-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            color: #b7c2cc;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+        /* Stat cards — 2x2 grid showing completed, backlog, hours, streak.
+           Each card has a hover lift effect and border glow on hover */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(21, 29, 36, 0.8), rgba(15, 21, 25, 0.9));
+            border: 1px solid #2a3843;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .stat-card:hover {
+            transform: translateY(-6px);
+            border-color: #5383e8;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+        }
+        .stat-card:hover {
+            background: linear-gradient(135deg, rgba(21, 29, 36, 0.95), rgba(15, 21, 25, 1));
+        }
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            margin-top: 16px;
+        }
+        .section-card {
+            background: linear-gradient(135deg, rgba(21, 29, 36, 0.7), rgba(15, 21, 25, 0.85));
+            border: 1px solid #2a3843;
+            border-radius: 14px;
+            padding: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(83, 131, 232, 0.3), transparent);
+        }
+        .section-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(83, 131, 232, 0.6);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+        }
+        .highlight-item,
+        .activity-item {
+            background: #10171d;
+            border: 1px solid #2a3843;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .highlight-item:hover,
+        .activity-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(83, 131, 232, 0.6);
+        }
+        .profile-item {
+            background: #151d24 !important;
+            border: 1px solid #2a3843 !important;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            background: linear-gradient(135deg, rgba(83, 131, 232, 0.15), rgba(80, 214, 180, 0.08));
+            border: 1px solid rgba(83, 131, 232, 0.3);
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .tag:hover {
+            border-color: #5383e8;
+            background: linear-gradient(135deg, rgba(83, 131, 232, 0.25), rgba(80, 214, 180, 0.15));
+        }
+        .tag i {
+            color: #5383e8;
+        }
+        .muted-divider {
+            height: 1px;
+            background: #2a3843;
+            margin: 20px 0;
+        }
+        /* Staggered reveal animation — items fade in one by one.
+           nth-child delays above make each card appear with a slight offset.
+           Gives the page a polished feel without needing any JavaScript for it */
+        .reveal-item {
+            opacity: 0;
+            transform: translateY(14px);
+            animation: rise 0.7s ease forwards;
+        }
+        .stat-grid .stat-card:nth-child(1) { animation-delay: 0.06s; }
+        .stat-grid .stat-card:nth-child(2) { animation-delay: 0.12s; }
+        .stat-grid .stat-card:nth-child(3) { animation-delay: 0.18s; }
+        .stat-grid .stat-card:nth-child(4) { animation-delay: 0.24s; }
+        .section-grid .section-card:nth-child(1) { animation-delay: 0.18s; }
+        .section-grid .section-card:nth-child(2) { animation-delay: 0.24s; }
+        .section-card .highlight-item:nth-of-type(1) { animation-delay: 0.16s; }
+        .section-card .highlight-item:nth-of-type(2) { animation-delay: 0.22s; }
+        .section-card .highlight-item:nth-of-type(3) { animation-delay: 0.28s; }
+        .section-card .activity-item:nth-of-type(1) { animation-delay: 0.16s; }
+        .section-card .activity-item:nth-of-type(2) { animation-delay: 0.22s; }
+        .section-card .activity-item:nth-of-type(3) { animation-delay: 0.28s; }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Mobile responsive — stack the 2-column grid into 1 column.
+           Centers the profile header and actions on mobile */
+        @media (max-width: 991px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+            .profile-top {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .profile-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .profile-meta {
+                justify-content: center;
+            }
+        }
+        /* Enhanced section title styling */
+        .section-title {
+            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #5383e8;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::before {
+            content: '';
+            width: 3px;
+            height: 18px;
+            background: linear-gradient(135deg, #5383e8, #50d6b4);
+            border-radius: 2px;
+        }
+        /* Enhanced favorite games styling */
+        .fav-games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .fav-game-card {
+            background: linear-gradient(135deg, rgba(83, 131, 232, 0.1), rgba(80, 214, 180, 0.05));
+            border: 1px solid rgba(83, 131, 232, 0.3);
+            border-radius: 14px;
+            padding: 14px 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .fav-game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        .fav-game-card:hover::before {
+            left: 100%;
+        }
+        .fav-game-card:hover {
+            border-color: #5383e8;
+            background: linear-gradient(135deg, rgba(83, 131, 232, 0.2), rgba(80, 214, 180, 0.1));
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(83, 131, 232, 0.25);
+        }
+        .fav-game-icon {
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .fav-game-card:hover .fav-game-icon {
+            transform: scale(1.1) rotateY(10deg);
+        }
+        .fav-game-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #dbe7ff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        /* Bio styling enhancement */
+        .bio-section {
+            background: linear-gradient(135deg, rgba(83, 131, 232, 0.08), rgba(80, 214, 180, 0.04));
+            border-left: 4px solid #5383e8;
+            padding: 14px;
+            border-radius: 10px;
+            margin: 12px 0;
+            line-height: 1.7;
+            color: #a8c0e0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar — "Profile" is active on this page -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <!-- Profile shell — contains the cover gradient, avatar, stats, and info sections.
+                 Wrapped in a single card-like container -->
+            <div class="col-lg-10">
+                <div class="profile-shell">
+                    <div class="profile-cover"></div>
+                    <div class="profile-body">
+                        <div class="profile-top">
+                            <div class="profile-header">
+                                <img id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="rounded-circle avatar-img" alt="Profile Picture">
+                                <div>
+                                    <h2 class="profile-name" id="profileName">Your Profile</h2>
+                                    <div class="profile-handle" id="profileHandle">@gamer • Gaming Enthusiast</div>
+                                    <div class="profile-meta" id="profileMeta">
+                                        <span><i class="bi bi-controller"></i> <span id="favoriteGenres">Gaming Fan</span></span>
+                                        <span><i class="bi bi-calendar3"></i> <span id="memberSince">Member since Today</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="profile-actions">
+                                <button class="btn btn-outline-primary btn-sm" id="shareProfileBtn">
+                                    <i class="bi bi-share me-1"></i> Share Profile
+                                </button>
+                                <a href="profile-edit.html" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-pencil me-1"></i> Customize Profile
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="profile-grid mt-3">
+                            <!-- Left column: stat cards + about + highlights -->
+                            <div>
+                                <!-- Stat grid — 4 stat cards in a 2x2 layout.
+                                     Numbers are placeholder/hardcoded for now -->
+                                <div class="stat-grid">
+                                    <div class="stat-card reveal-item">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <i class="bi bi-check-circle" style="font-size: 1.3rem; color: #50d6b4;"></i>
+                                            <div class="text-muted small">Completed</div>
+                                        </div>
+                                        <div class="fs-4 fw-bold" style="color: #50d6b4;">42</div>
+                                        <div class="text-muted extra-small">Games 🎮</div>
+                                    </div>
+                                    <div class="stat-card reveal-item">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <i class="bi bi-bookmark" style="font-size: 1.3rem; color: #5383e8;"></i>
+                                            <div class="text-muted small">Backlog</div>
+                                        </div>
+                                        <div class="fs-4 fw-bold" style="color: #5383e8;">68</div>
+                                        <div class="text-muted extra-small">Queued 📋</div>
+                                    </div>
+                                    <div class="stat-card reveal-item">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <i class="bi bi-hourglass-split" style="font-size: 1.3rem; color: #febc2e;"></i>
+                                            <div class="text-muted small">Hours</div>
+                                        </div>
+                                        <div class="fs-4 fw-bold" style="color: #febc2e;">1,240</div>
+                                        <div class="text-muted extra-small">Total time ⏰</div>
+                                    </div>
+                                    <div class="stat-card reveal-item">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <i class="bi bi-fire" style="font-size: 1.3rem; color: #ff6b6b;"></i>
+                                            <div class="text-muted small">Streak</div>
+                                        </div>
+                                        <div class="fs-4 fw-bold" style="color: #ff6b6b;">7 Days</div>
+                                        <div class="text-muted extra-small">Best 21 🔥</div>
+                                    </div>
+                                </div>
+
+                                <!-- About + Highlights sections stacked below stats -->
+                                <div class="section-grid">
+                                    <div class="section-card reveal-item">
+                                        <div class="section-title mb-2">About You</div>
+                                        <div id="bioContainer" class="bio-section">
+                                            <p id="userBio" class="mb-0">No bio yet. <a href="profile-edit.html" style="color: #5383e8;">Add one now!</a></p>
+                                        </div>
+                                        <div id="gamingIdentity" style="margin-top: 12px;">
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <span class="tag" id="identityTag" style="display:none;"><i class="bi bi-star"></i> <span id="identityText"></span></span>
+                                                <span class="tag" id="platformTag" style="display:none;"><i class="bi bi-pc-display"></i> <span id="platformText"></span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="section-card reveal-item">
+                                        <div class="section-title mb-3">Favourite Games</div>
+                                        <div id="favGamesContainer" class="fav-games-container">
+                                            <div class="empty-state-text">No favourite games yet. <a href="profile-edit.html" style="color: #5383e8;">Choose some!</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Achievements section -->
+                                <div class="section-card reveal-item mt-3">
+                                    <div class="section-title mb-3">Achievements <span id="achievementCount" style="color: #febc2e; font-size: 0.8rem; font-weight: 600;">(0/12)</span></div>
+                                    <div id="achievementsContainer" class="achievements-container">
+                                        <div class="empty-state-text">Complete games to unlock achievements!</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Right column: recent activity feed.
+                                 Shows last 3 activities -->
+                            <div>
+                                <div class="section-card reveal-item">
+                                    <div class="section-title mb-3">Recent Activity</div>
+                                    <div class="activity-item reveal-item">
+                                        <div class="d-flex justify-content-between">
+                                            <span><i class="bi bi-controller"></i> Logged 2h in Black Myth: Wukong</span>
+                                            <span class="text-muted small">Today</span>
+                                        </div>
+                                        <span class="text-muted small">Beat the Macaque Chief after 5 tries.</span>
+                                    </div>
+                                    <div class="activity-item reveal-item">
+                                        <div class="d-flex justify-content-between">
+                                            <span><i class="bi bi-journal-check"></i> Reviewed Elden Ring DLC</span>
+                                            <span class="text-muted small">Yesterday</span>
+                                        </div>
+                                        <span class="text-muted small">★★★★★ • “Best dungeon design ever.”</span>
+                                    </div>
+                                    <div class="activity-item reveal-item mb-0">
+                                        <div class="d-flex justify-content-between">
+                                            <span><i class="bi bi-trophy"></i> Completed Cyberpunk 2077</span>
+                                            <span class="text-muted small">2 days ago</span>
+                                        </div>
+                                        <span class="text-muted small">100% Platinum achieved.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    /* Profile customization — loads user data from localStorage */
+    const PROFILE_STORAGE_KEY = 'bh_profile_v1';
+    const LIBRARY_STORAGE_KEY = 'bh_library_v1';
+    const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
+
+    const defaultProfile = {
+        displayName: 'Gamer',
+        username: 'gamer',
+        bio: '',
+        avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%235383e8"%3E%3Ccircle cx="12" cy="8" r="4"/%3E%3Cpath d="M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z"/%3E%3C/svg%3E',
+        gamingIdentity: '',
+        favoritePlatform: '',
+        favoriteGames: [],
+        joinDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+    };
+
+    /* Achievement definitions */
+    const ACHIEVEMENTS = [
+        { id: 'first_game', name: 'First Step', icon: '🎮', description: 'Add your first game', condition: (games) => games.length >= 1 },
+        { id: 'collector', name: 'Collector', icon: '📚', description: 'Add 10 games to library', condition: (games) => games.length >= 10 },
+        { id: 'hoarder', name: 'Hoarder', icon: '🏰', description: 'Add 25 games to library', condition: (games) => games.length >= 25 },
+        { id: 'completionist_badge', name: 'Completionist', icon: '⭐', description: 'Complete 5 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 5 },
+        { id: 'platinum', name: 'Platinum Elite', icon: '👑', description: 'Complete 10 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 10 },
+        { id: 'backlog_master', name: 'Backlog Master', icon: '📋', description: 'Have 20 games in backlog', condition: (games) => games.filter(g => g.status === 'backlog').length >= 20 },
+        { id: 'multitasker', name: 'Multitasker', icon: '⚡', description: 'Play 5 games simultaneously', condition: (games) => games.filter(g => g.status === 'playing').length >= 5 },
+        { id: 'curator', name: 'Perfect Profile', icon: '✨', description: 'Customize your profile', condition: (games, profile) => profile.bio && profile.gamingIdentity && profile.favoriteGames.length > 0 },
+        { id: 'speedrunner', name: 'Quick Finisher', icon: '🚀', description: 'Complete a game in 5 hours', condition: (games) => false }, // Placeholder
+        { id: 'reviewer', name: 'Critic', icon: '📝', description: 'Rate 5 completed games', condition: (games) => games.filter(g => g.status === 'completed' && g.rating > 0).length >= 5 },
+        { id: 'hybrid', name: 'Balanced Gamer', icon: '⚙️', description: 'Have games in all 3 statuses', condition: (games) => games.filter(g => g.status === 'backlog').length > 0 && games.filter(g => g.status === 'playing').length > 0 && games.filter(g => g.status === 'completed').length > 0 },
+        { id: 'legendary', name: 'Legendary', icon: '🌟', description: 'Complete 20 games with 5-star ratings', condition: (games) => games.filter(g => g.status === 'completed' && g.rating === 5).length >= 20 },
+    ];
+
+    function loadAchievements() {
+        const stored = localStorage.getItem(ACHIEVEMENTS_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+    }
+
+    function saveAchievements(achievements) {
+        localStorage.setItem(ACHIEVEMENTS_STORAGE_KEY, JSON.stringify(achievements));
+    }
+
+    function checkAndUnlockAchievements() {
+        const games = JSON.parse(localStorage.getItem(LIBRARY_STORAGE_KEY) || '[]');
+        const profile = loadProfile();
+        const unlockedAchievements = loadAchievements();
+
+        ACHIEVEMENTS.forEach(achievement => {
+            const isUnlocked = unlockedAchievements.some(a => a.id === achievement.id);
+            const meetsCondition = achievement.condition(games, profile);
+
+            if (!isUnlocked && meetsCondition) {
+                unlockedAchievements.push({
+                    id: achievement.id,
+                    unlockedAt: new Date().toISOString()
+                });
+                showAchievementNotification(achievement);
+            }
+        });
+
+        saveAchievements(unlockedAchievements);
+        return unlockedAchievements;
+    }
+
+    function showAchievementNotification(achievement) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #febc2e, #ffa500);
+            color: #0f1519;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            z-index: 10000;
+            font-weight: 700;
+            animation: slideIn 0.4s ease;
+            max-width: 280px;
+        `;
+        notification.innerHTML = `
+            <div style="font-size: 1.2rem; margin-bottom: 6px;">🏆 Achievement Unlocked!</div>
+            <div>${achievement.icon} <strong>${achievement.name}</strong></div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 4px;">${achievement.description}</div>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.4s ease forwards';
+            setTimeout(() => notification.remove(), 400);
+        }, 3000);
+    }
+
+    function loadProfile() {
+        const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : defaultProfile;
+    }
+
+    function saveProfile(profile) {
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    }
+
+    function renderProfile() {
+        const profile = loadProfile();
+        const games = JSON.parse(localStorage.getItem(LIBRARY_STORAGE_KEY) || '[]');
+        const unlockedAchievements = checkAndUnlockAchievements();
+
+        // Update header
+        document.getElementById('profileName').textContent = profile.displayName;
+        document.getElementById('profileHandle').textContent = `@${profile.username} • Gaming Profile`;
+        document.getElementById('profileAvatar').src = profile.avatar;
+        document.getElementById('memberSince').textContent = `Member since ${profile.joinDate}`;
+        document.getElementById('favoriteGenres').textContent = profile.gamingIdentity || 'Gaming Fan';
+
+        // Update bio
+        if (profile.bio) {
+            document.getElementById('userBio').innerHTML = profile.bio;
+        } else {
+            document.getElementById('userBio').innerHTML = 'No bio yet. <a href="profile-edit.html" style="color: #5383e8;">Add one now!</a>';
+        }
+
+        // Update gaming identity tags
+        if (profile.gamingIdentity) {
+            document.getElementById('identityTag').style.display = 'inline-flex';
+            document.getElementById('identityText').textContent = profile.gamingIdentity;
+        }
+        if (profile.favoritePlatform) {
+            document.getElementById('platformTag').style.display = 'inline-flex';
+            document.getElementById('platformText').textContent = profile.favoritePlatform;
+        }
+
+        // Render favourite games
+        const favGamesContainer = document.getElementById('favGamesContainer');
+        if (profile.favoriteGames && profile.favoriteGames.length > 0) {
+            let html = '';
+            profile.favoriteGames.forEach(gameId => {
+                const game = games.find(g => g.id === gameId);
+                if (game) {
+                    html += `
+                    <div class="fav-game-card" title="${game.name}">
+                        <span class="fav-game-icon">🎮</span>
+                        <div class="fav-game-name">${game.name}</div>
+                    </div>`;
+                }
+            });
+            favGamesContainer.innerHTML = html;
+        } else {
+            favGamesContainer.innerHTML = '<div class="empty-state-text">No favourite games yet. <a href="profile-edit.html" style="color: #5383e8;">Choose some!</a></div>';
+        }
+
+        // Render achievements
+        const achievementsContainer = document.getElementById('achievementsContainer');
+        const achievementCountEl = document.getElementById('achievementCount');
+        
+        let achievementHtml = '';
+        ACHIEVEMENTS.forEach(achievement => {
+            const isUnlocked = unlockedAchievements.some(a => a.id === achievement.id);
+            achievementHtml += `
+            <div class="achievement-badge ${isUnlocked ? 'unlocked' : 'locked'}" title="${achievement.description}">
+                <span class="achievement-icon">${achievement.icon}</span>
+                <div class="achievement-name">${achievement.name}</div>
+                <div class="${isUnlocked ? 'achievement-desc' : 'achievement-locked-text'}">
+                    ${isUnlocked ? achievement.description : 'Locked'}
+                </div>
+                ${isUnlocked ? '<div class="unlock-badge">UNLOCKED</div>' : ''}
+            </div>`;
+        });
+
+        achievementsContainer.innerHTML = achievementHtml;
+        achievementCountEl.textContent = `(${unlockedAchievements.length}/${ACHIEVEMENTS.length})`;
+    }
+
+    // Share profile
+    document.getElementById('shareProfileBtn').addEventListener('click', () => {
+        const profile = loadProfile();
+        const profileUrl = `${window.location.origin}${window.location.pathname}`;
+        const text = `Check out my gaming profile on Backlog Hero! 🎮 ${profile.displayName}`;
+        
+        if (navigator.share) {
+            navigator.share({ text, url: profileUrl });
+        } else {
+            alert(`Share this link:\n${profileUrl}\n\n${text}`);
+        }
+    });
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Page exit transition
+    document.querySelectorAll('a[href]').forEach(a => {
+      if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          const dest = a.href;
+          document.body.classList.add('page-exit');
+          setTimeout(() => window.location = dest, 300);
+        });
+      }
+    });
+
+    // Initialize profile on page load
+    renderProfile();
+    </script>
+</body>
+</html>

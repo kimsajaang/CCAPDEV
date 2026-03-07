@@ -1,0 +1,568 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+          <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlog Hero | Your Gaming Journey Starts Here</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        html { overflow-y: scroll; }
+        body {
+            background-color: #0f1519;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* ── navbar ── */
+        .navbar {
+            background-color: rgba(28, 37, 46, 0.9) !important;
+            border-bottom: 1px solid #2a3843;
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease, transform 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+            transform: translateY(-3px);
+        }
+        .navbar-nav .nav-link.active { color: #5383e8 !important; }
+        @keyframes pageSlideIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body { animation: pageSlideIn 0.5s ease both; }
+        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .btn-outline-primary {
+            color: #5383e8 !important;
+            border-color: #5383e8 !important;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-primary:hover {
+            background-color: #5383e8 !important;
+            color: #ffffff !important;
+        }
+
+        /* ── hero ── */
+        .hero-section {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            background:
+                radial-gradient(circle at 25% 30%, rgba(83, 131, 232, 0.2), transparent 40%),
+                radial-gradient(circle at 75% 60%, rgba(80, 214, 180, 0.12), transparent 35%),
+                #0f1519;
+        }
+        .hero-title {
+            font-size: 3.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+        }
+        .hero-sub {
+            color: #b5c0cc;
+            font-size: 1.15rem;
+            max-width: 560px;
+        }
+        .hero-cta {
+            background-color: #5383e8;
+            border-color: #5383e8;
+            padding: 0.7rem 2.2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .hero-cta:hover {
+            background-color: #3d6ad2;
+            border-color: #3d6ad2;
+        }
+
+        /* ── stat counters ── */
+        .stat-row {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .stat-item .stat-num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #5383e8;
+        }
+        .stat-item .stat-label {
+            color: #9e9e9e;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* ── section shared ── */
+        .section-block {
+            padding: 100px 0;
+        }
+        .section-block:nth-child(even) {
+            background: rgba(28, 37, 46, 0.35);
+        }
+        .section-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 18px;
+        }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .section-desc {
+            color: #b5c0cc;
+            font-size: 1.05rem;
+            max-width: 520px;
+        }
+
+        /* ── feature cards ── */
+        .feature-card {
+            background: #1c252e;
+            border: 1px solid #2a3843;
+            border-radius: 14px;
+            padding: 28px 24px;
+            height: 100%;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: #5383e8;
+        }
+        .feature-card .fi {
+            font-size: 1.6rem;
+            color: #5383e8;
+            margin-bottom: 14px;
+        }
+        .feature-card h5 {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .feature-card p {
+            color: #9e9e9e;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        /* ── mockup placeholder ── */
+        .mockup-placeholder {
+            background: linear-gradient(145deg, #1c252e, #141b21);
+            border: 1px solid #2a3843;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+        .mockup-bar {
+            background: #1c252e;
+            border-bottom: 1px solid #2a3843;
+            padding: 10px 16px;
+            display: flex;
+            gap: 6px;
+        }
+        .mockup-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+        }
+        .mockup-body {
+            padding: 24px;
+        }
+        .mockup-line {
+            height: 10px;
+            border-radius: 6px;
+            background: #2a3843;
+            margin-bottom: 12px;
+        }
+        .mockup-card-sm {
+            background: #243039;
+            border-radius: 10px;
+            height: 100px;
+            border: 1px solid #2a3843;
+        }
+
+        /* ── CTA banner ── */
+        .cta-banner {
+            background: linear-gradient(135deg, rgba(83, 131, 232, 0.18), rgba(80, 214, 180, 0.12));
+            border: 1px solid #2a3843;
+            border-radius: 18px;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        /* ── footer ── */
+        .site-footer {
+            border-top: 1px solid #2a3843;
+            padding: 32px 0;
+            color: #9e9e9e;
+            font-size: 0.85rem;
+        }
+        .site-footer a {
+            color: #7cb7ff;
+            text-decoration: none;
+        }
+        .site-footer a:hover { color: #a8ccff; }
+
+        .text-muted { color: #9e9e9e !important; }
+    </style>
+</head>
+<body>
+    <!-- ═══════════ Navbar ═══════════ -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══════════ Hero ═══════════ -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <p class="text-uppercase small fw-bold mb-2" style="color:#5383e8;letter-spacing:0.1em;">Your Backlog Companion</p>
+                    <h1 class="hero-title mb-3">Discover, collect &amp; conquer your games</h1>
+                    <p class="hero-sub mb-4">
+                        Backlog Hero helps you track every game you own, plan what to play next,
+                        and share progress with a community of gamers who understand the grind.
+                    </p>
+
+                    <div class="d-flex gap-3 mb-5">
+                        <a href="register.html" class="btn hero-cta text-white">Create a free account</a>
+                        <a href="login.html" class="btn btn-outline-primary px-4 py-2" style="border-radius:10px;">Log In</a>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-num">2.4K</div>
+                            <div class="stat-label">Games Tracked</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">850</div>
+                            <div class="stat-label">Users</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">5.1K</div>
+                            <div class="stat-label">Reviews</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">320</div>
+                            <div class="stat-label">Lists</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decorative app mockup -->
+                <div class="col-lg-6">
+                    <div class="mockup-placeholder">
+                        <div class="mockup-bar">
+                            <div class="mockup-dot" style="background:#ff5f57;"></div>
+                            <div class="mockup-dot" style="background:#febc2e;"></div>
+                            <div class="mockup-dot" style="background:#28c840;"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="mockup-line" style="width:40%;"></div>
+                            <div class="mockup-line" style="width:70%;"></div>
+                            <div class="mockup-line" style="width:55%;"></div>
+                            <div class="row g-3 mt-2">
+                                <div class="col-4"><div class="mockup-card-sm"></div></div>
+                                <div class="col-4"><div class="mockup-card-sm"></div></div>
+                                <div class="col-4"><div class="mockup-card-sm"></div></div>
+                            </div>
+                            <div class="mockup-line mt-4" style="width:60%;"></div>
+                            <div class="mockup-line" style="width:85%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ What is Backlog Hero? ═══════════ -->
+    <section class="section-block">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6 order-lg-2">
+                    <div class="section-icon" style="background:rgba(83,131,232,0.15);color:#5383e8;">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </div>
+                    <h2 class="section-title">What is Backlog Hero?</h2>
+                    <p class="section-desc">
+                        Backlog Hero is a place to virtually manage your game collection. Keep your
+                        backlog updated, rate the games you've played, track your playtime, and
+                        add upcoming titles to your wishlist. Share your gaming journey
+                        with friends by following each other and staying up-to-date on the
+                        latest play sessions.
+                    </p>
+                </div>
+                <div class="col-lg-6 order-lg-1">
+                    <div class="mockup-placeholder" style="min-height:280px;">
+                        <div class="mockup-bar">
+                            <div class="mockup-dot" style="background:#ff5f57;"></div>
+                            <div class="mockup-dot" style="background:#febc2e;"></div>
+                            <div class="mockup-dot" style="background:#28c840;"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="row g-3">
+                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
+                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
+                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
+                                <div class="col-3"><div class="mockup-card-sm" style="height:130px;"></div></div>
+                            </div>
+                            <div class="mockup-line mt-3" style="width:50%;"></div>
+                            <div class="mockup-line" style="width:80%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Track Your Collection ═══════════ -->
+    <section class="section-block">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="section-icon" style="background:rgba(45,212,191,0.15);color:#2dd4bf;">
+                        <i class="bi bi-collection-fill"></i>
+                    </div>
+                    <h2 class="section-title">Track your personal game collection</h2>
+                    <p class="section-desc">
+                        Log any and every game you've played, are currently playing, or want
+                        to play. Be as detailed as you want — mark your progress, rate titles out
+                        of five stars, and organize everything with custom statuses like
+                        <strong style="color:#febc2e;">Playing</strong>,
+                        <strong style="color:#6c757d;">Backlog</strong>, and
+                        <strong style="color:#28c840;">Completed</strong>.
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="mockup-placeholder" style="min-height:260px;">
+                        <div class="mockup-bar">
+                            <div class="mockup-dot" style="background:#ff5f57;"></div>
+                            <div class="mockup-dot" style="background:#febc2e;"></div>
+                            <div class="mockup-dot" style="background:#28c840;"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="mockup-line" style="width:35%;"></div>
+                            <div class="row g-3">
+                                <div class="col-4"><div class="mockup-card-sm" style="height:140px;"></div></div>
+                                <div class="col-4"><div class="mockup-card-sm" style="height:140px;"></div></div>
+                                <div class="col-4"><div class="mockup-card-sm" style="height:140px;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Community ═══════════ -->
+    <section class="section-block">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6 order-lg-2">
+                    <div class="section-icon" style="background:rgba(232,83,131,0.15);color:#e85383;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h2 class="section-title">Join a community of gamers</h2>
+                    <p class="section-desc">
+                        Share recommendations, ask for help, and post updates about your
+                        backlog progress. Upvote the best discussions, leave comments, and
+                        discover what fellow gamers are playing.
+                    </p>
+                </div>
+                <div class="col-lg-6 order-lg-1">
+                    <div class="mockup-placeholder" style="min-height:260px;">
+                        <div class="mockup-bar">
+                            <div class="mockup-dot" style="background:#ff5f57;"></div>
+                            <div class="mockup-dot" style="background:#febc2e;"></div>
+                            <div class="mockup-dot" style="background:#28c840;"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="d-flex flex-column gap-3">
+                                <div class="mockup-card-sm" style="height:70px;"></div>
+                                <div class="mockup-card-sm" style="height:70px;"></div>
+                                <div class="mockup-card-sm" style="height:70px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Search & Discover ═══════════ -->
+    <section class="section-block">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="section-icon" style="background:rgba(254,188,46,0.15);color:#febc2e;">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <h2 class="section-title">Search &amp; discover new titles</h2>
+                    <p class="section-desc">
+                        Browse through a growing catalog of games. Filter by genre, platform,
+                        or release year. Find hidden gems you might have missed and add them
+                        to your backlog with a single click.
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="mockup-placeholder" style="min-height:240px;">
+                        <div class="mockup-bar">
+                            <div class="mockup-dot" style="background:#ff5f57;"></div>
+                            <div class="mockup-dot" style="background:#febc2e;"></div>
+                            <div class="mockup-dot" style="background:#28c840;"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="mockup-line" style="width:100%;height:14px;margin-bottom:18px;"></div>
+                            <div class="row g-3">
+                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
+                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
+                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
+                                <div class="col-6"><div class="mockup-card-sm" style="height:80px;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Feature Highlights ═══════════ -->
+    <section class="section-block" style="padding-bottom:60px;">
+        <div class="container text-center mb-5">
+            <h2 class="section-title">Everything you need in one place</h2>
+            <p class="section-desc mx-auto" style="max-width:600px;">
+                Whether you're a casual player or a completionist, Backlog Hero gives you the tools to stay on top of your gaming life.
+            </p>
+        </div>
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="fi"><i class="bi bi-controller"></i></div>
+                        <h5>Library Management</h5>
+                        <p>Organize games by status — backlog, playing, or completed — with progress tracking and star ratings.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="fi"><i class="bi bi-bar-chart-line-fill"></i></div>
+                        <h5>Stats &amp; Insights</h5>
+                        <p>See your completion rate, total playtime, genre breakdown, and how your backlog changes over time.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="fi"><i class="bi bi-chat-square-text-fill"></i></div>
+                        <h5>Community Posts</h5>
+                        <p>Ask for recommendations, share progress updates, and join discussions with fellow gamers.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="fi"><i class="bi bi-person-badge-fill"></i></div>
+                        <h5>Customizable Profile</h5>
+                        <p>Show off your gaming identity with bio, avatar, favourite games, and a public profile page.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="fi"><i class="bi bi-steam"></i></div>
+                        <h5>Platform Integration</h5>
+                        <p>Log in with Steam or Google to get started quickly and link your existing library.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="fi"><i class="bi bi-shield-lock-fill"></i></div>
+                        <h5>Private &amp; Secure</h5>
+                        <p>Your data stays yours. Control what's public, what's private, and keep your gaming life safe.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ CTA Banner ═══════════ -->
+    <section class="section-block" style="padding-top:40px;">
+        <div class="container">
+            <div class="cta-banner">
+                <h2 class="fw-bold mb-2">Ready to conquer your backlog?</h2>
+                <p class="text-muted mb-4">Join hundreds of gamers already tracking their collections on Backlog Hero.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="register.html" class="btn hero-cta text-white">Create a free account</a>
+                    <a href="login.html" class="btn btn-outline-primary px-4 py-2" style="border-radius:10px;">Log In</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Footer ═══════════ -->
+    <footer class="site-footer">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center">
+            <span>&copy; 2026 Backlog Hero</span>
+            <div class="d-flex gap-3">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="library.html">Library</a>
+                <a href="search.html">Search</a>
+                <a href="stats.html">Community</a>
+                <a href="profile.html">Profile</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.querySelectorAll('a[href]').forEach(a => {
+        if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            const dest = a.href;
+            document.body.classList.add('page-exit');
+            setTimeout(() => window.location = dest, 300);
+          });
+        }
+      });
+    </script>
+</body>
+</html>
