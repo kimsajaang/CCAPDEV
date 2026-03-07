@@ -22,223 +22,21 @@ plagiarized the work of other students and/or persons.
     <title>Backlog Hero | Your Gaming Journey Starts Here</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- We went with inline styles instead of a separate CSS file since each page
-         has slightly different overrides. Might refactor into a shared style.css later. -->
+    <link rel="stylesheet" href="style.css">
     <style>
-        html { overflow-y: scroll; }
-        body {
-            background-color: #0f1519;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* Page-specific: animated background circles */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
         }
-
-        /* ── navbar ── */
-        .navbar {
-            background-color: rgba(28, 37, 46, 0.9) !important;
-            border-bottom: 1px solid #2a3843;
-            backdrop-filter: blur(10px);
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
-        .navbar-nav .nav-link {
-            color: #9e9e9e !important;
-            transition: color 0.2s ease, transform 0.2s ease;
-            padding: 0.5rem 1rem !important;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-        }
-        .navbar-nav .nav-link:hover {
-            color: #ffffff !important;
-            transform: translateY(-3px);
-        }
-        .navbar-nav .nav-link.active { color: #5383e8 !important; }
-        /* Page entrance animation */
-        @keyframes pageSlideIn {
-            from { opacity: 0; transform: translateY(18px); }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        body { animation: pageSlideIn 0.5s ease both; }
-        /* Nav link exit fade */
-        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
-        .btn-outline-primary {
-            color: #5383e8 !important;
-            border-color: #5383e8 !important;
-            transition: all 0.2s ease;
-        }
-        .btn-outline-primary:hover {
-            background-color: #5383e8 !important;
-            color: #ffffff !important;
-        }
-
-        /* Gradient combo for the hero background — looks cleanest on dark theme */
-        /* ── hero ── */
-        .hero-section {
-            min-height: 90vh;
-            display: flex;
-            align-items: center;
-            background:
-                radial-gradient(circle at 25% 30%, rgba(83, 131, 232, 0.2), transparent 40%),
-                radial-gradient(circle at 75% 60%, rgba(80, 214, 180, 0.12), transparent 35%),
-                #0f1519;
-        }
-        .hero-title {
-            font-size: 3.6rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            line-height: 1.15;
-        }
-        .hero-sub {
-            color: #b5c0cc;
-            font-size: 1.15rem;
-            max-width: 560px;
-        }
-        .hero-cta {
-            background-color: #5383e8;
-            border-color: #5383e8;
-            padding: 0.7rem 2.2rem;
-            font-weight: 600;
-            font-size: 1rem;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-        .hero-cta:hover {
-            background-color: #3d6ad2;
-            border-color: #3d6ad2;
-        }
-
-        /* ── stat counters ── */
-        .stat-row {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-        .stat-item .stat-num {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #5383e8;
-        }
-        .stat-item .stat-label {
-            color: #9e9e9e;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-
-        /* ── section shared ── */
-        .section-block {
-            padding: 100px 0;
-        }
-        .section-block:nth-child(even) {
-            background: rgba(28, 37, 46, 0.35);
-        }
-        .section-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 18px;
-        }
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-        .section-desc {
-            color: #b5c0cc;
-            font-size: 1.05rem;
-            max-width: 520px;
-        }
-
-        /* Feature cards grid — 3 cols on desktop, stacks on mobile via bootstrap */
-        /* ── feature cards ── */
-        .feature-card {
-            background: #1c252e;
-            border: 1px solid #2a3843;
-            border-radius: 14px;
-            padding: 28px 24px;
-            height: 100%;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-        .feature-card:hover {
-            transform: translateY(-4px);
-            border-color: #5383e8;
-        }
-        .feature-card .fi {
-            font-size: 1.6rem;
-            color: #5383e8;
-            margin-bottom: 14px;
-        }
-        .feature-card h5 {
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .feature-card p {
-            color: #9e9e9e;
-            font-size: 0.9rem;
-            margin-bottom: 0;
-        }
-
-        /* ── mockup placeholder ── */
-        .mockup-placeholder {
-            background: linear-gradient(145deg, #1c252e, #141b21);
-            border: 1px solid #2a3843;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-        }
-        .mockup-bar {
-            background: #1c252e;
-            border-bottom: 1px solid #2a3843;
-            padding: 10px 16px;
-            display: flex;
-            gap: 6px;
-        }
-        .mockup-dot {
-            width: 10px; height: 10px; border-radius: 50%;
-        }
-        .mockup-body {
-            padding: 24px;
-        }
-        .mockup-line {
-            height: 10px;
-            border-radius: 6px;
-            background: #2a3843;
-            margin-bottom: 12px;
-        }
-        .mockup-card-sm {
-            background: #243039;
-            border-radius: 10px;
-            height: 100px;
-            border: 1px solid #2a3843;
-        }
-
-        /* ── CTA banner ── */
-        .cta-banner {
-            background: linear-gradient(135deg, rgba(83, 131, 232, 0.18), rgba(80, 214, 180, 0.12));
-            border: 1px solid #2a3843;
-            border-radius: 18px;
-            padding: 50px 40px;
-            text-align: center;
-        }
-
-        /* ── footer ── */
-        .site-footer {
-            border-top: 1px solid #2a3843;
-            padding: 32px 0;
-            color: #9e9e9e;
-            font-size: 0.85rem;
-        }
-        .site-footer a {
-            color: #7cb7ff;
-            text-decoration: none;
-        }
-        .site-footer a:hover { color: #a8ccff; }
-
-        .text-muted { color: #9e9e9e !important; }
     </style>
 </head>
 <body>
@@ -638,8 +436,8 @@ plagiarized the work of other students and/or persons.
             
             html += `
               <div style="flex: 0 0 auto; min-width: 110px; position: relative;">
-                <img src="${coverUrl}" alt="${game.name}" 
-                     style="width: 110px; height: 155px; object-fit: cover; border-radius: 12px; border: 2px solid rgba(83, 131, 232, 0.4); transition: all 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.4);"
+                <img src="${coverUrl}" alt="${game.name}" loading="lazy"
+                     style="width: 110px; height: 155px; object-fit: cover; border-radius: 12px; border: 2px solid rgba(83, 131, 232, 0.4); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background-color: #1a2634;"
                      title="${game.name} - Rating: ${rating}/100"
                      onmouseover="this.style.transform='scale(1.12) translateZ(0)'; this.style.boxShadow='0 12px 30px rgba(83, 131, 232, 0.6)';"
                      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.4)'">
@@ -658,18 +456,19 @@ plagiarized the work of other students and/or persons.
           const carousel = gameCardsContainer.querySelector('.gameCarousel');
           if (carousel) {
             let scrollPos = 0;
-            const gameWidth = 110 + 14; // width + gap
+            const gameWidth = 110 + 14;
             const singleSetWidth = topGames.length * gameWidth;
+            let lastScroll = 0;
 
-            setInterval(() => {
-              scrollPos += 1.5;
-              
-              if (scrollPos >= singleSetWidth) {
-                scrollPos = 0;
-              }
-              
+            function scrollCarousel(now) {
+              const delta = lastScroll ? (now - lastScroll) / 1000 : 0;
+              lastScroll = now;
+              scrollPos += 50 * delta;
+              if (scrollPos >= singleSetWidth) scrollPos = 0;
               carousel.scrollLeft = scrollPos;
-            }, 30);
+              requestAnimationFrame(scrollCarousel);
+            }
+            requestAnimationFrame(scrollCarousel);
           }
         }, 500);
       }
@@ -693,9 +492,6 @@ plagiarized the work of other students and/or persons.
           if (allGames && allGames.length > 0) {
             // Display initial random games
             displayRandomGames();
-
-            // Change games every 6 seconds
-            setInterval(displayRandomGames, 6000);
           }
         } catch (err) {
           console.error('Error loading featured games:', err);

@@ -19,217 +19,79 @@ plagiarized the work of other students and/or persons.
     <title>Backlog Hero | Your Gaming Journey Starts Here</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
     <style>
-        html { overflow-y: scroll; }
-        body {
-            background-color: #0f1519;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* ── navbar ── */
-        .navbar {
-            background-color: rgba(28, 37, 46, 0.9) !important;
-            border-bottom: 1px solid #2a3843;
-            backdrop-filter: blur(10px);
-        }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
-        .navbar-nav .nav-link {
-            color: #9e9e9e !important;
-            transition: color 0.2s ease, transform 0.2s ease;
-            padding: 0.5rem 1rem !important;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-        }
-        .navbar-nav .nav-link:hover {
-            color: #ffffff !important;
-            transform: translateY(-3px);
-        }
-        .navbar-nav .nav-link.active { color: #5383e8 !important; }
-        @keyframes pageSlideIn {
-            from { opacity: 0; transform: translateY(18px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        body { animation: pageSlideIn 0.5s ease both; }
-        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
-        .btn-outline-primary {
-            color: #5383e8 !important;
-            border-color: #5383e8 !important;
-            transition: all 0.2s ease;
-        }
-        .btn-outline-primary:hover {
-            background-color: #5383e8 !important;
-            color: #ffffff !important;
-        }
-
-        /* ── hero ── */
-        .hero-section {
-            min-height: 90vh;
+        /* Page-specific: intro / landing page */
+        .hero-section { position: relative; overflow: hidden; background: var(--bg-base) !important; }
+        .hero-covers-bg {
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            z-index: 0;
             display: flex;
-            align-items: center;
-            background:
-                radial-gradient(circle at 25% 30%, rgba(83, 131, 232, 0.2), transparent 40%),
-                radial-gradient(circle at 75% 60%, rgba(80, 214, 180, 0.12), transparent 35%),
-                #0f1519;
-        }
-        .hero-title {
-            font-size: 3.6rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            line-height: 1.15;
-        }
-        .hero-sub {
-            color: #b5c0cc;
-            font-size: 1.15rem;
-            max-width: 560px;
-        }
-        .hero-cta {
-            background-color: #5383e8;
-            border-color: #5383e8;
-            padding: 0.7rem 2.2rem;
-            font-weight: 600;
-            font-size: 1rem;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-        .hero-cta:hover {
-            background-color: #3d6ad2;
-            border-color: #3d6ad2;
-        }
-
-        /* ── stat counters ── */
-        .stat-row {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-        .stat-item .stat-num {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #5383e8;
-        }
-        .stat-item .stat-label {
-            color: #9e9e9e;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-
-        /* ── section shared ── */
-        .section-block {
-            padding: 100px 0;
-        }
-        .section-block:nth-child(even) {
-            background: rgba(28, 37, 46, 0.35);
-        }
-        .section-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
             justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 18px;
+            opacity: 0;
+            transition: opacity 1.5s ease;
         }
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-        .section-desc {
-            color: #b5c0cc;
-            font-size: 1.05rem;
-            max-width: 520px;
-        }
-
-        /* ── feature cards ── */
-        .feature-card {
-            background: #1c252e;
-            border: 1px solid #2a3843;
-            border-radius: 14px;
-            padding: 28px 24px;
-            height: 100%;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-        .feature-card:hover {
-            transform: translateY(-4px);
-            border-color: #5383e8;
-        }
-        .feature-card .fi {
-            font-size: 1.6rem;
-            color: #5383e8;
-            margin-bottom: 14px;
-        }
-        .feature-card h5 {
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .feature-card p {
-            color: #9e9e9e;
-            font-size: 0.9rem;
-            margin-bottom: 0;
-        }
-
-        /* ── mockup placeholder ── */
-        .mockup-placeholder {
-            background: linear-gradient(145deg, #1c252e, #141b21);
-            border: 1px solid #2a3843;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-        }
-        .mockup-bar {
-            background: #1c252e;
-            border-bottom: 1px solid #2a3843;
-            padding: 10px 16px;
+        .hero-covers-bg.loaded { opacity: 1; }
+        .covers-row {
             display: flex;
-            gap: 6px;
+            gap: 8px;
+            flex-shrink: 0;
+            width: max-content;
+            animation: coverScroll 120s linear infinite;
         }
-        .mockup-dot {
-            width: 10px; height: 10px; border-radius: 50%;
-        }
-        .mockup-body {
-            padding: 24px;
-        }
-        .mockup-line {
-            height: 10px;
-            border-radius: 6px;
-            background: #2a3843;
-            margin-bottom: 12px;
-        }
-        .mockup-card-sm {
-            background: #243039;
+        .covers-row:nth-child(2) { animation-delay: -30s; }
+        .covers-row:nth-child(3) { animation-delay: -60s; }
+        .covers-row:nth-child(even) { animation-direction: reverse; }
+        .covers-row img {
+            width: 155px;
+            height: 220px;
+            object-fit: cover;
             border-radius: 10px;
-            height: 100px;
-            border: 1px solid #2a3843;
+            flex-shrink: 0;
         }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background:
+                linear-gradient(to right, rgba(10,14,19,0.92) 0%, rgba(10,14,19,0.55) 50%, rgba(10,14,19,0.3) 100%),
+                linear-gradient(to bottom, transparent 0%, rgba(10,14,19,0.2) 60%, rgba(10,14,19,0.98) 100%);
+        }
+        .hero-section > .container { position: relative; z-index: 2; }
+        @keyframes coverScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes float   { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes bounce  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ── CTA banner ── */
-        .cta-banner {
-            background: linear-gradient(135deg, rgba(83, 131, 232, 0.18), rgba(80, 214, 180, 0.12));
-            border: 1px solid #2a3843;
-            border-radius: 18px;
-            padding: 50px 40px;
-            text-align: center;
-        }
+        /* Hero enhancements */
+        .hero-title { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-sub { color: rgba(180, 195, 215, 0.85); }
+        .hero-cta { position: relative; overflow: hidden; }
+        .hero-cta::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); transition: left 0.5s; }
+        .hero-cta:hover::after { left: 100%; }
+        .stat-num { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-        /* ── footer ── */
-        .site-footer {
-            border-top: 1px solid #2a3843;
-            padding: 32px 0;
-            color: #9e9e9e;
-            font-size: 0.85rem;
-        }
-        .site-footer a {
-            color: #7cb7ff;
-            text-decoration: none;
-        }
-        .site-footer a:hover { color: #a8ccff; }
+        /* Section block animations — scroll reveal */
+        .section-block { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .section-block.visible { opacity: 1; transform: translateY(0); }
+        .section-title { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-        .text-muted { color: #9e9e9e !important; }
+        /* Feature cards glow on hover */
+        .feature-card { position: relative; overflow: hidden; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s; }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-card:hover { border-color: rgba(83, 131, 232, 0.4); box-shadow: 0 16px 40px rgba(0,0,0,0.3), 0 0 20px rgba(83, 131, 232, 0.08); }
+
+        /* CTA banner shimmer */
+        .cta-banner { position: relative; overflow: hidden; }
+        .cta-banner::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(from 0deg, transparent, rgba(83, 131, 232, 0.06), transparent 30%); animation: rotateSweep 8s linear infinite; will-change: transform; pointer-events: none; }
+        @keyframes rotateSweep { to { transform: rotate(360deg); } }
+
+        /* Mockup cards upgraded with glass */
+        .mockup-placeholder { background: rgba(20, 28, 36, 0.95); }
     </style>
 </head>
 <body>
@@ -256,10 +118,14 @@ plagiarized the work of other students and/or persons.
 
     <!-- ═══════════ Hero ═══════════ -->
     <section class="hero-section">
+        <!-- Game covers background mosaic -->
+        <div class="hero-covers-bg" id="heroCovers" aria-hidden="true"></div>
+        <div class="hero-overlay"></div>
+
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
-                    <p class="text-uppercase small fw-bold mb-2" style="color:#5383e8;letter-spacing:0.1em;">Your Backlog Companion</p>
+                    <p class="text-uppercase small fw-bold mb-2" style="color:var(--accent);letter-spacing:0.15em;">Your Backlog Companion</p>
                     <h1 class="hero-title mb-3">Discover, collect &amp; conquer your games</h1>
                     <p class="hero-sub mb-4">
                         Backlog Hero helps you track every game you own, plan what to play next,
@@ -568,6 +434,50 @@ plagiarized the work of other students and/or persons.
     <script>
       let allGames = [];
       let currentGameSet = [];
+      let heroCoversReady = false;
+
+      // Populate hero background with game cover mosaic
+      function populateHeroCovers(igdbGames) {
+        if (heroCoversReady) return;
+        const container = document.getElementById('heroCovers');
+        if (!container) return;
+        heroCoversReady = true;
+
+        let coverUrls = [];
+        // Prefer IGDB covers from API if we have enough
+        if (igdbGames && igdbGames.length > 20) {
+          coverUrls = igdbGames
+            .filter(g => g.cover && g.cover.url)
+            .map(g => 'https://images.igdb.com/igdb/image/upload/t_cover_big/' + g.cover.url.split('/').pop());
+        }
+        // Fallback: Steam CDN portrait covers for well-known games
+        if (coverUrls.length < 30) {
+          const ids = [1174180,292030,271590,1245620,1086940,1091500,1593500,814380,2358720,990080,1817070,2050650,1196590,1172380,374320,1151640,1190460,582010,367520,413150,1145360,1332010,391540,620,1426210,1382330,524220,275850,379720,892970,739630,381210,252490,242760,105600,570940];
+          coverUrls = ids.map(id => 'https://cdn.cloudflare.steamstatic.com/steam/apps/' + id + '/library_600x900_2x.jpg');
+        }
+        // Shuffle
+        for (let i = coverUrls.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [coverUrls[i], coverUrls[j]] = [coverUrls[j], coverUrls[i]];
+        }
+        // Build 3 rows, each duplicated for seamless infinite scroll
+        const perRow = Math.ceil(coverUrls.length / 3);
+        for (let r = 0; r < 3; r++) {
+          const row = document.createElement('div');
+          row.className = 'covers-row';
+          const slice = coverUrls.slice(r * perRow, (r + 1) * perRow);
+          [...slice, ...slice].forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            img.loading = r === 0 ? 'eager' : 'lazy';
+            img.onerror = function() { this.style.display = 'none'; };
+            row.appendChild(img);
+          });
+          container.appendChild(row);
+        }
+        setTimeout(() => container.classList.add('loaded'), 300);
+      }
 
       // Randomize array
       function shuffleArray(arr) {
@@ -608,8 +518,8 @@ plagiarized the work of other students and/or persons.
             
             html += `
               <div style="flex: 0 0 auto; min-width: 110px; position: relative;">
-                <img src="${coverUrl}" alt="${game.name}" 
-                     style="width: 110px; height: 155px; object-fit: cover; border-radius: 12px; border: 2px solid rgba(83, 131, 232, 0.4); transition: all 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.4);"
+                <img src="${coverUrl}" alt="${game.name}" loading="lazy"
+                     style="width: 110px; height: 155px; object-fit: cover; border-radius: 12px; border: 2px solid rgba(83, 131, 232, 0.4); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background-color: #1a2634;"
                      title="${game.name} - Rating: ${rating}/100"
                      onmouseover="this.style.transform='scale(1.12) translateZ(0)'; this.style.boxShadow='0 12px 30px rgba(83, 131, 232, 0.6)';"
                      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.4)'">
@@ -628,18 +538,19 @@ plagiarized the work of other students and/or persons.
           const carousel = gameCardsContainer.querySelector('.gameCarousel');
           if (carousel) {
             let scrollPos = 0;
-            const gameWidth = 110 + 14; // width + gap
+            const gameWidth = 110 + 14;
             const singleSetWidth = topGames.length * gameWidth;
+            let lastScroll = 0;
 
-            setInterval(() => {
-              scrollPos += 1.5;
-              
-              if (scrollPos >= singleSetWidth) {
-                scrollPos = 0;
-              }
-              
+            function scrollCarousel(now) {
+              const delta = lastScroll ? (now - lastScroll) / 1000 : 0;
+              lastScroll = now;
+              scrollPos += 50 * delta; // 50px/sec, same visual speed
+              if (scrollPos >= singleSetWidth) scrollPos = 0;
               carousel.scrollLeft = scrollPos;
-            }, 30);
+              requestAnimationFrame(scrollCarousel);
+            }
+            requestAnimationFrame(scrollCarousel);
           }
         }, 500);
       }
@@ -659,13 +570,11 @@ plagiarized the work of other students and/or persons.
           }
 
           allGames = await response.json();
-          
+          populateHeroCovers(allGames);
+
           if (allGames && allGames.length > 0) {
             // Display initial random games
             displayRandomGames();
-
-            // Change games every 6 seconds
-            setInterval(displayRandomGames, 6000);
           }
         } catch (err) {
           console.error('Error loading featured games:', err);
@@ -866,6 +775,8 @@ plagiarized the work of other students and/or persons.
         loadFeaturedGames();
         animateSearch();
         animateCommunityFeed();
+        // Fallback: show Steam CDN covers if IGDB API hasn't loaded in 2s
+        setTimeout(() => populateHeroCovers(), 2000);
       });
 
       // Smart home navigation - if logged in go to dashboard, else go to index
@@ -893,6 +804,19 @@ plagiarized the work of other students and/or persons.
           });
         }
       });
+
+      // Navbar scroll shadow (passive, cached)
+      const _nav = document.querySelector('.navbar');
+      let _scrollTick = false;
+      window.addEventListener('scroll', () => {
+        if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
+      }, { passive: true });
+
+      // Scroll-reveal for section blocks
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); } });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.section-block').forEach(el => revealObserver.observe(el));
     </script>
 </body>
 </html>

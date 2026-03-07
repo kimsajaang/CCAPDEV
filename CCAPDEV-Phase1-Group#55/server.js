@@ -263,6 +263,7 @@ app.get('/api/auth/current', isLoggedIn, async (req, res) => {
     }
 
     console.log('[GET CURRENT USER] Retrieved user:', user.displayName);
+    const pendingRequests = (user.friendRequests || []).filter(r => r.status === 'pending').length;
     res.json({
       _id: user._id,
       username: user.username,
@@ -272,6 +273,8 @@ app.get('/api/auth/current', isLoggedIn, async (req, res) => {
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
       steamId: user.steamId || '',
+      friendsCount: (user.friends || []).length,
+      pendingRequests,
       createdAt: user.createdAt,
     });
   } catch (err) {
@@ -499,6 +502,7 @@ app.get('/api/users/:userId', isLoggedIn, async (req, res) => {
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
       steamId: user.steamId || '',
+      friendsCount: (user.friends || []).length,
       createdAt: user.createdAt,
     });
   } catch (err) {
@@ -563,7 +567,7 @@ app.get('/api/games/db/:gameId', async (req, res) => {
   }
 });
 
-// POST /api/games - Create a new game
+// POST /api/games - Find existing game by name or create a new one
 app.post('/api/games', async (req, res) => {
   try {
     const { name, coverUrl, rating, genres, platforms, releaseDate, summary } = req.body;
@@ -572,18 +576,25 @@ app.post('/api/games', async (req, res) => {
       return res.status(400).json({ error: 'Game name is required' });
     }
 
-    const newGame = new Game({
-      name,
-      coverUrl,
-      rating,
-      genres,
-      platforms,
-      releaseDate,
-      summary,
-    });
+    // Check if a game with this name already exists (case-insensitive)
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let game = await Game.findOne({ name: { $regex: new RegExp('^' + escaped + '$', 'i') } });
 
-    await newGame.save();
-    res.status(201).json({ message: 'Game created', game: newGame });
+    if (game) {
+      // Update missing fields if the new request has better data
+      let updated = false;
+      if (coverUrl && (!game.coverUrl || game.coverUrl.includes('via.placeholder.com'))) { game.coverUrl = coverUrl; updated = true; }
+      if (genres && genres.length && !game.genres.length) { game.genres = genres; updated = true; }
+      if (releaseDate && !game.releaseDate) { game.releaseDate = releaseDate; updated = true; }
+      if (summary && !game.summary) { game.summary = summary; updated = true; }
+      if (updated) await game.save();
+
+      return res.status(200).json({ message: 'Game already exists', game });
+    }
+
+    game = new Game({ name, coverUrl, rating, genres, platforms, releaseDate, summary });
+    await game.save();
+    res.status(201).json({ message: 'Game created', game });
   } catch (err) {
     console.error('[CREATE GAME] Error:', err.message);
     res.status(500).json({ error: 'Failed to create game' });
@@ -599,7 +610,23 @@ app.get('/api/library/:userId', async (req, res) => {
       .populate('gameId')
       .sort({ addedAt: -1 });
 
-    res.json(entries);
+    // Deduplicate by game name (keep earliest entry, merge best data)
+    const seen = new Map();
+    const unique = [];
+    for (const entry of entries) {
+      if (!entry.gameId) continue;
+      const key = entry.gameId.name.toLowerCase();
+      if (seen.has(key)) {
+        // Mark this duplicate hidden so it won't appear again
+        entry.hidden = true;
+        entry.save().catch(() => {});
+        continue;
+      }
+      seen.set(key, true);
+      unique.push(entry);
+    }
+
+    res.json(unique);
   } catch (err) {
     console.error('[GET LIBRARY] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch library' });
@@ -701,8 +728,9 @@ app.delete('/api/library/:entryId', async (req, res) => {
 // POST /api/games/search - Search games by name (IGDB)
 app.post('/api/games/search', async (req, res) => {
   try {
-    const { query, limit = 20 } = req.body;
+    const { query, limit: rawLimit = 20 } = req.body;
     if (!query) return res.status(400).json({ error: 'Query is required' });
+    const limit = Math.min(Math.max(1, parseInt(rawLimit) || 20), 50);
 
     const token = await getAccessToken();
     const igdbRes = await fetch('https://api.igdb.com/v4/games', {
@@ -723,10 +751,20 @@ app.post('/api/games/search', async (req, res) => {
   }
 });
 
-// GET /api/games/popular - Get popular/trending games (IGDB)
+// GET /api/games/popular - Get popular/trending games (IGDB) — cached 5 min
+let _popularCache = null;
+let _popularCacheTime = 0;
+const POPULAR_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 app.get('/api/games/popular', async (req, res) => {
   try {
+    // Return cached data if fresh
+    if (_popularCache && Date.now() - _popularCacheTime < POPULAR_CACHE_TTL) {
+      return res.json(_popularCache);
+    }
     const token = await getAccessToken();
+    // Get games trending RIGHT NOW — released in the last 30 days, sorted by hype/ratings
+    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
     const igdbRes = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
@@ -734,13 +772,17 @@ app.get('/api/games/popular', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `fields name,cover.url,rating,genres.name,first_release_date,summary; where rating > 80 & cover != null; sort rating desc; limit 20;`
+      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name; where first_release_date > ${thirtyDaysAgo} & cover != null; sort total_rating_count desc; limit 20;`
     });
 
     const data = await igdbRes.json();
+    _popularCache = data;
+    _popularCacheTime = Date.now();
     res.json(data);
   } catch (err) {
     console.error('[IGDB POPULAR] Error:', err.message);
+    // Return stale cache if available
+    if (_popularCache) return res.json(_popularCache);
     res.status(500).json({ error: 'Failed to get popular games' });
   }
 });
@@ -789,6 +831,211 @@ app.get('/api/games/igdb/:id', async (req, res) => {
   }
 });
 
+
+// ─── FRIEND ROUTES ───
+
+// GET /api/users/search/friends?q=query - Search users by username or displayName
+app.get('/api/users/search/friends', isLoggedIn, async (req, res) => {
+  try {
+    const q = req.query.q;
+    if (!q || q.length < 2) return res.status(400).json({ error: 'Query must be at least 2 characters' });
+    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const users = await User.find({
+      _id: { $ne: req.session.userId },
+      $or: [{ username: regex }, { displayName: regex }]
+    }).select('_id username displayName avatar').limit(10);
+    res.json(users);
+  } catch (err) {
+    console.error('[SEARCH USERS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+});
+
+// POST /api/friends/request/:userId - Send friend request
+app.post('/api/friends/request/:userId', isLoggedIn, async (req, res) => {
+  try {
+    const targetId = req.params.userId;
+    const myId = req.session.userId;
+    if (targetId === myId || targetId === myId.toString()) {
+      return res.status(400).json({ error: 'Cannot send friend request to yourself' });
+    }
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ error: 'User not found' });
+
+    // Check if already friends
+    const me = await User.findById(myId);
+    if (me.friends.some(f => f.toString() === targetId)) {
+      return res.status(409).json({ error: 'Already friends' });
+    }
+
+    // Check if request already pending
+    const existing = target.friendRequests.find(
+      r => r.from.toString() === myId.toString() && r.status === 'pending'
+    );
+    if (existing) return res.status(409).json({ error: 'Friend request already sent' });
+
+    // Check if they already sent us a request — auto-accept
+    const theirRequest = me.friendRequests.find(
+      r => r.from.toString() === targetId && r.status === 'pending'
+    );
+    if (theirRequest) {
+      theirRequest.status = 'accepted';
+      me.friends.addToSet(targetId);
+      target.friends.addToSet(myId);
+      await me.save();
+      await target.save();
+      return res.json({ message: 'Friend request auto-accepted! You are now friends.', status: 'friends' });
+    }
+
+    target.friendRequests.push({ from: myId });
+    await target.save();
+    res.json({ message: 'Friend request sent', status: 'pending' });
+  } catch (err) {
+    console.error('[FRIEND REQUEST] Error:', err.message);
+    res.status(500).json({ error: 'Failed to send friend request' });
+  }
+});
+
+// POST /api/friends/accept/:requestId - Accept friend request
+app.post('/api/friends/accept/:requestId', isLoggedIn, async (req, res) => {
+  try {
+    const me = await User.findById(req.session.userId);
+    const request = me.friendRequests.id(req.params.requestId);
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ error: 'Friend request not found' });
+    }
+    request.status = 'accepted';
+    me.friends.addToSet(request.from);
+    await me.save();
+
+    // Add reciprocal friendship
+    const sender = await User.findById(request.from);
+    if (sender) {
+      sender.friends.addToSet(me._id);
+      await sender.save();
+    }
+
+    res.json({ message: 'Friend request accepted' });
+  } catch (err) {
+    console.error('[ACCEPT FRIEND] Error:', err.message);
+    res.status(500).json({ error: 'Failed to accept friend request' });
+  }
+});
+
+// POST /api/friends/reject/:requestId - Reject friend request
+app.post('/api/friends/reject/:requestId', isLoggedIn, async (req, res) => {
+  try {
+    const me = await User.findById(req.session.userId);
+    const request = me.friendRequests.id(req.params.requestId);
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ error: 'Friend request not found' });
+    }
+    request.status = 'rejected';
+    await me.save();
+    res.json({ message: 'Friend request rejected' });
+  } catch (err) {
+    console.error('[REJECT FRIEND] Error:', err.message);
+    res.status(500).json({ error: 'Failed to reject friend request' });
+  }
+});
+
+// DELETE /api/friends/:friendId - Remove friend
+app.delete('/api/friends/:friendId', isLoggedIn, async (req, res) => {
+  try {
+    const myId = req.session.userId;
+    const friendId = req.params.friendId;
+    const me = await User.findById(myId);
+    const friend = await User.findById(friendId);
+
+    me.friends.pull(friendId);
+    await me.save();
+    if (friend) {
+      friend.friends.pull(myId);
+      await friend.save();
+    }
+    res.json({ message: 'Friend removed' });
+  } catch (err) {
+    console.error('[REMOVE FRIEND] Error:', err.message);
+    res.status(500).json({ error: 'Failed to remove friend' });
+  }
+});
+
+// GET /api/friends - Get current user's friends list
+app.get('/api/friends', isLoggedIn, async (req, res) => {
+  try {
+    const me = await User.findById(req.session.userId).populate('friends', '_id username displayName avatar bio');
+    res.json(me.friends || []);
+  } catch (err) {
+    console.error('[GET FRIENDS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch friends' });
+  }
+});
+
+// GET /api/friends/requests - Get pending friend requests for current user
+app.get('/api/friends/requests', isLoggedIn, async (req, res) => {
+  try {
+    const me = await User.findById(req.session.userId).populate('friendRequests.from', '_id username displayName avatar');
+    const pending = (me.friendRequests || []).filter(r => r.status === 'pending');
+    res.json(pending);
+  } catch (err) {
+    console.error('[GET FRIEND REQUESTS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch friend requests' });
+  }
+});
+
+// GET /api/friends/status/:userId - Get friendship status with a specific user
+app.get('/api/friends/status/:userId', isLoggedIn, async (req, res) => {
+  try {
+    const myId = req.session.userId;
+    const targetId = req.params.userId;
+    const me = await User.findById(myId);
+    const target = await User.findById(targetId);
+
+    if (me.friends.some(f => f.toString() === targetId)) {
+      return res.json({ status: 'friends' });
+    }
+    // Check if I sent them a request
+    if (target) {
+      const sentReq = target.friendRequests.find(
+        r => r.from.toString() === myId.toString() && r.status === 'pending'
+      );
+      if (sentReq) return res.json({ status: 'pending_sent' });
+    }
+    // Check if they sent me a request
+    const receivedReq = me.friendRequests.find(
+      r => r.from.toString() === targetId && r.status === 'pending'
+    );
+    if (receivedReq) return res.json({ status: 'pending_received', requestId: receivedReq._id });
+
+    res.json({ status: 'none' });
+  } catch (err) {
+    console.error('[FRIEND STATUS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to check friend status' });
+  }
+});
+
+// GET /api/friends/activity - Get friends' recent activity (for dashboard feed)
+app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
+  try {
+    const me = await User.findById(req.session.userId);
+    const friendIds = me.friends || [];
+    if (friendIds.length === 0) return res.json([]);
+
+    const entries = await LibraryEntry.find({
+      userId: { $in: friendIds },
+      hidden: { $ne: true }
+    })
+      .populate('gameId')
+      .populate('userId', '_id username displayName avatar')
+      .sort({ addedAt: -1 })
+      .limit(20);
+
+    res.json(entries);
+  } catch (err) {
+    console.error('[FRIEND ACTIVITY] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch friend activity' });
+  }
+});
 
 // ─── STEAM INTEGRATION ───
 

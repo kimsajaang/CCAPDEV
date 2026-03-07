@@ -20,390 +20,66 @@ plagiarized the work of other students and/or persons.
     <title>Backlog Hero | Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Custom dark theme styles. We tried using a shared stylesheet first but
-         each page needed too many overrides so we kept them inline for now. -->
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            background-color: #0f1519 !important;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body.loading {
-            overflow: hidden;
-        }
-        .card {
-            background-color: #1c252e !important;
-            border: 1px solid #2a3843 !important;
-            color: #ffffff;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
-        }
-        .navbar {
-            background-color: #1c252e !important;
-            border-bottom: 1px solid #2a3843;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 0.02em;
-        }
-        .navbar-nav .nav-link {
-            color: #9e9e9e !important;
-            transition: color 0.2s ease, transform 0.2s ease;
-            padding: 0.5rem 1rem !important;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-        }
-        .navbar-nav .nav-link:hover {
-            color: #ffffff !important;
-            transform: translateY(-3px);
-        }
-        .navbar-nav .nav-link.active {
-            color: #5383e8 !important;
-        }
-        @keyframes pageSlideIn {
-            from { opacity: 0; transform: translateY(18px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
-        .btn-primary, .bg-primary, .badge.bg-primary {
-            background-color: #5383e8 !important;
-            border-color: #5383e8 !important;
-        }
-        .btn-outline-primary {
-            color: #5383e8 !important;
-            border-color: #5383e8 !important;
-            transition: all 0.2s ease;
-        }
-        .btn-outline-primary:hover {
-            background-color: #5383e8 !important;
-            color: #ffffff !important;
-        }
-        .list-group-item {
-            background-color: #1c252e !important;
-            border-color: #2a3843 !important;
-            color: #ffffff;
-            transition: 0.2s;
-            border-radius: 12px;
-        }
-        .list-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .list-group-item:hover {
-            background-color: #243039 !important;
-        }
-        .avatar-sm {
-            width: 32px;
-            height: 32px;
-            object-fit: cover;
-        }
-        .feed-cover {
-            width: 46px;
-            height: 62px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 1px solid #2a3843;
-        }
-        .text-muted { color: #9e9e9e !important; }
-        .extra-small { font-size: 0.75rem; }
-        /* Loading spinner — shows for 1.2 seconds while the page "loads".
-           Faked the loading screen to make it feel more app-like.
-           The timeout is in the JS at the bottom of the page. */
-        .loader {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(15, 21, 25, 0.96);
-            z-index: 2000;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        .loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-        .loader-card {
-            background: #1c252e;
-            border: 1px solid #2a3843;
-            border-radius: 14px;
-            padding: 22px 26px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .loader-orb {
-            width: 44px;
-            height: 44px;
-            border-radius: 999px;
-            border: 4px solid #2a3843;
-            border-top-color: #5383e8;
-            animation: spin 0.9s linear infinite;
-        }
-        .loader-text {
-            font-weight: 700;
-            letter-spacing: 0.02em;
-        }
-        .loader-sub {
-            font-size: 0.8rem;
-            color: #9e9e9e;
-        }
-        
-        /* Hero banner at the top of the dashboard — quick stats + CTA buttons */
-        .hero {
-            background: linear-gradient(135deg, rgba(28, 37, 46, 0.95), rgba(15, 21, 25, 0.95));
-            border: 1px solid #2a3843;
-            border-radius: 16px;
-            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
-        }
-        .hero-title {
-            font-weight: 800;
-            letter-spacing: 0.02em;
-        }
-        .hero-sub {
-            color: #b5c0cc;
-        }
-        .feature-card {
-            background: #1c252e;
-            border: 1px solid #2a3843;
-            border-radius: 14px;
-            padding: 16px;
-            height: 100%;
-        }
-        .hero {
-            background: linear-gradient(135deg, rgba(28, 37, 46, 0.96), rgba(15, 21, 25, 0.96));
-            border: 1px solid #2a3843;
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
-        }
-        .hero-compact {
-            padding: 18px 22px;
-        }
-        .hero-title {
-            font-weight: 800;
-            letter-spacing: 0.02em;
-        }
-        .hero-sub {
-            color: #b5c0cc;
-            max-width: 700px;
-        }
-        .hero-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 14px;
-            margin-top: 18px;
-        }
-        .hero-stat {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: rgba(15, 21, 25, 0.55);
-            border: 1px solid rgba(42, 56, 67, 0.7);
-        }
-        .hero-stat-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #b5c0cc;
-            font-size: 0.8rem;
-            letter-spacing: 0.02em;
-        }
-        .hero-stat-value {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 999px;
-            display: inline-block;
-        }
-        .dot-played { background: #ff5aa5; }
-        .dot-games { background: #3ddc84; }
-        .dot-ratings { background: #4f8cff; }
-        .dot-reviews { background: #f2a13b; }
-        .dot-lists { background: #ff6b6b; }
-        /* Scroll-triggered reveal animations — cards fade in as you scroll down.
-           Uses IntersectionObserver for this, see the script at bottom */
-        .reveal {
-            opacity: 0;
-            transform: translateY(18px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .reveal.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .sticky-cta {
-            position: fixed;
-            right: 22px;
-            bottom: 22px;
-            z-index: 1200;
-            background: #5383e8;
-            color: #ffffff;
-            border-radius: 999px;
-            padding: 12px 18px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
-            text-decoration: none;
-        }
-        .sticky-cta:hover {
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        /* Post Update modal styling */
-        .modal-content {
-          background-color: #1c252e;
-          border: 1px solid #2a3843;
-          color: #ffffff;
-        }
-        .modal-header, .modal-footer {
-          border-color: #2a3843;
-        }
-        .btn-close {
-          filter: invert(1) grayscale(1);
-        }
-        .form-control, .form-select {
-          background-color: #141b21;
-          border-color: #2a3843;
-          color: #ffffff;
-        }
-        .form-control::placeholder { color: #76828c; }
-        .form-control:focus, .form-select:focus {
-          border-color: #5383e8;
-          box-shadow: 0 0 0 0.2rem rgba(83, 131, 232, 0.25);
-          color: #ffffff;
-          background-color: #141b21;
-        }
-        .form-text { color: #9e9e9e; }
-        /* Suggestion result animation */
-        .suggest-result {
-          transition: all 0.3s ease;
-        }
-        .suggest-result.highlight {
-          border-color: #5383e8 !important;
-          box-shadow: 0 0 12px rgba(83, 131, 232, 0.3);
-        }
-        /* Hide number input spinners */
-        #planHours::-webkit-inner-spin-button,
-        #planHours::-webkit-outer-spin-button,
-        #planMinutes::-webkit-inner-spin-button,
-        #planMinutes::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        #planHours, #planMinutes {
-          -moz-appearance: textbox;
-          appearance: textbox;
-        }
-        /* Source toggle styling */
-        .plan-source-group .btn-check:checked + .btn-plan-toggle {
-          background: #5383e8;
-          color: #fff;
-          border-color: #5383e8;
-        }
-        .btn-plan-toggle {
-          background: transparent;
-          color: #8b949e;
-          border: 1px solid #30363d;
-          transition: all 0.2s ease;
-        }
-        .btn-plan-toggle:hover {
-          color: #c9d1d9;
-          border-color: #484f58;
-          background: rgba(255,255,255,0.04);
-        }
-        /* Genre chip checkboxes */
-        .genre-chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-        .genre-chips .btn-check:checked + .genre-chip {
-          background: #5383e8;
-          color: #fff;
-          border-color: #5383e8;
-        }
-        .genre-chip {
-          font-size: 0.72rem;
-          padding: 3px 10px;
-          border-radius: 20px;
-          background: transparent;
-          color: #8b949e;
-          border: 1px solid #30363d;
-          cursor: pointer;
-          transition: all 0.15s ease;
-        }
-        .genre-chip:hover {
-          color: #c9d1d9;
-          border-color: #484f58;
-          background: rgba(255,255,255,0.04);
-        }
-        /* Steam sync spinner */
-        .spin-icon {
-          display: inline-block;
-          animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        /* User-posted feed item accent */
-        .user-post-item {
-          border-left: 4px solid #5383e8 !important;
-        }
-        /* Photo upload styles */
-        .photo-upload-area {
-          border: 2px dashed #2a3843;
-          border-radius: 12px;
-          padding: 20px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          background: rgba(83, 131, 232, 0.05);
-        }
-        .photo-upload-area:hover {
-          border-color: #5383e8;
-          background: rgba(83, 131, 232, 0.1);
-        }
-        .photo-upload-area.has-photo {
-          border: 1px solid #2a3843;
-          padding: 8px;
-          background: transparent;
-        }
-        .photo-preview-img {
-          max-width: 100%;
-          max-height: 300px;
-          border-radius: 8px;
-          object-fit: cover;
-          margin-bottom: 10px;
-        }
-        .photo-remove-btn {
-          font-size: 0.8rem;
-          padding: 4px 8px;
-        }
-        .feed-photo {
-          width: 100%;
-          max-height: 400px;
-          border-radius: 8px;
-          object-fit: cover;
-          margin: 10px 0;
-          border: 1px solid #2a3843;
-        }
+        /* Page-specific: dashboard overrides */
+        body.loading { overflow: hidden; }
+        .spin-icon { display: inline-block; animation: spin 0.8s linear infinite; }
+        .user-post-item { border-left: 4px solid var(--primary) !important; }
+        .photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease); background: rgba(83, 131, 232, 0.05); }
+        .photo-upload-area:hover { border-color: var(--primary); background: rgba(83, 131, 232, 0.1); }
+        .photo-upload-area.has-photo { border: 1px solid var(--border); padding: 8px; background: transparent; }
+        .photo-preview-img { max-width: 100%; max-height: 300px; border-radius: var(--radius-sm); object-fit: cover; margin-bottom: 10px; }
+        .photo-remove-btn { font-size: 0.8rem; padding: 4px 8px; }
+        .feed-photo { width: 100%; max-height: 400px; border-radius: var(--radius-sm); object-fit: cover; margin: 10px 0; border: 1px solid var(--border); }
+        /* Particle canvas */
+        #particleCanvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+        /* Trending section */
+        .trending-header { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+        .trending-header h5 { margin: 0; }
+        .trending-date { opacity: 0.55; white-space: nowrap; }
+        .trending-header .btn { margin-left: auto; }
+        .trending-scroll-wrap { position: relative; }
+        .trending-scroll-wrap .scroll-btn { position: absolute; top: 50%; transform: translateY(-50%); z-index: 5; background: rgba(10,14,19,0.95); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+        .trending-scroll-wrap .scroll-btn:hover { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 20px rgba(83,131,232,0.3); }
+        .trending-scroll-wrap .scroll-left { left: -12px; }
+        .trending-scroll-wrap .scroll-right { right: -12px; }
+        /* Trailers section */
+        .trailers-card { background: var(--bg-card); border: 1px solid var(--border) !important; }
+        .trailers-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        .trailers-scroll::-webkit-scrollbar { height: 6px; }
+        .trailers-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .trailer-item { flex: 0 0 280px; border-radius: var(--radius-md); overflow: hidden; position: relative; cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .trailer-item:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .trailer-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+        .trailer-play-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.2s ease; }
+        .trailer-item:hover .trailer-play-icon { opacity: 1; }
+        .trailer-play-icon i { font-size: 2.4rem; color: #fff; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+        .trailer-name { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 10px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); font-size: 0.78rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* Trailer modal */
+        .trailer-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .trailer-modal.active { opacity: 1; pointer-events: all; }
+        .trailer-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.92); }
+        .trailer-modal-content { position: relative; width: 90vw; max-width: 900px; border-radius: var(--radius-lg); overflow: hidden; background: #0a0e13; border: 1px solid var(--border); transform: scale(0.92); transition: transform 0.3s ease; }
+        .trailer-modal.active .trailer-modal-content { transform: scale(1); }
+        .trailer-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        .trailer-modal-title { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+        .trailer-modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); transition: color 0.2s, background 0.2s; }
+        .trailer-modal-close:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .trailer-modal-body { position: relative; width: 100%; padding-top: 56.25%; }
+        .trailer-modal-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+        /* Completion ring */
+        .completion-ring { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4); background: rgba(10,14,19,0.4); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+        .completion-ring-text { font-size: 0.82rem; color: var(--text-muted); }
+        .completion-ring-text strong { color: var(--text); font-weight: 700; }
     </style>
 </head>
 <body class="loading">
 
-    <!-- Fake loading screen. Purely cosmetic — just makes the dashboard feel polished.
-     We remove it after 1.2s in the JS below. -->
+    <!-- Particle background -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Fake loading screen -->
     <div id="page-loader" class="loader" aria-label="Loading">
         <div class="loader-card">
             <div class="loader-orb"></div>
@@ -437,39 +113,56 @@ plagiarized the work of other students and/or persons.
     <div class="container my-5">
         <!-- Welcome hero card with user stats -->
         <div class="hero hero-compact mb-4 reveal">
-            <span class="badge bg-primary mb-2">Welcome to Backlog Hero</span>
-            <h2 class="hero-title mb-2" id="welcomeTitle">Play smarter, finish more.</h2>
+            <span class="badge bg-primary mb-2"><i class="bi bi-lightning-charge-fill me-1"></i>Welcome to Backlog Hero</span>
+            <h2 class="mb-2" id="welcomeTitle" style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;letter-spacing:-0.02em;">Play smarter, <span class="gradient-text">finish more.</span></h2>
             <p class="hero-sub mb-3">Quick picks based on your free time.</p>
             <div class="d-flex flex-wrap gap-2 mb-2">
-                <a class="btn btn-primary" href="search.html">Find Games</a>
-                <a class="btn btn-outline-primary" href="library.html">My Library</a>
+                <a class="btn btn-primary" href="search.html"><i class="bi bi-search me-1"></i>Find Games</a>
+                <a class="btn btn-outline-primary" href="library.html"><i class="bi bi-collection me-1"></i>My Library</a>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat">
                     <div class="hero-stat-label"><span class="dot dot-played"></span>Completed</div>
-                    <div class="hero-stat-value" id="statCompleted">0</div>
+                    <div class="hero-stat-value counter-animate" id="statCompleted">0</div>
                 </div>
                 <div class="hero-stat">
                     <div class="hero-stat-label"><span class="dot dot-games"></span>Games</div>
-                    <div class="hero-stat-value" id="statTotal">0</div>
+                    <div class="hero-stat-value counter-animate" id="statTotal">0</div>
                 </div>
                 <div class="hero-stat">
                     <div class="hero-stat-label"><span class="dot dot-ratings"></span>Backlog</div>
-                    <div class="hero-stat-value" id="statBacklog">0</div>
+                    <div class="hero-stat-value counter-animate" id="statBacklog">0</div>
                 </div>
                 <div class="hero-stat">
                     <div class="hero-stat-label"><span class="dot dot-reviews"></span>Playing</div>
-                    <div class="hero-stat-value" id="statPlaying">0</div>
+                    <div class="hero-stat-value counter-animate" id="statPlaying">0</div>
                 </div>
                 <div class="hero-stat">
                     <div class="hero-stat-label"><span class="dot dot-lists"></span>Hours</div>
-                    <div class="hero-stat-value" id="statHours">0</div>
+                    <div class="hero-stat-value counter-animate" id="statHours">0</div>
                 </div>
             </div>
             <button class="btn btn-sm btn-outline-light mt-2" id="steamSyncBtn" style="display:none;" onclick="syncSteam()">
                 <i class="bi bi-steam me-1"></i>Sync Steam Hours
             </button>
         </div>
+
+        <!-- Trending Games -->
+        <div class="trending-section mb-4 reveal">
+            <div class="trending-header">
+                <h5><i class="bi bi-fire me-2" style="color:#fb923c;"></i>Trending <span class="gradient-text">Right Now</span></h5>
+                <span class="trending-date text-muted small" id="trendingDate"></span>
+                <a href="search.html" class="btn btn-sm btn-outline-primary">See All</a>
+            </div>
+            <div class="trending-scroll-wrap">
+                <button class="scroll-btn scroll-left" onclick="document.getElementById('trendingScroll').scrollBy({left:-340,behavior:'smooth'})"><i class="bi bi-chevron-left"></i></button>
+                <div class="trending-scroll" id="trendingScroll">
+                    <div class="text-muted small p-3">Loading trending games...</div>
+                </div>
+                <button class="scroll-btn scroll-right" onclick="document.getElementById('trendingScroll').scrollBy({left:340,behavior:'smooth'})"><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+
         <div class="row g-4 reveal">
             <div class="col-md-4">
             <!-- Backlog suggestion tool — user enters available minutes, gets a game pick.
@@ -510,12 +203,13 @@ plagiarized the work of other students and/or persons.
                     </div>
                 </div>
 
-                <!-- Daily streak counter — gamification element to keep users coming back. -->
-                <div class="card bg-primary text-white border-0 mb-4 reveal">
-                    <div class="card-body text-center py-4">
-                        <h6 class="text-white-50">Current Streak</h6>
-                        <h2 class="display-4 fw-bold" id="streakDays">0 Days</h2>
-                        <p class="mb-0 small" id="streakMessage">Start playing to build your streak!</p>
+                <!-- Latest Game Trailers -->
+                <div class="card border-0 mb-4 reveal trailers-card">
+                    <div class="card-body p-3">
+                        <h6 class="mb-3"><i class="bi bi-play-circle me-1" style="color:var(--accent)"></i>Latest Trailers</h6>
+                        <div class="trailers-scroll" id="trailersScroll">
+                            <div class="text-muted small p-2">Loading trailers...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -535,8 +229,8 @@ plagiarized the work of other students and/or persons.
      Each feed item has a different left-border color to indicate type.
      Data is static HTML for now. -->
                 <div class="d-flex justify-content-between align-items-center mb-4 reveal">
-                    <h4>Friend Activity Feed</h4>
-                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#postUpdateModal">Post Update</button>
+                    <h4><i class="bi bi-broadcast me-2" style="color:var(--accent);"></i>Friend Activity <span class="gradient-text-accent">Feed</span></h4>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#postUpdateModal"><i class="bi bi-plus-lg me-1"></i>Post Update</button>
                 </div>
 
                 <div class="list-group shadow-sm" id="activityFeed">
@@ -975,14 +669,14 @@ plagiarized the work of other students and/or persons.
         try {
           console.log('[Dashboard] Fetching current user...');
           // Fetch current user data with retry logic - more lenient
-          let retries = 5;
+          let retries = 2;
           let currentUserData = null;
           
           while (retries > 0) {
             try {
               // Use AbortController for proper timeout
               const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+              const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
               
               const userRes = await fetch('/api/auth/current', {
                 method: 'GET',
@@ -999,7 +693,7 @@ plagiarized the work of other students and/or persons.
                 currentUserData = await userRes.json();
                 console.log('[Dashboard] User logged in:', currentUserData.displayName);
                 currentUser = currentUserData;
-                document.getElementById('welcomeTitle').textContent = `Welcome back, ${currentUser.displayName}!`;
+                document.getElementById('welcomeTitle').innerHTML = `Welcome back, <span class="gradient-text">${currentUser.displayName}!</span>`;
 
                 // Fetch user stats
                 try {
@@ -1009,21 +703,12 @@ plagiarized the work of other students and/or persons.
 
                   if (statsRes.ok) {
                     const stats = await statsRes.json();
-                    document.getElementById('statCompleted').textContent = stats.completed;
-                    document.getElementById('statTotal').textContent = stats.total;
-                    document.getElementById('statBacklog').textContent = stats.backlog;
-                    document.getElementById('statPlaying').textContent = stats.playing;
-                    document.getElementById('statHours').textContent = Math.round(stats.totalHours);
-                    const streak = stats.streak || 0;
-                    document.getElementById('streakDays').textContent = streak + (streak === 1 ? ' Day' : ' Days');
-                    const isSteamUser = !!(currentUserData.steamId);
-                    if (streak > 0) {
-                      document.getElementById('streakMessage').textContent = `Keep it up, ${currentUser.displayName}!`;
-                    } else {
-                      document.getElementById('streakMessage').textContent = isSteamUser
-                        ? 'Play a game on Steam to start your streak!'
-                        : 'Visit daily to build your streak!';
-                    }
+                    animateCounter('statCompleted', stats.completed);
+                    animateCounter('statTotal', stats.total);
+                    animateCounter('statBacklog', stats.backlog);
+                    animateCounter('statPlaying', stats.playing);
+                    animateCounter('statHours', Math.round(stats.totalHours));
+                    // streak removed — replaced by trailers
                   }
                 } catch (statsErr) {
                   console.warn('[Dashboard] Could not fetch stats:', statsErr);
@@ -1034,21 +719,26 @@ plagiarized the work of other students and/or persons.
                   document.getElementById('steamSyncBtn').style.display = '';
                 }
 
-                // Load dynamic content
+                // Load dynamic content — fire all in parallel, no need to await
                 loadActivityFeed(currentUserData);
                 loadCommunityScores(currentUserData);
                 loadGameDropdown(currentUserData);
+                loadPendingBadge();
+                // Pre-fetch trending data once, then both sections use it
+                fetchTrendingGames();
+                loadTrendingGames();
+                loadTrailers();
 
                 return; // Success - exit function
               }
               // Retry on any non-200 status
             } catch (fetchErr) {
-              console.warn('[Dashboard] Fetch attempt ' + (6 - retries) + ' failed:', fetchErr.message);
+              console.warn('[Dashboard] Fetch attempt ' + (3 - retries) + ' failed:', fetchErr.message);
               // Network errors are temporary - retry
             }
             retries--;
             if (retries > 0) {
-              await new Promise(r => setTimeout(r, 500)); // Longer wait before retry
+              await new Promise(r => setTimeout(r, 300)); // Brief wait before retry
             }
           }
           
@@ -1072,7 +762,7 @@ plagiarized the work of other students and/or persons.
         setTimeout(() => {
           const loader = document.getElementById('page-loader');
           if (loader) loader.classList.add('hidden');
-        }, 1200);
+        }, 600);
       });
 
       // Smart home navigation - if logged in go to dashboard, else go to index
@@ -1089,50 +779,64 @@ plagiarized the work of other students and/or persons.
         }
       }
 
-      // --- Dynamic Activity Feed ---
+      // --- Dynamic Activity Feed (combines own + friends activity) ---
       async function loadActivityFeed(user) {
         const feedEl = document.getElementById('activityFeed');
         try {
           const userId = user._id || user.id;
+          // Fetch own library
           const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
-          if (!libRes.ok) { feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. Start adding games!</div>'; return; }
-          const entries = await libRes.json();
-          const validEntries = entries.filter(e => e.gameId);
-          if (validEntries.length === 0) {
+          let ownEntries = [];
+          if (libRes.ok) {
+            const entries = await libRes.json();
+            ownEntries = entries.filter(e => e.gameId).map(e => ({ ...e, _user: user }));
+          }
+
+          // Fetch friends' activity
+          let friendEntries = [];
+          try {
+            const friendRes = await fetch('/api/friends/activity', { credentials: 'include' });
+            if (friendRes.ok) {
+              const fEntries = await friendRes.json();
+              friendEntries = fEntries.filter(e => e.gameId && e.userId);
+            }
+          } catch (e) { console.warn('[Dashboard] Friends activity fetch failed:', e); }
+
+          // Combine own (last 5) + friend entries, sort by addedAt desc
+          const ownRecent = ownEntries.slice(0, 5);
+          const allEntries = [...ownRecent.map(e => ({ entry: e, user: user, isOwn: true })), ...friendEntries.map(e => ({ entry: e, user: e.userId, isOwn: false }))];
+          allEntries.sort((a, b) => new Date(b.entry.addedAt || 0) - new Date(a.entry.addedAt || 0));
+          const top = allEntries.slice(0, 10);
+
+          if (top.length === 0) {
             feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. <a href="search.html" style="color:#5383e8;">Find games to play!</a></div>';
             return;
           }
-          // Show recent library entries as activity
-          const recent = validEntries.slice(-5).reverse();
+
           let html = '';
-          for (const entry of recent) {
+          for (const item of top) {
+            const entry = item.entry;
+            const u = item.user;
             const game = entry.gameId;
-            const gameName = game.name || 'Unknown Game';
-            const coverUrl = game.coverUrl || '';
+            const gameName = (typeof game === 'object' ? game.name : '') || 'Unknown Game';
+            const coverUrl = (typeof game === 'object' ? game.coverUrl : '') || '';
             const coverTag = coverUrl
-              ? `<img src="${coverUrl}" class="feed-cover" alt="${gameName} cover" onerror="this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'feed-cover d-flex align-items-center justify-content-center\\' style=\\'background:#1a2634;\\'><i class=\\'bi bi-controller\\' style=\\'font-size:1.2rem;color:#5383e8;\\'></i></div>')">`
+              ? `<img src="${coverUrl}" class="feed-cover" alt="${gameName} cover" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'feed-cover d-flex align-items-center justify-content-center\\' style=\\'background:#1a2634;\\'><i class=\\'bi bi-controller\\' style=\\'font-size:1.2rem;color:#5383e8;\\'></i></div>')">`
               : `<div class="feed-cover d-flex align-items-center justify-content-center" style="background:#1a2634;"><i class="bi bi-controller" style="font-size:1.2rem;color:#5383e8;"></i></div>`;
-            let typeLabel = 'added to library';
-            let borderClass = '';
-            let badgeHtml = '';
-            if (entry.status === 'completed') {
-              typeLabel = 'completed';
-              borderClass = 'border-start border-success border-4';
-              badgeHtml = '<span class="badge bg-success extra-small">COMPLETED</span>';
-            } else if (entry.status === 'playing') {
-              typeLabel = 'is playing';
-              borderClass = 'border-start border-primary border-4';
-            } else if (entry.status === 'backlog') {
-              typeLabel = 'added to backlog';
-              borderClass = 'border-start border-warning border-4';
-            }
+            let typeLabel = 'added to library', borderClass = '', badgeHtml = '';
+            if (entry.status === 'completed') { typeLabel = 'completed'; borderClass = 'border-start border-success border-4'; badgeHtml = '<span class="badge bg-success extra-small">COMPLETED</span>'; }
+            else if (entry.status === 'playing') { typeLabel = 'is playing'; borderClass = 'border-start border-primary border-4'; }
+            else if (entry.status === 'backlog') { typeLabel = 'added to backlog'; borderClass = 'border-start border-warning border-4'; }
             const hoursText = entry.playtime ? `${Math.round(entry.playtime * 10) / 10}h played` : '';
             const ratingText = entry.rating ? '★'.repeat(entry.rating) + '☆'.repeat(5 - entry.rating) : '';
+            const displayName = u.displayName || u.username || 'User';
+            const userAvatar = u.avatar || '';
+            const profileLink = item.isOwn ? 'profile.html' : `profile.html?user=${u._id}`;
             html += `
               <div class="list-group-item p-3 ${borderClass} reveal is-visible">
                 <div class="d-flex align-items-center mb-2">
-                  <img src="${user.avatar || ''}" class="rounded-circle me-2 avatar-sm" alt="User" onerror="this.style.display='none'">
-                  <strong class="text-primary">${user.displayName}</strong>
+                  <a href="${profileLink}"><img src="${userAvatar}" class="rounded-circle me-2 avatar-sm" alt="User" style="width:32px;height:32px;" onerror="this.style.display='none'"></a>
+                  <a href="${profileLink}" class="text-primary fw-bold text-decoration-none">${displayName}</a>
                   <span class="text-muted ms-2 small">${typeLabel}</span>
                 </div>
                 <div class="d-flex align-items-start gap-3">
@@ -1197,6 +901,21 @@ plagiarized the work of other students and/or persons.
         }
       }
 
+      // --- Pending Friend Requests Badge ---
+      async function loadPendingBadge() {
+        try {
+          const res = await fetch('/api/friends/requests', { credentials: 'include' });
+          if (!res.ok) return;
+          const requests = await res.json();
+          if (requests.length > 0) {
+            const profileLink = document.querySelector('a.nav-link[href="profile.html"]');
+            if (profileLink) {
+              profileLink.innerHTML = `Profile <span style="display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;margin-left:4px;">${requests.length}</span>`;
+            }
+          }
+        } catch (e) { /* silent */ }
+      }
+
       // Page exit transition
       document.querySelectorAll('a[href]').forEach(a => {
         if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
@@ -1208,6 +927,242 @@ plagiarized the work of other students and/or persons.
           });
         }
       });
+
+      // ============================================================
+      // Animated Counter
+      // ============================================================
+      function animateCounter(elementId, target) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const duration = 1200;
+        const start = performance.now();
+        const from = 0;
+        function update(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(from + (target - from) * eased);
+          if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      }
+
+      // ============================================================
+      // Latest Trailers — pulled from trending games' IGDB videos
+      // ============================================================
+      let _trendingGamesPromise = null;
+      function fetchTrendingGames() {
+        if (!_trendingGamesPromise) {
+          _trendingGamesPromise = fetch('/api/games/popular', { credentials: 'include' })
+            .then(r => r.ok ? r.json() : [])
+            .catch(() => []);
+        }
+        return _trendingGamesPromise;
+      }
+
+      async function loadTrailers() {
+        const container = document.getElementById('trailersScroll');
+        if (!container) return;
+        try {
+          const games = await fetchTrendingGames();
+          // Extract trailers from trending games
+          const trailers = [];
+          for (const game of games) {
+            if (!game.videos) continue;
+            for (const vid of game.videos) {
+              trailers.push({ gameName: game.name, videoId: vid.video_id });
+            }
+            if (trailers.length >= 12) break;
+          }
+          if (trailers.length === 0) {
+            container.innerHTML = '<div class="text-muted small p-2">No trailers available for current trending games.</div>';
+            return;
+          }
+          container.innerHTML = '';
+          trailers.slice(0, 12).forEach((t, idx) => {
+            const thumb = `https://img.youtube.com/vi/${t.videoId}/mqdefault.jpg`;
+            const item = document.createElement('div');
+            item.className = 'trailer-item';
+            item.style.animation = `fadeInUp 0.4s ease ${idx * 0.07}s both`;
+            item.innerHTML = `
+              <img class="trailer-thumb" src="${thumb}" alt="${t.gameName}" loading="lazy">
+              <div class="trailer-play-icon"><i class="bi bi-play-fill"></i></div>
+              <div class="trailer-name">${t.gameName}</div>
+            `;
+            item.addEventListener('click', () => openTrailerPlayer(t.videoId, t.gameName));
+            container.appendChild(item);
+          });
+        } catch (err) {
+          console.warn('[Dashboard] Trailers load error:', err);
+          container.innerHTML = '<div class="text-muted small p-2">Could not load trailers.</div>';
+        }
+      }
+
+      // Inline YouTube player modal
+      function openTrailerPlayer(videoId, gameName) {
+        // Remove existing modal if any
+        let existing = document.getElementById('trailerModal');
+        if (existing) existing.remove();
+        const modal = document.createElement('div');
+        modal.id = 'trailerModal';
+        modal.className = 'trailer-modal';
+        modal.innerHTML = `
+          <div class="trailer-modal-backdrop"></div>
+          <div class="trailer-modal-content">
+            <div class="trailer-modal-header">
+              <span class="trailer-modal-title">${gameName}</span>
+              <button class="trailer-modal-close" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="trailer-modal-body">
+              <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" 
+                      allow="autoplay; encrypted-media; fullscreen" 
+                      allowfullscreen 
+                      frameborder="0"></iframe>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        // Animate in
+        requestAnimationFrame(() => modal.classList.add('active'));
+        // Close handlers
+        const close = () => { modal.classList.remove('active'); setTimeout(() => modal.remove(), 300); };
+        modal.querySelector('.trailer-modal-backdrop').addEventListener('click', close);
+        modal.querySelector('.trailer-modal-close').addEventListener('click', close);
+        document.addEventListener('keydown', function escHandler(e) {
+          if (e.key === 'Escape') { close(); document.removeEventListener('keydown', escHandler); }
+        });
+      }
+
+      // ============================================================
+      // Trending Games (IGDB via server)
+      // ============================================================
+      async function loadTrendingGames() {
+        const container = document.getElementById('trendingScroll');
+        if (!container) return;
+        // Show current date range
+        const dateEl = document.getElementById('trendingDate');
+        if (dateEl) {
+          const now = new Date();
+          const thirtyAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          dateEl.textContent = fmt(thirtyAgo) + ' — ' + fmt(now);
+        }
+        try {
+          let games = await fetchTrendingGames();
+          // Fallback to hardcoded popular games if API fails
+          if (!games || games.length === 0) {
+            games = discoverGames.map((g, i) => ({
+              name: g.name,
+              coverUrl: g.img,
+              rating: 80 + Math.floor(Math.random() * 15),
+              _fallback: true
+            }));
+          }
+          // Take top 15
+          const top = games.slice(0, 15);
+          container.innerHTML = '';
+          top.forEach((game, idx) => {
+            const name = game.name || 'Unknown';
+            let cover = game.coverUrl || game.cover?.url || '';
+            // Upgrade IGDB thumbnail to high-res cover
+            if (cover.includes('t_thumb')) cover = cover.replace('t_thumb', 't_cover_big');
+            if (cover.includes('t_micro')) cover = cover.replace('t_micro', 't_cover_big');
+            const rating = (game.total_rating || game.rating) ? Math.round(game.total_rating || game.rating) : '';
+            const card = document.createElement('div');
+            card.className = 'trending-card';
+            card.style.animationDelay = `${idx * 0.06}s`;
+            card.style.animation = `fadeInUp 0.5s ease ${idx * 0.06}s both`;
+            const coverImg = cover
+              ? `<img src="${cover.startsWith('//') ? 'https:' + cover : cover}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 160 220%22 fill=%22%231e2d3a%22%3E%3Crect width=%22160%22 height=%22220%22/%3E%3Ctext x=%2280%22 y=%22110%22 fill=%22%235a6a7a%22 text-anchor=%22middle%22 font-size=%2222%22%3E🎮%3C/text%3E%3C/svg%3E'">`
+              : `<div style="width:100%;height:220px;background:#1e2d3a;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎮</div>`;
+            card.innerHTML = `
+              <span class="trending-rank">#${idx + 1}</span>
+              ${coverImg}
+              <div class="trending-overlay">
+                <div class="trending-name">${name}</div>
+                ${rating ? `<div class="trending-rating">★ ${rating}%</div>` : ''}
+              </div>
+            `;
+            card.addEventListener('click', () => {
+              window.location.href = 'search.html?q=' + encodeURIComponent(name);
+            });
+            container.appendChild(card);
+          });
+        } catch (err) {
+          console.warn('[Dashboard] Trending games load error:', err);
+          container.innerHTML = '<div class="text-muted small p-3">Could not load trending games.</div>';
+        }
+      }
+
+      // ============================================================
+      // Particle Canvas Animation (GPU-optimized, no connection lines)
+      // ============================================================
+      (function initParticles() {
+        const canvas = document.getElementById('particleCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
+        let w, h, particles = [];
+        const PARTICLE_COUNT = 30;
+
+        function resize() {
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          particles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            r: Math.random() * 1.5 + 0.5,
+            alpha: Math.random() * 0.3 + 0.05,
+            color: Math.random() > 0.5 ? '83,131,232' : '45,212,191'
+          });
+        }
+
+        let lastFrame = 0;
+        let running = true;
+        const FRAME_INTERVAL = 1000 / 30; // cap at 30fps — visually identical, half the CPU
+        function draw(now) {
+          if (!running) return;
+          requestAnimationFrame(draw);
+          if (now - lastFrame < FRAME_INTERVAL) return;
+          lastFrame = now;
+          ctx.clearRect(0, 0, w, h);
+          for (const p of particles) {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0) p.x = w;
+            if (p.x > w) p.x = 0;
+            if (p.y < 0) p.y = h;
+            if (p.y > h) p.y = 0;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+            ctx.fill();
+          }
+        }
+        requestAnimationFrame(draw);
+
+        // Stop rendering when tab is hidden, resume when visible
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) { running = false; }
+          else { running = true; requestAnimationFrame(draw); }
+        });
+      })();
+
+      // ============================================================
+      // Navbar scroll effect
+      // ============================================================
+      // Navbar scroll shadow (passive, cached)
+      const _nav = document.querySelector('.navbar');
+      let _scrollTick = false;
+      window.addEventListener('scroll', () => {
+        if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
+      }, { passive: true });
     </script>
 </body>
 </html>

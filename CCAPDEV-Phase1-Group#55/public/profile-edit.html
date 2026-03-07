@@ -21,209 +21,34 @@ plagiarized the work of other students and/or persons.
     <title>Edit Profile | Backlog Hero</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
     <style>
-        html { overflow-y: scroll; }
-        /* Edit profile styles — simpler than the profile page since it's just a form.
-           Same dark palette and card styling as other pages */
-        body {
-            background-color: #0f1519;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .navbar {
-            background-color: #1c252e !important;
-            border-bottom: 1px solid #2a3843;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 0.02em;
-        }
-        .navbar-nav .nav-link {
-            color: #9e9e9e !important;
-            transition: color 0.2s ease, transform 0.2s ease;
-            padding: 0.5rem 1rem !important;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-        }
-        .navbar-nav .nav-link:hover {
-            color: #ffffff !important;
-            transform: translateY(-3px);
-        }
-        .navbar-nav .nav-link.active {
-            color: #5383e8 !important;
-        }
-        @keyframes pageSlideIn {
-            from { opacity: 0; transform: translateY(18px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        body { animation: pageSlideIn 0.5s ease both; }
-        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
-        .card {
-            background-color: #1c252e !important;
-            border: 1px solid #2a3843 !important;
-        }
-        /* Form inputs — dark bg with blue focus glow to match the site theme */
-        .form-control, .form-select {
-            background-color: #10171d !important;
-            border: 1px solid #2a3843;
-            color: #ffffff;
-        }
-        .form-control:focus, .form-select:focus {
-            box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
-            border-color: #5383e8;
-            color: #ffffff;
-            background-color: #10171d;
-        }
-        .form-control,
-		.form-control:focus,
-		.form-control:active {
-			color: #ffffff !important;
-		}
-		.form-select {
-			color: #ffffff !important;
-		}
-        .btn-primary {
-            background-color: #5383e8 !important;
-            border-color: #5383e8 !important;
-        }
-        .text-muted { color: #9e9e9e !important; }
-        .section-title {
-            font-size: 0.95rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #9e9e9e;
-        }
-        /* Avatar upload */
-        .avatar-preview-container {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-        .avatar-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            border: 3px solid #5383e8;
-            object-fit: cover;
-            background: #151d24;
-        }
-        .avatar-upload-controls {
-            flex: 1;
-        }
-        .avatar-upload-controls input[type="file"] {
-            display: none;
-        }
-        .avatar-upload-btn {
-            cursor: pointer;
-        }
-        /* Favourite games selector */
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            margin: 12px 0;
-        }
-        .game-option {
-            background: #151d24;
-            border: 2px solid #2a3843;
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.75rem;
-        }
-        .game-option:hover {
-            border-color: #5383e8;
-            transform: translateY(-2px);
-        }
-        .game-option.selected {
-            border-color: #5383e8;
-            background: rgba(83, 131, 232, 0.15);
-            box-shadow: 0 0 12px rgba(83, 131, 232, 0.3);
-        }
-        .game-option-icon {
-            font-size: 2rem;
-            margin-bottom: 6px;
-            display: block;
-        }
-        .game-count {
-            display: inline-block;
-            background: #5383e8;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.7rem;
-            margin-left: 8px;
-        }
-        /* Notification Toast */
-        .notification-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-            pointer-events: none;
-        }
-        .notification {
-            background: linear-gradient(135deg, rgba(83, 131, 232, 0.95), rgba(80, 214, 180, 0.9));
-            color: #ffffff;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            animation: slideIn 0.4s ease forwards;
-            pointer-events: all;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        .notification.error {
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(255, 107, 107, 0.9));
-        }
-        .notification.success {
-            background: linear-gradient(135deg, rgba(80, 214, 180, 0.95), rgba(83, 131, 232, 0.85));
-        }
-        .notification-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        .notification-content {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .notification-title {
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-        .notification-message {
-            font-size: 0.85rem;
-            opacity: 0.95;
-        }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(400px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        @keyframes slideOut {
-            from {
-                opacity: 1;
-                transform: translateX(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(400px);
-            }
-        }
+        /* Page-specific: profile edit form */
+        body { background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.12), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.08), transparent 25%), var(--bg-base); }
+        .section-title { color: var(--text-muted); }
+        .card { animation: fadeInScale 0.6s ease both; }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.97) translateY(14px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .avatar-preview-container { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; background: #151d24; }
+        .avatar-upload-controls { flex: 1; }
+        .avatar-upload-controls input[type="file"] { display: none; }
+        .avatar-upload-btn { cursor: pointer; }
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 12px 0; }
+        .game-option { background: #151d24; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease), transform var(--duration) var(--ease); font-size: 0.75rem; }
+        .game-option:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .game-option.selected { border-color: var(--primary); background: rgba(83, 131, 232, 0.15); box-shadow: 0 0 12px rgba(83, 131, 232, 0.3); }
+        .game-option-icon { font-size: 2rem; margin-bottom: 6px; display: block; }
+        .game-count { display: inline-block; background: var(--primary); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.7rem; margin-left: 8px; }
+        .notification-container { position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none; }
+        .notification { background: linear-gradient(135deg, rgba(83, 131, 232, 0.95), rgba(45, 212, 191, 0.9)); color: #fff; padding: 16px 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; margin-bottom: 12px; animation: slideIn 0.4s ease forwards; pointer-events: all; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .notification.error { background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(255, 107, 107, 0.9)); }
+        .notification.success { background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(83, 131, 232, 0.85)); }
+        .notification-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .notification-content { display: flex; flex-direction: column; gap: 2px; }
+        .notification-title { font-weight: 700; font-size: 0.95rem; }
+        .notification-message { font-size: 0.85rem; opacity: 0.95; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(400px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(400px); } }
     </style>
 </head>
 <body>
@@ -679,6 +504,13 @@ plagiarized the work of other students and/or persons.
 
         // Initialize on page load
         window.addEventListener('load', initProfileEdit);
+
+        // Navbar scroll shadow (passive, cached)
+        const _nav = document.querySelector('.navbar');
+        let _scrollTick = false;
+        window.addEventListener('scroll', () => {
+            if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
+        }, { passive: true });
     </script>
 </body>
 </html>
