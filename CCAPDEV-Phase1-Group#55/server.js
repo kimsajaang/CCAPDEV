@@ -177,6 +177,9 @@ app.post('/api/users/register', async (req, res) => {
     req.session.userId = newUser._id;
     req.session.username = newUser.username;
     console.log('[REGISTER] Session set for user:', newUser.displayName, '| Session ID:', req.sessionID);
+
+    // Start login streak (non-Steam users get visit-based streak)
+    try { await updateStreak(newUser._id, true); } catch (e) { console.warn('[REGISTER] Streak update failed:', e.message); }
     
     // Save session before responding
     req.session.save((err) => {
@@ -222,6 +225,11 @@ app.post('/api/users/login', async (req, res) => {
     req.session.userId = user._id;
     req.session.username = user.username;
     console.log('[LOGIN] Session set for user:', user.displayName, '| Session ID:', req.sessionID);
+
+    // Update login streak (non-Steam users get visit-based streak)
+    if (!user.steamId) {
+      try { await updateStreak(user._id, true); } catch (e) { console.warn('[LOGIN] Streak update failed:', e.message); }
+    }
 
     // Save session before responding
     req.session.save((err) => {
@@ -283,7 +291,54 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+// Helper: update a user's streak
+// For Steam users: based on whether playtime increased (they actually gamed)
+// For non-Steam users: based on daily app visits
+async function updateStreak(userId, hadGamingActivity) {
+  const user = await User.findById(userId);
+  if (!user) return;
+  const today = new Date().toISOString().slice(0, 10);
+  if (user.lastActiveDate === today) return; // already counted today
+
+  // For Steam users, only count days with actual gaming activity
+  if (user.steamId && !hadGamingActivity) return;
+
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (user.lastActiveDate === yesterday) {
+    user.streakCount += 1;
+  } else {
+    user.streakCount = 1;
+  }
+  user.lastActiveDate = today;
+  await user.save();
+}
+
 // ─── STEAM AUTH ROUTES ───
+
+// Helper: try to get an IGDB cover URL for a game by name
+async function getIgdbCover(gameName) {
+  try {
+    if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) return null;
+    const token = await getAccessToken();
+    const escaped = gameName.replace(/"/g, '\\"');
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain'
+      },
+      body: `search "${escaped}"; fields name,cover.url; where cover != null; limit 1;`
+    });
+    const data = await igdbRes.json();
+    if (data && data[0] && data[0].cover && data[0].cover.url) {
+      return 'https:' + data[0].cover.url.replace('t_thumb', 't_cover_big_2x');
+    }
+  } catch (err) {
+    console.warn('[IGDB COVER] Failed for', gameName, err.message);
+  }
+  return null;
+}
 
 // Helper: import a user's Steam games into their Backlog Hero library
 async function importSteamGames(user) {
@@ -304,17 +359,20 @@ async function importSteamGames(user) {
 
     // Find or create the Game document
     let game = await Game.findOne({ name: { $regex: new RegExp('^' + sg.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') } });
-    const portraitCover = `https://cdn.cloudflare.steamstatic.com/steam/apps/${sg.appid}/library_600x900_2x.jpg`;
+    const steamCover = `https://cdn.cloudflare.steamstatic.com/steam/apps/${sg.appid}/library_600x900_2x.jpg`;
     if (!game) {
+      // Try IGDB first, fall back to Steam CDN
+      const igdbCover = await getIgdbCover(sg.name);
       game = new Game({
         name: sg.name,
-        coverUrl: portraitCover,
+        coverUrl: igdbCover || steamCover,
         platforms: ['PC'],
       });
       await game.save();
-    } else if (game.coverUrl && game.coverUrl.includes('/header.jpg')) {
-      // Upgrade old landscape header to portrait cover
-      game.coverUrl = portraitCover;
+    } else if (game.coverUrl && (game.coverUrl.includes('via.placeholder.com') || game.coverUrl.includes('/header.jpg'))) {
+      // Upgrade placeholder or old header URLs
+      const igdbCover = await getIgdbCover(sg.name);
+      game.coverUrl = igdbCover || steamCover;
       await game.save();
     }
 
@@ -350,7 +408,7 @@ async function importSteamGames(user) {
   }
 
   console.log(`[STEAM IMPORT] ${user.displayName}: imported ${imported} new games, updated ${updated} playtimes (${steamGames.length} total Steam games)`);
-  return { imported, updated, total: steamGames.length };
+  return { imported, updated, total: steamGames.length, hadActivity: imported > 0 || updated > 0 };
 }
 
 // GET /auth/steam - Redirect to Steam login page
@@ -365,12 +423,17 @@ app.get('/auth/steam/callback',
     console.log('[STEAM AUTH] Login successful. User:', req.user.displayName);
 
     // Auto-import Steam games into library
+    let hadActivity = false;
     try {
       const result = await importSteamGames(req.user);
+      hadActivity = result.hadActivity;
       console.log('[STEAM AUTH] Import result:', result);
     } catch (err) {
       console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
     }
+
+    // Update streak based on actual gaming activity
+    try { await updateStreak(req.user._id, hadActivity); } catch (e) { console.warn('[STEAM AUTH] Streak update failed:', e.message); }
 
     res.redirect('/dashboard.html');
   }
@@ -380,8 +443,26 @@ app.get('/auth/steam/callback',
 app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
   try {
     const userId = req.session.userId;
+    const user = await User.findById(userId);
+
+    // For Steam users: auto-sync playtime and count gaming days for streak
+    let hadGamingActivity = false;
+    if (user && user.steamId) {
+      try {
+        const result = await importSteamGames(user);
+        hadGamingActivity = result.hadActivity;
+      } catch (err) {
+        console.warn('[STATS] Steam auto-sync failed (non-blocking):', err.message);
+      }
+    }
+
+    // Update streak — Steam users need gaming activity, others get visit streak
+    await updateStreak(userId, user && user.steamId ? hadGamingActivity : true);
+
     const entries = await LibraryEntry.find({ userId, hidden: { $ne: true } });
     
+    // Re-read user to get updated streak count
+    const updatedUser = await User.findById(userId);
     const stats = {
       total: entries.length,
       completed: entries.filter(e => e.status === 'completed').length,
@@ -391,6 +472,7 @@ app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
       avgRating: entries.length > 0 
         ? (entries.reduce((sum, e) => sum + (e.rating || 0), 0) / entries.length).toFixed(1)
         : 0,
+      streak: updatedUser ? updatedUser.streakCount : 0,
     };
 
     res.json(stats);

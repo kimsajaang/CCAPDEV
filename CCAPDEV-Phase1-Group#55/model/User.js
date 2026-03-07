@@ -43,6 +43,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    streakCount: {
+      type: Number,
+      default: 0,
+    },
+    lastActiveDate: {
+      type: String,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

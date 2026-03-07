@@ -257,7 +257,7 @@ plagiarized the work of other students and/or persons.
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                             <div>
                                 <div class="section-title mb-2">Edit Profile</div>
-                                <h3 class="fw-bold mb-1">Kane Joshua</h3>
+                                <h3 class="fw-bold mb-1" id="editPageName">Loading...</h3>
                                 <p class="text-muted mb-0">Update your gaming identity and preferences.</p>
                             </div>
                             <a href="profile.html" class="btn btn-outline-secondary">Back to Profile</a>
@@ -407,30 +407,68 @@ plagiarized the work of other students and/or persons.
             }, 4000);
         }
 
-        function initializeForm() {
-            const profile = loadProfile();
-            const games = loadLibrary();
+        let serverLibraryGames = []; // populated from server
+
+        async function initializeForm() {
+            const localProfile = loadProfile();
+
+            // Fetch current user from server to get the latest avatar & profile data
+            let serverUser = null;
+            try {
+                const res = await fetch('/api/auth/current', { credentials: 'include' });
+                if (res.ok) serverUser = await res.json();
+            } catch (e) { console.warn('Could not fetch server profile:', e); }
+
+            // Fetch user's library from server for the favorite games picker
+            if (serverUser) {
+                try {
+                    const userId = serverUser._id || serverUser.id;
+                    const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
+                    if (libRes.ok) {
+                        const entries = await libRes.json();
+                        serverLibraryGames = entries
+                            .filter(e => e.gameId)
+                            .map(e => ({ id: e.gameId._id, name: e.gameId.name, coverUrl: e.gameId.coverUrl }));
+                    }
+                } catch (e) { console.warn('Could not fetch library:', e); }
+            }
+
+            // Merge: prefer server data for key fields, fall back to localStorage
+            const profile = {
+                ...localProfile,
+                displayName: (serverUser && serverUser.displayName) || localProfile.displayName,
+                username: (serverUser && serverUser.username) || localProfile.username,
+                bio: (serverUser && serverUser.bio && serverUser.bio !== 'No bio yet') ? serverUser.bio : localProfile.bio,
+                avatar: (serverUser && serverUser.avatar) || localProfile.avatar,
+                steamId: (serverUser && serverUser.steamId) || localProfile.steamId || '',
+                favoriteGames: (serverUser && serverUser.favoriteGames && serverUser.favoriteGames.length > 0)
+                    ? serverUser.favoriteGames
+                    : localProfile.favoriteGames || [],
+            };
+
+            // favoriteGames are stored as game name strings on the server
             selectedFavoriteGames = [...profile.favoriteGames];
 
-            // Populate form with profile data
+            // Populate form with merged profile data
             document.getElementById('inputName').value = profile.displayName;
             document.getElementById('inputUsername').value = profile.username;
             document.getElementById('inputBio').value = profile.bio;
-            document.getElementById('inputIdentity').value = profile.gamingIdentity;
-            document.getElementById('inputPlatform').value = profile.favoritePlatform;
+            document.getElementById('inputIdentity').value = profile.gamingIdentity || '';
+            document.getElementById('inputPlatform').value = profile.favoritePlatform || '';
             document.getElementById('avatarPreview').src = profile.avatar;
             document.getElementById('inputSteamId').value = profile.steamId || '';
+            document.getElementById('editPageName').textContent = profile.displayName;
 
-            // Render games grid
+            // Render games grid from server library
             const gamesGrid = document.getElementById('gamesGrid');
-            if (games.length === 0) {
-                gamesGrid.innerHTML = '<div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">No games in your library yet. <a href="library.html" style="color: #5383e8;">Add some games first!</a></div>';
+            if (serverLibraryGames.length === 0) {
+                gamesGrid.innerHTML = '<div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">No games in your library yet. <a href="search.html" style="color: #5383e8;">Find games to add!</a></div>';
             } else {
                 let html = '';
-                games.forEach(game => {
-                    const isSelected = selectedFavoriteGames.includes(game.id);
+                serverLibraryGames.forEach(game => {
+                    const isSelected = selectedFavoriteGames.includes(game.name);
                     html += `
-                    <div class="game-option ${isSelected ? 'selected' : ''}" onclick="toggleFavoriteGame('${game.id}')" data-game-id="${game.id}">
+                    <div class="game-option ${isSelected ? 'selected' : ''}" onclick="toggleFavoriteGame(this, '${game.name.replace(/'/g, "\\'")}')" data-game-name="${game.name}">
                         <span class="game-option-icon">🎮</span>
                         <div style="font-weight: 600; color: #dbe7ff;">${game.name}</div>
                     </div>`;
@@ -441,28 +479,19 @@ plagiarized the work of other students and/or persons.
             updateGameCount();
         }
 
-        function toggleFavoriteGame(gameId) {
-            if (selectedFavoriteGames.includes(gameId)) {
-                selectedFavoriteGames = selectedFavoriteGames.filter(id => id !== gameId);
+        function toggleFavoriteGame(el, gameName) {
+            if (selectedFavoriteGames.includes(gameName)) {
+                selectedFavoriteGames = selectedFavoriteGames.filter(n => n !== gameName);
+                el.classList.remove('selected');
             } else {
                 if (selectedFavoriteGames.length < 5) {
-                    selectedFavoriteGames.push(gameId);
+                    selectedFavoriteGames.push(gameName);
+                    el.classList.add('selected');
                 } else {
                     alert('You can only select up to 5 favorite games.');
                     return;
                 }
             }
-
-            // Update UI
-            const gameCards = document.querySelectorAll('.game-option');
-            gameCards.forEach(card => {
-                const gameId = card.dataset.gameId;
-                if (selectedFavoriteGames.includes(gameId)) {
-                    card.classList.add('selected');
-                } else {
-                    card.classList.remove('selected');
-                }
-            });
             updateGameCount();
         }
 
@@ -526,7 +555,9 @@ plagiarized the work of other students and/or persons.
                   body: JSON.stringify({
                     displayName: profile.displayName,
                     bio: profile.bio,
-                    steamId: profile.steamId
+                    avatar: profile.avatar,
+                    steamId: profile.steamId,
+                    favoriteGames: selectedFavoriteGames
                   })
                 });
               }

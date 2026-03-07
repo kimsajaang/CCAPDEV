@@ -524,18 +524,7 @@ plagiarized the work of other students and/or persons.
                 <div class="card reveal">
                     <div class="card-body">
                         <h6 class="mb-3">Community Quality Scores</h6>
-                        <div class="d-flex justify-content-between mb-2 small">
-                            <span>Elden Ring</span>
-                            <span class="text-warning">★ 4.9</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 small">
-                            <span>Cyberpunk 2077</span>
-                            <span class="text-warning">★ 4.5</span>
-                        </div>
-                        <div class="d-flex justify-content-between small">
-                            <span>Balatro</span>
-                            <span class="text-warning">★ 4.8</span>
-                        </div>
+                        <div id="communityScores"><p class="text-muted small mb-0">Loading scores...</p></div>
                     </div>
                 </div>
             </div>
@@ -550,81 +539,8 @@ plagiarized the work of other students and/or persons.
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#postUpdateModal">Post Update</button>
                 </div>
 
-                <div class="list-group shadow-sm">
-                    <div class="list-group-item p-3 border-start border-primary border-4 reveal">
-                        <div class="d-flex align-items-center mb-2">
-                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
-                            <strong class="text-primary">Kane_Joshua</strong> 
-                            <span class="text-muted ms-2 small">logged a session</span>
-                            <span class="text-muted ms-auto extra-small">Feb 15, 11:24 PM</span>
-                        </div>
-                        <div class="d-flex align-items-start gap-3 mb-2">
-                            <img src="reddead.jpg" class="feed-cover" alt="Red Dead Redemption 2 cover">
-                            <h6 class="mb-1">Red Dead Redemption 2</h6>
-                        </div>
-                        <p class="mb-2 text-white-50 small">"Just survived an unarmed encounter with some bandits. The witness mechanic is wild - gotta be careful who sees me out here in the frontier!"</p>
-                        <img src="gamelaypic.png" class="feed-photo" alt="Session screenshot" style="max-height: 400px;">
-                        <div class="d-flex gap-3 text-muted extra-small mt-2">
-                            <span><i class="bi bi-controller"></i> 2h Active</span>
-                            <span><i class="bi bi-cup-hot"></i> 0.5h AFK</span>
-                            <span class="text-info">Chapter 2</span>
-                        </div>
-                    </div>
-
-                    <div class="list-group-item p-3 reveal">
-                        <div class="d-flex align-items-center mb-2">
-                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
-                            <strong class="text-primary">Justin_Ice</strong> 
-                            <span class="text-muted ms-2 small">reviewed a game</span>
-                        </div>
-                        <div class="d-flex gap-3">
-                            <img src="valorant.jpg" class="feed-cover" alt="Valorant cover">
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 small">Valorant</h6>
-                                <div class="text-warning mb-1 extra-small">★★★★★</div>
-                                <p class="mb-0 small text-white-50">"Finally hit a new rank today. The clutch round was wild."</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="list-group-item p-3 reveal">
-                        <div class="d-flex align-items-center mb-2">
-                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="Friend">
-                            <strong class="text-primary">Seanne_C</strong> 
-                            <span class="text-muted ms-2 small">moved a game to <strong>Playing</strong></span>
-                        </div>
-                        <div class="d-flex align-items-start gap-3">
-                            <img src="farcrt.jpg" class="feed-cover" alt="Far Cry cover">
-                            <p class="mb-0 small">Far Cry 5 (PC)</p>
-                        </div>
-                        <small class="text-muted extra-small">Goal: Clear Holland Valley outposts.</small>
-                    </div>
-
-                    <div class="list-group-item p-3 reveal">
-                        <div class="d-flex align-items-center mb-2">
-                            <img src="pfp.jpg" class="rounded-circle me-2 avatar-sm" alt="User">
-                            <strong class="text-primary">Kane_Joshua</strong> 
-                            <span class="text-muted ms-2 small">completed a game</span>
-                        </div>
-                        <div class="d-flex align-items-start gap-3">
-                            <img src="leagueoflegends.jpg" class="feed-cover" alt="League of Legends cover">
-                            <h6 class="mb-0 small">League of Legends</h6>
-                        </div>
-                        <span class="badge bg-success extra-small">100% PLATINUM</span>
-                        <p class="mt-2 mb-0 small text-white-50">"Season grind complete. Time to try a new role."</p>
-                    </div>
-
-                    <div class="list-group-item p-3 reveal">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-list-stars text-primary me-2"></i>
-                            <strong class="text-primary">Justin_Ice</strong> 
-                            <span class="text-muted ms-2 small">shared a list: <strong>Top Roguelikes 2026</strong></span>
-                        </div>
-                        <div class="d-flex align-items-start gap-3">
-                            <img src="reddead.jpg" class="feed-cover" alt="Red Dead Redemption 2 cover">
-                            <p class="mb-0 small text-muted">Includes Red Dead Redemption 2, Valorant, and League of Legends.</p>
-                        </div>
-                    </div>
+                <div class="list-group shadow-sm" id="activityFeed">
+                    <div class="list-group-item p-3 text-center text-muted">Loading activity feed...</div>
                 </div>
             </div>
         </div>
@@ -651,11 +567,7 @@ plagiarized the work of other students and/or persons.
             <div class="mb-3">
               <label class="form-label small">Game</label>
               <select id="updateGame" class="form-select">
-                <option value="Black Myth: Wukong">Black Myth: Wukong</option>
-                <option value="Red Dead Redemption 2">Red Dead Redemption 2</option>
-                <option value="Far Cry 5">Far Cry 5</option>
-                <option value="Valorant">Valorant</option>
-                <option value="League of Legends">League of Legends</option>
+                <option value="">Loading games...</option>
               </select>
             </div>
             <div class="mb-3" id="ratingGroup" style="display:none;">
@@ -1102,7 +1014,16 @@ plagiarized the work of other students and/or persons.
                     document.getElementById('statBacklog').textContent = stats.backlog;
                     document.getElementById('statPlaying').textContent = stats.playing;
                     document.getElementById('statHours').textContent = Math.round(stats.totalHours);
-                    document.getElementById('streakMessage').textContent = `Keep it up, ${currentUser.displayName}!`;
+                    const streak = stats.streak || 0;
+                    document.getElementById('streakDays').textContent = streak + (streak === 1 ? ' Day' : ' Days');
+                    const isSteamUser = !!(currentUserData.steamId);
+                    if (streak > 0) {
+                      document.getElementById('streakMessage').textContent = `Keep it up, ${currentUser.displayName}!`;
+                    } else {
+                      document.getElementById('streakMessage').textContent = isSteamUser
+                        ? 'Play a game on Steam to start your streak!'
+                        : 'Visit daily to build your streak!';
+                    }
                   }
                 } catch (statsErr) {
                   console.warn('[Dashboard] Could not fetch stats:', statsErr);
@@ -1112,6 +1033,12 @@ plagiarized the work of other students and/or persons.
                 if (currentUserData.steamId) {
                   document.getElementById('steamSyncBtn').style.display = '';
                 }
+
+                // Load dynamic content
+                loadActivityFeed(currentUserData);
+                loadCommunityScores(currentUserData);
+                loadGameDropdown(currentUserData);
+
                 return; // Success - exit function
               }
               // Retry on any non-200 status
@@ -1159,6 +1086,114 @@ plagiarized the work of other students and/or persons.
         } catch (err) {
           console.error('Auth check failed:', err);
           window.location = 'index.html';
+        }
+      }
+
+      // --- Dynamic Activity Feed ---
+      async function loadActivityFeed(user) {
+        const feedEl = document.getElementById('activityFeed');
+        try {
+          const userId = user._id || user.id;
+          const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
+          if (!libRes.ok) { feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. Start adding games!</div>'; return; }
+          const entries = await libRes.json();
+          const validEntries = entries.filter(e => e.gameId);
+          if (validEntries.length === 0) {
+            feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. <a href="search.html" style="color:#5383e8;">Find games to play!</a></div>';
+            return;
+          }
+          // Show recent library entries as activity
+          const recent = validEntries.slice(-5).reverse();
+          let html = '';
+          for (const entry of recent) {
+            const game = entry.gameId;
+            const gameName = game.name || 'Unknown Game';
+            const coverUrl = game.coverUrl || '';
+            const coverTag = coverUrl
+              ? `<img src="${coverUrl}" class="feed-cover" alt="${gameName} cover" onerror="this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'feed-cover d-flex align-items-center justify-content-center\\' style=\\'background:#1a2634;\\'><i class=\\'bi bi-controller\\' style=\\'font-size:1.2rem;color:#5383e8;\\'></i></div>')">`
+              : `<div class="feed-cover d-flex align-items-center justify-content-center" style="background:#1a2634;"><i class="bi bi-controller" style="font-size:1.2rem;color:#5383e8;"></i></div>`;
+            let typeLabel = 'added to library';
+            let borderClass = '';
+            let badgeHtml = '';
+            if (entry.status === 'completed') {
+              typeLabel = 'completed';
+              borderClass = 'border-start border-success border-4';
+              badgeHtml = '<span class="badge bg-success extra-small">COMPLETED</span>';
+            } else if (entry.status === 'playing') {
+              typeLabel = 'is playing';
+              borderClass = 'border-start border-primary border-4';
+            } else if (entry.status === 'backlog') {
+              typeLabel = 'added to backlog';
+              borderClass = 'border-start border-warning border-4';
+            }
+            const hoursText = entry.playtime ? `${Math.round(entry.playtime * 10) / 10}h played` : '';
+            const ratingText = entry.rating ? '★'.repeat(entry.rating) + '☆'.repeat(5 - entry.rating) : '';
+            html += `
+              <div class="list-group-item p-3 ${borderClass} reveal is-visible">
+                <div class="d-flex align-items-center mb-2">
+                  <img src="${user.avatar || ''}" class="rounded-circle me-2 avatar-sm" alt="User" onerror="this.style.display='none'">
+                  <strong class="text-primary">${user.displayName}</strong>
+                  <span class="text-muted ms-2 small">${typeLabel}</span>
+                </div>
+                <div class="d-flex align-items-start gap-3">
+                  ${coverTag}
+                  <div>
+                    <h6 class="mb-1 small">${gameName}</h6>
+                    ${badgeHtml}
+                    ${ratingText ? `<div class="text-warning extra-small">${ratingText}</div>` : ''}
+                    ${hoursText ? `<div class="text-muted extra-small">${hoursText}</div>` : ''}
+                  </div>
+                </div>
+              </div>`;
+          }
+          feedEl.innerHTML = html;
+        } catch (err) {
+          console.warn('[Dashboard] Activity feed error:', err);
+          feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load activity feed.</div>';
+        }
+      }
+
+      // --- Dynamic Community Scores ---
+      async function loadCommunityScores(user) {
+        const scoresEl = document.getElementById('communityScores');
+        try {
+          const userId = user._id || user.id;
+          const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
+          if (!libRes.ok) { scoresEl.innerHTML = '<p class="text-muted small mb-0">No rated games yet.</p>'; return; }
+          const entries = await libRes.json();
+          const rated = entries.filter(e => e.gameId && e.rating && e.rating > 0)
+            .sort((a, b) => b.rating - a.rating)
+            .slice(0, 5);
+          if (rated.length === 0) {
+            scoresEl.innerHTML = '<p class="text-muted small mb-0">Rate games in your library to see scores here.</p>';
+            return;
+          }
+          let html = '';
+          rated.forEach(e => {
+            html += `<div class="d-flex justify-content-between mb-2 small"><span>${e.gameId.name}</span><span class="text-warning">★ ${e.rating}.0</span></div>`;
+          });
+          scoresEl.innerHTML = html;
+        } catch (err) {
+          scoresEl.innerHTML = '<p class="text-muted small mb-0">Could not load scores.</p>';
+        }
+      }
+
+      // --- Dynamic Game Dropdown for Post Update ---
+      async function loadGameDropdown(user) {
+        const sel = document.getElementById('updateGame');
+        try {
+          const userId = user._id || user.id;
+          const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
+          if (!libRes.ok) { sel.innerHTML = '<option value="">No games in library</option>'; return; }
+          const entries = await libRes.json();
+          const games = entries.filter(e => e.gameId).map(e => e.gameId.name).filter(Boolean);
+          if (games.length === 0) {
+            sel.innerHTML = '<option value="">No games in library</option>';
+            return;
+          }
+          sel.innerHTML = games.map(name => `<option value="${name}">${name}</option>`).join('');
+        } catch (err) {
+          sel.innerHTML = '<option value="">Could not load games</option>';
         }
       }
 

@@ -1,4 +1,4 @@
-<!-- ******************************************************************************
+﻿<!-- ******************************************************************************
 This is to certify that this project is my own work, based on my personal
  efforts in studying and applying the concepts learned. I have constructed
 the functions and their respective algorithms and corresponding code by
@@ -683,29 +683,9 @@ plagiarized the work of other students and/or persons.
                                 <div class="section-card reveal-item">
                                     <div class="section-title mb-3">Recent Activity</div>
                                     <div id="activityContainer">
-                                    <div class="activity-item reveal-item">
-                                        <div class="d-flex justify-content-between">
-                                            <span><i class="bi bi-controller"></i> Logged 2h in Black Myth: Wukong</span>
-                                            <span class="text-muted small">Today</span>
-                                        </div>
-                                        <span class="text-muted small">Beat the Macaque Chief after 5 tries.</span>
-                                    </div>
-                                    <div class="activity-item reveal-item">
-                                        <div class="d-flex justify-content-between">
-                                            <span><i class="bi bi-journal-check"></i> Reviewed Elden Ring DLC</span>
-                                            <span class="text-muted small">Yesterday</span>
-                                        </div>
-                                        <span class="text-muted small">★★★★★ • “Best dungeon design ever.”</span>
-                                    </div>
-                                    <div class="activity-item reveal-item mb-0">
-                                        <div class="d-flex justify-content-between">
-                                            <span><i class="bi bi-trophy"></i> Completed Cyberpunk 2077</span>
-                                            <span class="text-muted small">2 days ago</span>
-                                        </div>
-                                        <span class="text-muted small">100% Platinum achieved.</span>
-                                    </div>
-                                    </div>
-                                </div>
+                                      <div id="activityContainer">
+                                        <div class="empty-state-text">Loading activity...</div>
+                                    </div>                              </div>
                             </div>
                         </div>
                     </div>
@@ -823,7 +803,7 @@ plagiarized the work of other students and/or persons.
         }, 3000);
     }
 
-    function renderProfile(profile) {
+    async function renderProfile(profile) {
         // Ensure profile has default values for missing fields
         profile = {
             displayName: profile.displayName || 'Gamer',
@@ -892,45 +872,59 @@ plagiarized the work of other students and/or persons.
         achievementsContainer.innerHTML = achievementHtml;
         achievementCountEl.textContent = `(${unlockedAchievements.length}/${ACHIEVEMENTS.length})`;
 
-        // Calculate and display stats
-        const library = JSON.parse(localStorage.getItem(LIBRARY_STORAGE_KEY) || '[]');
-        const completedCount = library.filter(g => g.status === 'completed').length;
-        const backlogCount = library.filter(g => g.status === 'backlog').length;
-        const playingCount = library.filter(g => g.status === 'playing').length;
-        const totalHours = library.reduce((sum, g) => sum + (g.hoursPlayed || 0), 0);
+        // Calculate and display stats from server
+        try {
+            const statsRes = await fetch('/api/auth/stats', { credentials: 'include' });
+            if (statsRes.ok) {
+                const stats = await statsRes.json();
+                document.getElementById('completedCount').textContent = stats.completed;
+                document.getElementById('backlogCount').textContent = stats.backlog;
+                document.getElementById('playingCount').textContent = stats.playing;
+                document.getElementById('totalHours').textContent = Math.round(stats.totalHours);
+            }
+        } catch (e) { console.warn('Could not fetch stats:', e); }
 
-        document.getElementById('completedCount').textContent = completedCount;
-        document.getElementById('backlogCount').textContent = backlogCount;
-        document.getElementById('playingCount').textContent = playingCount;
-        document.getElementById('totalHours').textContent = totalHours;
-
-        // Render recent activity
+        // Render recent activity from server library
         const activityContainer = document.getElementById('activityContainer');
-        if (library.length > 0) {
-            const recentGames = library.slice(-3).reverse(); // Get last 3 games
-            let activityHtml = '';
-            recentGames.forEach(game => {
-                let activityType = 'Controller';
-                let activityIcon = 'bi-controller';
-                if (game.status === 'completed') {
-                    activityType = 'Completed';
-                    activityIcon = 'bi-trophy';
-                } else if (game.status === 'backlog') {
-                    activityType = 'Added to Backlog';
-                    activityIcon = 'bi-bookmark';
+        try {
+            const userId = profile._id || profile.id;
+            if (userId) {
+                const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
+                if (libRes.ok) {
+                    const entries = await libRes.json();
+                    const validEntries = entries.filter(e => e.gameId);
+                    if (validEntries.length > 0) {
+                        const recent = validEntries.slice(-3).reverse();
+                        let activityHtml = '';
+                        recent.forEach(entry => {
+                            const gameName = entry.gameId.name || 'Unknown';
+                            let activityType = 'Playing';
+                            let activityIcon = 'bi-controller';
+                            if (entry.status === 'completed') {
+                                activityType = 'Completed';
+                                activityIcon = 'bi-trophy';
+                            } else if (entry.status === 'backlog') {
+                                activityType = 'Added to Backlog';
+                                activityIcon = 'bi-bookmark';
+                            }
+                            const hours = entry.playtime ? `${Math.round(entry.playtime * 10) / 10} hours played` : '0 hours played';
+                            activityHtml += `
+                                <div class="activity-item reveal-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="bi ${activityIcon}"></i> ${activityType}: ${gameName}</span>
+                                        <span class="text-muted small">Recently</span>
+                                    </div>
+                                    <span class="text-muted small">${hours}</span>
+                                </div>`;
+                        });
+                        activityContainer.innerHTML = activityHtml;
+                    } else {
+                        activityContainer.innerHTML = '<div class="empty-state-text">No recent activity yet. <a href="search.html" style="color: #5383e8;">Find games to play!</a></div>';
+                    }
                 }
-                
-                activityHtml += `
-                    <div class="activity-item reveal-item">
-                        <div class="d-flex justify-content-between">
-                            <span><i class="bi ${activityIcon}"></i> ${activityType}: ${game.name}</span>
-                            <span class="text-muted small">Recently</span>
-                        </div>
-                        <span class="text-muted small">${game.hoursPlayed || 0} hours played</span>
-                    </div>`;
-            });
-            activityContainer.innerHTML = activityHtml;
-        } else {
+            }
+        } catch (e) {
+            console.warn('Could not load activity:', e);
             activityContainer.innerHTML = '<div class="empty-state-text">No recent activity yet. Start playing games!</div>';
         }
     }

@@ -317,12 +317,8 @@ plagiarized the work of other students and/or persons.
         <div class="card shadow-sm mb-4">
           <div class="card-body">
             <div class="fw-semibold mb-3">👥 Active Members</div>
-            <div class="d-grid gap-2">
-              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#5383e8;width:28px;height:28px;font-size:0.6rem;">KJ</div><span class="small"><strong>Kane_Joshua</strong></span><span class="badge bg-success" style="font-size:0.6rem;">Online</span></div>
-              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#2dd4bf;color:#0d1217;width:28px;height:28px;font-size:0.6rem;">JI</div><span class="small"><strong>Justin_Ice</strong></span><span class="badge bg-success" style="font-size:0.6rem;">Online</span></div>
-              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#e85383;width:28px;height:28px;font-size:0.6rem;">SC</div><span class="small"><strong>Seanne_C</strong></span><span class="text-muted" style="font-size:0.65rem;">2h ago</span></div>
-              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#febc2e;color:#0d1217;width:28px;height:28px;font-size:0.6rem;">MR</div><span class="small"><strong>MarcusRPG</strong></span><span class="text-muted" style="font-size:0.65rem;">5h ago</span></div>
-              <div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:#a78bfa;width:28px;height:28px;font-size:0.6rem;">NO</div><span class="small"><strong>NightOwlAria</strong></span><span class="text-muted" style="font-size:0.65rem;">1d ago</span></div>
+            <div class="d-grid gap-2" id="activeMembersList">
+              <div class="text-muted small">Loading members...</div>
             </div>
           </div>
         </div>
@@ -330,9 +326,9 @@ plagiarized the work of other students and/or persons.
         <div class="card shadow-sm">
           <div class="card-body">
             <div class="fw-semibold mb-2">📊 Community Stats</div>
-            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Posts</span><strong class="text-white">10</strong></div>
-            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Comments</span><strong class="text-white">24</strong></div>
-            <div class="d-flex justify-content-between small text-muted"><span>Active Members</span><strong class="text-white">5</strong></div>
+            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Posts</span><strong class="text-white" id="statTotalPosts">0</strong></div>
+            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Comments</span><strong class="text-white" id="statTotalComments">0</strong></div>
+            <div class="d-flex justify-content-between small text-muted"><span>Active Members</span><strong class="text-white" id="statActiveMembers">0</strong></div>
           </div>
         </div>
       </div>
@@ -413,6 +409,7 @@ plagiarized the work of other students and/or persons.
 
     // Track login status globally
     let isUserLoggedIn = false;
+    let currentUsername = 'Gamer';
 
     // Check authentication status and show/hide content accordingly
     async function checkAuthAndShowContent() {
@@ -423,6 +420,10 @@ plagiarized the work of other students and/or persons.
         });
 
         isUserLoggedIn = response.ok;
+        if (isUserLoggedIn) {
+          const userData = await response.json();
+          currentUsername = userData.displayName || userData.username || 'Gamer';
+        }
         const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
         const previewSections = document.querySelectorAll('[data-preview-only="true"]');
 
@@ -608,7 +609,7 @@ plagiarized the work of other students and/or persons.
               <div class="mt-3 d-none" data-comments>
                 <div class="comment-panel p-3">
                   <div class="comment-input-wrap d-flex align-items-center gap-2 mb-3">
-                    <div class="comment-avatar" style="background:#5383e8;">KJ</div>
+                    <div class="comment-avatar" style="background:#5383e8;">${getInitials(currentUsername)}</div>
                     <input class="form-control flex-grow-1" maxlength="300" placeholder="Write a comment..."/>
                     <button class="btn btn-primary" data-act="addComment">Post</button>
                   </div>
@@ -720,7 +721,7 @@ plagiarized the work of other students and/or persons.
       const p = posts.find(x => x.id === postId);
       if (!p) return;
 
-      p.comments.push({ id: crypto.randomUUID(), text, author: "Kane_Joshua", createdAt: nowIso() });
+      p.comments.push({ id: crypto.randomUUID(), text, author: currentUsername, createdAt: nowIso() });
       savePosts(posts);
     }
 
@@ -754,7 +755,27 @@ plagiarized the work of other students and/or persons.
     const communityPhotoInput = document.getElementById("communityPhotoInput");
     const communityPhotoPreviewContainer = document.getElementById("communityPhotoPreviewContainer");
 
-    communityPhotoUploadArea.addEventListener("click", () => communityPhotoInput.click());
+    function resetPhotoUpload() {
+      communitySelectedPhoto = null;
+      communityPhotoInput.value = "";
+      communityPhotoUploadArea.classList.remove("has-photo");
+      communityPhotoUploadArea.innerHTML = "";
+      const icon = document.createElement("i");
+      icon.className = "bi bi-image";
+      icon.style.cssText = "font-size: 1.5rem; color: #5383e8;";
+      const p = document.createElement("p");
+      p.className = "mb-0 mt-2 small";
+      p.textContent = "Click to upload a screenshot or photo";
+      communityPhotoUploadArea.appendChild(icon);
+      communityPhotoUploadArea.appendChild(p);
+      communityPhotoUploadArea.appendChild(communityPhotoInput);
+    }
+
+    communityPhotoUploadArea.addEventListener("click", (e) => {
+      if (e.target.closest(".community-photo-remove-btn")) return;
+      if (!communitySelectedPhoto) communityPhotoInput.click();
+    });
+
     communityPhotoInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -767,17 +788,21 @@ plagiarized the work of other students and/or persons.
         reader.onload = (event) => {
           communitySelectedPhoto = event.target.result;
           communityPhotoUploadArea.classList.add("has-photo");
-          communityPhotoUploadArea.innerHTML = `<img src="${communitySelectedPhoto}" class="community-photo-preview-img" alt="Preview">`;
+          communityPhotoUploadArea.innerHTML = "";
+          const img = document.createElement("img");
+          img.src = communitySelectedPhoto;
+          img.className = "community-photo-preview-img";
+          img.alt = "Preview";
+          communityPhotoUploadArea.appendChild(img);
+          communityPhotoUploadArea.appendChild(communityPhotoInput);
           const removeBtn = document.createElement("button");
           removeBtn.type = "button";
           removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn";
           removeBtn.textContent = "Remove Photo";
           removeBtn.addEventListener("click", (e) => {
             e.preventDefault();
-            communitySelectedPhoto = null;
-            communityPhotoInput.value = "";
-            communityPhotoUploadArea.classList.remove("has-photo");
-            communityPhotoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot or photo</p>`;
+            e.stopPropagation();
+            resetPhotoUpload();
           });
           communityPhotoUploadArea.appendChild(removeBtn);
           postError.style.display = "none";
@@ -808,7 +833,7 @@ plagiarized the work of other students and/or persons.
         flair,
         game,
         photo: communitySelectedPhoto,
-        author: "Kane_Joshua",
+        author: currentUsername,
         up: 0,
         down: 0,
         comments: [],
@@ -825,15 +850,13 @@ plagiarized the work of other students and/or persons.
       postError.textContent = "";
 
       // Reset photo
-      communitySelectedPhoto = null;
-      communityPhotoInput.value = "";
-      communityPhotoUploadArea.classList.remove("has-photo");
-      communityPhotoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot or photo</p>`;
+      resetPhotoUpload();
 
       newPostModal.hide();
 
       location.hash = "post-" + id;
       render();
+      updateSidebarStats();
       setTimeout(() => openCommentsForHash(), 50);
     });
 
@@ -1015,6 +1038,42 @@ plagiarized the work of other students and/or persons.
 
     seedDefaultPosts();
 
+    // Update sidebar stats dynamically from post data
+    function updateSidebarStats() {
+      const posts = ensureIds(loadPosts());
+      const totalPosts = posts.length;
+      const totalComments = posts.reduce((sum, p) => sum + (p.comments || []).length, 0);
+      
+      // Collect unique authors from posts and comments
+      const authors = new Set();
+      posts.forEach(p => {
+        if (p.author) authors.add(p.author);
+        (p.comments || []).forEach(c => { if (c.author) authors.add(c.author); });
+      });
+
+      document.getElementById('statTotalPosts').textContent = totalPosts;
+      document.getElementById('statTotalComments').textContent = totalComments;
+      document.getElementById('statActiveMembers').textContent = authors.size;
+
+      // Render active members list
+      const membersList = document.getElementById('activeMembersList');
+      if (authors.size === 0) {
+        membersList.innerHTML = '<div class="text-muted small">No members yet.</div>';
+        return;
+      }
+      const avatarColors = ['#5383e8','#2dd4bf','#e85383','#febc2e','#a78bfa','#ff6b6b','#3ddc84','#f2a13b'];
+      let html = '';
+      let i = 0;
+      authors.forEach(name => {
+        const initials = name.split(/[_\s]+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        const color = avatarColors[i % avatarColors.length];
+        const textColor = ['#febc2e'].includes(color) ? '#0d1217' : '#fff';
+        html += `<div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:${color};color:${textColor};width:28px;height:28px;font-size:0.6rem;">${initials}</div><span class="small"><strong>${name}</strong></span></div>`;
+        i++;
+      });
+      membersList.innerHTML = html;
+    }
+
     // Deep-link handler — if URL has #post-<id>, scroll to that post and open its comments.
     // Used by the "Copy Link" share feature
     function openCommentsForHash() {
@@ -1030,6 +1089,7 @@ plagiarized the work of other students and/or persons.
     }
 
     render();
+    updateSidebarStats();
     setTimeout(() => openCommentsForHash(), 150);
 
     // Logout function
