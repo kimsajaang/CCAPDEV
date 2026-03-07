@@ -1,0 +1,543 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+          <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+<!-- profile-edit.html — Edit profile form page.
+     Split this out from profile.html because having the edit form in a modal was messy.
+     The form doesn't actually save anywhere yet — just shows an alert. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile | Backlog Hero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        html { overflow-y: scroll; }
+        /* Edit profile styles — simpler than the profile page since it's just a form.
+           Same dark palette and card styling as other pages */
+        body {
+            background-color: #0f1519;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #1c252e !important;
+            border-bottom: 1px solid #2a3843;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .navbar-nav .nav-link {
+            color: #9e9e9e !important;
+            transition: color 0.2s ease, transform 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+            transform: translateY(-3px);
+        }
+        .navbar-nav .nav-link.active {
+            color: #5383e8 !important;
+        }
+        @keyframes pageSlideIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body { animation: pageSlideIn 0.5s ease both; }
+        body.page-exit { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .card {
+            background-color: #1c252e !important;
+            border: 1px solid #2a3843 !important;
+        }
+        /* Form inputs — dark bg with blue focus glow to match the site theme */
+        .form-control, .form-select {
+            background-color: #10171d !important;
+            border: 1px solid #2a3843;
+            color: #ffffff;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.15rem rgba(83, 131, 232, 0.35);
+            border-color: #5383e8;
+            color: #ffffff;
+            background-color: #10171d;
+        }
+        .form-control,
+		.form-control:focus,
+		.form-control:active {
+			color: #ffffff !important;
+		}
+		.form-select {
+			color: #ffffff !important;
+		}
+        .btn-primary {
+            background-color: #5383e8 !important;
+            border-color: #5383e8 !important;
+        }
+        .text-muted { color: #9e9e9e !important; }
+        .section-title {
+            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9e9e9e;
+        }
+        /* Avatar upload */
+        .avatar-preview-container {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #5383e8;
+            object-fit: cover;
+            background: #151d24;
+        }
+        .avatar-upload-controls {
+            flex: 1;
+        }
+        .avatar-upload-controls input[type="file"] {
+            display: none;
+        }
+        .avatar-upload-btn {
+            cursor: pointer;
+        }
+        /* Favourite games selector */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .game-option {
+            background: #151d24;
+            border: 2px solid #2a3843;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.75rem;
+        }
+        .game-option:hover {
+            border-color: #5383e8;
+            transform: translateY(-2px);
+        }
+        .game-option.selected {
+            border-color: #5383e8;
+            background: rgba(83, 131, 232, 0.15);
+            box-shadow: 0 0 12px rgba(83, 131, 232, 0.3);
+        }
+        .game-option-icon {
+            font-size: 2rem;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .game-count {
+            display: inline-block;
+            background: #5383e8;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+        /* Notification Toast */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        .notification {
+            background: linear-gradient(135deg, rgba(83, 131, 232, 0.95), rgba(80, 214, 180, 0.9));
+            color: #ffffff;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            animation: slideIn 0.4s ease forwards;
+            pointer-events: all;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .notification.error {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(255, 107, 107, 0.9));
+        }
+        .notification.success {
+            background: linear-gradient(135deg, rgba(80, 214, 180, 0.95), rgba(83, 131, 232, 0.85));
+        }
+        .notification-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .notification-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .notification-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .notification-message {
+            font-size: 0.85rem;
+            opacity: 0.95;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar — no active link highlighted since this is a sub-page of Profile -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand fw-bold" href="index.html">🛡️ Backlog Hero</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
+                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
+                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <!-- Edit form card — centered on the page, max col-md-8 so it doesn't stretch too wide -->
+            <div class="col-md-8">
+                <div class="card shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                            <div>
+                                <div class="section-title mb-2">Edit Profile</div>
+                                <h3 class="fw-bold mb-1">Kane Joshua</h3>
+                                <p class="text-muted mb-0">Update your gaming identity and preferences.</p>
+                            </div>
+                            <a href="profile.html" class="btn btn-outline-secondary">Back to Profile</a>
+                        </div>
+
+                        <!-- Profile edit form — fields pre-filled with hardcoded data.
+                             Gaming identity and timezone add fun profile details -->
+                        <form id="profileForm">
+                            <!-- Avatar section -->
+                            <div class="avatar-preview-container">
+                                <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="avatar-preview" alt="Avatar Preview">
+                                <div class="avatar-upload-controls">
+                                    <label class="form-label">Profile Picture</label>
+                                    <input type="file" id="avatarInput" accept="image/*">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="uploadAvatarBtn">
+                                        <i class="bi bi-upload me-1"></i> Upload Avatar
+                                    </button>
+                                    <p class="text-muted small mt-2">JPG, PNG (Max 5MB)</p>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Display Name</label>
+                                    <input type="text" class="form-control" id="inputName" placeholder="Your gaming name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="inputUsername" placeholder="@username">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Bio</label>
+                                    <textarea class="form-control" rows="3" id="inputBio" placeholder="Tell the gaming community about yourself..."></textarea>
+                                    <small class="text-muted">Share your gaming passions, favorite genres, or gaming philosophy.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Gaming Identity</label>
+                                    <select class="form-select" id="inputIdentity">
+                                        <option value="">Select your playstyle...</option>
+                                        <option value="Completionist">Completionist</option>
+                                        <option value="Casual">Casual</option>
+                                        <option value="Speedrunner">Speedrunner</option>
+                                        <option value="Explorer">Explorer</option>
+                                        <option value="Competitive">Competitive</option>
+                                        <option value="Story-Driven">Story-Driven</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Favorite Platform</label>
+                                    <select class="form-select" id="inputPlatform">
+                                        <option value="">Select favorite platform...</option>
+                                        <option value="PC">PC</option>
+                                        <option value="PlayStation">PlayStation</option>
+                                        <option value="Xbox">Xbox</option>
+                                        <option value="Nintendo Switch">Nintendo Switch</option>
+                                        <option value="Mobile">Mobile</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Favorite Games <span class="game-count" id="gameCount">0/5</span></label>
+                                    <p class="text-muted small mb-2">Choose up to 5 games from your library to showcase on your profile.</p>
+                                    <div class="games-grid" id="gamesGrid">
+                                        <div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">Loading your library...</div>
+                                    </div>
+                                </div>
+                                <!-- Privacy toggle — controls whether activity shows on the community feed.
+                                     Defaults to checked (public) -->
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="privacyToggle" checked>
+                                        <label class="form-check-label" for="privacyToggle">Show my profile on community</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary">Save Profile</button>
+                                <a href="profile.html" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const PROFILE_STORAGE_KEY = 'bh_profile_v1';
+        const LIBRARY_STORAGE_KEY = 'bh_library_v1';
+
+        const defaultProfile = {
+            displayName: 'Gamer',
+            username: 'gamer',
+            bio: '',
+            avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%235383e8"%3E%3Ccircle cx="12" cy="8" r="4"/%3E%3Cpath d="M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z"/%3E%3C/svg%3E',
+            gamingIdentity: '',
+            favoritePlatform: '',
+            favoriteGames: [],
+            joinDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+        };
+
+        function loadProfile() {
+            const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : defaultProfile;
+        }
+
+        function loadLibrary() {
+            const stored = localStorage.getItem(LIBRARY_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveProfile(profile) {
+            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+        }
+
+        let selectedFavoriteGames = [];
+
+        function showNotification(title, message, type = 'success') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icon = type === 'success' ? '✓' : '!';
+            
+            notification.innerHTML = `
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.4s ease forwards';
+                setTimeout(() => notification.remove(), 400);
+            }, 4000);
+        }
+
+        function initializeForm() {
+            const profile = loadProfile();
+            const games = loadLibrary();
+            selectedFavoriteGames = [...profile.favoriteGames];
+
+            // Populate form with profile data
+            document.getElementById('inputName').value = profile.displayName;
+            document.getElementById('inputUsername').value = profile.username;
+            document.getElementById('inputBio').value = profile.bio;
+            document.getElementById('inputIdentity').value = profile.gamingIdentity;
+            document.getElementById('inputPlatform').value = profile.favoritePlatform;
+            document.getElementById('avatarPreview').src = profile.avatar;
+
+            // Render games grid
+            const gamesGrid = document.getElementById('gamesGrid');
+            if (games.length === 0) {
+                gamesGrid.innerHTML = '<div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">No games in your library yet. <a href="library.html" style="color: #5383e8;">Add some games first!</a></div>';
+            } else {
+                let html = '';
+                games.forEach(game => {
+                    const isSelected = selectedFavoriteGames.includes(game.id);
+                    html += `
+                    <div class="game-option ${isSelected ? 'selected' : ''}" onclick="toggleFavoriteGame('${game.id}')" data-game-id="${game.id}">
+                        <span class="game-option-icon">🎮</span>
+                        <div style="font-weight: 600; color: #dbe7ff;">${game.name}</div>
+                    </div>`;
+                });
+                gamesGrid.innerHTML = html;
+            }
+
+            updateGameCount();
+        }
+
+        function toggleFavoriteGame(gameId) {
+            if (selectedFavoriteGames.includes(gameId)) {
+                selectedFavoriteGames = selectedFavoriteGames.filter(id => id !== gameId);
+            } else {
+                if (selectedFavoriteGames.length < 5) {
+                    selectedFavoriteGames.push(gameId);
+                } else {
+                    alert('You can only select up to 5 favorite games.');
+                    return;
+                }
+            }
+
+            // Update UI
+            const gameCards = document.querySelectorAll('.game-option');
+            gameCards.forEach(card => {
+                const gameId = card.dataset.gameId;
+                if (selectedFavoriteGames.includes(gameId)) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+            updateGameCount();
+        }
+
+        function updateGameCount() {
+            document.getElementById('gameCount').textContent = `${selectedFavoriteGames.length}/5`;
+        }
+
+        // Avatar upload handler
+        document.getElementById('uploadAvatarBtn').addEventListener('click', () => {
+            document.getElementById('avatarInput').click();
+        });
+
+        document.getElementById('avatarInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification('File Too Large', 'Avatar must be less than 5MB', 'error');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('avatarPreview').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submission
+        document.getElementById('profileForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const displayName = document.getElementById('inputName').value.trim();
+            if (!displayName) {
+                showNotification('Missing Information', 'Please enter a display name', 'error');
+                return;
+            }
+
+            const profile = {
+                displayName: displayName,
+                username: document.getElementById('inputUsername').value.trim() || displayName.toLowerCase().replace(/\s+/g, ''),
+                bio: document.getElementById('inputBio').value.trim(),
+                avatar: document.getElementById('avatarPreview').src,
+                gamingIdentity: document.getElementById('inputIdentity').value,
+                favoritePlatform: document.getElementById('inputPlatform').value,
+                favoriteGames: selectedFavoriteGames,
+                joinDate: loadProfile().joinDate
+            };
+
+            saveProfile(profile);
+
+            // Check for achievements
+            const games = loadLibrary();
+            const achievementsKey = 'bh_achievements_v1';
+            const unlockedAchievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');
+            
+            // Check for curator achievement
+            if (profile.bio && profile.gamingIdentity && profile.favoriteGames.length > 0) {
+                if (!unlockedAchievements.some(a => a.id === 'curator')) {
+                    unlockedAchievements.push({ id: 'curator', unlockedAt: new Date().toISOString() });
+                    localStorage.setItem(achievementsKey, JSON.stringify(unlockedAchievements));
+                }
+            }
+
+            showNotification('Profile Updated', 'Your profile has been saved successfully!', 'success');
+            setTimeout(() => window.location.href = 'profile.html', 1500);
+        });
+
+        // Page exit transition
+        document.querySelectorAll('a[href]').forEach(a => {
+          if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+            a.addEventListener('click', e => {
+              e.preventDefault();
+              const dest = a.href;
+              document.body.classList.add('page-exit');
+              setTimeout(() => window.location = dest, 300);
+            });
+          }
+        });
+
+        // Initialize on page load
+        initializeForm();
+    </script>
+</body>
+</html>
