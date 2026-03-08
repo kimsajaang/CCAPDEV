@@ -1,35 +1,4 @@
-<!-- ******************************************************************************
-This is to certify that this project is my own work, based on my personal
- efforts in studying and applying the concepts learned. I have constructed
-the functions and their respective algorithms and corresponding code by
-myself. The program was run, tested, and debugged by my own efforts. I
-further certify that I have not copied in part or whole or otherwise
-plagiarized the work of other students and/or persons.
-<Your Full Name> - <ID Number> - <Section>
-    <Ibanez, Kane Joshua> - <1234654> - <S13>
-    <David, Justin Ice> - <12411574> - <S13>
-      <Fortea, Seanne Clarence - <12410969> -<S22>
-****************************************************************************** -->
-
-<!-- stats.html — Community / forum page.
-     This is the most JS-heavy page in the project. Posts, comments, voting,
-     and sorting are all done client-side with localStorage.
-     Originally called "stats" because we planned to show gaming statistics here,
-     but we pivoted to a community feed instead. Kept the filename to avoid breaking links.
-     
-     Navigation Flow: intro.html → login.html / register.html → dashboard.html → 
-     stats.html (you are here) / profile.html / library.html -->
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Backlog Hero | Community</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="style.css">
-  <style>
+<style>
     /* Page-specific: community / stats page */
     .community-photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease); background: rgba(83, 131, 232, 0.05); }
     .community-photo-upload-area:hover { border-color: var(--primary); background: rgba(83, 131, 232, 0.1); }
@@ -51,39 +20,7 @@ plagiarized the work of other students and/or persons.
     /* Competitive community enhancements */
     .card { animation: fadeInScale 0.5s ease both; }
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.97) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-  </style>
-</head>
-<body>
-
-  <!-- Navbar — Clean version, "Community" is the active link on this page -->
-  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-    <div class="container py-2">
-      <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-          <li class="nav-item" data-auth-required="true"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-          <li class="nav-item" data-auth-required="true"><a class="nav-link" href="library.html">My Library</a></li>
-          <li class="nav-item" data-preview-only="true"><a class="nav-link" href="index.html">← Back Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
-          <li class="nav-item"><a class="nav-link active" href="stats.html">Community</a></li>
-          <li class="nav-item" data-auth-required="true"><a class="nav-link" href="profile.html">Profile</a></li>
-          <li class="nav-item" id="authNavItems" data-preview-only="true" style="display: none;">
-            <a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="login.html">Login</a>
-          </li>
-          <li class="nav-item" id="signupNavItem" data-preview-only="true" style="display: none;">
-            <a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="register.html">Sign Up</a>
-          </li>
-          <li class="nav-item" id="logoutNavItem" data-auth-required="true" style="display: none;">
-            <a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" href="#" id="logoutBtn" onclick="logout(event)">Logout</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  </style>{{> navbar-app activePage="stats"}}
 
   <div class="container my-5">
 
@@ -168,7 +105,7 @@ plagiarized the work of other students and/or persons.
   <!-- New Post Modal — opens when user clicks "New Post" button.
        Uses modal-lg so users have room to type longer posts.
        The form has title, body, flair, and optional game tag fields. -->
-  <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true" data-auth-required="true">
+  <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
@@ -224,8 +161,6 @@ plagiarized the work of other students and/or persons.
       </div>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // ============================================================
     // Community Feed Script
@@ -401,7 +336,7 @@ plagiarized the work of other students and/or persons.
 
       const flairBadge = `<span class="badge bg-secondary">${escapeHtml(post.flair || "Discussion")}</span>`;
       const gameTag = post.game ? `<span class="badge bg-info text-dark ms-2">${escapeHtml(post.game)}</span>` : "";
-      const photoHtml = post.photo ? `<img src="${post.photo}" class="community-post-photo" alt="Post photo">` : "";
+      const photoHtml = post.photo ? `<img src="${post.photo}" class="community-post-photo" alt="Post photo" loading="lazy">` : "";
 
       wrapper.innerHTML = `
         <div class="card-body">
@@ -692,7 +627,7 @@ plagiarized the work of other students and/or persons.
     sortSelect.addEventListener("change", render);
     searchInput.addEventListener("input", () => {
       clearTimeout(window.__bhSearchT);
-      window.__bhSearchT = setTimeout(render, 150);
+      window.__bhSearchT = setTimeout(render, 350);
     });
 
     // --- Auto-seed: pre-made sample posts seeded on first visit ---
@@ -969,5 +904,3 @@ plagiarized the work of other students and/or persons.
       if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
     }, { passive: true });
   </script>
-</body>
-</html>

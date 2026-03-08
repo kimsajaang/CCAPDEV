@@ -1,0 +1,16 @@
+<!-- Auth Navbar — used on login and register pages -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container py-2">
+        <a class="navbar-brand fw-bold" href="/index.html">🛡️ Backlog Hero</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                <li class="nav-item"><a class="nav-link" href="/index.html">← Back to Home</a></li>
+                <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1 {{#if (eq activePage "login")}}active{{/if}}" href="/login.html">Login</a></li>
+                <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1 {{#if (eq activePage "register")}}active{{/if}}" href="/register.html">Sign Up</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,27 +1,4 @@
-<!-- ******************************************************************************
-This is to certify that this project is my own work, based on my personal
- efforts in studying and applying the concepts learned. I have constructed
-the functions and their respective algorithms and corresponding code by
-myself. The program was run, tested, and debugged by my own efforts. I
-further certify that I have not copied in part or whole or otherwise
-plagiarized the work of other students and/or persons.
-<Your Full Name> - <ID Number> - <Section>
-    <Ibanez, Kane Joshua> - <1234654> - <S13>
-    <David, Justin Ice> - <12411574> - <S13>
-          <Fortea, Seanne Clarence - <12410969> -<S22>
-****************************************************************************** -->
-<!-- dashboard.html — Main dashboard page after login.
-     Shows friend activity feed, backlog suggestions, and streak counter. -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backlog Hero | Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="style.css">
-    <style>
+<style>
         /* Page-specific: dashboard overrides */
         body.loading { overflow: hidden; }
         .spin-icon { display: inline-block; animation: spin 0.8s linear infinite; }
@@ -44,6 +21,15 @@ plagiarized the work of other students and/or persons.
         .trending-scroll-wrap .scroll-btn:hover { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 20px rgba(83,131,232,0.3); }
         .trending-scroll-wrap .scroll-left { left: -12px; }
         .trending-scroll-wrap .scroll-right { right: -12px; }
+        /* Top 50 modal */
+        .top50-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
+        .top50-card { position: relative; border-radius: var(--radius-md); overflow: hidden; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .top50-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .top50-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; }
+        .top50-card .top50-rank { position: absolute; top: 8px; left: 8px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-full); }
+        .top50-card .top50-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 8px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); }
+        .top50-card .top50-name { font-size: 0.78rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top50-card .top50-rating { font-size: 0.7rem; color: #fb923c; }
         /* Trailers section */
         .trailers-card { background: var(--bg-card); border: 1px solid var(--border) !important; }
         .trailers-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
@@ -73,10 +59,8 @@ plagiarized the work of other students and/or persons.
         .completion-ring-text { font-size: 0.82rem; color: var(--text-muted); }
         .completion-ring-text strong { color: var(--text); font-weight: 700; }
     </style>
-</head>
-<body class="loading">
 
-    <!-- Particle background -->
+<!-- Particle background -->
     <canvas id="particleCanvas"></canvas>
 
     <!-- Fake loading screen -->
@@ -88,27 +72,7 @@ plagiarized the work of other students and/or persons.
                 <div class="loader-sub">Warming up your backlog picks</div>
             </div>
         </div>
-    </div>
-
-    <!-- Navigation bar — same structure on every page, just the active class changes -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                    <li class="nav-item"><a class="nav-link active" href="dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
-                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
-                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
-                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    </div>{{> navbar-app activePage="dashboard"}}
 
     <div class="container my-5">
         <!-- Welcome hero card with user stats -->
@@ -152,7 +116,7 @@ plagiarized the work of other students and/or persons.
             <div class="trending-header">
                 <h5><i class="bi bi-fire me-2" style="color:#fb923c;"></i>Trending <span class="gradient-text">Right Now</span></h5>
                 <span class="trending-date text-muted small" id="trendingDate"></span>
-                <a href="search.html" class="btn btn-sm btn-outline-primary">See All</a>
+                <button class="btn btn-sm btn-outline-primary" id="seeAllBtn">See All</button>
             </div>
             <div class="trending-scroll-wrap">
                 <button class="scroll-btn scroll-left" onclick="document.getElementById('trendingScroll').scrollBy({left:-340,behavior:'smooth'})"><i class="bi bi-chevron-left"></i></button>
@@ -298,7 +262,6 @@ plagiarized the work of other students and/or persons.
     </div>
 
     <!-- Bootstrap JS bundle (includes Popper) for navbar toggle and other components -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Page scripts:
      1) Fake loader — hides after 1.2s timeout
      2) Scroll reveal — uses IntersectionObserver to fade in cards as they enter viewport
@@ -452,7 +415,7 @@ plagiarized the work of other students and/or persons.
           const pick = fits[Math.floor(Math.random() * fits.length)];
           const sessions = Math.max(1, Math.floor(totalMins / pick.avgSession));
           const imgTag = pick.img
-            ? `<img src="${pick.img}" style="width:42px;height:56px;border-radius:6px;object-fit:cover;border:1px solid #2a3843;" alt="${pick.name}">`
+            ? `<img src="${pick.img}" style="width:42px;height:56px;border-radius:6px;object-fit:cover;border:1px solid #2a3843;" alt="${pick.name}" loading="lazy">`
             : `<div style="width:42px;height:56px;border-radius:6px;background:#2a3843;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#6f7d8a;"><i class="bi bi-controller"></i></div>`;
 
           const sourceLabel = source === 'library'
@@ -509,7 +472,7 @@ plagiarized the work of other students and/or persons.
             reader.onload = (event) => {
               selectedPhoto = event.target.result;
               photoUploadArea.classList.add("has-photo");
-              photoUploadArea.innerHTML = `<img src="${selectedPhoto}" class="photo-preview-img" alt="Preview">`;
+              photoUploadArea.innerHTML = `<img src="${selectedPhoto}" class="photo-preview-img" alt="Preview" loading="lazy">`;
               const removeBtn = document.createElement("button");
               removeBtn.type = "button";
               removeBtn.className = "btn btn-sm btn-outline-danger photo-remove-btn";
@@ -569,7 +532,7 @@ plagiarized the work of other students and/or persons.
           
           let photoHTML = "";
           if (selectedPhoto) {
-            photoHTML = `<img src="${selectedPhoto}" class="feed-photo" alt="Session screenshot">`;
+            photoHTML = `<img src="${selectedPhoto}" class="feed-photo" alt="Session screenshot" loading="lazy">`;
           }
           
           // Get user avatar or use default
@@ -965,13 +928,11 @@ plagiarized the work of other students and/or persons.
         if (!container) return;
         try {
           const games = await fetchTrendingGames();
-          // Extract trailers from trending games
+          // Extract trailers — max 1 per game for diversity
           const trailers = [];
           for (const game of games) {
-            if (!game.videos) continue;
-            for (const vid of game.videos) {
-              trailers.push({ gameName: game.name, videoId: vid.video_id });
-            }
+            if (!game.videos || game.videos.length === 0) continue;
+            trailers.push({ gameName: game.name, videoId: game.videos[0].video_id });
             if (trailers.length >= 12) break;
           }
           if (trailers.length === 0) {
@@ -1155,6 +1116,45 @@ plagiarized the work of other students and/or persons.
       })();
 
       // ============================================================
+      // Top 50 Modal
+      // ============================================================
+      document.getElementById('seeAllBtn')?.addEventListener('click', async () => {
+        const modal = new bootstrap.Modal(document.getElementById('top50Modal'));
+        const grid = document.getElementById('top50Grid');
+        grid.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading top games...</div>';
+        modal.show();
+        try {
+          const res = await fetch('/api/games/top', { credentials: 'include' });
+          const games = res.ok ? await res.json() : [];
+          if (!games.length) { grid.innerHTML = '<div class="text-muted text-center py-4">No games found.</div>'; return; }
+          grid.innerHTML = '';
+          games.forEach((game, idx) => {
+            let cover = game.cover?.url || '';
+            if (cover) {
+              cover = cover.replace('t_thumb', 't_cover_big');
+              if (!cover.startsWith('http')) cover = 'https:' + cover;
+            }
+            const rating = game.total_rating ? Math.round(game.total_rating) : '';
+            const name = game.name || 'Unknown';
+            const card = document.createElement('div');
+            card.className = 'top50-card';
+            card.innerHTML = `
+              ${cover ? `<img src="${cover}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.style.display='none'">` : '<div style="width:100%;aspect-ratio:3/4;background:#1e2d3a;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🎮</div>'}
+              <span class="top50-rank">#${idx + 1}</span>
+              <div class="top50-info">
+                <div class="top50-name">${name}</div>
+                ${rating ? `<div class="top50-rating">★ ${rating}%</div>` : ''}
+              </div>
+            `;
+            card.addEventListener('click', () => { window.location.href = 'search.html?q=' + encodeURIComponent(name); });
+            grid.appendChild(card);
+          });
+        } catch (err) {
+          grid.innerHTML = '<div class="text-muted text-center py-4">Failed to load games.</div>';
+        }
+      });
+
+      // ============================================================
       // Navbar scroll effect
       // ============================================================
       // Navbar scroll shadow (passive, cached)
@@ -1164,5 +1164,18 @@ plagiarized the work of other students and/or persons.
         if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
       }, { passive: true });
     </script>
-</body>
-</html>
+
+    <!-- Top 50 Games Modal -->
+    <div class="modal fade" id="top50Modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-trophy me-2" style="color:#fb923c;"></i>Top 50 Games of All Time</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="top50-grid" id="top50Grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>

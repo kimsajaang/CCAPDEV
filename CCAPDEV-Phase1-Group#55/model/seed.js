@@ -70,7 +70,7 @@ const seedDatabase = async () => {
     const games = await Game.create([
       {
         name: 'Elden Ring',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co4jni.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg',
         rating: 96,
         genres: ['Action RPG', 'Fantasy'],
         platforms: ['PlayStation 5', 'Xbox Series X', 'PC'],
@@ -79,7 +79,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Baldurs Gate 3',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co670h.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co670h.jpg',
         rating: 96,
         genres: ['RPG', 'Fantasy'],
         platforms: ['PlayStation 5', 'PC'],
@@ -88,7 +88,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'The Legend of Zelda: Breath of the Wild',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co3p2d.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3p2d.jpg',
         rating: 97,
         genres: ['Action Adventure', 'Open World'],
         platforms: ['Nintendo Switch', 'Wii U'],
@@ -97,7 +97,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Dark Souls 3',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1vcf.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vcf.jpg',
         rating: 89,
         genres: ['Action RPG', 'Fantasy'],
         platforms: ['PlayStation 4', 'Xbox One', 'PC'],
@@ -106,7 +106,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Hollow Knight',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1rgi.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.jpg',
         rating: 88,
         genres: ['Metroidvania', 'Indie'],
         platforms: ['Nintendo Switch', 'PC', 'PlayStation 4', 'Xbox One'],
@@ -115,7 +115,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Celeste',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co3byy.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3byy.jpg',
         rating: 87,
         genres: ['Platformer', 'Indie'],
         platforms: ['Nintendo Switch', 'PC', 'PlayStation 4', 'Xbox One'],
@@ -124,7 +124,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Portal 2',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1rs4.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg',
         rating: 95,
         genres: ['Puzzle', 'First-Person'],
         platforms: ['PC', 'PlayStation 3', 'Xbox 360'],
@@ -133,7 +133,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Stardew Valley',
-        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/xrpmydnu9rpxvxfjkiu7.jpg',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/xrpmydnu9rpxvxfjkiu7.jpg',
         rating: 92,
         genres: ['Simulation', 'Indie', 'RPG'],
         platforms: ['PC', 'Nintendo Switch', 'PlayStation 4', 'Xbox One', 'Mobile'],

@@ -1,0 +1,28 @@
+<!-- Landing Navbar — used on index and intro pages, shows conditional auth/preview links -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container py-2">
+        <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                <li class="nav-item" data-auth-required="true"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
+                <li class="nav-item" data-auth-required="true"><a class="nav-link" href="/library.html">My Library</a></li>
+                <li class="nav-item" data-preview-only="true"><a class="nav-link" href="/search.html">Search Games</a></li>
+                <li class="nav-item" data-preview-only="true"><a class="nav-link" href="/stats.html">Community</a></li>
+                <li class="nav-item" data-auth-required="true"><a class="nav-link" href="/profile.html">Profile</a></li>
+                <li class="nav-item" data-preview-only="true"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="/login.html">Login</a></li>
+                <li class="nav-item" data-auth-required="true"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<script>
+function smartHomeClick(e) {
+    e.preventDefault();
+    fetch('/api/auth/current', { credentials: 'include' })
+        .then(r => { window.location.href = r.ok ? '/dashboard.html' : '/index.html'; })
+        .catch(() => { window.location.href = '/index.html'; });
+}
+</script>

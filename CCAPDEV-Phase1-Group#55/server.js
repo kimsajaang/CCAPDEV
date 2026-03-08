@@ -1,8 +1,9 @@
 // server.js — Express server for Backlog Hero Phase 2
-// Serves static HTML files and implements backend with MongoDB
+// Uses Handlebars template engine for views and implements backend with MongoDB
 
 require('dotenv').config();
 const express = require('express');
+const { engine } = require('express-handlebars');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const fetch = require('node-fetch');
@@ -16,6 +17,17 @@ const LibraryEntry = require('./model/LibraryEntry');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// --- Handlebars Template Engine ---
+app.engine('hbs', engine({
+  extname: '.hbs',
+  defaultLayout: 'main',
+  helpers: {
+    eq: (a, b) => a === b
+  }
+}));
+app.set('view engine', 'hbs');
+app.set('views', __dirname + '/views');
+
 // --- Session Configuration ---
 app.use(session({
   secret: 'backlog-hero-secret-key-change-in-prod',
@@ -27,7 +39,24 @@ app.use(session({
 // --- Middleware ---
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public')); // serve HTML, CSS, images from public folder
+
+// --- View Routes (Handlebars) ---
+// These are defined BEFORE express.static so the template engine handles .html routes
+// instead of serving raw HTML files from public/
+app.get('/', (req, res) => res.render('index', { title: 'Your Gaming Journey Starts Here' }));
+app.get('/index.html', (req, res) => res.render('index', { title: 'Your Gaming Journey Starts Here' }));
+app.get('/intro.html', (req, res) => res.render('intro', { title: 'Welcome' }));
+app.get('/login.html', (req, res) => res.render('login', { title: 'Login' }));
+app.get('/register.html', (req, res) => res.render('register', { title: 'Register' }));
+app.get('/dashboard.html', (req, res) => res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading' }));
+app.get('/library.html', (req, res) => res.render('library', { title: 'My Library' }));
+app.get('/profile.html', (req, res) => res.render('profile', { title: 'Profile' }));
+app.get('/profile-edit.html', (req, res) => res.render('profile-edit', { title: 'Edit Profile' }));
+app.get('/search.html', (req, res) => res.render('search', { title: 'Search Games' }));
+app.get('/stats.html', (req, res) => res.render('stats', { title: 'Community' }));
+
+// Static files (CSS, images, client-side assets) — after view routes
+app.use(express.static(__dirname + '/public'));
 
 // --- Passport Configuration ---
 passport.serializeUser((user, done) => done(null, user._id.toString()));
@@ -335,7 +364,7 @@ async function getIgdbCover(gameName) {
     });
     const data = await igdbRes.json();
     if (data && data[0] && data[0].cover && data[0].cover.url) {
-      return 'https:' + data[0].cover.url.replace('t_thumb', 't_cover_big_2x');
+      return 'https:' + data[0].cover.url.replace('t_thumb', 't_cover_big');
     }
   } catch (err) {
     console.warn('[IGDB COVER] Failed for', gameName, err.message);
@@ -740,7 +769,7 @@ app.post('/api/games/search', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `search "${query}"; fields name,cover.url,rating,genres.name,first_release_date,summary,platforms.name; where cover != null; limit ${limit};`
+      body: `search "${query}"; fields name,cover.url,rating,genres.name,first_release_date; where cover != null; limit ${limit};`
     });
 
     const data = await igdbRes.json();
@@ -763,8 +792,8 @@ app.get('/api/games/popular', async (req, res) => {
       return res.json(_popularCache);
     }
     const token = await getAccessToken();
-    // Get games trending RIGHT NOW — released in the last 30 days, sorted by hype/ratings
-    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+    // Get trending/popular games — released in the last 6 months for wider trailer coverage
+    const sixMonthsAgo = Math.floor(Date.now() / 1000) - (180 * 24 * 60 * 60);
     const igdbRes = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
@@ -772,7 +801,7 @@ app.get('/api/games/popular', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name; where first_release_date > ${thirtyDaysAgo} & cover != null; sort total_rating_count desc; limit 20;`
+      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name; where first_release_date > ${sixMonthsAgo} & cover != null & videos != null; sort total_rating_count desc; limit 20;`
     });
 
     const data = await igdbRes.json();
@@ -784,6 +813,39 @@ app.get('/api/games/popular', async (req, res) => {
     // Return stale cache if available
     if (_popularCache) return res.json(_popularCache);
     res.status(500).json({ error: 'Failed to get popular games' });
+  }
+});
+
+// GET /api/games/top - Get top 50 highest-rated games overall (cached 10 min)
+let _topCache = null;
+let _topCacheTime = 0;
+const TOP_CACHE_TTL = 10 * 60 * 1000;
+
+app.get('/api/games/top', async (req, res) => {
+  try {
+    if (_topCache && Date.now() - _topCacheTime < TOP_CACHE_TTL) {
+      return res.json(_topCache);
+    }
+    const token = await getAccessToken();
+    // Only recent games: released in the last 12 months
+    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain'
+      },
+      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date; where total_rating_count > 5 & cover != null & total_rating != null & first_release_date > ${oneYearAgo}; sort total_rating desc; limit 50;`
+    });
+    const data = await igdbRes.json();
+    _topCache = data;
+    _topCacheTime = Date.now();
+    res.json(data);
+  } catch (err) {
+    console.error('[IGDB TOP] Error:', err.message);
+    if (_topCache) return res.json(_topCache);
+    res.status(500).json({ error: 'Failed to get top games' });
   }
 });
 

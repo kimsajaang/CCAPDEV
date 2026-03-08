@@ -108,7 +108,7 @@ body {
   position: relative;
 }
 
-/* Ambient background glow orbs — pre-spread gradient, no runtime blur */
+/* Ambient background glow orbs — static, no animation for performance */
 body::before,
 body::after {
   content: '';
@@ -116,9 +116,7 @@ body::after {
   border-radius: 50%;
   pointer-events: none;
   z-index: -1;
-  will-change: transform;
   contain: strict;
-  animation: orbFloat 20s ease-in-out infinite;
 }
 body::before {
   width: 900px;
@@ -133,12 +131,6 @@ body::after {
   background: radial-gradient(circle, rgba(45, 212, 191, 0.03), rgba(45, 212, 191, 0.015) 40%, transparent 70%);
   bottom: -250px;
   right: -180px;
-  animation-delay: -10s;
-}
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%      { transform: translate(30px, -20px) scale(1.05); }
-  66%      { transform: translate(-20px, 15px) scale(0.95); }
 }
 
 ::selection {
@@ -517,7 +509,7 @@ a:hover {
 .form-control:focus,
 .form-select:focus {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px var(--primary-glow), 0 0 20px rgba(83, 131, 232, 0.1) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
   background-color: rgba(13, 18, 24, 0.9) !important;
   color: var(--text) !important;
 }

@@ -1,30 +1,4 @@
-﻿<!-- ******************************************************************************
-This is to certify that this project is my own work, based on my personal
- efforts in studying and applying the concepts learned. I have constructed
-the functions and their respective algorithms and corresponding code by
-myself. The program was run, tested, and debugged by my own efforts. I
-further certify that I have not copied in part or whole or otherwise
-plagiarized the work of other students and/or persons.
-<Your Full Name> - <ID Number> - <Section>
-    <Ibanez, Kane Joshua> - <1234654> - <S13>
-    <David, Justin Ice> - <12411574> - <S13>
-    <Fortea, Seanne Clarence - <12410969> -<S22>
-****************************************************************************** -->
-<!-- profile.html — User profile page.
-     Shows stats, highlights, recent activity in a card shell layout.
-     The design is inspired by gaming profile pages like op.gg and steam profiles.
-     All data here is hardcoded for now. -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Settings | Backlog Hero</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="style.css">
-    
-    <style>
+<style>
         /* Page-specific: profile page with ambient radial glows */
         body { background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.15), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.1), transparent 25%), radial-gradient(circle at 50% 80%, rgba(45, 212, 191, 0.06), transparent 35%), var(--bg-base); }
         .profile-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -145,33 +119,11 @@ plagiarized the work of other students and/or persons.
             .friends-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
             .avatar-img { margin-top: -24px; }
         }
-    </style>
-</head>
-<body>
-
-    <!-- Navbar — Dynamic version for authenticated users -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="library.html">My Library</a></li>
-                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
-                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    </style>{{> navbar-app activePage="profile"}}
 
     <div class="container my-5">
         <div class="row justify-content-center">
-            <!-- Profile shell — contains the cover gradient, avatar, stats, and info sections.
+            <!-- Profile shell � contains the cover gradient, avatar, stats, and info sections.
                  Wrapped in a single card-like container -->
             <div class="col-lg-10">
                 <div class="profile-shell">
@@ -182,7 +134,7 @@ plagiarized the work of other students and/or persons.
                                 <img id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="rounded-circle avatar-img" alt="Profile Picture">
                                 <div>
                                     <h2 class="profile-name" id="profileName">Your Profile</h2>
-                                    <div class="profile-handle" id="profileHandle">@gamer • Gaming Enthusiast</div>
+                                    <div class="profile-handle" id="profileHandle">@gamer � Gaming Enthusiast</div>
                                     <div class="profile-meta" id="profileMeta">
                                         <span><i class="bi bi-controller"></i> <span id="favoriteGenres">Gaming Fan</span></span>
                                         <span><i class="bi bi-calendar3"></i> <span id="memberSince">Member since Today</span></span>
@@ -203,7 +155,7 @@ plagiarized the work of other students and/or persons.
                         <div class="profile-grid mt-3">
                             <!-- Left column: stat cards + about + highlights -->
                             <div>
-                                <!-- Stat grid — 4 stat cards in a 2x2 layout.
+                                <!-- Stat grid � 4 stat cards in a 2x2 layout.
                                      Numbers are calculated from user library data -->
                                 <div class="stat-grid">
                                     <div class="stat-card reveal-item">
@@ -212,7 +164,7 @@ plagiarized the work of other students and/or persons.
                                             <div class="text-muted small">Completed</div>
                                         </div>
                                         <div class="stat-value" id="completedCount">0</div>
-                                        <div class="text-muted extra-small">Games 🎮</div>
+                                        <div class="text-muted extra-small">Games ??</div>
                                     </div>
                                     <div class="stat-card reveal-item">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -220,7 +172,7 @@ plagiarized the work of other students and/or persons.
                                             <div class="text-muted small">Backlog</div>
                                         </div>
                                         <div class="stat-value" id="backlogCount">0</div>
-                                        <div class="text-muted extra-small">Queued 📋</div>
+                                        <div class="text-muted extra-small">Queued ??</div>
                                     </div>
                                     <div class="stat-card reveal-item">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -228,7 +180,7 @@ plagiarized the work of other students and/or persons.
                                             <div class="text-muted small">Hours</div>
                                         </div>
                                         <div class="stat-value" id="totalHours">0</div>
-                                        <div class="text-muted extra-small">Total time ⏰</div>
+                                        <div class="text-muted extra-small">Total time ?</div>
                                     </div>
                                     <div class="stat-card reveal-item">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -236,7 +188,7 @@ plagiarized the work of other students and/or persons.
                                             <div class="text-muted small">Current</div>
                                         </div>
                                         <div class="stat-value" id="playingCount">0</div>
-                                        <div class="text-muted extra-small">Playing 🎮</div>
+                                        <div class="text-muted extra-small">Playing ??</div>
                                     </div>
                                 </div>
 
@@ -321,11 +273,9 @@ plagiarized the work of other students and/or persons.
         </div>
       </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-    /* Profile page — supports viewing own profile and other users' profiles via ?user=userId */
+    /* Profile page � supports viewing own profile and other users' profiles via ?user=userId */
     const PROFILE_STORAGE_KEY = 'bh_profile_v1';
     const LIBRARY_STORAGE_KEY = 'bh_library_v1';
     const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
@@ -353,18 +303,18 @@ plagiarized the work of other students and/or persons.
 
     /* Achievement definitions */
     const ACHIEVEMENTS = [
-        { id: 'first_game', name: 'First Step', icon: '🎮', description: 'Add your first game', condition: (games) => games.length >= 1 },
-        { id: 'collector', name: 'Collector', icon: '📚', description: 'Add 10 games to library', condition: (games) => games.length >= 10 },
-        { id: 'hoarder', name: 'Hoarder', icon: '🏰', description: 'Add 25 games to library', condition: (games) => games.length >= 25 },
-        { id: 'completionist_badge', name: 'Completionist', icon: '⭐', description: 'Complete 5 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 5 },
-        { id: 'platinum', name: 'Platinum Elite', icon: '👑', description: 'Complete 10 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 10 },
-        { id: 'backlog_master', name: 'Backlog Master', icon: '📋', description: 'Have 20 games in backlog', condition: (games) => games.filter(g => g.status === 'backlog').length >= 20 },
-        { id: 'multitasker', name: 'Multitasker', icon: '⚡', description: 'Play 5 games simultaneously', condition: (games) => games.filter(g => g.status === 'playing').length >= 5 },
-        { id: 'curator', name: 'Perfect Profile', icon: '✨', description: 'Customize your profile', condition: (games, profile) => profile.bio && profile.bio !== 'No bio yet' && profile.favoriteGames && profile.favoriteGames.length > 0 },
-        { id: 'speedrunner', name: 'Quick Finisher', icon: '🚀', description: 'Complete a game in 5 hours', condition: () => false },
-        { id: 'reviewer', name: 'Critic', icon: '📝', description: 'Rate 5 completed games', condition: (games) => games.filter(g => g.status === 'completed' && g.rating > 0).length >= 5 },
-        { id: 'hybrid', name: 'Balanced Gamer', icon: '⚙️', description: 'Have games in all 3 statuses', condition: (games) => games.filter(g => g.status === 'backlog').length > 0 && games.filter(g => g.status === 'playing').length > 0 && games.filter(g => g.status === 'completed').length > 0 },
-        { id: 'legendary', name: 'Legendary', icon: '🌟', description: 'Complete 20 games with 5-star ratings', condition: (games) => games.filter(g => g.status === 'completed' && g.rating === 5).length >= 20 },
+        { id: 'first_game', name: 'First Step', icon: '??', description: 'Add your first game', condition: (games) => games.length >= 1 },
+        { id: 'collector', name: 'Collector', icon: '??', description: 'Add 10 games to library', condition: (games) => games.length >= 10 },
+        { id: 'hoarder', name: 'Hoarder', icon: '??', description: 'Add 25 games to library', condition: (games) => games.length >= 25 },
+        { id: 'completionist_badge', name: 'Completionist', icon: '?', description: 'Complete 5 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 5 },
+        { id: 'platinum', name: 'Platinum Elite', icon: '??', description: 'Complete 10 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 10 },
+        { id: 'backlog_master', name: 'Backlog Master', icon: '??', description: 'Have 20 games in backlog', condition: (games) => games.filter(g => g.status === 'backlog').length >= 20 },
+        { id: 'multitasker', name: 'Multitasker', icon: '?', description: 'Play 5 games simultaneously', condition: (games) => games.filter(g => g.status === 'playing').length >= 5 },
+        { id: 'curator', name: 'Perfect Profile', icon: '?', description: 'Customize your profile', condition: (games, profile) => profile.bio && profile.bio !== 'No bio yet' && profile.favoriteGames && profile.favoriteGames.length > 0 },
+        { id: 'speedrunner', name: 'Quick Finisher', icon: '??', description: 'Complete a game in 5 hours', condition: () => false },
+        { id: 'reviewer', name: 'Critic', icon: '??', description: 'Rate 5 completed games', condition: (games) => games.filter(g => g.status === 'completed' && g.rating > 0).length >= 5 },
+        { id: 'hybrid', name: 'Balanced Gamer', icon: '??', description: 'Have games in all 3 statuses', condition: (games) => games.filter(g => g.status === 'backlog').length > 0 && games.filter(g => g.status === 'playing').length > 0 && games.filter(g => g.status === 'completed').length > 0 },
+        { id: 'legendary', name: 'Legendary', icon: '??', description: 'Complete 20 games with 5-star ratings', condition: (games) => games.filter(g => g.status === 'completed' && g.rating === 5).length >= 20 },
     ];
 
     function loadAchievements() {
@@ -391,7 +341,7 @@ plagiarized the work of other students and/or persons.
     function showAchievementNotification(achievement) {
         const notification = document.createElement('div');
         notification.style.cssText = `position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#febc2e,#ffa500);color:#0f1519;padding:16px 20px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:10000;font-weight:700;animation:slideIn 0.4s ease;max-width:280px;`;
-        notification.innerHTML = `<div style="font-size:1.2rem;margin-bottom:6px;">🏆 Achievement Unlocked!</div><div>${achievement.icon} <strong>${achievement.name}</strong></div><div style="font-size:0.85rem;opacity:0.9;margin-top:4px;">${achievement.description}</div>`;
+        notification.innerHTML = `<div style="font-size:1.2rem;margin-bottom:6px;">?? Achievement Unlocked!</div><div>${achievement.icon} <strong>${achievement.name}</strong></div><div style="font-size:0.85rem;opacity:0.9;margin-top:4px;">${achievement.description}</div>`;
         document.body.appendChild(notification);
         setTimeout(() => { notification.style.animation = 'slideOut 0.4s ease forwards'; setTimeout(() => notification.remove(), 400); }, 3000);
     }
@@ -403,7 +353,7 @@ plagiarized the work of other students and/or persons.
         const unlockedAchievements = isOwnProfile ? checkAndUnlockAchievements(profile) : loadAchievements();
 
         document.getElementById('profileName').textContent = profile.displayName;
-        document.getElementById('profileHandle').textContent = `@${profile.username} • Gaming Profile`;
+        document.getElementById('profileHandle').textContent = `@${profile.username} � Gaming Profile`;
         document.getElementById('profileAvatar').src = profile.avatar || defaultProfile.avatar;
         document.getElementById('memberSince').textContent = `Member since ${new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`;
         document.getElementById('favoriteGenres').textContent = 'Gaming Fan';
@@ -435,7 +385,7 @@ plagiarized the work of other students and/or persons.
         if (profile.favoriteGames && profile.favoriteGames.length > 0) {
             let html = '';
             profile.favoriteGames.forEach(gameName => {
-                html += `<div class="fav-game-card" title="${gameName}"><span class="fav-game-icon">🎮</span><div class="fav-game-name">${gameName}</div></div>`;
+                html += `<div class="fav-game-card" title="${gameName}"><span class="fav-game-icon">??</span><div class="fav-game-name">${gameName}</div></div>`;
             });
             favGamesContainer.innerHTML = html;
         } else {
@@ -517,7 +467,7 @@ plagiarized the work of other students and/or persons.
         if (isOwnProfile) await loadFriendRequests();
     }
 
-    // ─── Friend Button on other user's profile ───
+    // --- Friend Button on other user's profile ---
     async function renderFriendButton(profile) {
         const actionsDiv = document.getElementById('profileActions');
         const targetId = profile._id || profile.id;
@@ -583,7 +533,7 @@ plagiarized the work of other students and/or persons.
         } catch (e) { console.warn('Could not load friend status:', e); }
     }
 
-    // ─── Friends List ───
+    // --- Friends List ---
     async function loadFriendsList(userId) {
         const container = document.getElementById('friendsListContainer');
         const countEl = document.getElementById('friendsCount');
@@ -618,7 +568,7 @@ plagiarized the work of other students and/or persons.
         }
     }
 
-    // ─── Friend Requests ───
+    // --- Friend Requests ---
     async function loadFriendRequests() {
         const container = document.getElementById('friendRequestsContainer');
         try {
@@ -648,7 +598,7 @@ plagiarized the work of other students and/or persons.
         await loadFriendRequests();
     }
 
-    // ─── Find Friends Modal ───
+    // --- Find Friends Modal ---
     const friendSearchInput = document.getElementById('friendSearchInput');
     const friendSearchBtn = document.getElementById('friendSearchBtn');
     const friendSearchResults = document.getElementById('friendSearchResults');
@@ -679,7 +629,7 @@ plagiarized the work of other students and/or persons.
     document.getElementById('shareProfileBtn').addEventListener('click', () => {
         const profileName = document.getElementById('profileName').textContent;
         const profileUrl = `${window.location.origin}/profile.html?user=${viewingUserId}`;
-        const text = `Check out ${isOwnProfile ? 'my' : profileName + "'s"} gaming profile on Backlog Hero! 🎮`;
+        const text = `Check out ${isOwnProfile ? 'my' : profileName + "'s"} gaming profile on Backlog Hero! ??`;
         if (navigator.share) {
             navigator.share({ text, url: profileUrl });
         } else {
@@ -769,5 +719,3 @@ plagiarized the work of other students and/or persons.
 
     window.addEventListener('load', initProfile);
     </script>
-</body>
-</html>
