@@ -1,32 +1,59 @@
 <!-- App Navbar — used on dashboard, library, search, stats, profile, profile-edit -->
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container py-2">
-        <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
+        <a class="navbar-brand fw-bold" href="/index.html">🛡️ Backlog Hero</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                <li class="nav-item"><a class="nav-link {{#if (eq activePage "dashboard")}}active{{/if}}" href="/dashboard.html">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link {{#if (eq activePage "library")}}active{{/if}}" href="/library.html">My Library</a></li>
-                <li class="nav-item"><a class="nav-link {{#if (eq activePage "search")}}active{{/if}}" href="/search.html">Search Games</a></li>
-                <li class="nav-item"><a class="nav-link {{#if (eq activePage "stats")}}active{{/if}}" href="/stats.html">Community</a></li>
-                <li class="nav-item"><a class="nav-link {{#if (eq activePage "profile")}}active{{/if}}" href="/profile.html">Profile</a></li>
-                <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
+            <ul class="navbar-nav ms-auto text-uppercase small fw-bold" id="navbarLinks">
+                <!-- Guest-only links -->
+                <li class="nav-item guest-only"><a class="nav-link" href="/intro.html">Back to Home</a></li>
+                <li class="nav-item guest-only"><a class="nav-link" href="/search.html">Search Games</a></li>
+                <li class="nav-item guest-only"><a class="nav-link" href="/stats.html">Community</a></li>
+                <li class="nav-item guest-only"><a class="nav-link btn btn-primary ms-lg-2 px-3 py-1" href="/login.html">Login</a></li>
+                <li class="nav-item guest-only"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="/register.html">Sign Up</a></li>
+                <!-- Auth-only links -->
+                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
+                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/library.html">Library</a></li>
+                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/profile.html">Profile</a></li>
+                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/search.html">Search Games</a></li>
+                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/stats.html">Community</a></li>
+                <li class="nav-item auth-only" style="display:none"><a class="nav-link btn btn-danger ms-lg-2 px-3 py-1" href="#" onclick="logout(event)">Logout</a></li>
             </ul>
         </div>
     </div>
 </nav>
 <script>
-function smartHomeClick(e) {
-    e.preventDefault();
-    window.location.href = '/dashboard.html';
+// Auth check: toggle navbar links
+async function updateNavbarAuth() {
+    try {
+        const res = await fetch('/api/auth/current', { credentials: 'include' });
+        const isLoggedIn = res.ok;
+        document.querySelectorAll('.guest-only').forEach(el => {
+            el.style.display = isLoggedIn ? 'none' : '';
+        });
+        document.querySelectorAll('.auth-only').forEach(el => {
+            el.style.display = isLoggedIn ? '' : 'none';
+        });
+    } catch (err) {
+        document.querySelectorAll('.guest-only').forEach(el => {
+            el.style.display = '';
+        });
+        document.querySelectorAll('.auth-only').forEach(el => {
+            el.style.display = 'none';
+        });
+    }
 }
-async function logout(e) {
-    e.preventDefault();
+window.addEventListener('DOMContentLoaded', updateNavbarAuth);
+
+async function logout(event) {
+    event.preventDefault();
     try {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-    } catch (err) { console.error('Logout error:', err); }
-    window.location.href = '/index.html';
+        window.location.href = '/login.html';
+    } catch (err) {
+        window.location.href = '/login.html';
+    }
 }
 </script>

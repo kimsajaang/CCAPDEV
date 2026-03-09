@@ -161,6 +161,17 @@
       </div>
     </div>
   </div>
+
+  <!-- Login prompt for community preview -->
+  <div class="container my-5" id="communityLoginPrompt" style="display:none;">
+    <div class="alert alert-info text-center">
+      <strong>Preview only:</strong> Log in or sign up to unlock full community features and post updates.<br>
+      <a href="login.html" class="btn btn-primary btn-sm mt-2">Login</a>
+      <a href="register.html" class="btn btn-outline-primary btn-sm mt-2">Sign Up</a>
+      <a href="index.html" class="btn btn-link btn-sm mt-2">Back to Home</a>
+    </div>
+  </div>
+
   <script>
     // ============================================================
     // Community Feed Script
@@ -206,11 +217,29 @@
       }
     }
 
+    // Check auth for community page
+    async function checkCommunityAuth() {
+      try {
+        const res = await fetch('/api/auth/current', { credentials: 'include' });
+        const isLoggedIn = res.ok;
+        if (!isLoggedIn) {
+          // Limit posts to 3 and show login prompt
+          window.limitCommunityPreview = true;
+          document.getElementById('communityLoginPrompt').style.display = '';
+        }
+      } catch (err) {
+        window.limitCommunityPreview = true;
+        document.getElementById('communityLoginPrompt').style.display = '';
+      }
+    }
+
     // Check auth on page load
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', checkAuthAndShowContent);
+      checkCommunityAuth();
     } else {
       checkAuthAndShowContent();
+      checkCommunityAuth();
     }
 
     // Handle New Post button clicks - redirect to login if not logged in

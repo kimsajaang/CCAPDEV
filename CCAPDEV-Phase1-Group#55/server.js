@@ -13,10 +13,11 @@ const connectDB = require('./model/db');
 const User = require('./model/User');
 const Game = require('./model/Game');
 const LibraryEntry = require('./model/LibraryEntry');
+const axios = require('axios'); // Ensure axios is installed: npm install axios
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+app.use(express.json()); // Add this line to handle the JSON data from your search bar
 // --- Handlebars Template Engine ---
 app.engine('hbs', engine({
   extname: '.hbs',
@@ -43,8 +44,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // --- View Routes (Handlebars) ---
 // These are defined BEFORE express.static so the template engine handles .html routes
 // instead of serving raw HTML files from public/
-app.get('/', (req, res) => res.render('index', { title: 'Your Gaming Journey Starts Here' }));
-app.get('/index.html', (req, res) => res.render('index', { title: 'Your Gaming Journey Starts Here' }));
+app.get('/', (req, res) => res.render('intro', { title: 'Welcome' }));
+app.get('/index.html', (req, res) => res.render('intro', { title: 'Welcome' }));
 app.get('/intro.html', (req, res) => res.render('intro', { title: 'Welcome' }));
 app.get('/login.html', (req, res) => res.render('login', { title: 'Login' }));
 app.get('/register.html', (req, res) => res.render('register', { title: 'Register' }));
@@ -174,6 +175,82 @@ async function getAccessToken() {
   console.log('[IGDB] Got access token, expires in', Math.round(data.expires_in / 3600), 'hours');
   return accessToken;
 }
+
+// Helper to get IGDB Access Token (Twitch OAuth)
+// You need these in your .env file!
+async function getIGDBToken() {
+  const url = `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`;
+  const response = await axios.post(url);
+  return response.data.access_token;
+}
+
+// IGDB API integration
+app.post('/api/games/search', async (req, res) => {
+  try {
+    const { query, limit } = req.body;
+    const token = await getIGDBToken();
+
+    let response = await axios({
+      url: "https://api.igdb.com/v4/games",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+      },
+      data: `search "${query}"; fields name, cover.url, first_release_date, genres.name, rating, summary; limit ${limit || 20};`
+    });
+
+    // Fallback: if no games found, retry with wildcard
+    if (!response.data || response.data.length === 0) {
+      response = await axios({
+        url: "https://api.igdb.com/v4/games",
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Client-ID': process.env.TWITCH_CLIENT_ID,
+          'Authorization': `Bearer ${token}`,
+        },
+        data: `fields name, cover.url, first_release_date, genres.name, rating, summary; limit ${limit || 20}; sort rating desc;`
+      });
+    }
+    res.json(response.data);
+  } catch (err) {
+    // Log full error details for debugging
+    if (err.response) {
+      console.error("DEBUG IGDB ERROR:", {
+        status: err.response.status,
+        data: err.response.data,
+        headers: err.response.headers
+      });
+      res.status(500).json({ error: "Search failed", details: err.response.data ? JSON.stringify(err.response.data) : err.message });
+    } else {
+      console.error("DEBUG IGDB ERROR:", err.message);
+      res.status(500).json({ error: "Search failed", details: err.message });
+    }
+  }
+});
+
+// 2. The Detailed Info Route (Matches search.hbs openGameDetail)
+app.get('/api/games/igdb/:id', async (req, res) => {
+  try {
+    const token = await getIGDBToken();
+    const response = await axios({
+      url: "https://api.igdb.com/v4/games",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+      },
+      data: `fields name, cover.url, first_release_date, genres.name, rating, summary, platforms.name, screenshots.url, involved_companies.company.name, involved_companies.developer; where id = ${req.params.id};`
+    });
+
+    res.json(response.data[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch game details" });
+  }
+});
 
 // ======================== API ROUTES ========================
 
@@ -761,18 +838,23 @@ app.post('/api/games/search', async (req, res) => {
     if (!query) return res.status(400).json({ error: 'Query is required' });
     const limit = Math.min(Math.max(1, parseInt(rawLimit) || 20), 50);
 
-    const token = await getAccessToken();
-    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
-      method: 'POST',
-      headers: {
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'text/plain'
-      },
-      body: `search "${query}"; fields name,cover.url,rating,genres.name,first_release_date; where cover != null; limit ${limit};`
-    });
-
-    const data = await igdbRes.json();
+    let data = [];
+    try {
+      const token = await getAccessToken();
+      const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+        method: 'POST',
+        headers: {
+          'Client-ID': process.env.TWITCH_CLIENT_ID,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain'
+        },
+        body: `search "${query}"; fields name,cover.url; limit ${limit};`
+      });
+      data = await igdbRes.json();
+      console.log('[IGDB RAW RESPONSE]', data);
+    } catch (err) {
+      console.error('[IGDB SEARCH] Error:', err.message);
+    }
     res.json(data);
   } catch (err) {
     console.error('[IGDB SEARCH] Error:', err.message);
@@ -892,7 +974,6 @@ app.get('/api/games/igdb/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to get game details' });
   }
 });
-
 
 // ─── FRIEND ROUTES ───
 

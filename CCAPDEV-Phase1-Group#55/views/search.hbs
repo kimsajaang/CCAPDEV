@@ -52,6 +52,15 @@
         </div>
     </header>
 
+    <!-- Login prompt for search preview -->
+    <div class="container my-5" id="searchLoginPrompt" style="display:none;">
+      <div class="alert alert-info text-center">
+        <strong>Preview only:</strong> Log in or sign up to unlock full search and add games to your library.<br>
+        <a href="login.html" class="btn btn-primary btn-sm mt-2">Login</a>
+        <a href="register.html" class="btn btn-outline-primary btn-sm mt-2">Sign Up</a>
+      </div>
+    </div>
+
     <!-- Results grid — dynamically populated by search -->
     <main class="container my-5">
         <h4 class="mb-4 text-muted">Search for games above to get started</h4>
@@ -140,7 +149,7 @@
       let searchUserId = null;
       let searchUserLibrary = [];
 
-      // Check authentication status
+      // Allow search for all users, always show full results
       async function checkAuth() {
         try {
           const response = await fetch('/api/auth/current', {
@@ -148,41 +157,18 @@
             credentials: 'include'
           });
           isLoggedIn = response.ok;
-          
           if (isLoggedIn) {
             const userData = await response.json();
             searchUserId = userData._id || userData.id;
-            // Fetch server library for "already added" checks
             try {
               const libRes = await fetch('/api/library/' + searchUserId, { credentials: 'include' });
               if (libRes.ok) searchUserLibrary = await libRes.json();
             } catch (e) { /* ignore */ }
           }
-
-          // Update ALL navbar visibility based on auth status
-          if (isLoggedIn) {
-            // Show auth-required elements, hide preview-only
-            document.querySelectorAll('[data-auth-required="true"]').forEach(el => {
-              el.style.display = '';
-            });
-            document.querySelectorAll('[data-preview-only="true"]').forEach(el => {
-              el.style.display = 'none';
-            });
-          } else {
-            // Hide auth-required elements, show preview-only
-            document.querySelectorAll('[data-auth-required="true"]').forEach(el => {
-              el.style.display = 'none';
-            });
-            document.querySelectorAll('[data-preview-only="true"]').forEach(el => {
-              el.style.display = '';
-            });
-          }
         } catch (err) {
           isLoggedIn = false;
         }
       }
-
-      // Initialize auth check
       window.addEventListener('load', () => {
         checkAuth();
       });
@@ -373,7 +359,21 @@
             body: JSON.stringify({ query: query.trim(), limit: 20 })
           });
 
-          if (!res.ok) throw new Error('Server error');
+          if (!res.ok) {
+            let errorMsg = 'Server error';
+            try {
+              const errData = await res.json();
+              errorMsg = errData.details || errData.error || errorMsg;
+            } catch (e) {}
+            sectionTitle.textContent = 'Search unavailable';
+            resultsGrid.innerHTML = `
+              <div class="col-12 text-center py-5">
+                <p class="text-danger">${errorMsg}</p>
+                <p class="text-muted small">Make sure the server is running: <code>npm start</code></p>
+              </div>
+            `;
+            return;
+          }
           let games = await res.json();
 
           // Sort by relevance — exact matches first
@@ -381,24 +381,20 @@
           games.sort((a, b) => {
             const aName = a.name.toLowerCase();
             const bName = b.name.toLowerCase();
-            
             // Exact match has highest priority
             if (aName === queryLower) return -1;
             if (bName === queryLower) return 1;
-            
             // Starts with query has second priority
             if (aName.startsWith(queryLower) && !bName.startsWith(queryLower)) return -1;
             if (bName.startsWith(queryLower) && !aName.startsWith(queryLower)) return 1;
-            
             // Rating (higher rated games first)
             if (a.rating !== b.rating) {
               return (b.rating || 0) - (a.rating || 0);
             }
-            
             return 0;
           });
 
-          if (games.length === 0) {
+          if (!Array.isArray(games) || games.length === 0) {
             sectionTitle.textContent = `No results for "${query}"`;
             resultsGrid.innerHTML = `
               <div class="col-12 text-center py-5">
@@ -410,38 +406,32 @@
 
           sectionTitle.textContent = `Results for "${query}" (${games.length} found)`;
 
-          // IGDB cover URLs come as //images.igdb.com/... so we prepend https:
-          // and swap t_thumb for t_cover_big to get quality (264x352px)
-
           resultsGrid.innerHTML = games.map(game => {
-            const coverUrl = game.cover
+            // Fallback for minimal IGDB fields
+            const name = game.name || 'Unknown Game';
+            const coverUrl = game.cover && game.cover.url
               ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big')
               : 'https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover';
-
             const year = game.first_release_date
               ? new Date(game.first_release_date * 1000).getFullYear()
               : 'TBA';
-
-            const genres = game.genres
+            const genres = Array.isArray(game.genres) && game.genres.length
               ? game.genres.map(g => g.name).slice(0, 2).join(' • ')
               : 'Game';
-
-            const rating = game.rating
+            const rating = typeof game.rating === 'number'
               ? Math.round(game.rating) + '/100'
               : '';
-
-          const alreadyAdded = searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === game.name.toLowerCase());
-
+            const alreadyAdded = searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === name.toLowerCase());
             return `
               <div class="col">
-                <div class="card h-100 shadow-sm game-result-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" data-game='${JSON.stringify(game).replace(/'/g, "&#39;")}'>
-                  <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
+                <div class="card h-100 shadow-sm game-result-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" data-game='${JSON.stringify(game).replace(/'/g, "&#39;")}'">
+                  <img src="${coverUrl}" class="card-img-top game-cover" alt="${name}" loading="lazy"
                        onerror="this.src='https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover'">
                   <div class="card-body">
-                    <h6 class="card-title">${game.name}</h6>
+                    <h6 class="card-title">${name}</h6>
                     <p class="card-text small text-muted">${genres} • ${year} ${rating ? '• ' + rating : ''}</p>
                     <button class="btn btn-sm ${alreadyAdded ? 'btn-success disabled' : 'btn-outline-primary'} w-100 add-lib-btn"
-                            data-name="${game.name}"
+                            data-name="${name}"
                             data-genre="${genres}"
                             data-year="${year}"
                             data-cover="${coverUrl}"
@@ -457,7 +447,7 @@
           sectionTitle.textContent = 'Search unavailable';
           resultsGrid.innerHTML = `
             <div class="col-12 text-center py-5">
-              <p class="text-muted">Could not connect to the game database.</p>
+              <p class="text-danger">${err.message || err}</p>
               <p class="text-muted small">Make sure the server is running: <code>npm start</code></p>
             </div>
           `;
@@ -647,3 +637,7 @@
         btn.disabled = false;
       });
     </script>
+
+    <!-- Auth check for search page removed: always allow search -->
+  </body>
+</html>

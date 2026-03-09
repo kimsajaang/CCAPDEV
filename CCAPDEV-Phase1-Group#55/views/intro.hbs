@@ -73,73 +73,221 @@
     </style>{{> navbar-landing}}
 
     <!-- ═══════════ Hero ═══════════ -->
-    <section class="hero-section">
-        <!-- Game covers background mosaic -->
-        <div class="hero-covers-bg" id="heroCovers" aria-hidden="true"></div>
-        <div class="hero-overlay"></div>
+    <section class="hero-section orange-cyan-hero">
+      <div class="hero-covers-bg" id="heroCovers" aria-hidden="true"></div>
+      <div class="hero-overlay"></div>
+      <div class="orange-cyan-gradient-overlay"></div>
 
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6">
-                    <p class="text-uppercase small fw-bold mb-2" style="color:var(--accent);letter-spacing:0.15em;">Your Backlog Companion</p>
-                    <h1 class="hero-title mb-3">Discover, collect &amp; conquer your games</h1>
-                    <p class="hero-sub mb-4">
-                        Backlog Hero helps you track every game you own, plan what to play next,
-                        and share progress with a community of gamers who understand the grind.
-                    </p>
-
-                    <div class="d-flex gap-3 mb-5">
-                        <a href="register.html" class="btn hero-cta text-white">Create a free account</a>
-                        <a href="login.html" class="btn btn-outline-primary px-4 py-2" style="border-radius:10px;">Log In</a>
-                    </div>
-
-                    <div class="stat-row">
-                        <div class="stat-item">
-                            <div class="stat-num">2.4K</div>
-                            <div class="stat-label">Games Tracked</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-num">850</div>
-                            <div class="stat-label">Users</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-num">5.1K</div>
-                            <div class="stat-label">Reviews</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-num">320</div>
-                            <div class="stat-label">Lists</div>
-                        </div>
-                    </div>
+      <div class="container">
+        <div class="row align-items-center g-5 justify-content-center">
+          <div class="col-lg-8">
+              <div class="orange-cyan-logo mb-3">
+                <span style="font-size:3rem; background:linear-gradient(135deg,#ff9800,#00bcd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🛡️</span>
+              </div>
+              <p class="text-uppercase small fw-bold mb-2 orange-cyan-accent">Your Backlog Companion</p>
+              <h1 class="orange-cyan-title mb-3">Discover, collect &amp; conquer your games</h1>
+              <p class="orange-cyan-sub mb-4">
+                Backlog Hero helps you track every game you own, plan what to play next,
+                and share progress with a community of gamers who understand the grind.
+              </p>
+              <div class="d-flex gap-3 justify-content-center mb-5">
+                <a href="register.html" class="btn orange-cyan-cta text-white px-5 py-3 fw-bold">Create a free account</a>
+                <a href="login.html" class="btn orange-cyan-cta-outline px-5 py-3 fw-bold">Log In</a>
+              </div>
+              <div class="stat-row mt-4">
+                <div class="stat-item">
+                  <div class="stat-num orange-cyan-stat">2.4K</div>
+                  <div class="stat-label">Games Tracked</div>
                 </div>
-
-                <!-- Decorative app mockup -->
-                <div class="col-lg-6">
-                    <div class="mockup-placeholder">
-                        <div class="mockup-bar">
-                            <div class="mockup-dot" style="background:#ff5f57;"></div>
-                            <div class="mockup-dot" style="background:#febc2e;"></div>
-                            <div class="mockup-dot" style="background:#28c840;"></div>
-                        </div>
-                        <div class="mockup-body">
-                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px; background: linear-gradient(135deg, rgba(83, 131, 232, 0.1), rgba(80, 214, 180, 0.08)); border-radius: 8px; padding: 24px; position: relative; overflow: hidden;">
-                                <!-- Animated background circles -->
-                                <div style="position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, rgba(83, 131, 232, 0.2), transparent); border-radius: 50%; top: -50px; right: -50px; animation: float 6s ease-in-out infinite;"></div>
-                                <div style="position: absolute; width: 150px; height: 150px; background: radial-gradient(circle, rgba(80, 214, 180, 0.15), transparent); border-radius: 50%; bottom: -40px; left: -40px; animation: float 8s ease-in-out infinite 1s;"></div>
-                                
-                                <div style="text-align: center; position: relative; z-index: 1; animation: fadeInUp 0.8s ease forwards;">
-                                    <div style="font-size: 3.2rem; margin-bottom: 16px; animation: bounce 2s ease-in-out infinite;">👋</div>
-                                    <h3 style="font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; background: linear-gradient(135deg, #5383e8, #2dd4bf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 2px 10px rgba(83, 131, 232, 0.2);">Hello</h3>
-                                    <p style="font-size: 1.4rem; color: #b5c0cc; font-weight: 600; letter-spacing: 0.05em; margin: 0;">Welcome to Backlog</p>
-                                    <div style="width: 50px; height: 3px; background: linear-gradient(90deg, #5383e8, #2dd4bf); margin: 16px auto 0; border-radius: 2px;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="stat-item">
+                  <div class="stat-num orange-cyan-stat">850</div>
+                  <div class="stat-label">Users</div>
                 </div>
+                <div class="stat-item">
+                  <div class="stat-num orange-cyan-stat">5.1K</div>
+                  <div class="stat-label">Reviews</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num orange-cyan-stat">320</div>
+                  <div class="stat-label">Lists</div>
+                </div>
+              </div>
             </div>
+            <!-- Overlay hero section removed to show only game background -->
+          </div>
         </div>
+      </div>
     </section>
+</style>
+<style>
+.orange-cyan-hero {
+  position: relative;
+  min-height: 650px;
+  background: linear-gradient(120deg, #ff9800 0%, #00bcd4 100%);
+  overflow: hidden;
+}
+.orange-cyan-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,152,0,0.15) 0%, rgba(0,188,212,0.12) 100%);
+  animation: orangeCyanGradientMove 10s linear infinite;
+}
+@keyframes orangeCyanGradientMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 100% 100%; }
+}
+.orange-cyan-glass {
+  background: rgba(255,255,255,0.85);
+  border-radius: 2.5rem;
+  box-shadow: 0 12px 48px rgba(255,152,0,0.18);
+  backdrop-filter: blur(18px);
+  border: 2px solid rgba(0,188,212,0.22);
+  z-index: 3;
+}
+.orange-cyan-title {
+  font-size: 3.2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg,#ff9800,#00bcd4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5em;
+  font-family: 'Montserrat', sans-serif;
+}
+.orange-cyan-sub {
+  color: #3b4860;
+  font-size: 1.35rem;
+  font-weight: 500;
+  margin-bottom: 2em;
+  font-family: 'Lato', sans-serif;
+}
+.orange-cyan-cta {
+  background: linear-gradient(90deg,#ff9800,#00bcd4);
+  border: none;
+  border-radius: 1.5em;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 16px rgba(255,152,0,0.14);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.orange-cyan-cta:hover {
+  background: linear-gradient(90deg,#00bcd4,#ff9800);
+  box-shadow: 0 4px 24px rgba(0,188,212,0.18);
+}
+.orange-cyan-cta-outline {
+  background: transparent;
+  border: 2px solid #ff9800;
+  color: #ff9800;
+  border-radius: 1.5em;
+  font-size: 1.15rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+.orange-cyan-cta-outline:hover {
+  border-color: #00bcd4;
+  color: #00bcd4;
+}
+.orange-cyan-logo {
+  filter: drop-shadow(0 2px 24px rgba(255,152,0,0.22));
+}
+.orange-cyan-accent {
+  color: #00bcd4;
+  letter-spacing: 0.15em;
+}
+.orange-cyan-stat {
+  background: linear-gradient(90deg,#ff9800,#00bcd4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+</style>
+</style>
+<style>
+/* Classy hero glassmorphism */
+.classy-hero {
+  position: relative;
+  min-height: 600px;
+}
+.classy-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(83,131,232,0.12) 0%, rgba(45,212,191,0.10) 100%);
+  animation: classyGradientMove 8s linear infinite;
+}
+@keyframes classyGradientMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 100% 100%; }
+}
+.classy-glass {
+  background: rgba(20,28,36,0.85);
+  border-radius: 2rem;
+  box-shadow: 0 8px 32px rgba(83,131,232,0.12);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(83,131,232,0.18);
+  z-index: 3;
+}
+.classy-title {
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg,#5383e8,#2dd4bf);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5em;
+}
+.classy-sub {
+  color: #b5c0cc;
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 2em;
+}
+.classy-cta {
+  background: linear-gradient(90deg,#5383e8,#2dd4bf);
+  border: none;
+  border-radius: 1.2em;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 16px rgba(83,131,232,0.12);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.classy-cta:hover {
+  background: linear-gradient(90deg,#2dd4bf,#5383e8);
+  box-shadow: 0 4px 24px rgba(45,212,191,0.18);
+}
+.classy-cta-outline {
+  background: transparent;
+  border: 2px solid #5383e8;
+  color: #5383e8;
+  border-radius: 1.2em;
+  font-size: 1.1rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+.classy-cta-outline:hover {
+  border-color: #2dd4bf;
+  color: #2dd4bf;
+}
+.classy-logo {
+  filter: drop-shadow(0 2px 16px rgba(83,131,232,0.18));
+}
+.classy-accent {
+  color: #2dd4bf;
+  letter-spacing: 0.15em;
+}
+.classy-stat {
+  background: linear-gradient(90deg,#5383e8,#2dd4bf);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+</style>
+<!-- ...existing code... -->
 
     <!-- ═══════════ What is Backlog Hero? ═══════════ -->
     <section class="section-block" data-preview-only="true">
