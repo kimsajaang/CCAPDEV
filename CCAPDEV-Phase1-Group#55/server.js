@@ -42,19 +42,28 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // --- View Routes (Handlebars) ---
-// These are defined BEFORE express.static so the template engine handles .html routes
-// instead of serving raw HTML files from public/
-app.get('/', (req, res) => res.render('intro', { title: 'Welcome' }));
-app.get('/index.html', (req, res) => res.render('intro', { title: 'Welcome' }));
-app.get('/intro.html', (req, res) => res.render('intro', { title: 'Welcome' }));
-app.get('/login.html', (req, res) => res.render('login', { title: 'Login' }));
-app.get('/register.html', (req, res) => res.render('register', { title: 'Register' }));
-app.get('/dashboard.html', (req, res) => res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading' }));
-app.get('/library.html', (req, res) => res.render('library', { title: 'My Library' }));
-app.get('/profile.html', (req, res) => res.render('profile', { title: 'Profile' }));
-app.get('/profile-edit.html', (req, res) => res.render('profile-edit', { title: 'Edit Profile' }));
-app.get('/search.html', (req, res) => res.render('search', { title: 'Search Games' }));
-app.get('/stats.html', (req, res) => res.render('stats', { title: 'Community' }));
+// These are defined BEFORE express.static so the template engine handles  routes
+// instead of serving raw files from public/
+app.get('/', (req, res) => {
+  if (req.session && req.session.userId) return res.redirect('/dashboard');
+  res.render('intro', { title: 'Welcome', user: req.user });
+});
+app.get('/index', (req, res) => {
+  if (req.session && req.session.userId) return res.redirect('/dashboard');
+  res.render('intro', { title: 'Welcome', user: req.user });
+});
+app.get('/intro', (req, res) => {
+  if (req.session && req.session.userId) return res.redirect('/dashboard');
+  res.render('intro', { title: 'Welcome', user: req.user });
+});
+app.get('/login', (req, res) => res.render('login', { title: 'Login', user: req.user }));
+app.get('/register', (req, res) => res.render('register', { title: 'Register', user: req.user }));
+app.get('/dashboard', (req, res) => res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading', user: req.user }));
+app.get('/library', (req, res) => res.render('library', { title: 'My Library', user: req.user }));
+app.get('/profile', (req, res) => res.render('profile', { title: 'Profile', user: req.user }));
+app.get('/profile-edit', (req, res) => res.render('profile-edit', { title: 'Edit Profile', user: req.user }));
+app.get('/search', (req, res) => res.render('search', { title: 'Search Games', user: req.user }));
+app.get('/stats', (req, res) => res.render('stats', { title: 'Community', user: req.user }));
 
 // Static files (CSS, images, client-side assets) — after view routes
 app.use(express.static(__dirname + '/public'));
@@ -188,9 +197,10 @@ async function getIGDBToken() {
 app.post('/api/games/search', async (req, res) => {
   try {
     const { query, limit } = req.body;
+    // Ensure we have a valid token
     const token = await getIGDBToken();
 
-    let response = await axios({
+    const response = await axios({
       url: "https://api.igdb.com/v4/games",
       method: 'POST',
       headers: {
@@ -198,41 +208,88 @@ app.post('/api/games/search', async (req, res) => {
         'Client-ID': process.env.TWITCH_CLIENT_ID,
         'Authorization': `Bearer ${token}`,
       },
+      // IMPORTANT: Added cover.url to the fields
       data: `search "${query}"; fields name, cover.url, first_release_date, genres.name, rating, summary; limit ${limit || 20};`
     });
 
-    // Fallback: if no games found, retry with wildcard
+    // Handle empty results
     if (!response.data || response.data.length === 0) {
-      response = await axios({
-        url: "https://api.igdb.com/v4/games",
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          'Authorization': `Bearer ${token}`,
-        },
-        data: `fields name, cover.url, first_release_date, genres.name, rating, summary; limit ${limit || 20}; sort rating desc;`
-      });
+      return res.json([]);
     }
+
     res.json(response.data);
   } catch (err) {
-    // Log full error details for debugging
-    if (err.response) {
-      console.error("DEBUG IGDB ERROR:", {
-        status: err.response.status,
-        data: err.response.data,
-        headers: err.response.headers
-      });
-      res.status(500).json({ error: "Search failed", details: err.response.data ? JSON.stringify(err.response.data) : err.message });
-    } else {
-      console.error("DEBUG IGDB ERROR:", err.message);
-      res.status(500).json({ error: "Search failed", details: err.message });
-    }
+    console.error("IGDB Error:", err.response ? err.response.data : err.message);
+    res.status(500).json({ error: "Search failed" });
   }
 });
 
-// 2. The Detailed Info Route (Matches search.hbs openGameDetail)
-app.get('/api/games/igdb/:id', async (req, res) => {
+
+// GET /api/games/trending — fetch recent trending games (must be before /:id to avoid route conflict)
+app.get('/api/games/trending', async (req, res) => {
+  try {
+    const token = await getIGDBToken();
+    const response = await axios({
+      url: "https://api.igdb.com/v4/games",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+      },
+      // Trending: recent releases with high rating, limit 20
+      data: `fields name, cover.url, first_release_date, genres.name, rating, summary; sort first_release_date desc; where rating != null & first_release_date != null; limit 20;`
+    });
+    res.json(response.data);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch trending games" });
+  }
+});
+
+// GET /api/games/popular — popular games WITH videos (dashboard trailers + trending)
+app.get('/api/games/popular', async (req, res) => {
+  try {
+    const token = await getIGDBToken();
+    const response = await axios({
+      url: "https://api.igdb.com/v4/games",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+      },
+      data: `fields name, cover.url, total_rating, rating, first_release_date, genres.name, videos.video_id; sort total_rating desc; where total_rating != null & videos != null & cover != null & first_release_date != null; limit 20;`
+    });
+    res.json(response.data);
+  } catch (err) {
+    console.error('[IGDB popular]', err.response ? err.response.data : err.message);
+    res.status(500).json({ error: "Failed to fetch popular games" });
+  }
+});
+
+// GET /api/games/top — all-time top 50 rated games (for "See All" modal)
+app.get('/api/games/top', async (req, res) => {
+  try {
+    const token = await getIGDBToken();
+    const response = await axios({
+      url: "https://api.igdb.com/v4/games",
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+      },
+      data: `fields name, cover.url, total_rating, rating; sort total_rating desc; where total_rating != null & cover != null; limit 50;`
+    });
+    res.json(response.data);
+  } catch (err) {
+    console.error('[IGDB top]', err.response ? err.response.data : err.message);
+    res.status(500).json({ error: "Failed to fetch top games" });
+  }
+});
+
+// GET /api/games/:id — get full details for a single game
+app.get('/api/games/:id', async (req, res) => {
   try {
     const token = await getIGDBToken();
     const response = await axios({
@@ -245,8 +302,11 @@ app.get('/api/games/igdb/:id', async (req, res) => {
       },
       data: `fields name, cover.url, first_release_date, genres.name, rating, summary, platforms.name, screenshots.url, involved_companies.company.name, involved_companies.developer; where id = ${req.params.id};`
     });
-
-    res.json(response.data[0]);
+    if (response.data && response.data.length > 0) {
+      res.json(response.data[0]);
+    } else {
+      res.status(404).json({ error: "Game not found" });
+    }
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch game details" });
   }
@@ -400,6 +460,39 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+// GET /api/auth/steam-status - Get user's currently playing Steam game
+app.get('/api/auth/steam-status', isLoggedIn, async (req, res) => {
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user || !user.steamId) {
+      return res.json({ playing: false, message: 'No Steam account linked' });
+    }
+
+    const steamUrl = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${encodeURIComponent(user.steamId)}`;
+    const response = await fetch(steamUrl);
+    const data = await response.json();
+
+    if (data && data.response && data.response.players && data.response.players.length > 0) {
+      const player = data.response.players[0];
+      
+      if (player.gameextrainfo) {
+        // User is currently playing a game on Steam
+        return res.json({
+          playing: true,
+          gameName: player.gameextrainfo,
+          gameId: player.gameid
+        });
+      }
+    }
+    
+    // Not currently playing anything
+    res.json({ playing: false });
+  } catch (err) {
+    console.error('[STEAM STATUS] Error checking live status:', err.message);
+    res.status(500).json({ error: 'Failed to check Steam status' });
+  }
+});
+
 // Helper: update a user's streak
 // For Steam users: based on whether playtime increased (they actually gamed)
 // For non-Steam users: based on daily app visits
@@ -521,11 +614,11 @@ async function importSteamGames(user) {
 }
 
 // GET /auth/steam - Redirect to Steam login page
-app.get('/auth/steam', passport.authenticate('steam', { failureRedirect: '/login.html' }));
+app.get('/auth/steam', passport.authenticate('steam', { failureRedirect: '/login' }));
 
 // GET /auth/steam/callback - Steam redirects back here after login
 app.get('/auth/steam/callback',
-  passport.authenticate('steam', { failureRedirect: '/login.html' }),
+  passport.authenticate('steam', { failureRedirect: '/login' }),
   async (req, res) => {
     // Set our session userId so existing auth middleware works
     req.session.userId = req.user._id.toString();
@@ -544,7 +637,7 @@ app.get('/auth/steam/callback',
     // Update streak based on actual gaming activity
     try { await updateStreak(req.user._id, hadActivity); } catch (e) { console.warn('[STEAM AUTH] Streak update failed:', e.message); }
 
-    res.redirect('/dashboard.html');
+    res.redirect('/dashboard');
   }
 );
 

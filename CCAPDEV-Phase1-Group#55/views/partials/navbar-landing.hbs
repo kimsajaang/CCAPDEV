@@ -7,13 +7,13 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                <li class="nav-item" data-auth-required="true"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
-                <li class="nav-item" data-auth-required="true"><a class="nav-link" href="/library.html">My Library</a></li>
-                <li class="nav-item" data-preview-only="true"><a class="nav-link" href="/search.html">Search Games</a></li>
-                <li class="nav-item" data-preview-only="true"><a class="nav-link" href="/stats.html">Community</a></li>
-                <li class="nav-item" data-auth-required="true"><a class="nav-link" href="/profile.html">Profile</a></li>
-                <li class="nav-item" data-preview-only="true"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="/login.html">Login</a></li>
-                <li class="nav-item" data-auth-required="true"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="#" id="logoutBtn">Logout</a></li>
+                <li class="nav-item d-none" id="nav-dashboard"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item d-none" id="nav-library"><a class="nav-link" href="/library">My Library</a></li>
+                <li class="nav-item"><a class="nav-link" href="/search">Search Games</a></li>
+                <li class="nav-item"><a class="nav-link" href="/stats">Community</a></li>
+                <li class="nav-item d-none" id="nav-profile"><a class="nav-link" href="/profile">Profile</a></li>
+                <li class="nav-item" id="nav-login"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="/login">Login</a></li>
+                <li class="nav-item d-none" id="nav-logout"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="#" id="logoutBtn" onclick="handleLogout(event)">Logout</a></li>
             </ul>
         </div>
     </div>
@@ -22,7 +22,38 @@
 function smartHomeClick(e) {
     e.preventDefault();
     fetch('/api/auth/current', { credentials: 'include' })
-        .then(r => { window.location.href = r.ok ? '/dashboard.html' : '/index.html'; })
-        .catch(() => { window.location.href = '/index.html'; });
+        .then(r => { window.location.href = r.ok ? '/dashboard' : '/'; })
+        .catch(() => { window.location.href = '/'; });
+}
+
+// Show/hide nav items based on authentication
+fetch('/api/auth/current', { credentials: 'include' })
+    .then(r => r.ok ? r.json() : null)
+    .then(user => {
+        if (user) {
+            document.getElementById('nav-dashboard').classList.remove('d-none');
+            document.getElementById('nav-library').classList.remove('d-none');
+            document.getElementById('nav-profile').classList.remove('d-none');
+            document.getElementById('nav-logout').classList.remove('d-none');
+            document.getElementById('nav-login').classList.add('d-none');
+        } else {
+            document.getElementById('nav-dashboard').classList.add('d-none');
+            document.getElementById('nav-library').classList.add('d-none');
+            document.getElementById('nav-profile').classList.add('d-none');
+            document.getElementById('nav-logout').classList.add('d-none');
+            document.getElementById('nav-login').classList.remove('d-none');
+        }
+    });
+
+// Logout handler
+async function handleLogout(e) {
+    e.preventDefault();
+    try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (err) {
+        console.error('Logout failed:', err);
+    }
+    window.location.href = '/login';
 }
 </script>
+

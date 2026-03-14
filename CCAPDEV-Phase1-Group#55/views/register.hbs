@@ -1,76 +1,145 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
 <style>
-		body { background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.15), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.1), transparent 25%), radial-gradient(circle at 60% 90%, rgba(45, 212, 191, 0.06), transparent 30%), var(--bg-base); }
-		.link-accent { color: var(--primary); text-decoration: none; }
-		.link-accent:hover { color: var(--accent); }
-		.badge-accent { background: linear-gradient(120deg, var(--accent), var(--primary)); color: #0d1217; }
-		.strength-bar { height: 6px; border-radius: var(--radius-full); background: var(--border); overflow: hidden; }
-		.strength-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b6b, #ffd166, #50d6b4, #5383e8); transition: width 0.25s var(--ease); }
-		/* Competitive auth card enhancements */
-		.auth-card { animation: fadeInScale 0.6s ease both; }
-		@keyframes fadeInScale { from { opacity: 0; transform: scale(0.96) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-		.auth-card h3 { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-	</style>{{> navbar-auth activePage="register"}}
+	body {
+		background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.15), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.1), transparent 25%), radial-gradient(circle at 60% 90%, rgba(45, 212, 191, 0.06), transparent 30%), var(--bg-base);
+	}
 
-	<div class="auth-wrapper">
-		<div class="container">
-			<div class="row justify-content-center">
-				<!-- Registration card — wider than login (col-lg-6) to fit the 2-column form layout.
+	.link-accent {
+		color: var(--primary);
+		text-decoration: none;
+	}
+
+	.link-accent:hover {
+		color: var(--accent);
+	}
+
+	.badge-accent {
+		background: linear-gradient(120deg, var(--accent), var(--primary));
+		color: #0d1217;
+	}
+
+	.strength-bar {
+		height: 6px;
+		border-radius: var(--radius-full);
+		background: var(--border);
+		overflow: hidden;
+	}
+
+	.strength-fill {
+		height: 100%;
+		width: 0%;
+		background: linear-gradient(90deg, #ff6b6b, #ffd166, #50d6b4, #5383e8);
+		transition: width 0.25s var(--ease);
+	}
+
+	/* Competitive auth card enhancements */
+	.auth-card {
+		animation: fadeInScale 0.6s ease both;
+	}
+
+	@keyframes fadeInScale {
+		from {
+			opacity: 0;
+			transform: scale(0.96) translateY(16px);
+		}
+
+		to {
+			opacity: 1;
+			transform: scale(1) translateY(0);
+		}
+	}
+
+	.auth-card h3 {
+		background: var(--gradient-primary);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+</style>{{> navbar-auth activePage="register"}}
+
+<div class="auth-wrapper">
+	<div class="container">
+		<div class="row justify-content-center">
+			<!-- Registration card — wider than login (col-lg-6) to fit the 2-column form layout.
 				     The "Free" badge is just a visual touch -->
-				<div class="col-md-8 col-lg-6">
-					<div class="auth-card p-4 p-md-5">
-						<div class="d-flex align-items-start justify-content-between mb-4">
-							<div>
-								<p class="text-uppercase text-muted small mb-1">Create your space</p>
-								<h3 class="fw-bold mb-1">Join Backlog Hero</h3>
-								<p class="text-muted small mb-0">Track, prioritize, and finish your games.</p>
-							</div>
-								<span class="badge badge-accent rounded-pill px-3 py-2">Free</span>
-						</div>
+			<div class="col-md-8 col-lg-6">
+				<div class="auth-card p-4 p-md-5">
+					<div class="d-flex align-items-start justify-content-between mb-4">
+						<div>
+							<p class="text-uppercase text-muted small mb-1">Create your space</p>
+							<h3 class="fw-bold mb-1">Join Backlog Hero</h3>
+							<p class="text-muted small mb-0">Track, prioritize, and finish your games.</p>
 
-						<!-- Registration form — connects to backend API.
+							<!-- Registration form — connects to backend API.
 						     2-column grid layout for better UX -->
-						<form id="registerForm">
-							<div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
-							<div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+							<form id="registerForm">
+								<div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+								<div id="successAlert" class="alert alert-success d-none" role="alert"></div>
 
-							<div class="row g-3">
-								<div class="col-md-6">
-									<label class="form-label">Username</label>
-									<input type="text" class="form-control" id="username" placeholder="gaminglead" required>
-									<small class="text-muted">3+ characters, letters/numbers only</small>
+								<div class="row g-4">
+									<div class="col-md-6">
+										<label class="form-label mb-1">Username</label>
+										<input type="text" class="form-control" id="username" placeholder="gaminglead"
+											required>
+										<div class="form-text text-muted mt-2" style="font-size: 0.8rem; opacity: 0.8;">
+											3+ characters, letters/numbers only</div>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label mb-1">Email</label>
+										<input type="email" class="form-control" id="email"
+											placeholder="you@example.com" required>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label mb-1">Password</label>
+										<input id="password" type="password" class="form-control"
+											placeholder="Create a strong password" required>
+										<div class="strength-bar mt-2 mb-1">
+											<div id="strengthFill" class="strength-fill"></div>
+										</div>
+										<div class="form-text text-muted" style="font-size: 0.8rem; opacity: 0.8;">Use
+											10+ characters with numbers and symbols.</div>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label mb-1">Confirm Password</label>
+										<input id="confirm" type="password" class="form-control"
+											placeholder="Repeat password" required>
+									</div>
+									<div class="col-md-12">
+										<label class="form-label mb-1">Display Name (Optional)</label>
+										<input type="text" class="form-control" id="displayName"
+											placeholder="Your Full Name">
+									</div>
 								</div>
-								<div class="col-md-6">
-									<label class="form-label">Email</label>
-									<input type="email" class="form-control" id="email" placeholder="you@example.com" required>
-								</div>
-								<div class="col-md-6">
-									<label class="form-label">Password</label>
-									<input id="password" type="password" class="form-control" placeholder="Create a strong password" required>
-									<div class="strength-bar mt-2"><div id="strengthFill" class="strength-fill"></div></div>
-									<small class="text-muted">Use 10+ characters with numbers and symbols.</small>
-								</div>
-								<div class="col-md-6">
-									<label class="form-label">Confirm Password</label>
-									<input id="confirm" type="password" class="form-control" placeholder="Repeat password" required>
-								</div>
-								<div class="col-md-12">
-									<label class="form-label">Display Name (Optional)</label>
-									<input type="text" class="form-control" id="displayName" placeholder="Your Full Name">
-								</div>
-							</div>
 
-							<!-- Terms checkbox — required before submitting -->
-							<div class="form-check mt-4 mb-3">
-								<input class="form-check-input" type="checkbox" value="" id="terms" required>
-								<label class="form-check-label text-muted" for="terms">I agree to the Backlog Hero terms and privacy.</label>
-							</div>
+								<!-- Terms checkbox — required before submitting -->
+								<div class="form-check d-flex align-items-center mt-4 mb-4 gap-2">
+									<input class="form-check-input m-0" type="checkbox" value="" id="terms" required
+										style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
+									<label class="form-check-label text-muted" for="terms"
+										style="font-size: 0.95rem; cursor: pointer;">
+										I agree to the <span class="text-white">Backlog Hero</span> terms and privacy.
+									</label>
+								</div>
 
-							<div class="d-grid mb-3">
-								<button type="submit" class="btn btn-primary py-2" id="registerBtn">Create Account</button>
-							</div>
-							<p class="text-center text-muted mb-0">Already have an account? <a class="link-accent" href="login.html">Log in</a></p>
-						</form>
-					</div>
+								<div class="d-grid mb-4">
+									<button type="submit" class="btn btn-primary py-2 fw-bold" id="registerBtn"
+										style="font-size: 1.05rem;">Create Account</button>
+								</div>
+								<p class="text-center text-muted mb-0">Already have an account? <a
+										class="link-accent fw-semibold ms-1" href="/login">Log in</a></p>
+							</form>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -148,7 +217,7 @@
 					});
 
 					console.log('[Register] Response status:', response.status);
-					
+
 					const data = await response.json();
 
 					if (!response.ok) {
@@ -163,7 +232,7 @@
 
 					// Redirect to dashboard
 					setTimeout(() => {
-						window.location.href = 'dashboard.html';
+						window.location.href = '/dashboard';
 					}, 1500);
 
 				} catch (err) {

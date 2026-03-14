@@ -1,3 +1,16 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+
 <style>
         /* Page-specific: animated background circles */
         @keyframes float {
@@ -14,7 +27,7 @@
         }
     </style>
 
-<!-- Shared navbar across all pages. Copied from dashboard.html and adjusted active states.
+<!-- Shared navbar across all pages. Copied from /dashboard and adjusted active states.
      TODO: maybe extract this into a separate partial if we move to a templating engine later. -->{{> navbar-landing}}
 
     <!-- Main hero / above-the-fold section. Stat numbers are placeholder for now
@@ -31,8 +44,8 @@
                     </p>
 
                     <div class="d-flex gap-3 mb-5">
-                        <a href="register.html" class="btn hero-cta text-white">Create a free account</a>
-                        <a href="login.html" class="btn btn-outline-primary px-4 py-2" style="border-radius:10px;">Log In</a>
+                        <a href="/register" class="btn hero-cta text-white">Create a free account</a>
+                        <a href="/login" class="btn btn-outline-primary px-4 py-2" style="border-radius:10px;">Log In</a>
                     </div>
 
                     <div class="stat-row">
@@ -121,7 +134,7 @@
         </div>
     </section>
 
-    <!-- Collection tracking pitch. This ties to the library.html page functionality.
+    <!-- Collection tracking pitch. This ties to the /library page functionality.
      Uses the same mockup component but with different card layout inside -->
     <!-- ═══════════ Track Your Collection ═══════════ -->
     <section class="section-block" data-auth-required="true">
@@ -189,7 +202,7 @@
         </div>
     </section>
 
-    <!-- Community section — links conceptually to stats.html (our community/forum page) -->
+    <!-- Community section — links conceptually to /stats (our community/forum page) -->
     <!-- ═══════════ Community ═══════════ -->
     <section class="section-block" data-preview-only="true">
         <div class="container">
@@ -221,7 +234,7 @@
         </div>
     </section>
 
-    <!-- Search feature highlight. References search.html.
+    <!-- Search feature highlight. References /search.
      TODO: add actual screenshots once we finalize the search page design -->
     <!-- ═══════════ Search & Discover ═══════════ -->
     <section class="section-block" data-preview-only="true">
@@ -322,8 +335,8 @@
                 <h2 class="fw-bold mb-2">Ready to conquer your backlog?</h2>
                 <p class="text-muted mb-4">Join hundreds of gamers already tracking their collections on Backlog Hero.</p>
                 <div class="d-flex justify-content-center gap-3">
-                    <a href="register.html" class="btn hero-cta text-white">Create a free account</a>
-                    <a href="login.html" class="btn btn-outline-primary px-4 py-2" style="border-radius:10px;">Log In</a>
+                    <a href="/register" class="btn hero-cta text-white">Create a free account</a>
+                    <a href="/login" class="btn btn-outline-primary px-4 py-2" style="border-radius:10px;">Log In</a>
                 </div>
             </div>
         </div>
@@ -335,11 +348,11 @@
         <div class="container d-flex flex-wrap justify-content-between align-items-center">
             <span>&copy; 2026 Backlog Hero</span>
             <div class="d-flex gap-3">
-                <a href="dashboard.html">Dashboard</a>
-                <a href="library.html">Library</a>
-                <a href="search.html">Search</a>
-                <a href="stats.html">Community</a>
-                <a href="profile.html">Profile</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/library">Library</a>
+                <a href="/search">Search</a>
+                <a href="/stats">Community</a>
+                <a href="/profile">Profile</a>
             </div>
         </div>
     </footer>
@@ -592,53 +605,28 @@
 
       // Check user authentication and show/hide sections accordingly
       async function checkAuthAndShowContent() {
-        try {
-          const response = await fetch('/api/auth/current', {
-            method: 'GET',
-            credentials: 'include'
-          });
+  try {
+    const res = await fetch('/api/auth/current', { credentials: 'include' });
+    const isLoggedIn = res.ok;
 
-          const isLoggedIn = response.ok;
-          
-          // Elements to hide if not logged in
-          const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
-          // Elements to hide if logged in
-          const previewSections = document.querySelectorAll('[data-preview-only="true"]');
+    if (isLoggedIn) {
+      // Hide Login/Register, Show Logout/Dashboard
+      document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = 'block');
+      document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = 'none');
+    } else {
+      // Show Login/Register, Hide Logout/Dashboard
+      document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = 'block');
+    }
+  } catch (err) {
+    // Default to logged out view on error
+    document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = 'block');
+  }
+}
 
-          if (isLoggedIn) {
-            // User is logged in - show all features
-            protectedSections.forEach(el => el.style.display = '');
-            previewSections.forEach(el => el.style.display = 'none');
-            
-            // Add logout functionality
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-              logoutBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                  await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    credentials: 'include'
-                  });
-                  window.location.href = 'index.html';
-                } catch (err) {
-                  console.error('Logout failed:', err);
-                }
-              });
-            }
-          } else {
-            // User is not logged in - show only preview features
-            protectedSections.forEach(el => el.style.display = 'none');
-            previewSections.forEach(el => el.style.display = '');
-          }
-        } catch (err) {
-          console.error('Auth check failed:', err);
-          // Show preview by default on error
-          document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = 'none');
-          document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = '');
-        }
-      }
-
+// Make sure this is called when the page loads
+window.addEventListener('load', checkAuthAndShowContent);
       // Check auth on page load
       window.addEventListener('load', () => {
         checkAuthAndShowContent();
@@ -652,12 +640,12 @@
         e.preventDefault();
         try {
           const res = await fetch('/api/auth/current', { credentials: 'include' });
-          const dest = res.ok ? 'dashboard.html' : 'index.html';
+          const dest = res.ok ? '/dashboard' : '/';
           document.body.classList.add('page-exit');
           setTimeout(() => window.location = dest, 300);
         } catch (err) {
           console.error('Auth check failed:', err);
-          window.location = 'index.html';
+          window.location = '/';
         }
       }
 

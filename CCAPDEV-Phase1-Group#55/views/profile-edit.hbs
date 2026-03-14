@@ -1,3 +1,15 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
 <style>
         /* Page-specific: profile edit form */
         body { background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.12), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.08), transparent 25%), var(--bg-base); }
@@ -39,7 +51,7 @@
                                 <h3 class="fw-bold mb-1" id="editPageName">Loading...</h3>
                                 <p class="text-muted mb-0">Update your gaming identity and preferences.</p>
                             </div>
-                            <a href="profile.html" class="btn btn-outline-secondary">Back to Profile</a>
+                            <a href="/profile" class="btn btn-outline-secondary">Back to Profile</a>
                         </div>
 
                         <!-- Profile edit form — fields pre-filled with hardcoded data.
@@ -118,7 +130,7 @@
                             </div>
                             <div class="d-flex flex-wrap gap-2 mt-4">
                                 <button type="submit" class="btn btn-primary">Save Profile</button>
-                                <a href="profile.html" class="btn btn-outline-secondary">Cancel</a>
+                                <a href="/profile" class="btn btn-outline-secondary">Cancel</a>
                             </div>
                         </form>
                     </div>
@@ -239,7 +251,7 @@
             // Render games grid from server library
             const gamesGrid = document.getElementById('gamesGrid');
             if (serverLibraryGames.length === 0) {
-                gamesGrid.innerHTML = '<div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">No games in your library yet. <a href="search.html" style="color: #5383e8;">Find games to add!</a></div>';
+                gamesGrid.innerHTML = '<div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">No games in your library yet. <a href="/search" style="color: #5383e8;">Find games to add!</a></div>';
             } else {
                 let html = '';
                 serverLibraryGames.forEach(game => {
@@ -354,7 +366,7 @@
             }
 
             showNotification('Profile Updated', 'Your profile has been saved successfully!', 'success');
-            setTimeout(() => window.location.href = 'profile.html', 1500);
+            setTimeout(() => window.location.href = '/profile', 1500);
         });
 
         // Logout function
@@ -365,10 +377,10 @@
                   method: 'POST',
                   credentials: 'include'
               });
-              window.location.href = 'login.html';
+              window.location.href = '/login';
           } catch (err) {
               console.error('Logout failed:', err);
-              window.location.href = 'login.html';
+              window.location.href = '/login';
           }
         }
 
@@ -377,12 +389,12 @@
           e.preventDefault();
           try {
             const res = await fetch('/api/auth/current', { credentials: 'include' });
-            const dest = res.ok ? 'dashboard.html' : 'index.html';
+            const dest = res.ok ? '/dashboard' : '/';
             document.body.classList.add('page-exit');
             setTimeout(() => window.location = dest, 300);
           } catch (err) {
             console.error('Auth check failed:', err);
-            window.location = 'index.html';
+            window.location = '/';
           }
         }
 
@@ -417,7 +429,7 @@
                   // Explicit auth failure - don't retry
                   console.error('[ProfileEdit] Unauthorized (' + res.status + ') - redirecting to login');
                   setTimeout(() => {
-                    window.location.href = 'login.html';
+                    window.location.href = '/login';
                   }, 500);
                   return;
                 }
@@ -434,11 +446,11 @@
             
             // If all retries exhausted, redirect
             console.error('[ProfileEdit] Auth check failed after all retries - redirecting');
-            window.location.href = 'login.html';
+            window.location.href = '/login';
             
           } catch (err) {
             console.error('[ProfileEdit] Failed to load:', err);
-            window.location.href = 'login.html';
+            window.location.href = '/login';
           }
         }
 

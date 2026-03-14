@@ -1,59 +1,60 @@
-<!-- App Navbar — used on dashboard, library, search, stats, profile, profile-edit -->
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container py-2">
-        <a class="navbar-brand fw-bold" href="/index.html">🛡️ Backlog Hero</a>
+        <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto text-uppercase small fw-bold" id="navbarLinks">
-                <!-- Guest-only links -->
-                <li class="nav-item guest-only"><a class="nav-link" href="/intro.html">Back to Home</a></li>
-                <li class="nav-item guest-only"><a class="nav-link" href="/search.html">Search Games</a></li>
-                <li class="nav-item guest-only"><a class="nav-link" href="/stats.html">Community</a></li>
-                <li class="nav-item guest-only"><a class="nav-link btn btn-primary ms-lg-2 px-3 py-1" href="/login.html">Login</a></li>
-                <li class="nav-item guest-only"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="/register.html">Sign Up</a></li>
-                <!-- Auth-only links -->
-                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
-                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/library.html">Library</a></li>
-                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/profile.html">Profile</a></li>
-                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/search.html">Search Games</a></li>
-                <li class="nav-item auth-only" style="display:none"><a class="nav-link" href="/stats.html">Community</a></li>
-                <li class="nav-item auth-only" style="display:none"><a class="nav-link btn btn-danger ms-lg-2 px-3 py-1" href="#" onclick="logout(event)">Logout</a></li>
+            <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                <li class="nav-item" id="nav-back"><a class="nav-link" href="/"><i class="bi bi-arrow-left"></i> Back</a></li>
+                <li class="nav-item d-none" id="nav-dashboard"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/search">Search Games</a></li>
+                <li class="nav-item"><a class="nav-link" href="/stats">Community</a></li>
+                <li class="nav-item d-none" id="nav-library"><a class="nav-link" href="/library">My Library</a></li>
+                <li class="nav-item d-none" id="nav-profile"><a class="nav-link" href="/profile">Profile</a></li>
+                <li class="nav-item d-none" id="nav-logout"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="#" id="logoutBtn" onclick="handleLogout(event)">Logout</a></li>
+                <li class="nav-item" id="nav-login"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="/login">Login</a></li>
             </ul>
         </div>
     </div>
 </nav>
 <script>
-// Auth check: toggle navbar links
-async function updateNavbarAuth() {
-    try {
-        const res = await fetch('/api/auth/current', { credentials: 'include' });
-        const isLoggedIn = res.ok;
-        document.querySelectorAll('.guest-only').forEach(el => {
-            el.style.display = isLoggedIn ? 'none' : '';
-        });
-        document.querySelectorAll('.auth-only').forEach(el => {
-            el.style.display = isLoggedIn ? '' : 'none';
-        });
-    } catch (err) {
-        document.querySelectorAll('.guest-only').forEach(el => {
-            el.style.display = '';
-        });
-        document.querySelectorAll('.auth-only').forEach(el => {
-            el.style.display = 'none';
-        });
-    }
+function smartHomeClick(e) {
+    e.preventDefault();
+    fetch('/api/auth/current', { credentials: 'include' })
+        .then(r => { window.location.href = r.ok ? '/dashboard' : '/'; })
+        .catch(() => { window.location.href = '/'; });
 }
-window.addEventListener('DOMContentLoaded', updateNavbarAuth);
 
-async function logout(event) {
-    event.preventDefault();
+// Show/hide nav items based on authentication
+fetch('/api/auth/current', { credentials: 'include' })
+    .then(r => r.ok ? r.json() : null)
+    .then(user => {
+        if (user) {
+            document.getElementById('nav-back').classList.add('d-none');
+            document.getElementById('nav-dashboard').classList.remove('d-none');
+            document.getElementById('nav-library').classList.remove('d-none');
+            document.getElementById('nav-profile').classList.remove('d-none');
+            document.getElementById('nav-logout').classList.remove('d-none');
+            document.getElementById('nav-login').classList.add('d-none');
+        } else {
+            document.getElementById('nav-back').classList.remove('d-none');
+            document.getElementById('nav-dashboard').classList.add('d-none');
+            document.getElementById('nav-library').classList.add('d-none');
+            document.getElementById('nav-profile').classList.add('d-none');
+            document.getElementById('nav-logout').classList.add('d-none');
+            document.getElementById('nav-login').classList.remove('d-none');
+        }
+    });
+
+// Logout handler
+async function handleLogout(e) {
+    e.preventDefault();
     try {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-        window.location.href = '/login.html';
     } catch (err) {
-        window.location.href = '/login.html';
+        console.error('Logout failed:', err);
     }
+    window.location.href = '/login';
 }
 </script>

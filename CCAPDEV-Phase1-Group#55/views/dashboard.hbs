@@ -1,3 +1,15 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
 <style>
         /* Page-specific: dashboard overrides */
         body.loading { overflow: hidden; }
@@ -81,8 +93,13 @@
             <h2 class="mb-2" id="welcomeTitle" style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;letter-spacing:-0.02em;">Play smarter, <span class="gradient-text">finish more.</span></h2>
             <p class="hero-sub mb-3">Quick picks based on your free time.</p>
             <div class="d-flex flex-wrap gap-2 mb-2">
-                <a class="btn btn-primary" href="search.html"><i class="bi bi-search me-1"></i>Find Games</a>
-                <a class="btn btn-outline-primary" href="library.html"><i class="bi bi-collection me-1"></i>My Library</a>
+                <a class="btn btn-primary" href="search+_"><i class="bi bi-search me-1"></i>Find Games</a>
+                <a class="btn btn-outline-primary" href="library+_"><i class="bi bi-collection me-1"></i>My Library</a>
+            </div>
+            <div id="steamLiveStatus" class="mb-3" style="display:none; font-size: 0.85rem;">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 p-2" style="border-radius: var(--radius-md)">
+                    <i class="bi bi-steam me-1"></i><span class="spinner-grow spinner-grow-sm text-success me-2" role="status" style="width: 0.75rem; height: 0.75rem;"></span>Currently Playing: <strong id="steamLiveGameName" class="text-white ms-1"></strong>
+                </span>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat">
@@ -115,7 +132,7 @@
         <div class="trending-section mb-4 reveal">
             <div class="trending-header">
                 <h5><i class="bi bi-fire me-2" style="color:#fb923c;"></i>Trending <span class="gradient-text">Right Now</span></h5>
-                <span class="trending-date text-muted small" id="trendingDate"></span>
+
                 <button class="btn btn-sm btn-outline-primary" id="seeAllBtn">See All</button>
             </div>
             <div class="trending-scroll-wrap">
@@ -594,7 +611,7 @@
         });
     </script>
     <!-- Floating CTA button — always visible in bottom-right corner -->
-    <a class="sticky-cta" href="search.html">Find Games</a>
+    <a class="sticky-cta" href="search+_">Find Games</a>
     <script>
       // Logout function
       async function logout(event) {
@@ -604,10 +621,10 @@
             method: 'POST',
             credentials: 'include'
           });
-          window.location.href = 'login.html';
+          window.location.href = 'login+_';
         } catch (err) {
           console.error('Logout failed:', err);
-          window.location.href = 'login.html';
+          window.location.href = 'login+_';
         }
       }
 
@@ -693,6 +710,20 @@
                 // Show Steam sync button if user has a Steam ID
                 if (currentUserData.steamId) {
                   document.getElementById('steamSyncBtn').style.display = '';
+                  
+                  // Check if currently playing a game on Steam
+                  try {
+                    const steamRes = await fetch('/api/auth/steam-status', { credentials: 'include' });
+                    if (steamRes.ok) {
+                      const steamData = await steamRes.json();
+                      if (steamData.playing && steamData.gameName) {
+                        document.getElementById('steamLiveGameName').textContent = steamData.gameName;
+                        document.getElementById('steamLiveStatus').style.display = '';
+                      }
+                    }
+                  } catch (steamErr) {
+                    console.warn('[Dashboard] Could not fetch live Steam status:', steamErr);
+                  }
                 }
 
                 // Load dynamic content — fire all in parallel, no need to await
@@ -721,13 +752,13 @@
           // If all retries exhausted, do one final redirect attempt
           console.error('[Dashboard] Auth check failed after all retries - redirecting');
           setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = 'login+_';
           }, 500);
           
         } catch (err) {
           console.error('[Dashboard] Failed to load dashboard:', err);
           setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = 'login+_';
           }, 500);
         }
       }
@@ -746,12 +777,12 @@
         e.preventDefault();
         try {
           const res = await fetch('/api/auth/current', { credentials: 'include' });
-          const dest = res.ok ? 'dashboard.html' : 'index.html';
+          const dest = res.ok ? 'dashboard+_' : 'index+_';
           document.body.classList.add('page-exit');
           setTimeout(() => window.location = dest, 300);
         } catch (err) {
           console.error('Auth check failed:', err);
-          window.location = 'index.html';
+          window.location = 'index+_';
         }
       }
 
@@ -785,7 +816,7 @@
           const top = allEntries.slice(0, 10);
 
           if (top.length === 0) {
-            feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. <a href="search.html" style="color:#5383e8;">Find games to play!</a></div>';
+            feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. <a href="search+_" style="color:#5383e8;">Find games to play!</a></div>';
             return;
           }
 
@@ -807,7 +838,7 @@
             const ratingText = entry.rating ? '★'.repeat(entry.rating) + '☆'.repeat(5 - entry.rating) : '';
             const displayName = u.displayName || u.username || 'User';
             const userAvatar = u.avatar || '';
-            const profileLink = item.isOwn ? 'profile.html' : `profile.html?user=${u._id}`;
+            const profileLink = item.isOwn ? 'profile+_' : `profile+_?user=${u._id}`;
             html += `
               <div class="list-group-item p-3 ${borderClass} reveal is-visible">
                 <div class="d-flex align-items-center mb-2">
@@ -884,7 +915,7 @@
           if (!res.ok) return;
           const requests = await res.json();
           if (requests.length > 0) {
-            const profileLink = document.querySelector('a.nav-link[href="profile.html"]');
+            const profileLink = document.querySelector('a.nav-link[href="profile+_"]');
             if (profileLink) {
               profileLink.innerHTML = `Profile <span style="display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;margin-left:4px;">${requests.length}</span>`;
             }
@@ -1058,7 +1089,7 @@
               </div>
             `;
             card.addEventListener('click', () => {
-              window.location.href = 'search.html?q=' + encodeURIComponent(name);
+              window.location.href = 'search+_?q=' + encodeURIComponent(name);
             });
             container.appendChild(card);
           });
@@ -1159,7 +1190,7 @@
                 ${rating ? `<div class="top50-rating">★ ${rating}%</div>` : ''}
               </div>
             `;
-            card.addEventListener('click', () => { window.location.href = 'search.html?q=' + encodeURIComponent(name); });
+            card.addEventListener('click', () => { window.location.href = 'search+_?q=' + encodeURIComponent(name); });
             grid.appendChild(card);
           });
         } catch (err) {

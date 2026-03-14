@@ -1,3 +1,15 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
 <style>
         /* Page-specific: profile page with ambient radial glows */
         body { background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.15), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.1), transparent 25%), radial-gradient(circle at 50% 80%, rgba(45, 212, 191, 0.06), transparent 35%), var(--bg-base); }
@@ -123,7 +135,7 @@
 
     <div class="container my-5">
         <div class="row justify-content-center">
-            <!-- Profile shell — contains the cover gradient, avatar, stats, and info sections.
+            <!-- Profile shell ï¿½ contains the cover gradient, avatar, stats, and info sections.
                  Wrapped in a single card-like container -->
             <div class="col-lg-10">
                 <div class="profile-shell">
@@ -134,7 +146,7 @@
                                 <img id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="rounded-circle avatar-img" alt="Profile Picture">
                                 <div>
                                     <h2 class="profile-name" id="profileName">Your Profile</h2>
-                                    <div class="profile-handle" id="profileHandle">@gamer • Gaming Enthusiast</div>
+                                    <div class="profile-handle" id="profileHandle">@gamer ï¿½ Gaming Enthusiast</div>
                                     <div class="profile-meta" id="profileMeta">
                                         <span><i class="bi bi-controller"></i> <span id="favoriteGenres">Gaming Fan</span></span>
                                         <span><i class="bi bi-calendar3"></i> <span id="memberSince">Member since Today</span></span>
@@ -155,7 +167,7 @@
                         <div class="profile-grid mt-3">
                             <!-- Left column: stat cards + about + highlights -->
                             <div>
-                                <!-- Stat grid — 4 stat cards in a 2x2 layout.
+                                <!-- Stat grid ï¿½ 4 stat cards in a 2x2 layout.
                                      Numbers are calculated from user library data -->
                                 <div class="stat-grid">
                                     <div class="stat-card reveal-item">
@@ -275,7 +287,7 @@
     </div>
     
     <script>
-    /* Profile page — supports viewing own profile and other users' profiles via ?user=userId */
+    /* Profile page ï¿½ supports viewing own profile and other users' profiles via ?user=userId */
     const PROFILE_STORAGE_KEY = 'bh_profile_v1';
     const LIBRARY_STORAGE_KEY = 'bh_library_v1';
     const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
@@ -298,7 +310,7 @@
     async function logout(event) {
         event.preventDefault();
         try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     }
 
     /* Achievement definitions */
@@ -353,7 +365,7 @@
         const unlockedAchievements = isOwnProfile ? checkAndUnlockAchievements(profile) : loadAchievements();
 
         document.getElementById('profileName').textContent = profile.displayName;
-        document.getElementById('profileHandle').textContent = `@${profile.username} • Gaming Profile`;
+        document.getElementById('profileHandle').textContent = `@${profile.username} ï¿½ Gaming Profile`;
         document.getElementById('profileAvatar').src = profile.avatar || defaultProfile.avatar;
         document.getElementById('memberSince').textContent = `Member since ${new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`;
         document.getElementById('favoriteGenres').textContent = 'Gaming Fan';
@@ -452,7 +464,7 @@
                         activityContainer.innerHTML = activityHtml;
                     } else {
                         activityContainer.innerHTML = isOwnProfile
-                            ? '<div class="empty-state-text">No recent activity yet. <a href="search.html" style="color: #5383e8;">Find games to play!</a></div>'
+                            ? '<div class="empty-state-text">No recent activity yet. <a href="/search" style="color: #5383e8;">Find games to play!</a></div>'
                             : '<div class="empty-state-text">No recent activity yet.</div>';
                     }
                 }
@@ -559,7 +571,7 @@
                 const avatar = f.avatar || defaultProfile.avatar;
                 const safeDisplayName = (f.displayName || f.username).replace(/</g, '&lt;');
                 const safeUsername = (f.username || '').replace(/</g, '&lt;');
-                html += `<a href="profile.html?user=${f._id}" class="friend-card"><img src="${avatar}" alt="${safeDisplayName}" onerror="this.src='${defaultProfile.avatar}'"><div class="friend-info"><div class="friend-name">${safeDisplayName}</div><div class="friend-username">@${safeUsername}</div></div></a>`;
+                html += `<a href="/profile?user=${f._id}" class="friend-card"><img src="${avatar}" alt="${safeDisplayName}" onerror="this.src='${defaultProfile.avatar}'"><div class="friend-info"><div class="friend-name">${safeDisplayName}</div><div class="friend-username">@${safeUsername}</div></div></a>`;
             });
             container.innerHTML = html;
         } catch (e) {
@@ -619,7 +631,7 @@
             users.forEach(u => {
                 const avatar = u.avatar || defaultProfile.avatar;
                 const safeDisplayName = (u.displayName || u.username).replace(/</g, '&lt;');
-                html += `<div class="user-search-result" onclick="window.location='profile.html?user=${u._id}'"><img src="${avatar}" alt="${safeDisplayName}" onerror="this.src='${defaultProfile.avatar}'"><div><div class="fw-bold small">${safeDisplayName}</div><div class="text-muted" style="font-size:0.75rem;">@${(u.username || '').replace(/</g, '&lt;')}</div></div></div>`;
+                html += `<div class="user-search-result" onclick="window.location='/profile?user=${u._id}'"><img src="${avatar}" alt="${safeDisplayName}" onerror="this.src='${defaultProfile.avatar}'"><div><div class="fw-bold small">${safeDisplayName}</div><div class="text-muted" style="font-size:0.75rem;">@${(u.username || '').replace(/</g, '&lt;')}</div></div></div>`;
             });
             friendSearchResults.innerHTML = html;
         } catch (e) { friendSearchResults.innerHTML = '<p class="text-danger small">Search failed.</p>'; }
@@ -628,7 +640,7 @@
     // Share profile
     document.getElementById('shareProfileBtn').addEventListener('click', () => {
         const profileName = document.getElementById('profileName').textContent;
-        const profileUrl = `${window.location.origin}/profile.html?user=${viewingUserId}`;
+        const profileUrl = `${window.location.origin}//profile?user=${viewingUserId}`;
         const text = `Check out ${isOwnProfile ? 'my' : profileName + "'s"} gaming profile on Backlog Hero! ??`;
         if (navigator.share) {
             navigator.share({ text, url: profileUrl });
@@ -672,7 +684,7 @@
             retries--;
             if (retries > 0) await new Promise(r => setTimeout(r, 500));
         }
-        if (!currentUser) { window.location.href = 'login.html'; return; }
+        if (!currentUser) { window.location.href = '/login'; return; }
 
         // Determine if viewing own profile or another user's
         const myId = currentUser._id || currentUser.id;
@@ -685,7 +697,7 @@
                     const otherUser = await res.json();
                     renderProfile(otherUser);
                 } else {
-                    document.querySelector('.profile-body').innerHTML = '<div class="text-center py-5"><h4 class="text-muted">User not found</h4><a href="dashboard.html" class="btn btn-primary mt-3">Go to Dashboard</a></div>';
+                    document.querySelector('.profile-body').innerHTML = '<div class="text-center py-5"><h4 class="text-muted">User not found</h4><a href="/dashboard" class="btn btn-primary mt-3">Go to Dashboard</a></div>';
                 }
             } catch (e) {
                 console.error('[Profile] Error loading user:', e);
@@ -701,10 +713,10 @@
       e.preventDefault();
       try {
         const res = await fetch('/api/auth/current', { credentials: 'include' });
-        const dest = res.ok ? 'dashboard.html' : 'index.html';
+        const dest = res.ok ? '/dashboard' : '/';
         document.body.classList.add('page-exit');
         setTimeout(() => window.location = dest, 300);
-      } catch (err) { window.location = 'index.html'; }
+      } catch (err) { window.location = '/'; }
     }
 
     document.querySelectorAll('a[href]').forEach(a => {

@@ -1,3 +1,15 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
 <style>
     /* Page-specific: community / stats page */
     .community-photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease); background: rgba(83, 131, 232, 0.05); }
@@ -47,7 +59,7 @@
       </div>
 
       <div class="alert alert-info alert-sm mb-0" data-preview-only="true" style="display: none; font-size: 0.9rem;">
-        <a href="login.html" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> to create posts and engage with the community!
+        <a href="/login" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> to create posts and engage with the community!
       </div>
     </div>
 
@@ -166,9 +178,9 @@
   <div class="container my-5" id="communityLoginPrompt" style="display:none;">
     <div class="alert alert-info text-center">
       <strong>Preview only:</strong> Log in or sign up to unlock full community features and post updates.<br>
-      <a href="login.html" class="btn btn-primary btn-sm mt-2">Login</a>
-      <a href="register.html" class="btn btn-outline-primary btn-sm mt-2">Sign Up</a>
-      <a href="index.html" class="btn btn-link btn-sm mt-2">Back to Home</a>
+      <a href="/login" class="btn btn-primary btn-sm mt-2">Login</a>
+      <a href="/register" class="btn btn-outline-primary btn-sm mt-2">Sign Up</a>
+      <a href="/" class="btn btn-link btn-sm mt-2">Back to Home</a>
     </div>
   </div>
 
@@ -252,7 +264,7 @@
           const modal = bootstrap.Modal.getInstance(document.getElementById('newPostModal'));
           if (modal) modal.hide();
           // Redirect to login
-          window.location.href = 'login.html';
+          window.location.href = '/login';
         }
       });
     });
@@ -893,10 +905,10 @@
               method: 'POST',
               credentials: 'include'
           });
-          window.location.href = 'login.html';
+          window.location.href = '/login';
       } catch (err) {
           console.error('Logout failed:', err);
-          window.location.href = 'login.html';
+          window.location.href = '/login';
       }
     }
 
@@ -905,12 +917,12 @@
       e.preventDefault();
       try {
         const res = await fetch('/api/auth/current', { credentials: 'include' });
-        const dest = res.ok ? 'dashboard.html' : 'index.html';
+        const dest = res.ok ? '/dashboard' : '/';
         document.body.classList.add('page-exit');
         setTimeout(() => window.location = dest, 300);
       } catch (err) {
         console.error('Auth check failed:', err);
-        window.location = 'index.html';
+        window.location = '/';
       }
     }
 
