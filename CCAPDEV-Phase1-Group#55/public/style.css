@@ -96,10 +96,11 @@
 html {
   overflow-y: scroll;
   scroll-behavior: smooth;
+  background-color: #05070a; /* Ensure a dark base even if body is transparent */
 }
 
 body {
-  background-color: var(--bg-base);
+  background: transparent;
   color: var(--text);
   font-family: var(--font);
   line-height: 1.6;
@@ -133,9 +134,15 @@ body::after {
   right: -180px;
 }
 
-::selection {
-  background: rgba(83, 131, 232, 0.35);
-  color: #fff;
+#plexus-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background: #05070a;
+  pointer-events: none;
 }
 
 ::-webkit-scrollbar {

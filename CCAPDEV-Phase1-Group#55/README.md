@@ -15,8 +15,10 @@ CCAPDEV-Phase2-Group#55/
 │   ├── db.js                  # MongoDB connection setup
 │   ├── User.js                # User schema & model
 │   ├── Game.js                # Game schema & model
+│   ├── Post.js                # Post & Comment schema & model
 │   ├── LibraryEntry.js        # Library entry schema & model
-│   └── seed.js                # Sample data seeder
+│   ├── seed.js                # Sample data seeder (Users, Games)
+│   └── seed-posts.js          # Sample data seeder (Posts, Comments)
 ├── server.js                  # Express server & API routes
 ├── package.json               # Dependencies
 ├── .env                       # Environment configuration
@@ -305,7 +307,7 @@ All pages are accessible from the main navbar:
 - Session management with express-session and bcryptjs for password hashing
 - Steam login via passport-steam with automatic game library import and playtime sync
 - Database uses MongoDB with Mongoose for schema validation
-- Community posts are stored in localStorage (per-browser)
+- Community posts are stored in MongoDB (database-backed)
 - All routes follow RESTful API conventions
 - Comprehensive error handling with appropriate HTTP status codes
 
