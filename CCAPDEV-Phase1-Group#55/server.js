@@ -13,6 +13,7 @@ const connectDB = require('./model/db');
 const User = require('./model/User');
 const Game = require('./model/Game');
 const LibraryEntry = require('./model/LibraryEntry');
+const Post = require('./model/Post');
 const axios = require('axios'); // Ensure axios is installed: npm install axios
 
 const app = express();
@@ -187,130 +188,9 @@ async function getAccessToken() {
 
 // Helper to get IGDB Access Token (Twitch OAuth)
 // You need these in your .env file!
-async function getIGDBToken() {
-  const url = `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`;
-  const response = await axios.post(url);
-  return response.data.access_token;
-}
+// (Redundant getIGDBToken removed, using getAccessToken instead)
 
-// IGDB API integration
-app.post('/api/games/search', async (req, res) => {
-  try {
-    const { query, limit } = req.body;
-    // Ensure we have a valid token
-    const token = await getIGDBToken();
-
-    const response = await axios({
-      url: "https://api.igdb.com/v4/games",
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-      },
-      // IMPORTANT: Added cover.url to the fields
-      data: `search "${query}"; fields name, cover.url, first_release_date, genres.name, rating, summary; limit ${limit || 20};`
-    });
-
-    // Handle empty results
-    if (!response.data || response.data.length === 0) {
-      return res.json([]);
-    }
-
-    res.json(response.data);
-  } catch (err) {
-    console.error("IGDB Error:", err.response ? err.response.data : err.message);
-    res.status(500).json({ error: "Search failed" });
-  }
-});
-
-
-// GET /api/games/trending — fetch recent trending games (must be before /:id to avoid route conflict)
-app.get('/api/games/trending', async (req, res) => {
-  try {
-    const token = await getIGDBToken();
-    const response = await axios({
-      url: "https://api.igdb.com/v4/games",
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-      },
-      // Trending: recent releases with high rating, limit 20
-      data: `fields name, cover.url, first_release_date, genres.name, rating, summary; sort first_release_date desc; where rating != null & first_release_date != null; limit 20;`
-    });
-    res.json(response.data);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch trending games" });
-  }
-});
-
-// GET /api/games/popular — popular games WITH videos (dashboard trailers + trending)
-app.get('/api/games/popular', async (req, res) => {
-  try {
-    const token = await getIGDBToken();
-    const response = await axios({
-      url: "https://api.igdb.com/v4/games",
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-      },
-      data: `fields name, cover.url, total_rating, rating, first_release_date, genres.name, videos.video_id; sort total_rating desc; where total_rating != null & videos != null & cover != null & first_release_date != null; limit 20;`
-    });
-    res.json(response.data);
-  } catch (err) {
-    console.error('[IGDB popular]', err.response ? err.response.data : err.message);
-    res.status(500).json({ error: "Failed to fetch popular games" });
-  }
-});
-
-// GET /api/games/top — all-time top 50 rated games (for "See All" modal)
-app.get('/api/games/top', async (req, res) => {
-  try {
-    const token = await getIGDBToken();
-    const response = await axios({
-      url: "https://api.igdb.com/v4/games",
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-      },
-      data: `fields name, cover.url, total_rating, rating; sort total_rating desc; where total_rating != null & cover != null; limit 50;`
-    });
-    res.json(response.data);
-  } catch (err) {
-    console.error('[IGDB top]', err.response ? err.response.data : err.message);
-    res.status(500).json({ error: "Failed to fetch top games" });
-  }
-});
-
-// GET /api/games/:id — get full details for a single game
-app.get('/api/games/:id', async (req, res) => {
-  try {
-    const token = await getIGDBToken();
-    const response = await axios({
-      url: "https://api.igdb.com/v4/games",
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-      },
-      data: `fields name, cover.url, first_release_date, genres.name, rating, summary, platforms.name, screenshots.url, involved_companies.company.name, involved_companies.developer; where id = ${req.params.id};`
-    });
-    if (response.data && response.data.length > 0) {
-      res.json(response.data[0]);
-    } else {
-      res.status(404).json({ error: "Game not found" });
-    }
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch game details" });
-  }
-});
+// (Redundant routes removed, merged below in API ROUTES section)
 
 // ======================== API ROUTES ========================
 
@@ -782,7 +662,10 @@ app.post('/api/games', async (req, res) => {
     if (game) {
       // Update missing fields if the new request has better data
       let updated = false;
-      if (coverUrl && (!game.coverUrl || game.coverUrl.includes('via.placeholder.com'))) { game.coverUrl = coverUrl; updated = true; }
+      if (coverUrl && (!game.coverUrl || game.coverUrl.includes('via.placeholder.com'))) { 
+        game.coverUrl = coverUrl; 
+        updated = true; 
+      }
       if (genres && genres.length && !game.genres.length) { game.genres = genres; updated = true; }
       if (releaseDate && !game.releaseDate) { game.releaseDate = releaseDate; updated = true; }
       if (summary && !game.summary) { game.summary = summary; updated = true; }
@@ -941,10 +824,10 @@ app.post('/api/games/search', async (req, res) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'text/plain'
         },
-        body: `search "${query}"; fields name,cover.url; limit ${limit};`
+        body: `search "${query}"; fields name,cover.url,first_release_date,genres.name,rating,summary; limit ${limit};`
       });
       data = await igdbRes.json();
-      console.log('[IGDB RAW RESPONSE]', data);
+      console.log('[IGDB SEARCH RESPONSE]', data.length, 'results');
     } catch (err) {
       console.error('[IGDB SEARCH] Error:', err.message);
     }
@@ -952,6 +835,29 @@ app.post('/api/games/search', async (req, res) => {
   } catch (err) {
     console.error('[IGDB SEARCH] Error:', err.message);
     res.status(500).json({ error: 'Failed to search games' });
+  }
+});
+
+// GET /api/games/trending — fetch recent trending games (IGDB)
+app.get('/api/games/trending', async (req, res) => {
+  try {
+    const token = await getAccessToken();
+    const response = await fetch("https://api.igdb.com/v4/games", {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain'
+      },
+      // Trending: recent releases with high rating, limit 20
+      body: `fields name, cover.url, first_release_date, genres.name, rating, summary; sort first_release_date desc; where rating != null & first_release_date != null; limit 20;`
+    });
+    const data = await response.json();
+    console.log('[IGDB TRENDING] Results:', data.length);
+    res.json(data);
+  } catch (err) {
+    console.error('[IGDB TRENDING] Error:', err.message);
+    res.status(500).json({ error: "Failed to fetch trending games" });
   }
 });
 
@@ -1270,6 +1176,105 @@ app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[FRIEND ACTIVITY] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch friend activity' });
+  }
+});
+
+// ─── COMMUNITY / POST ROUTES ───
+
+// GET /api/posts - Get all community posts
+app.get('/api/posts', async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .populate('author', 'username displayName avatar')
+      .populate('comments.author', 'username displayName avatar')
+      .sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (err) {
+    console.error('[GET POSTS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch posts' });
+  }
+});
+
+// POST /api/posts - Create a new post
+app.post('/api/posts', isLoggedIn, async (req, res) => {
+  try {
+    const { title, body, flair, game, photo } = req.body;
+    if (!title || title.length < 3) {
+      return res.status(400).json({ error: 'Title is required and must be at least 3 characters' });
+    }
+    const newPost = new Post({
+      author: req.session.userId,
+      title,
+      body,
+      flair,
+      game,
+      photo
+    });
+    await newPost.save();
+    const populated = await newPost.populate('author', 'username displayName avatar');
+    res.status(201).json(populated);
+  } catch (err) {
+    console.error('[CREATE POST] Error:', err.message);
+    res.status(500).json({ error: 'Failed to create post' });
+  }
+});
+
+// POST /api/posts/:id/vote - Upvote/Downvote a post
+app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
+  try {
+    const { direction } = req.body; // 'up' or 'down'
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+
+    const userId = req.session.userId;
+    // Remove existing votes from this user
+    post.upvotes = post.upvotes.filter(id => id.toString() !== userId.toString());
+    post.downvotes = post.downvotes.filter(id => id.toString() !== userId.toString());
+
+    if (direction === 'up') {
+      post.upvotes.push(userId);
+    } else if (direction === 'down') {
+      post.downvotes.push(userId);
+    }
+
+    await post.save();
+    res.json({ 
+      upvotes: post.upvotes.length, 
+      downvotes: post.downvotes.length,
+      score: post.upvotes.length - post.downvotes.length
+    });
+  } catch (err) {
+    console.error('[VOTE POST] Error:', err.message);
+    res.status(500).json({ error: 'Voting failed' });
+  }
+});
+
+// POST /api/posts/:id/comment - Add a comment to a post
+app.post('/api/posts/:id/comment', isLoggedIn, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Comment text is required' });
+    }
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+
+    const newComment = {
+      author: req.session.userId,
+      text,
+      createdAt: new Date()
+    };
+    post.comments.push(newComment);
+    await post.save();
+
+    // Re-populate to get author info
+    const updatedPost = await Post.findById(req.params.id)
+      .populate('comments.author', 'username displayName avatar');
+    
+    res.json(updatedPost.comments[updatedPost.comments.length - 1]);
+  } catch (err) {
+    console.error('[COMMENT POST] Error:', err.message);
+    res.status(500).json({ error: 'Commenting failed' });
   }
 });
 

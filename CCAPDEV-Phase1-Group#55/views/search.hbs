@@ -580,8 +580,13 @@ plagiarized the work of other students and/or persons.
         return `
             <div class="col">
               <div class="card h-100 shadow-sm game-result-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" data-game='${JSON.stringify(game).replace(/'/g, "&#39;")}'>
-                <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
-                     onerror="this.src='https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover'">
+                <div class="card-img-top-wrap position-relative" style="aspect-ratio: 3/4; overflow: hidden;">
+                  <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
+                       onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                  <div class="cover-placeholder" style="display: none; height: 100%;">
+                    <i class="bi bi-controller" style="font-size: 2.5rem; color: var(--primary);"></i>
+                  </div>
+                </div>
                 <div class="card-body">
                   <h6 class="card-title">${game.name}</h6>
                   <p class="card-text small text-muted">${genres} • ${year} ${rating ? '• ' + rating : ''}</p>
