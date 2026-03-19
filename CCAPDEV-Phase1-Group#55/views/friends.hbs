@@ -1,0 +1,378 @@
+{{> navbar-app activePage="friends"}}
+
+<div class="container-fluid px-4 px-xl-5 py-5 mt-4 min-vh-100" style="max-width: 1800px;">
+    <div class="row justify-content-between">
+        <!-- Left Column: Search -->
+        <div class="col-lg-7 col-xl-6 mb-4 mb-lg-0">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="icon-square bg-primary text-white me-3 d-flex justify-content-center align-items-center" style="width:48px; height:48px; border-radius:12px;">
+                    <i class="bi bi-people-fill fs-4"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Find Friends</h2>
+                    <p class="text-muted mb-0">Connect with other gamers on Backlog Hero.</p>
+                </div>
+            </div>
+
+            <!-- Search Box -->
+            <div class="card bg-section border-0 shadow-sm mb-4" style="border-radius:12px;">
+                <div class="card-body p-3 p-md-4">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-dark border-secondary text-muted" style="border-radius:8px 0 0 8px;">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" id="friendsSearchInput" class="form-control bg-dark border-secondary text-white" 
+                            placeholder="Search by username or display name..." autocomplete="off">
+                        <button class="btn btn-primary px-4 fw-bold" id="friendsSearchBtn" type="button" style="border-radius:0 8px 8px 0;">Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <h5 class="fw-bold mb-3 d-none" id="resultsHeader">Search Results</h5>
+            <div id="friendsSearchResults" class="d-flex flex-column gap-3">
+                <div class="text-center text-muted py-5 mt-3 border border-secondary border-opacity-25 rounded-3 border-dashed">
+                    <i class="bi bi-person-bounding-box opacity-50 mb-3 d-block" style="font-size: 3rem;"></i>
+                    <p class="mb-0">Type a username to start searching</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Friends sidebar -->
+        <div class="col-lg-5 col-xl-4">
+
+            <!-- Friend Requests (shown when there are pending requests) -->
+            <div id="friendReqSection" class="d-none mb-4">
+                <div class="card border-0 shadow-sm" style="border-radius:12px; border-left: 3px solid #febc2e !important; background: rgba(254,188,46,0.06);">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold d-flex align-items-center mb-1" style="color:#febc2e;">
+                            <i class="bi bi-bell-fill me-2"></i> Friend Requests
+                            <span id="friendReqCount" class="badge bg-warning text-dark ms-2" style="font-size:0.7rem;">0</span>
+                        </h5>
+                        <p class="text-muted small mb-3">People who want to connect with you.</p>
+                        <div id="friendReqContainer" class="d-flex flex-column gap-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Your Backlog Hero Friends (always shown when logged in) -->
+            <div id="bhFriendsSection" class="d-none mb-4">
+                <div class="card bg-section border-0 shadow-sm" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold d-flex align-items-center mb-1">
+                            <i class="bi bi-people-fill me-2" style="color:#5383e8;"></i> Your Friends
+                        </h5>
+                        <p class="text-muted small mb-3">Your connections on Backlog Hero.</p>
+                        <div id="bhFriendsContainer" class="d-flex flex-column gap-2" style="max-height: 35vh; overflow-y: auto;">
+                            <div class="text-center py-3 text-muted">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                <span>Loading friends...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Steam Friends (Hidden by default, shown via JS if Steam linked) -->
+            <div id="steamFriendsSection" class="d-none sticky-top" style="top: 100px; z-index: 1;">
+                <div class="card bg-section border-0 shadow-sm" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold d-flex align-items-center mb-1">
+                            <i class="bi bi-steam me-2" style="color:#66c0f4;"></i> Live on Steam
+                        </h5>
+                        <p class="text-muted small mb-4">See what your Steam friends are playing.</p>
+                        
+                        <div id="steamFriendsContainer" class="d-flex flex-column gap-3 pe-2" style="max-height: 75vh; overflow-y: auto;">
+                            <div class="text-center py-4 text-muted border border-secondary border-opacity-25 rounded-3 border-dashed">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                <span>Loading Steam friends...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-dashed { border-style: dashed !important; }
+.user-card {
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+}
+.user-card:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.07) !important;
+    border-color: rgba(83, 131, 232, 0.4);
+}
+.cursor-pointer { cursor: pointer; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('friendsSearchInput');
+    const searchBtn = document.getElementById('friendsSearchBtn');
+    const searchResults = document.getElementById('friendsSearchResults');
+    const resultsHeader = document.getElementById('resultsHeader');
+
+    searchInput.focus();
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+
+    let timeout = null;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(performSearch, 400);
+    });
+
+    async function performSearch() {
+        const q = searchInput.value.trim();
+        
+        if (q.length < 2) {
+            if (q.length === 0) {
+                resultsHeader.classList.add('d-none');
+                searchResults.innerHTML = `
+                    <div class="text-center text-muted py-5 mt-3 border border-secondary border-opacity-25 rounded-3 border-dashed">
+                        <i class="bi bi-person-bounding-box opacity-50 mb-3 d-block" style="font-size: 3rem;"></i>
+                        <p class="mb-0">Type a username to start searching</p>
+                    </div>`;
+            } else {
+                searchResults.innerHTML = '<p class="text-muted small ms-2"><i class="bi bi-info-circle me-1"></i>Type at least 2 characters.</p>';
+            }
+            return;
+        }
+
+        resultsHeader.classList.remove('d-none');
+        searchResults.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                <span class="text-muted">Searching...</span>
+            </div>`;
+
+        try {
+            const res = await fetch('/api/users/search/friends?q=' + encodeURIComponent(q), { credentials: 'include' });
+            if (!res.ok) {
+                searchResults.innerHTML = '<div class="alert alert-danger border-0 bg-danger bg-opacity-10"><i class="bi bi-exclamation-triangle me-2"></i>Search failed. Please try again.</div>';
+                return;
+            }
+            
+            const users = await res.json();
+            
+            if (users.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="text-center text-muted py-5 border border-secondary border-opacity-25 rounded-3 border-dashed">
+                        <i class="bi bi-search opacity-50 mb-3 d-block" style="font-size: 2rem;"></i>
+                        <p class="mb-0">No users found matching "<strong>${q.replace(/</g, '&lt;')}</strong>"</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            users.forEach(u => {
+                const avatar = u.avatar || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E";
+                const safeDisplayName = (u.displayName || u.username).replace(/</g, '&lt;');
+                const safeUsername = (u.username || '').replace(/</g, '&lt;');
+                
+                html += `
+                <div class="card bg-section border-0 shadow-sm user-card cursor-pointer" onclick="window.location='/profile?user=${u._id}'">
+                    <div class="card-body p-3 p-md-4 d-flex align-items-center">
+                        <img src="${avatar}" class="rounded-circle shadow-sm object-fit-cover me-3" style="width: 64px; height: 64px;">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-0">${safeDisplayName}</h5>
+                            <span class="text-muted small">@${safeUsername}</span>
+                        </div>
+                        <button class="btn btn-outline-primary rounded-pill px-3 fw-bold d-none d-sm-block">View Profile</button>
+                        <i class="bi bi-chevron-right text-muted d-sm-none fs-4"></i>
+                    </div>
+                </div>`;
+            });
+            
+            searchResults.innerHTML = html;
+        } catch (e) {
+            searchResults.innerHTML = '<div class="alert alert-danger border-0 bg-danger bg-opacity-10"><i class="bi bi-exclamation-triangle me-2"></i>An error occurred while searching.</div>';
+        }
+    }
+
+    async function loadFriendRequests() {
+        try {
+            const res = await fetch('/api/friends/requests', { credentials: 'include' });
+            if (!res.ok) return;
+            const requests = await res.json();
+            const section = document.getElementById('friendReqSection');
+            const container = document.getElementById('friendReqContainer');
+            const countEl = document.getElementById('friendReqCount');
+            if (!requests || requests.length === 0) { section.classList.add('d-none'); return; }
+            section.classList.remove('d-none');
+            countEl.textContent = requests.length;
+            const defaultAvatar = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E`;
+            let html = '';
+            requests.forEach((r, idx) => {
+                const from = r.from || {};
+                const name = (from.displayName || from.username || 'User').replace(/</g, '&lt;');
+                const handle = ('@' + (from.username || '')).replace(/</g, '&lt;');
+                const avatar = from.avatar || defaultAvatar;
+                const rid = (r._id || r.id || '').toString();
+                html += `
+                <div class="d-flex align-items-center gap-3 p-2 rounded-3" style="background: rgba(255,255,255,0.03);" data-req-id="${rid}">
+                    <img src="${avatar}" class="rounded-circle object-fit-cover flex-shrink-0" style="width:40px;height:40px;border:2px solid rgba(254,188,46,0.4);">
+                    <div class="flex-grow-1" style="min-width:0;">
+                        <div class="fw-bold text-truncate" style="font-size:0.85rem;">${name}</div>
+                        <div class="text-muted text-truncate" style="font-size:0.72rem;">${handle}</div>
+                    </div>
+                    <div class="d-flex gap-1 flex-shrink-0">
+                        <button class="btn btn-sm btn-success py-1 px-2 friend-req-accept" data-rid="${rid}" title="Accept"><i class="bi bi-check-lg"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary py-1 px-2 friend-req-reject" data-rid="${rid}" title="Decline"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            // Attach click handlers after inserting HTML
+            container.querySelectorAll('.friend-req-accept').forEach(btn => {
+                btn.addEventListener('click', () => acceptFriendReq(btn.dataset.rid));
+            });
+            container.querySelectorAll('.friend-req-reject').forEach(btn => {
+                btn.addEventListener('click', () => rejectFriendReq(btn.dataset.rid));
+            });
+        } catch (e) { /* ignore */ }
+    }
+
+    async function acceptFriendReq(id) {
+        if (!id) { console.error('No request ID to accept'); return; }
+        try {
+            const res = await fetch('/api/friends/accept/' + id, { method: 'POST', credentials: 'include' });
+            const data = await res.json();
+            if (!res.ok) { console.error('Accept failed:', data); return; }
+            loadFriendRequests();
+            loadBHFriends();
+        } catch (e) { console.error('Accept error:', e); }
+    }
+    async function rejectFriendReq(id) {
+        if (!id) return;
+        try {
+            const res = await fetch('/api/friends/reject/' + id, { method: 'POST', credentials: 'include' });
+            if (res.ok) loadFriendRequests();
+        } catch (e) { /* ignore */ }
+    }
+
+    // Load Steam friends automatically
+    async function loadSteamFriends() {
+        const container = document.getElementById('steamFriendsContainer');
+        if (!container) return;
+        
+        try {
+            const res = await fetch('/api/steam/friends', { credentials: 'include' });
+            if (!res.ok) throw new Error('Failed to load');
+            
+            const friends = await res.json();
+            
+            if (friends.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4 border border-secondary border-opacity-25 rounded-3 border-dashed">
+                        <i class="bi bi-steam opacity-50 mb-2 d-block fs-3"></i>
+                        <p class="mb-0 small">No recent Steam friends found or profile is private.</p>
+                    </div>`;
+                return;
+            }
+            
+            let html = '';
+            friends.forEach(f => {
+                let gameStatus = '';
+                if (f.isPlaying) {
+                    gameStatus = `<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-2 px-2 py-1" style="font-size: 0.75rem;"><i class="bi bi-play-circle-fill me-1"></i>Playing ${f.gameName}</span>`;
+                } else if (f.isOnline) {
+                    gameStatus = `<span class="text-primary small mt-1 d-block"><i class="bi bi-circle-fill me-1" style="font-size: 0.4rem; vertical-align: middle; margin-bottom: 2px;"></i>Online</span>`;
+                } else {
+                    gameStatus = `<span class="text-muted small mt-1 d-block opacity-75">Offline</span>`;
+                }
+                    
+                html += `
+                <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm user-card cursor-pointer flex-shrink-0" onclick="window.open('${f.profileUrl}', '_blank')" style="border-radius: 10px; transition: transform 0.2s;">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="position-relative me-3">
+                            <img src="${f.avatar}" class="rounded-circle object-fit-cover" style="width: 46px; height: 46px; border: 2px solid ${f.isPlaying ? '#22c55e' : (f.isOnline ? '#66c0f4' : 'rgba(255,255,255,0.05)')}">
+                            ${f.isPlaying ? '<span class="position-absolute bottom-0 end-0 p-1 bg-success border border-dark rounded-circle" style="width: 12px; height: 12px;"></span>' : (f.isOnline ? '<span class="position-absolute bottom-0 end-0 p-1 bg-primary border border-dark rounded-circle" style="width: 12px; height: 12px;"></span>' : '')}
+                        </div>
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${f.name.replace(/</g, '&lt;')}</h6>
+                            ${gameStatus}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<div class="alert alert-danger border-0 bg-danger bg-opacity-10 py-2"><i class="bi bi-exclamation-triangle me-2"></i>Could not load Steam friends. Ensure your Steam profile privacy is set to Public!</div>';
+        }
+    }
+    
+    // Check if user has Steam linked and load friends
+    async function initUser() {
+        try {
+            const res = await fetch('/api/auth/current', { credentials: 'include' });
+            if (res.ok) {
+                const user = await res.json();
+                
+                // Always show BH friends for any logged-in user
+                document.getElementById('bhFriendsSection').classList.remove('d-none');
+                loadBHFriends();
+                loadFriendRequests();
+                
+                // Only show Steam friends if Steam account is linked
+                if (user.steamId) {
+                    document.getElementById('steamFriendsSection').classList.remove('d-none');
+                    loadSteamFriends();
+                }
+            }
+        } catch (err) {
+            // Silently ignore auth fetch errors
+        }
+    }
+    
+    async function loadBHFriends() {
+        const container = document.getElementById('bhFriendsContainer');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/friends', { credentials: 'include' });
+            if (!res.ok) throw new Error();
+            const friends = await res.json();
+            
+            if (!friends || friends.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-3 border border-secondary border-opacity-25 rounded-3 border-dashed">
+                        <i class="bi bi-people opacity-50 mb-1 d-block fs-4"></i>
+                        <p class="mb-1 small">No friends yet!</p>
+                        <small>Search for users above to connect.</small>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            friends.forEach(f => {
+                const name = (f.displayName || f.username || 'User').replace(/</g, '&lt;');
+                const handle = ('@' + (f.username || '')).replace(/</g, '&lt;');
+                const avatar = f.avatar || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E`;
+                html += `
+                <div class="card bg-dark border border-secondary border-opacity-25 user-card cursor-pointer flex-shrink-0" onclick="window.location='/profile?user=${f._id}'" style="border-radius: 10px;">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <img src="${avatar}" class="rounded-circle object-fit-cover me-2" style="width: 40px; height: 40px; border: 2px solid rgba(83,131,232,0.4);">
+                        <div style="min-width:0;">
+                            <div class="fw-bold text-truncate" style="font-size:0.85rem;">${name}</div>
+                            <div class="text-muted text-truncate" style="font-size:0.72rem;">${handle}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<div class="text-muted small text-center py-2">Could not load friends.</div>';
+        }
+    }
+
+    initUser();
+});
+</script>

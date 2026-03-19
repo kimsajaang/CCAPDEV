@@ -12,12 +12,33 @@
                 <li class="nav-item"><a class="nav-link" href="/stats">Community</a></li>
                 <li class="nav-item d-none" id="nav-library"><a class="nav-link" href="/library">My Library</a></li>
                 <li class="nav-item d-none" id="nav-profile"><a class="nav-link" href="/profile">Profile</a></li>
+                <li class="nav-item d-none" id="nav-friends"><a class="nav-link text-warning" href="/friends"><i class="bi bi-person-plus"></i> Find Friends</a></li>
+                <li class="nav-item d-none position-relative" id="nav-notifications">
+                    <a class="nav-link" href="/profile" title="Friend Requests" id="notifBell" style="position:relative; padding-right: 18px;">
+                        <i class="bi bi-bell-fill"></i>
+                        <span id="friendReqBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.6rem; min-width:16px;">0</span>
+                    </a>
+                </li>
                 <li class="nav-item d-none" id="nav-logout"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="#" id="logoutBtn" onclick="handleLogout(event)">Logout</a></li>
                 <li class="nav-item" id="nav-login"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="/login">Login</a></li>
             </ul>
         </div>
-    </div>
 </nav>
+
+<!-- Steam Status Bar (always shown when Steam account is linked) -->
+<div id="steamStatusBar" style="display:none; border-bottom: 1px solid rgba(74,183,107,0.3); padding: 5px 0; font-size: 0.8rem;">
+    <div class="container d-flex align-items-center gap-2">
+        <span id="steamDot" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#4ab76b;"></span>
+        <i class="bi bi-steam" style="color:#4ab76b;"></i>
+        <span id="steamStatusText" style="color:#a8d8b0;">Connected to Steam</span>
+        <span id="steamLiveGame" class="fw-bold" style="color:#4ab76b;"></span>
+    </div>
+</div>
+<style>
+@keyframes steamPulse { 0%,100%{opacity:1;box-shadow:0 0 6px #4ab76b}50%{opacity:.6;box-shadow:0 0 14px #4ab76b} }
+.steam-playing #steamDot { animation: steamPulse 2s ease-in-out infinite; }
+</style>
+
 <script>
 function smartHomeClick(e) {
     e.preventDefault();
@@ -26,26 +47,55 @@ function smartHomeClick(e) {
         .catch(() => { window.location.href = '/'; });
 }
 
-// Show/hide nav items based on authentication
-fetch('/api/auth/current', { credentials: 'include' })
-    .then(r => r.ok ? r.json() : null)
-    .then(user => {
-        if (user) {
-            document.getElementById('nav-back').classList.add('d-none');
-            document.getElementById('nav-dashboard').classList.remove('d-none');
-            document.getElementById('nav-library').classList.remove('d-none');
-            document.getElementById('nav-profile').classList.remove('d-none');
-            document.getElementById('nav-logout').classList.remove('d-none');
-            document.getElementById('nav-login').classList.add('d-none');
-        } else {
-            document.getElementById('nav-back').classList.remove('d-none');
-            document.getElementById('nav-dashboard').classList.add('d-none');
-            document.getElementById('nav-library').classList.add('d-none');
-            document.getElementById('nav-profile').classList.add('d-none');
-            document.getElementById('nav-logout').classList.add('d-none');
-            document.getElementById('nav-login').classList.remove('d-none');
+// Show/hide nav items based on authentication — use sessionStorage cache to avoid flicker
+(async function initNav() {
+    // Instantly restore from cache (no flicker)
+    const cached = sessionStorage.getItem('bh_user');
+    if (cached) {
+        try { applyUser(JSON.parse(cached)); } catch(e) {}
+    }
+    // Always re-fetch fresh data in background
+    try {
+        const r = await fetch('/api/auth/current', { credentials: 'include' });
+        const user = r.ok ? await r.json() : null;
+        sessionStorage.setItem('bh_user', user ? JSON.stringify(user) : 'null');
+        applyUser(user);
+    } catch(e) {}
+})();
+
+function applyUser(user) {
+    if (user) {
+        document.getElementById('nav-back').classList.add('d-none');
+        document.getElementById('nav-dashboard').classList.remove('d-none');
+        document.getElementById('nav-library').classList.remove('d-none');
+        document.getElementById('nav-profile').classList.remove('d-none');
+        document.getElementById('nav-friends').classList.remove('d-none');
+        document.getElementById('nav-notifications').classList.remove('d-none');
+        document.getElementById('nav-logout').classList.remove('d-none');
+        document.getElementById('nav-login').classList.add('d-none');
+        // Friend request badge
+        const count = user.pendingRequests || 0;
+        const badge = document.getElementById('friendReqBadge');
+        if (badge && count > 0) {
+            badge.textContent = count > 9 ? '9+' : count;
+            badge.classList.remove('d-none');
         }
-    });
+        // Steam bar — always show when linked
+        if (user.steamId && user.steamId !== '') {
+            document.getElementById('steamStatusBar').style.display = '';
+            checkSteamStatus();
+        }
+    } else {
+        document.getElementById('nav-back').classList.remove('d-none');
+        document.getElementById('nav-dashboard').classList.add('d-none');
+        document.getElementById('nav-library').classList.add('d-none');
+        document.getElementById('nav-profile').classList.add('d-none');
+        document.getElementById('nav-friends')?.classList.add('d-none');
+        document.getElementById('nav-notifications')?.classList.add('d-none');
+        document.getElementById('nav-logout').classList.add('d-none');
+        document.getElementById('nav-login').classList.remove('d-none');
+    }
+}
 
 // Logout handler
 async function handleLogout(e) {
@@ -56,5 +106,28 @@ async function handleLogout(e) {
         console.error('Logout failed:', err);
     }
     window.location.href = '/login';
+}
+
+// Check live Steam status and update the bar content
+async function checkSteamStatus() {
+    const bar = document.getElementById('steamStatusBar');
+    const statusText = document.getElementById('steamStatusText');
+    const gameEl = document.getElementById('steamLiveGame');
+    try {
+        const res = await fetch('/api/auth/steam-status', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.playing && data.gameName) {
+            bar.style.background = 'linear-gradient(90deg, rgba(26,45,36,0.97), rgba(22,58,42,0.95))';
+            bar.classList.add('steam-playing');
+            statusText.textContent = 'Now Playing:';
+            gameEl.textContent = data.gameName;
+        } else {
+            bar.style.background = 'rgba(22,30,38,0.9)';
+            bar.classList.remove('steam-playing');
+            statusText.textContent = 'Steam Connected';
+            gameEl.textContent = '';
+        }
+    } catch (e) { /* ignore */ }
 }
 </script>

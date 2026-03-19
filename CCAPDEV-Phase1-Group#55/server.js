@@ -9,6 +9,7 @@ const session = require('express-session');
 const fetch = require('node-fetch');
 const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const connectDB = require('./model/db');
 const User = require('./model/User');
 const Game = require('./model/Game');
@@ -65,6 +66,7 @@ app.get('/profile', (req, res) => res.render('profile', { title: 'Profile', user
 app.get('/profile-edit', (req, res) => res.render('profile-edit', { title: 'Edit Profile', user: req.user }));
 app.get('/search', (req, res) => res.render('search', { title: 'Search Games', user: req.user }));
 app.get('/stats', (req, res) => res.render('stats', { title: 'Community', user: req.user }));
+app.get('/friends', (req, res) => res.render('friends', { title: 'Find Friends', user: req.user }));
 
 // Static files (CSS, images, client-side assets) — after view routes
 app.use(express.static(__dirname + '/public'));
@@ -81,6 +83,50 @@ passport.deserializeUser(async (id, done) => {
 });
 
 const STEAM_API_KEY = process.env.STEAM_API_KEY || 'F89327857A7FC98A53F87A6099FC1D2D';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      callbackURL: `http://localhost:${PORT}/auth/google/callback`
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await User.findOne({ googleId: profile.id });
+        if (!user) {
+          const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+          if (email) {
+            user = await User.findOne({ email });
+          }
+          if (user) {
+            // Link to existing account
+            user.googleId = profile.id;
+            await user.save();
+          } else {
+            // Create new account
+            user = new User({
+              username: 'google_' + profile.id,
+              email: email || profile.id + '@google.local',
+              password: require('crypto').randomBytes(32).toString('hex'),
+              displayName: profile.displayName || 'Google User',
+              avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : undefined,
+              googleId: profile.id,
+            });
+            await user.save();
+            console.log('[GOOGLE AUTH] Created new user:', user.displayName, '| Google ID:', profile.id);
+          }
+        } else {
+          console.log('[GOOGLE AUTH] Existing user found:', user.displayName, '| Google ID:', profile.id);
+        }
+        return done(null, user);
+      } catch (err) {
+        return done(err, null);
+      }
+    }
+  ));
+}
 
 passport.use(new SteamStrategy({
     returnURL: `http://localhost:${PORT}/auth/steam/callback`,
@@ -193,6 +239,58 @@ async function getAccessToken() {
 // (Redundant routes removed, merged below in API ROUTES section)
 
 // ======================== API ROUTES ========================
+
+// GET /api/steam/friends - Fetch Steam friends and their statuses
+app.get('/api/steam/friends', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+  if (!req.user.steamId) return res.status(400).json({ error: 'Steam not linked' });
+  try {
+    const friendUrl = `https://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=${STEAM_API_KEY}&steamid=${req.user.steamId}&relationship=friend`;
+    const friendRes = await fetch(friendUrl);
+    if (!friendRes.ok) return res.status(404).json({ error: 'Could not fetch friends list' });
+    const friendData = await friendRes.json();
+    if (!friendData.friendslist || !friendData.friendslist.friends) return res.json([]);
+    
+    // Sort friends by friend_since and take up to 100
+    const friendIds = friendData.friendslist.friends.map(f => f.steamid).slice(0, 100);
+    if (friendIds.length === 0) return res.json([]);
+
+    // Fetch summaries to get names, avatars, and currently playing games
+    const summaryUrl = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${friendIds.join(',')}`;
+    const summaryRes = await fetch(summaryUrl);
+    if (!summaryRes.ok) return res.status(500).json({ error: 'Could not fetch player summaries' });
+    const summaryData = await summaryRes.json();
+    
+    if (!summaryData.response || !summaryData.response.players) return res.json([]);
+    
+    const players = summaryData.response.players.map(p => ({
+      steamId: p.steamid,
+      name: p.personaname,
+      avatar: p.avatarfull || p.avatarmedium || p.avatar,
+      gameName: p.gameextrainfo || null,
+      isPlaying: !!p.gameextrainfo,
+      isOnline: p.personastate > 0,
+      profileUrl: p.profileurl
+    }));
+    
+    // Sort: Playing -> Online -> Offline -> Alphabetical
+    players.sort((a, b) => {
+      if (a.isPlaying && !b.isPlaying) return -1;
+      if (!a.isPlaying && b.isPlaying) return 1;
+      if (a.isPlaying && b.isPlaying) return a.name.localeCompare(b.name);
+      
+      if (a.isOnline && !b.isOnline) return -1;
+      if (!a.isOnline && b.isOnline) return 1;
+      
+      return a.name.localeCompare(b.name);
+    });
+
+    res.json(players);
+  } catch (err) {
+    console.error('[STEAM FRIENDS API]', err.message);
+    res.status(500).json({ error: 'Server error fetching Steam friends' });
+  }
+});
 
 // ─── USER ROUTES ───
 
@@ -493,6 +591,60 @@ async function importSteamGames(user) {
   return { imported, updated, total: steamGames.length, hadActivity: imported > 0 || updated > 0 };
 }
 
+// Helper: auto-sync Steam friends that have Backlog Hero accounts
+async function syncSteamFriends(user) {
+  if (!user || !user.steamId) return 0;
+  
+  try {
+    const steamUrl = `https://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=${STEAM_API_KEY}&steamid=${user.steamId}&relationship=friend`;
+    const steamRes = await fetch(steamUrl);
+    
+    // Steam API returns 401/403 or empty if profile is private
+    if (!steamRes.ok) return 0;
+    
+    const steamData = await steamRes.json();
+    if (!steamData.friendslist || !steamData.friendslist.friends) return 0;
+    
+    const steamFriendIds = steamData.friendslist.friends.map(f => f.steamid);
+    if (steamFriendIds.length === 0) return 0;
+    
+    // Find all Backlog Hero users that match these steam IDs
+    const matchingPlatformUsers = await User.find({ steamId: { $in: steamFriendIds } });
+    if (matchingPlatformUsers.length === 0) return 0;
+    
+    let newFriendsAdded = 0;
+    
+    for (const friendUser of matchingPlatformUsers) {
+      // Check if they are already friends
+      const alreadyFriends = user.friends && user.friends.includes(friendUser._id);
+      if (!alreadyFriends) {
+        // Add to current user's friends list
+        if (!user.friends) user.friends = [];
+        user.friends.push(friendUser._id);
+        
+        // Add to the other user's friends list (two-way)
+        if (!friendUser.friends) friendUser.friends = [];
+        if (!friendUser.friends.includes(user._id)) {
+          friendUser.friends.push(user._id);
+          await friendUser.save();
+        }
+        
+        newFriendsAdded++;
+      }
+    }
+    
+    if (newFriendsAdded > 0) {
+      await user.save();
+      console.log(`[STEAM FRIENDS] ${user.displayName}: Auto-synced ${newFriendsAdded} friends from Steam!`);
+    }
+    
+    return newFriendsAdded;
+  } catch (err) {
+    console.error(`[STEAM FRIENDS] Sync failed for ${user.displayName}:`, err.message);
+    return 0;
+  }
+}
+
 // GET /auth/steam - Redirect to Steam login page
 app.get('/auth/steam', passport.authenticate('steam', { failureRedirect: '/login' }));
 
@@ -517,6 +669,31 @@ app.get('/auth/steam/callback',
     // Update streak based on actual gaming activity
     try { await updateStreak(req.user._id, hadActivity); } catch (e) { console.warn('[STEAM AUTH] Streak update failed:', e.message); }
 
+    // Auto-sync Steam friends
+    try { await syncSteamFriends(req.user); } catch (e) { console.warn('[STEAM AUTH] Friends sync failed:', e.message); }
+
+    res.redirect('/dashboard');
+  }
+);
+
+// --- GOOGLE AUTH ROUTES ---
+
+// GET /auth/google - Redirect to Google login page
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// GET /auth/google/callback - Google redirects back here after login
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  async (req, res) => {
+    // Set session userId
+    req.session.userId = req.user._id.toString();
+    console.log('[GOOGLE AUTH] Login successful. User:', req.user.displayName);
+
+    // Update login streak (non-Steam users get visit-based streak, so Google users get it too)
+    if (!req.user.steamId) {
+      try { await updateStreak(req.user._id, true); } catch (e) { console.warn('[GOOGLE AUTH] Streak update failed:', e.message); }
+    }
+
     res.redirect('/dashboard');
   }
 );
@@ -533,6 +710,9 @@ app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
       try {
         const result = await importSteamGames(user);
         hadGamingActivity = result.hadActivity;
+        
+        // Also sync friends silently in background
+        syncSteamFriends(user).catch(() => {});
       } catch (err) {
         console.warn('[STATS] Steam auto-sync failed (non-blocking):', err.message);
       }

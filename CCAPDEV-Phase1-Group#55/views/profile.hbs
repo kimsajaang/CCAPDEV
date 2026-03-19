@@ -157,7 +157,7 @@ plagiarized the work of other students and/or persons.
                                 <button class="btn btn-outline-primary btn-sm" id="shareProfileBtn">
                                     <i class="bi bi-share me-1"></i> Share Profile
                                 </button>
-                                <a href="profile-edit.html" class="btn btn-primary btn-sm" id="editProfileBtn">
+                                <a href="/profile-edit" class="btn btn-primary btn-sm" id="editProfileBtn">
                                     <i class="bi bi-pencil me-1"></i> Customize Profile
                                 </a>
                                 <!-- Friend buttons injected by JS when viewing another user's profile -->
@@ -209,7 +209,7 @@ plagiarized the work of other students and/or persons.
                                     <div class="section-card reveal-item">
                                         <div class="section-title mb-2">About You</div>
                                         <div id="bioContainer" class="bio-section">
-                                            <p id="userBio" class="mb-0">No bio yet. <a href="profile-edit.html" style="color: #5383e8;">Add one now!</a></p>
+                                            <p id="userBio" class="mb-0">No bio yet. <a href="/profile-edit" style="color: #5383e8;">Add one now!</a></p>
                                         </div>
                                         <div id="gamingIdentity" style="margin-top: 12px;">
                                             <div class="d-flex flex-wrap gap-2">
@@ -221,7 +221,7 @@ plagiarized the work of other students and/or persons.
                                     <div class="section-card reveal-item">
                                         <div class="section-title mb-3">Favourite Games</div>
                                         <div id="favGamesContainer" class="fav-games-container">
-                                            <div class="empty-state-text">No favourite games yet. <a href="profile-edit.html" style="color: #5383e8;">Choose some!</a></div>
+                                            <div class="empty-state-text">No favourite games yet. <a href="/profile-edit" style="color: #5383e8;">Choose some!</a></div>
                                         </div>
                                     </div>
                                 </div>
@@ -234,8 +234,12 @@ plagiarized the work of other students and/or persons.
                                     </div>
                                 </div>
 
+                            </div>
+
+                            <!-- Right column: friends + recent activity feed -->
+                            <div>
                                 <!-- Friends section -->
-                                <div class="section-card reveal-item mt-3" id="friendsSection">
+                                <div class="section-card reveal-item mb-3" id="friendsSection">
                                     <div class="section-title mb-3">
                                         Friends <span id="friendsCount" style="color: var(--accent); font-size: 0.8rem; font-weight: 600;">(0)</span>
                                     </div>
@@ -245,14 +249,12 @@ plagiarized the work of other students and/or persons.
                                         <div class="empty-state-text">No friends yet. Search for users to add!</div>
                                     </div>
                                     <div class="mt-3 text-center" id="addFriendSection" style="display:none;">
-                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#findFriendsModal">
+                                        <a href="/friends" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-person-plus me-1"></i> Find Friends
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
-                            </div>
-                            <!-- Right column: recent activity feed -->
-                            <div>
+
                                 <div class="section-card reveal-item">
                                     <div class="section-title mb-3">Recent Activity</div>
                                     <div id="activityContainer">
@@ -388,7 +390,7 @@ plagiarized the work of other students and/or persons.
             document.getElementById('userBio').innerHTML = profile.bio.replace(/</g, '&lt;').replace(/>/g, '&gt;');
         } else {
             document.getElementById('userBio').innerHTML = isOwnProfile
-                ? 'No bio yet. <a href="profile-edit.html" style="color: #5383e8;">Add one now!</a>'
+                ? 'No bio yet. <a href="/profile-edit" style="color: #5383e8;">Add one now!</a>'
                 : 'This user hasn\'t added a bio yet.';
         }
 
@@ -402,7 +404,7 @@ plagiarized the work of other students and/or persons.
             favGamesContainer.innerHTML = html;
         } else {
             favGamesContainer.innerHTML = isOwnProfile
-                ? '<div class="empty-state-text">No favourite games yet. <a href="profile-edit.html" style="color: #5383e8;">Choose some!</a></div>'
+                ? '<div class="empty-state-text">No favourite games yet. <a href="/profile-edit" style="color: #5383e8;">Choose some!</a></div>'
                 : '<div class="empty-state-text">No favourite games yet.</div>';
         }
 
