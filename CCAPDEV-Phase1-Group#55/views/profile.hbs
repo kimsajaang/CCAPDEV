@@ -17,9 +17,10 @@ plagiarized the work of other students and/or persons.
         .profile-shell { background: linear-gradient(145deg, rgba(28, 37, 46, 0.92), rgba(16, 22, 27, 0.95)); border: 1px solid var(--border); border-radius: var(--radius-2xl, 28px); box-shadow: var(--shadow-lg), 0 0 80px rgba(83, 131, 232, 0.06); overflow: hidden; animation: fadeInScale 0.7s var(--ease) both; }
         @keyframes fadeInScale { from { opacity: 0; transform: scale(0.97) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* Cover with animated gradient */
-        .profile-cover { height: 120px; background: linear-gradient(120deg, rgba(83, 131, 232, 0.5), rgba(167, 139, 250, 0.4) 40%, rgba(45, 212, 191, 0.3) 70%, rgba(15, 21, 25, 1)); background-size: 200% 200%; animation: gradientShift 8s ease infinite; will-change: background-position; position: relative; }
-        .profile-cover::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(transparent, rgba(16, 22, 27, 0.95)); }
+        /* Cover with animated gradient and custom wallpaper */
+        .profile-cover { height: 320px; background: linear-gradient(120deg, rgba(83, 131, 232, 0.5), rgba(167, 139, 250, 0.4) 40%, rgba(45, 212, 191, 0.3) 70%, rgba(15, 21, 25, 1)); background-size: 200% 200%; animation: gradientShift 8s ease infinite; will-change: background-position; position: relative; }
+        .profile-cover.has-wallpaper { background-image: var(--cover-img); background-size: cover; background-position: center var(--cover-pos, 50%); animation: none !important; }
+        .profile-cover::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 140px; background: linear-gradient(transparent, rgba(16, 22, 27, 0.98)); pointer-events: none; z-index: 1; }
         @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
         .fav-games-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 12px; }
@@ -53,15 +54,16 @@ plagiarized the work of other students and/or persons.
         .profile-actions .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(83, 131, 232, 0.45); }
         .profile-actions .btn-outline-primary { border-width: 2px; }
         .profile-actions .btn-outline-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(83, 131, 232, 0.3); }
-        .profile-body { padding: 22px 24px 26px; }
-        .profile-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; }
-        .profile-header { display: flex; gap: 16px; align-items: center; }
-        .avatar-img { width: 80px; height: 80px; border: 3px solid transparent; background: var(--bg-base); background-clip: padding-box; box-shadow: 0 0 0 3px var(--primary), 0 0 24px rgba(83, 131, 232, 0.35); transition: box-shadow 0.4s var(--ease), transform 0.4s var(--ease); position: relative; z-index: 2; margin-top: -30px; }
-        .avatar-img:hover { box-shadow: 0 0 0 3px var(--accent), 0 0 40px rgba(45, 212, 191, 0.4), 0 0 60px rgba(83, 131, 232, 0.2); transform: scale(1.08); }
-        .profile-name { font-weight: 800; letter-spacing: 0.02em; margin-bottom: 4px; font-size: 1.8rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .profile-handle { color: var(--text-muted); font-size: 0.85rem; }
-        .profile-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-        .profile-meta { display: flex; flex-wrap: wrap; gap: 10px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px; }
+        .profile-body { padding: 32px 36px 40px; }
+        .profile-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; }
+        .profile-header { display: flex; gap: 24px; align-items: flex-start; flex: 1; margin-top: -85px; position: relative; z-index: 10;}
+        .avatar-img { width: 150px; height: 150px; border: 4px solid var(--bg-base); background: var(--bg-base); background-clip: padding-box; box-shadow: 0 0 0 3px var(--primary), 0 16px 40px rgba(0, 0, 0, 0.6); transition: box-shadow 0.4s var(--ease), transform 0.4s var(--ease); border-radius: 50%; flex-shrink: 0; margin-top: 20px;}
+        .avatar-img:hover { box-shadow: 0 0 0 3px var(--accent), 0 0 50px rgba(45, 212, 191, 0.4), 0 0 70px rgba(83, 131, 232, 0.2); transform: scale(1.05); }
+        .profile-header-text { margin-top: 90px; }
+        .profile-name { font-weight: 900; letter-spacing: -0.04em; margin-bottom: 2px; font-size: 2.6rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+        .profile-handle { color: var(--text-muted); font-size: 1.05rem; font-weight: 500; margin-bottom: 12px; }
+        .profile-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;}
+        .profile-meta { display: flex; flex-wrap: wrap; gap: 16px; color: var(--text-secondary); font-size: 0.95rem; }
         .profile-meta i { color: var(--primary); }
         .stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
         .stat-card { background: rgba(20,28,36,0.92); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; text-align: center; transition: transform 0.35s var(--ease), border-color 0.35s var(--ease), box-shadow 0.35s var(--ease); position: relative; overflow: hidden; }
@@ -143,8 +145,8 @@ plagiarized the work of other students and/or persons.
                     <div class="profile-body">
                         <div class="profile-top">
                             <div class="profile-header">
-                                <img id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="rounded-circle avatar-img" alt="Profile Picture">
-                                <div>
+                                <img id="profileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="avatar-img" alt="Profile Picture">
+                                <div class="profile-header-text">
                                     <h2 class="profile-name" id="profileName">Your Profile</h2>
                                     <div class="profile-handle" id="profileHandle">@gamer � Gaming Enthusiast</div>
                                     <div class="profile-meta" id="profileMeta">
@@ -372,6 +374,19 @@ plagiarized the work of other students and/or persons.
         document.getElementById('memberSince').textContent = `Member since ${new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`;
         document.getElementById('favoriteGenres').textContent = 'Gaming Fan';
 
+        // Wallpaper logic — use CSS class for reliable full-cover display
+        const coverEl = document.querySelector('.profile-cover');
+        if (profile.wallpaper) {
+            const pos = profile.wallpaperPosition != null ? profile.wallpaperPosition : 50;
+            coverEl.style.setProperty('--cover-img', `url("${profile.wallpaper}")`);
+            coverEl.style.setProperty('--cover-pos', `${pos}%`);
+            coverEl.classList.add('has-wallpaper');
+        } else {
+            coverEl.style.removeProperty('--cover-img');
+            coverEl.style.removeProperty('--cover-pos');
+            coverEl.classList.remove('has-wallpaper');
+        }
+
         // Show/hide actions based on own profile vs other
         const editBtn = document.getElementById('editProfileBtn');
         const addFriendSection = document.getElementById('addFriendSection');
@@ -398,8 +413,24 @@ plagiarized the work of other students and/or persons.
         const favGamesContainer = document.getElementById('favGamesContainer');
         if (profile.favoriteGames && profile.favoriteGames.length > 0) {
             let html = '';
-            profile.favoriteGames.forEach(gameName => {
-                html += `<div class="fav-game-card" title="${gameName}"><span class="fav-game-icon">??</span><div class="fav-game-name">${gameName}</div></div>`;
+            profile.favoriteGames.forEach(game => {
+                const name = typeof game === 'object' ? game.name : game;
+                const cover = typeof game === 'object' && game.cover ? game.cover : '';
+                const safeName = name.replace(/"/g, '&quot;');
+                
+                if (cover) {
+                    html += `
+                    <div class="fav-game-card position-relative" title="${safeName}" style="padding:0; overflow:hidden; border: 2px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); aspect-ratio: 3/4; cursor: pointer;" onclick="window.location.href='/search?q='+encodeURIComponent('${safeName}')">
+                        <img src="${cover}" alt="${safeName}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        <div class="position-absolute bottom-0 start-0 w-100 p-2 text-center text-truncate text-white" style="font-size: 0.75rem; font-weight: 500; background: linear-gradient(transparent, rgba(0,0,0,0.95)); text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${safeName}</div>
+                    </div>`;
+                } else {
+                    html += `
+                    <div class="fav-game-card" title="${safeName}" style="cursor: pointer;" onclick="window.location.href='/search?q='+encodeURIComponent('${safeName}')">
+                        <span class="fav-game-icon">🎮</span>
+                        <div class="fav-game-name text-truncate" style="max-width: 100%;">${safeName}</div>
+                    </div>`;
+                }
             });
             favGamesContainer.innerHTML = html;
         } else {

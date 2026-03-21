@@ -6,6 +6,7 @@ const express = require('express');
 const { engine } = require('express-handlebars');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const compression = require('compression');
 const fetch = require('node-fetch');
 const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
@@ -19,7 +20,7 @@ const axios = require('axios'); // Ensure axios is installed: npm install axios
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use(express.json()); // Add this line to handle the JSON data from your search bar
+app.use(express.json({ limit: '20mb' })); // Allow large base64 image payloads
 // --- Handlebars Template Engine ---
 app.engine('hbs', engine({
   extname: '.hbs',
@@ -30,6 +31,7 @@ app.engine('hbs', engine({
 }));
 app.set('view engine', 'hbs');
 app.set('views', __dirname + '/views');
+app.set('view cache', true); // Compile templates once instead of on every request
 
 // --- Session Configuration ---
 app.use(session({
@@ -40,8 +42,9 @@ app.use(session({
 }));
 
 // --- Middleware ---
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(compression()); // Gzip compression to vastly reduce HTML payload sizes
+app.use(bodyParser.json({ limit: '20mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
 
 // --- View Routes (Handlebars) ---
 // These are defined BEFORE express.static so the template engine handles  routes
@@ -201,6 +204,10 @@ const initializeServer = async () => {
 };
 
 initializeServer();
+
+// Per-user Steam sync cooldown: only sync once every 5 minutes max
+const steamSyncCooldown = new Map();
+const STEAM_SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 // --- Twitch OAuth token management ---
 let accessToken = null;
@@ -417,6 +424,8 @@ app.get('/api/auth/current', isLoggedIn, async (req, res) => {
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
       steamId: user.steamId || '',
+      wallpaper: user.wallpaper || '',
+      wallpaperPosition: user.wallpaperPosition != null ? user.wallpaperPosition : 50,
       friendsCount: (user.friends || []).length,
       pendingRequests,
       createdAt: user.createdAt,
@@ -705,16 +714,21 @@ app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
     const user = await User.findById(userId);
 
     // For Steam users: auto-sync playtime and count gaming days for streak
+    // Throttle to once every 5 minutes to prevent lag on every page load
     let hadGamingActivity = false;
     if (user && user.steamId) {
-      try {
-        const result = await importSteamGames(user);
-        hadGamingActivity = result.hadActivity;
-        
-        // Also sync friends silently in background
-        syncSteamFriends(user).catch(() => {});
-      } catch (err) {
-        console.warn('[STATS] Steam auto-sync failed (non-blocking):', err.message);
+      const lastSync = steamSyncCooldown.get(userId);
+      const shouldSync = !lastSync || (Date.now() - lastSync) > STEAM_SYNC_INTERVAL_MS;
+      if (shouldSync) {
+        steamSyncCooldown.set(userId, Date.now());
+        try {
+          const result = await importSteamGames(user);
+          hadGamingActivity = result.hadActivity;
+          // Also sync friends silently in background
+          syncSteamFriends(user).catch(() => {});
+        } catch (err) {
+          console.warn('[STATS] Steam auto-sync failed (non-blocking):', err.message);
+        }
       }
     }
 
@@ -761,6 +775,8 @@ app.get('/api/users/:userId', isLoggedIn, async (req, res) => {
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
       steamId: user.steamId || '',
+      wallpaper: user.wallpaper || '',
+      wallpaperPosition: user.wallpaperPosition != null ? user.wallpaperPosition : 50,
       friendsCount: (user.friends || []).length,
       createdAt: user.createdAt,
     });
@@ -778,7 +794,7 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden. You can only edit your own profile.' });
     }
 
-    const { displayName, bio, avatar, favoriteGames, steamId } = req.body;
+    const { displayName, bio, avatar, favoriteGames, steamId, wallpaper, wallpaperPosition } = req.body;
     const user = await User.findById(req.params.userId);
 
     if (!user) {
@@ -788,6 +804,8 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
     if (displayName) user.displayName = displayName;
     if (bio !== undefined) user.bio = bio;
     if (avatar) user.avatar = avatar;
+    if (wallpaper !== undefined) user.wallpaper = wallpaper;
+    if (wallpaperPosition !== undefined) user.wallpaperPosition = wallpaperPosition;
     if (favoriteGames) user.favoriteGames = favoriteGames;
     if (steamId !== undefined) user.steamId = steamId;
 
@@ -868,9 +886,12 @@ app.post('/api/games', async (req, res) => {
 // GET /api/library/:userId - Get user's library
 app.get('/api/library/:userId', async (req, res) => {
   try {
+    // Optimization: limit to 500, use lean() for massive speedup, and only project needed fields
     const entries = await LibraryEntry.find({ userId: req.params.userId, hidden: { $ne: true } })
-      .populate('gameId')
-      .sort({ addedAt: -1 });
+      .populate('gameId', 'name coverUrl genres')
+      .sort({ addedAt: -1 })
+      .limit(500)
+      .lean();
 
     // Deduplicate by game name (keep earliest entry, merge best data)
     const seen = new Map();
@@ -904,8 +925,10 @@ app.get('/api/library/:userId/status/:status', async (req, res) => {
     }
 
     const entries = await LibraryEntry.find({ userId, status, hidden: { $ne: true } })
-      .populate('gameId')
-      .sort({ addedAt: -1 });
+      .populate('gameId', 'name coverUrl genres')
+      .sort({ addedAt: -1 })
+      .limit(200)
+      .lean();
 
     res.json(entries);
   } catch (err) {
@@ -1018,10 +1041,19 @@ app.post('/api/games/search', async (req, res) => {
   }
 });
 
+let _trendingCache = null;
+let _trendingCacheTime = 0;
+const TRENDING_CACHE_TTL = 15 * 60 * 1000; // 15 mins
+
 // GET /api/games/trending — fetch recent trending games (IGDB)
 app.get('/api/games/trending', async (req, res) => {
   try {
+    if (_trendingCache && Date.now() - _trendingCacheTime < TRENDING_CACHE_TTL) {
+      return res.json(_trendingCache);
+    }
     const token = await getAccessToken();
+    const now = Math.floor(Date.now() / 1000);
+    const ninetyDaysAgo = now - (90 * 24 * 60 * 60);
     const response = await fetch("https://api.igdb.com/v4/games", {
       method: 'POST',
       headers: {
@@ -1030,13 +1062,16 @@ app.get('/api/games/trending', async (req, res) => {
         'Content-Type': 'text/plain'
       },
       // Trending: recent releases with high rating, limit 20
-      body: `fields name, cover.url, first_release_date, genres.name, rating, summary; sort first_release_date desc; where rating != null & first_release_date != null; limit 20;`
+      body: `fields name, cover.url, first_release_date, genres.name, rating, summary; sort rating desc; where rating != null & first_release_date != null & first_release_date < ${now} & first_release_date > ${ninetyDaysAgo}; limit 20;`
     });
     const data = await response.json();
     console.log('[IGDB TRENDING] Results:', data.length);
+    _trendingCache = data;
+    _trendingCacheTime = Date.now();
     res.json(data);
   } catch (err) {
     console.error('[IGDB TRENDING] Error:', err.message);
+    if (_trendingCache) return res.json(_trendingCache);
     res.status(500).json({ error: "Failed to fetch trending games" });
   }
 });
@@ -1053,8 +1088,9 @@ app.get('/api/games/popular', async (req, res) => {
       return res.json(_popularCache);
     }
     const token = await getAccessToken();
+    const now = Math.floor(Date.now() / 1000);
     // Get trending/popular games — released in the last 6 months for wider trailer coverage
-    const sixMonthsAgo = Math.floor(Date.now() / 1000) - (180 * 24 * 60 * 60);
+    const sixMonthsAgo = now - (180 * 24 * 60 * 60);
     const igdbRes = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
@@ -1062,7 +1098,7 @@ app.get('/api/games/popular', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name; where first_release_date > ${sixMonthsAgo} & cover != null & videos != null; sort total_rating_count desc; limit 20;`
+      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name; where first_release_date > ${sixMonthsAgo} & first_release_date < ${now} & cover != null & videos != null; sort total_rating_count desc; limit 20;`
     });
 
     const data = await igdbRes.json();
@@ -1088,8 +1124,9 @@ app.get('/api/games/top', async (req, res) => {
       return res.json(_topCache);
     }
     const token = await getAccessToken();
+    const now = Math.floor(Date.now() / 1000);
     // Only recent games: released in the last 12 months
-    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
+    const oneYearAgo = now - (365 * 24 * 60 * 60);
     const igdbRes = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
@@ -1097,7 +1134,7 @@ app.get('/api/games/top', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date; where total_rating_count > 5 & cover != null & total_rating != null & first_release_date > ${oneYearAgo}; sort total_rating desc; limit 50;`
+      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date; where total_rating_count > 5 & cover != null & total_rating != null & first_release_date > ${oneYearAgo} & first_release_date < ${now}; sort total_rating desc; limit 50;`
     });
     const data = await igdbRes.json();
     _topCache = data;
@@ -1110,10 +1147,18 @@ app.get('/api/games/top', async (req, res) => {
   }
 });
 
+let _homeCache = null;
+let _homeCacheTime = 0;
+const HOME_CACHE_TTL = 15 * 60 * 1000;
+
 // GET /api/igdb/games - Alias for getting popular games (for homepage)
 app.get('/api/igdb/games', async (req, res) => {
   try {
+    if (_homeCache && Date.now() - _homeCacheTime < HOME_CACHE_TTL) {
+      return res.json(_homeCache);
+    }
     const token = await getAccessToken();
+    const now = Math.floor(Date.now() / 1000);
     const igdbRes = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
@@ -1121,13 +1166,16 @@ app.get('/api/igdb/games', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `fields name,cover.url,rating,genres.name,first_release_date,summary; where rating > 85 & cover != null; sort rating desc; limit 10;`
+      body: `fields name,cover.url,rating,genres.name,first_release_date,summary; where rating > 85 & cover != null & first_release_date < ${now}; sort rating desc; limit 10;`
     });
 
     const data = await igdbRes.json();
+    _homeCache = data;
+    _homeCacheTime = Date.now();
     res.json(data);
   } catch (err) {
     console.error('[IGDB GAMES] Error:', err.message);
+    if (_homeCache) return res.json(_homeCache);
     res.status(500).json({ error: 'Failed to get games' });
   }
 });
@@ -1347,10 +1395,11 @@ app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
       userId: { $in: friendIds },
       hidden: { $ne: true }
     })
-      .populate('gameId')
+      .populate('gameId', 'name coverUrl')
       .populate('userId', '_id username displayName avatar')
       .sort({ addedAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
     res.json(entries);
   } catch (err) {

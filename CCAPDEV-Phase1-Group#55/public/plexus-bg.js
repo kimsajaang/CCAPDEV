@@ -8,9 +8,9 @@ const canvas = document.getElementById('plexus-canvas');
 const ctx = canvas.getContext('2d');
 
 let particles = [];
-const particleCount = 100; // Increased
-const connectionDistance = 180; // Increased
-const mouseRange = 250; // Increased
+const particleCount = 40; // Lowered for better performance
+const connectionDistance = 140;
+const mouseRange = 250;
 
 let width, height;
 let mouse = { x: null, y: null };
@@ -68,14 +68,7 @@ class Particle {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
-        if (this.isGlow) {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#fb923c';
-        } else {
-            ctx.shadowBlur = 0;
-        }
         ctx.fill();
-        ctx.shadowBlur = 0;
     }
 }
 

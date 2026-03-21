@@ -39,8 +39,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'https://ui-avatars.com/api/?name=User&background=5383E8&color=fff',
     },
+    wallpaper: {
+      type: String,
+      default: '',
+    },
+    wallpaperPosition: {
+      type: Number,
+      default: 50,
+    },
     favoriteGames: {
-      type: [String], // array of game names
+      type: [mongoose.Schema.Types.Mixed], // array of game objects { id, name, cover }
       default: [],
     },
     steamId: {

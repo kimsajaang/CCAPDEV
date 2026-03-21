@@ -471,6 +471,28 @@ plagiarized the work of other students and/or persons.
             transform: translateY(0);
         }
     }
+
+    @keyframes scrollLeftAnim {
+        from {
+            transform: translateX(0);
+        }
+
+        to {
+            transform: translateX(calc(-50% - 6px));
+        }
+
+        /* -6px compensates for gap/2 */
+    }
+
+    @keyframes scrollUpAnim {
+        from {
+            transform: translateY(0);
+        }
+
+        to {
+            transform: translateY(-50%);
+        }
+    }
 </style>
 {{> navbar-landing}}
 
@@ -482,10 +504,7 @@ plagiarized the work of other students and/or persons.
     <div class="container py-5">
         <div class="row align-items-center g-5">
             <div class="col-lg-7" style="animation: fadeInUp 0.7s ease both;">
-                <div class="hero-eyebrow">
-                    <i class="bi bi-shield-fill-check"></i>
-                    Your Backlog Companion
-                </div>
+
                 <h1 class="hero-title">
                     Track every title you own<br>&amp; <span class="gradient-word">Plan your next adventure</span>
                 </h1>
@@ -864,9 +883,9 @@ plagiarized the work of other students and/or persons.
                 img.style.height = '100%';
                 img.style.objectFit = 'cover';
                 img.style.borderRadius = '10px';
-                img.onerror = function () { 
-                  this.style.display = 'none'; 
-                  this.nextElementSibling.style.display = 'flex';
+                img.onerror = function () {
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
                 };
 
                 const fallback = document.createElement('div');
@@ -913,14 +932,14 @@ plagiarized the work of other students and/or persons.
         gameCardsContainer.style.transition = 'opacity 0.5s ease';
 
         setTimeout(() => {
-            let html = `<div style="display:flex;gap:12px;overflow-x:hidden;padding:4px 0;" class="gameCarousel">`;
+            let html = `<div style="display:flex;gap:12px;width:max-content;animation:scrollLeftAnim 40s linear infinite;" class="gameCarousel">`;
             [...topGames, ...topGames].forEach(game => {
                 const coverUrl = game.cover?.url
                     ? 'https://images.igdb.com/igdb/image/upload/t_cover_big/' + game.cover.url.split('/').pop()
                     : '';
                 const rating = game.rating ? Math.round(game.rating) : 'N/A';
                 html += `<div style="flex:0 0 auto;position:relative;width:106px;height:150px;overflow:hidden;border-radius:10px;border:1px solid rgba(83,131,232,0.35);box-shadow:0 6px 18px rgba(0,0,0,0.4);">
-                    ${coverUrl 
+                    ${coverUrl
                         ? `<img src="${coverUrl}" alt="${game.name}" loading="lazy"
                              style="width:100%;height:100%;object-fit:cover;"
                              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -938,22 +957,6 @@ plagiarized the work of other students and/or persons.
             html += '</div>';
             gameCardsContainer.innerHTML = html;
             gameCardsContainer.style.opacity = '1';
-
-            const carousel = gameCardsContainer.querySelector('.gameCarousel');
-            if (carousel) {
-                let scrollPos = 0;
-                const singleSetWidth = topGames.length * (106 + 12);
-                let lastTime = 0;
-                function tick(now) {
-                    const delta = lastTime ? (now - lastTime) / 1000 : 0;
-                    lastTime = now;
-                    scrollPos += 48 * delta;
-                    if (scrollPos >= singleSetWidth) scrollPos = 0;
-                    carousel.scrollLeft = scrollPos;
-                    requestAnimationFrame(tick);
-                }
-                requestAnimationFrame(tick);
-            }
         }, 400);
     }
 
@@ -1001,7 +1004,7 @@ plagiarized the work of other students and/or persons.
         const feed = document.getElementById('communityFeed');
         if (!feed) return;
         const colors = ['#5383e8', '#2dd4bf', '#e85383', '#febc2e', '#7c3aed', '#10b981'];
-        feed.innerHTML = sampleComments.map((c, i) => `
+        const commentsHtml = sampleComments.map((c, i) => `
             <div style="background:rgba(26,38,52,0.8);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 14px;margin-bottom:8px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
                     <div style="width:26px;height:26px;border-radius:50%;background:${colors[i % colors.length]};display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:#fff;flex-shrink:0;">${c.user[0]}</div>
@@ -1011,15 +1014,13 @@ plagiarized the work of other students and/or persons.
                 <div style="font-size:0.85rem;color:rgba(180,200,230,0.72);">${c.comment}</div>
             </div>`).join('');
 
-        let scrollPos = 0;
-        function scrollFeed() {
-            scrollPos += 0.4;
-            if (scrollPos >= feed.scrollHeight / 2) scrollPos = 0;
-            feed.scrollTop = scrollPos;
-            requestAnimationFrame(scrollFeed);
-        }
-        feed.innerHTML += feed.innerHTML;
-        requestAnimationFrame(scrollFeed);
+        // Use CSS animation on an inner container instead of JS scrolling
+        feed.innerHTML = `
+            <div style="animation: scrollUpAnim 30s linear infinite;">
+                ${commentsHtml}
+                ${commentsHtml}
+            </div>
+        `;
     }
 
     // Scroll reveal

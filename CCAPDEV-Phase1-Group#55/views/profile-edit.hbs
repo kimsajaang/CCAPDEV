@@ -19,8 +19,17 @@ plagiarized the work of other students and/or persons.
         .avatar-preview-container { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
         .avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; background: #151d24; }
         .avatar-upload-controls { flex: 1; }
-        .avatar-upload-controls input[type="file"] { display: none; }
-        .avatar-upload-btn { cursor: pointer; }
+        .avatar-upload-controls input[type="file"], .wallpaper-upload-controls input[type="file"] { display: none; }
+        .avatar-upload-btn, .wallpaper-upload-btn { cursor: pointer; }
+        .wallpaper-preview-container { margin-bottom: 24px; position: relative; }
+        .wallpaper-preview { width: 100%; height: 160px; border-radius: var(--radius-md); border: 2px dashed var(--border); object-fit: cover; background: linear-gradient(135deg, rgba(83, 131, 232, 0.1), rgba(45, 212, 191, 0.05)); }
+        .wallpaper-preview.has-image { border: 2px solid var(--primary); }
+        .wallpaper-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s ease; border-radius: var(--radius-md); }
+        .wallpaper-preview-container:hover .wallpaper-overlay { opacity: 1; }
+        .wallpaper-position-control { margin-top: 8px; display: none; }
+        .wallpaper-position-control.visible { display: flex; align-items: center; gap: 12px; }
+        .wallpaper-position-control label { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+        .wallpaper-position-control input[type="range"] { flex: 1; accent-color: var(--primary); }
         .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 12px 0; }
         .game-option { background: #151d24; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease), transform var(--duration) var(--ease); font-size: 0.75rem; }
         .game-option:hover { border-color: var(--primary); transform: translateY(-2px); }
@@ -57,6 +66,24 @@ plagiarized the work of other students and/or persons.
                         <!-- Profile edit form — fields pre-filled with hardcoded data.
                              Gaming identity and timezone add fun profile details -->
                         <form id="profileForm">
+                            <!-- Wallpaper section -->
+                            <label class="form-label">Profile Cover Wallpaper</label>
+                            <div class="wallpaper-preview-container wallpaper-upload-controls">
+                                <img id="wallpaperPreview" class="wallpaper-preview" alt="Wallpaper Preview" style="display: none;">
+                                <div id="wallpaperEmptyState" class="wallpaper-preview d-flex align-items-center justify-content-center text-muted flex-column">
+                                    <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                    <span>Upload a wide image</span>
+                                </div>
+                                <div class="wallpaper-overlay wallpaper-upload-btn" onclick="document.getElementById('wallpaperInput').click()">
+                                    <button type="button" class="btn btn-primary btn-sm"><i class="bi bi-camera me-1"></i> Change Cover</button>
+                                </div>
+                                <input type="file" id="wallpaperInput" accept="image/*">
+                            </div>
+                            <div class="wallpaper-position-control" id="wallpaperPositionControl">
+                                <label><i class="bi bi-arrows-vertical me-1"></i>Position</label>
+                                <input type="range" id="wallpaperPositionSlider" min="0" max="100" value="50">
+                            </div>
+
                             <!-- Avatar section -->
                             <div class="avatar-preview-container">
                                 <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="avatar-preview" alt="Avatar Preview">
@@ -110,9 +137,14 @@ plagiarized the work of other students and/or persons.
                                 <div class="col-12">
                                     <label class="form-label">Favorite Games <span class="game-count" id="gameCount">0/5</span></label>
                                     <p class="text-muted small mb-2">Choose up to 5 games from your library to showcase on your profile.</p>
-                                    <div class="games-grid" id="gamesGrid">
-                                        <div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">Loading your library...</div>
+                                    <div class="favorite-games-search mb-3 position-relative">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                                            <input type="text" class="form-control bg-dark border-secondary text-light" id="favGameSearchInput" placeholder="Search a game to add..." autocomplete="off">
+                                        </div>
+                                        <div id="favGameSearchResults" class="position-absolute w-100 bg-dark border border-secondary rounded mt-1 shadow-lg" style="display:none; z-index: 1000; max-height: 300px; overflow-y: auto;"></div>
                                     </div>
+                                    <div class="favorite-games-selected" id="favoriteGamesSelected" style="display: flex; gap: 12px; flex-wrap: wrap;"></div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label"><i class="bi bi-steam me-1"></i>Steam ID</label>
@@ -229,6 +261,7 @@ plagiarized the work of other students and/or persons.
                 username: (serverUser && serverUser.username) || localProfile.username,
                 bio: (serverUser && serverUser.bio && serverUser.bio !== 'No bio yet') ? serverUser.bio : localProfile.bio,
                 avatar: (serverUser && serverUser.avatar) || localProfile.avatar,
+                wallpaper: (serverUser && serverUser.wallpaper) || localProfile.wallpaper || '',
                 steamId: (serverUser && serverUser.steamId) || localProfile.steamId || '',
                 favoriteGames: (serverUser && serverUser.favoriteGames && serverUser.favoriteGames.length > 0)
                     ? serverUser.favoriteGames
@@ -248,40 +281,126 @@ plagiarized the work of other students and/or persons.
             document.getElementById('inputSteamId').value = profile.steamId || '';
             document.getElementById('editPageName').textContent = profile.displayName;
 
-            // Render games grid from server library
-            const gamesGrid = document.getElementById('gamesGrid');
-            if (serverLibraryGames.length === 0) {
-                gamesGrid.innerHTML = '<div class="text-muted text-center" style="grid-column: 1/-1; padding: 20px;">No games in your library yet. <a href="/search" style="color: #5383e8;">Find games to add!</a></div>';
-            } else {
-                let html = '';
-                serverLibraryGames.forEach(game => {
-                    const isSelected = selectedFavoriteGames.includes(game.name);
-                    html += `
-                    <div class="game-option ${isSelected ? 'selected' : ''}" onclick="toggleFavoriteGame(this, '${game.name.replace(/'/g, "\\'")}')" data-game-name="${game.name}">
-                        <span class="game-option-icon">🎮</span>
-                        <div style="font-weight: 600; color: #dbe7ff;">${game.name}</div>
-                    </div>`;
-                });
-                gamesGrid.innerHTML = html;
+            if (profile.wallpaper) {
+                document.getElementById('wallpaperPreview').src = profile.wallpaper;
+                document.getElementById('wallpaperPreview').style.display = 'block';
+                document.getElementById('wallpaperPreview').classList.add('has-image');
+                document.getElementById('wallpaperEmptyState').classList.add('d-none');
+                document.getElementById('wallpaperPositionControl').classList.add('visible');
+                const pos = profile.wallpaperPosition != null ? profile.wallpaperPosition : 50;
+                document.getElementById('wallpaperPositionSlider').value = pos;
+                document.getElementById('wallpaperPreview').style.objectPosition = `center ${pos}%`;
             }
 
-            updateGameCount();
+            // Render existing favorite games
+            renderSelectedFavoriteGames();
         }
 
-        function toggleFavoriteGame(el, gameName) {
-            if (selectedFavoriteGames.includes(gameName)) {
-                selectedFavoriteGames = selectedFavoriteGames.filter(n => n !== gameName);
-                el.classList.remove('selected');
-            } else {
-                if (selectedFavoriteGames.length < 5) {
-                    selectedFavoriteGames.push(gameName);
-                    el.classList.add('selected');
-                } else {
-                    alert('You can only select up to 5 favorite games.');
-                    return;
-                }
+        // --- Favorite Games Search & Select ---
+        const favSearchInput = document.getElementById('favGameSearchInput');
+        const favSearchResults = document.getElementById('favGameSearchResults');
+        const favSelectedContainer = document.getElementById('favoriteGamesSelected');
+        let searchTimeoutId = null;
+
+        favSearchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeoutId);
+            const query = e.target.value.trim();
+            if (query.length < 2) {
+                favSearchResults.style.display = 'none';
+                return;
             }
+            searchTimeoutId = setTimeout(() => performGameSearch(query), 500);
+        });
+
+        async function performGameSearch(query) {
+            favSearchResults.innerHTML = '<div class="p-3 text-center text-muted"><i class="spin-icon bi bi-arrow-repeat"></i> Searching...</div>';
+            favSearchResults.style.display = 'block';
+            try {
+                const res = await fetch('/api/games/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit: 10 })
+                });
+                if (!res.ok) throw new Error('Search failed');
+                const games = await res.json();
+                renderSearchResults(games);
+            } catch (err) {
+                favSearchResults.innerHTML = '<div class="p-3 text-center text-danger">Search failed</div>';
+            }
+        }
+
+        function renderSearchResults(games) {
+            if (!games || games.length === 0) {
+                favSearchResults.innerHTML = '<div class="p-3 text-center text-muted">No games found</div>';
+                return;
+            }
+            let html = '';
+            games.forEach(game => {
+                const coverUrl = game.cover && game.cover.url ? game.cover.url.replace('t_thumb', 't_cover_big') : 'https://via.placeholder.com/90x120?text=No+Cover';
+                const safeName = game.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                html += `
+                <div class="d-flex align-items-center p-2 border-bottom border-secondary cursor-pointer hover-bg-light" style="cursor: pointer;" onclick="addFavoriteGame('${game.id}', '${safeName}', '${coverUrl}')">
+                    <img src="${coverUrl}" alt="${safeName}" style="width: 40px; height: 55px; object-fit: cover; border-radius: 4px; margin-right: 12px;">
+                    <div class="fw-bold">${safeName}</div>
+                </div>`;
+            });
+            favSearchResults.innerHTML = html;
+        }
+
+        // Add a style rule for the hover effect dynamically since we used inline html
+        const styleHtml = document.createElement('style');
+        styleHtml.textContent = '.hover-bg-light:hover { background-color: rgba(255,255,255,0.05); }';
+        document.head.appendChild(styleHtml);
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!favSearchInput.contains(e.target) && !favSearchResults.contains(e.target)) {
+                favSearchResults.style.display = 'none';
+            }
+        });
+
+        function addFavoriteGame(id, name, cover) {
+            favSearchResults.style.display = 'none';
+            favSearchInput.value = '';
+            
+            // Allow storing object or string (string backwards compatibility)
+            // If already exists (checking by name)
+            if (selectedFavoriteGames.some(g => (typeof g === 'object' ? g.name === name : g === name))) {
+                return;
+            }
+            if (selectedFavoriteGames.length >= 5) {
+                alert('You can only select up to 5 favorite games.');
+                return;
+            }
+            // Push as object
+            selectedFavoriteGames.push({ id, name, cover });
+            renderSelectedFavoriteGames();
+        }
+
+        function removeFavoriteGame(index) {
+            selectedFavoriteGames.splice(index, 1);
+            renderSelectedFavoriteGames();
+        }
+
+        function renderSelectedFavoriteGames() {
             updateGameCount();
+            if (selectedFavoriteGames.length === 0) {
+                favSelectedContainer.innerHTML = '<div class="text-muted w-100 text-center py-3 border border-secondary rounded" style="border-style: dashed !important;">Search above to add your favorite games</div>';
+                return;
+            }
+            let html = '';
+            selectedFavoriteGames.forEach((game, index) => {
+                const name = typeof game === 'object' ? game.name : game;
+                const coverUrl = typeof game === 'object' && game.cover ? game.cover : 'https://via.placeholder.com/130x180?text=No+Cover';
+                const safeName = name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                html += `
+                <div class="position-relative" style="width: 100px;">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute rounded-circle shadow" style="top: -8px; right: -8px; width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 10;" onclick="removeFavoriteGame(${index})" title="Remove"> <i class="bi bi-x"></i> </button>
+                    <img src="${coverUrl}" alt="${safeName}" title="${safeName}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 2px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                    <div class="text-center small mt-1 text-truncate" style="color: #dbe7ff; font-weight: 500;" title="${safeName}">${safeName}</div>
+                </div>`;
+            });
+            favSelectedContainer.innerHTML = html;
         }
 
         function updateGameCount() {
@@ -308,6 +427,33 @@ plagiarized the work of other students and/or persons.
             }
         });
 
+        // Wallpaper upload handler
+        document.getElementById('wallpaperInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 8 * 1024 * 1024) {
+                    showNotification('File Too Large', 'Wallpaper must be less than 8MB', 'error');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('wallpaperPreview').src = event.target.result;
+                    document.getElementById('wallpaperPreview').style.display = 'block';
+                    document.getElementById('wallpaperPreview').classList.add('has-image');
+                    document.getElementById('wallpaperEmptyState').classList.add('d-none');
+                    document.getElementById('wallpaperPositionControl').classList.add('visible');
+                    document.getElementById('wallpaperPositionSlider').value = 50;
+                    document.getElementById('wallpaperPreview').style.objectPosition = 'center 50%';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Wallpaper position slider - live preview
+        document.getElementById('wallpaperPositionSlider').addEventListener('input', (e) => {
+            document.getElementById('wallpaperPreview').style.objectPosition = `center ${e.target.value}%`;
+        });
+
         // Form submission
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -323,6 +469,8 @@ plagiarized the work of other students and/or persons.
                 username: document.getElementById('inputUsername').value.trim() || displayName.toLowerCase().replace(/\s+/g, ''),
                 bio: document.getElementById('inputBio').value.trim(),
                 avatar: document.getElementById('avatarPreview').src,
+                wallpaper: document.getElementById('wallpaperPreview').src,
+                wallpaperPosition: parseInt(document.getElementById('wallpaperPositionSlider').value) || 50,
                 gamingIdentity: document.getElementById('inputIdentity').value,
                 favoritePlatform: document.getElementById('inputPlatform').value,
                 favoriteGames: selectedFavoriteGames,
@@ -345,6 +493,8 @@ plagiarized the work of other students and/or persons.
                     displayName: profile.displayName,
                     bio: profile.bio,
                     avatar: profile.avatar,
+                    wallpaper: profile.wallpaper && profile.wallpaper !== window.location.href ? profile.wallpaper : '',
+                    wallpaperPosition: profile.wallpaperPosition,
                     steamId: profile.steamId,
                     favoriteGames: selectedFavoriteGames
                   })

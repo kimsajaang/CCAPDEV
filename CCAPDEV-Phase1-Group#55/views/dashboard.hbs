@@ -68,13 +68,6 @@ plagiarized the work of other students and/or persons.
     border: 1px solid var(--border);
   }
 
-  /* Particle canvas */
-  #particleCanvas {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-  }
 
   /* Trending section */
   .trending-header {
@@ -381,8 +374,6 @@ plagiarized the work of other students and/or persons.
   }
 </style>
 
-<!-- Particle background -->
-<canvas id="particleCanvas"></canvas>
 
 <!-- Fake loading screen -->
 <div id="page-loader" class="loader" aria-label="Loading">
@@ -1436,66 +1427,6 @@ plagiarized the work of other students and/or persons.
       container.innerHTML = '<div class="text-muted small p-3">Could not load trending games.</div>';
     }
   }
-
-  // ============================================================
-  // Particle Canvas Animation (GPU-optimized, no connection lines)
-  // ============================================================
-  (function initParticles() {
-    const canvas = document.getElementById('particleCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d', { willReadFrequently: false });
-    let w, h, particles = [];
-    const PARTICLE_COUNT = 30;
-
-    function resize() {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        r: Math.random() * 1.5 + 0.5,
-        alpha: Math.random() * 0.3 + 0.05,
-        color: Math.random() > 0.5 ? '83,131,232' : '45,212,191'
-      });
-    }
-
-    let lastFrame = 0;
-    let running = true;
-    const FRAME_INTERVAL = 1000 / 30; // cap at 30fps — visually identical, half the CPU
-    function draw(now) {
-      if (!running) return;
-      requestAnimationFrame(draw);
-      if (now - lastFrame < FRAME_INTERVAL) return;
-      lastFrame = now;
-      ctx.clearRect(0, 0, w, h);
-      for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0) p.x = w;
-        if (p.x > w) p.x = 0;
-        if (p.y < 0) p.y = h;
-        if (p.y > h) p.y = 0;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
-        ctx.fill();
-      }
-    }
-    requestAnimationFrame(draw);
-
-    // Stop rendering when tab is hidden, resume when visible
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) { running = false; }
-      else { running = true; requestAnimationFrame(draw); }
-    });
-  })();
 
   // ============================================================
   // Top 50 Modal
