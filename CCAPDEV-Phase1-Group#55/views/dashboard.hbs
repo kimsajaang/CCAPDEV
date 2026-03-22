@@ -1437,28 +1437,72 @@ plagiarized the work of other students and/or persons.
         // Upgrade IGDB thumbnail to high-res cover
         if (cover.includes('t_thumb')) cover = cover.replace('t_thumb', 't_cover_big');
         if (cover.includes('t_micro')) cover = cover.replace('t_micro', 't_cover_big');
-        const rating = (game.total_rating || game.rating) ? Math.round(game.total_rating || game.rating) : '';
+        const rating = (game.total_rating || game.rating) ? Math.round(game.total_rating || game.rating) : 0;
         
+        // Steam-style review mapping
+        let reviewStatus = 'No User Reviews';
+        let reviewClass = '';
+        if (rating >= 95) { reviewStatus = 'Overwhelmingly Positive'; reviewClass = 'positive'; }
+        else if (rating >= 85) { reviewStatus = 'Very Positive'; reviewClass = 'positive'; }
+        else if (rating >= 70) { reviewStatus = 'Mostly Positive'; reviewClass = 'positive'; }
+        else if (rating >= 40) { reviewStatus = 'Mixed'; reviewClass = 'mixed'; }
+        else if (rating > 0) { reviewStatus = 'Mostly Negative'; reviewClass = 'negative'; }
+
         // Truncate summary for hover tooltip
         const rawSummary = game.summary || game.note || '';
-        const summary = rawSummary.length > 140 ? rawSummary.substring(0, 137) + '...' : rawSummary;
+        const summary = rawSummary.length > 150 ? rawSummary.substring(0, 147) + '...' : rawSummary;
+
+        // Release Date
+        const releaseDate = game.first_release_date 
+          ? new Date(game.first_release_date * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+          : 'TBA';
+
+        // Genres as Tags
+        const tagsHtml = (game.genres || []).slice(0, 4).map(g => `<span class="steam-tag">${g.name}</span>`).join('');
+
+        // Main Screenshot (the first one)
+        let mainScreenshot = '';
+        if (game.screenshots && game.screenshots.length > 0) {
+          mainScreenshot = game.screenshots[0].url || '';
+          if (mainScreenshot.startsWith('//')) mainScreenshot = 'https:' + mainScreenshot;
+          mainScreenshot = mainScreenshot.replace('t_thumb', 't_screenshot_med');
+        }
+
+        const coverImg = cover
+          ? `<img src="${cover.startsWith('//') ? 'https:' + cover : cover}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 160 220%22 fill=%22%231e2d3a%22%3E%3Crect width=%22160%22 height=%22220%22/%3E%3Ctext x=%2280%22 y=%22110%22 fill=%22%235a6a7a%22 text-anchor=%22middle%22 font-size=%2222%22%3E🎮%3C/text%3E%3C/svg%3E'">`
+          : `<div style="width:100%;height:220px;background:#1e2d3a;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎮</div>`;
 
         const card = document.createElement('div');
         card.className = 'trending-card';
         card.style.animationDelay = `${idx * 0.06}s`;
         card.style.animation = `fadeInUp 0.5s ease ${idx * 0.06}s both`;
-        const coverImg = cover
-          ? `<img src="${cover.startsWith('//') ? 'https:' + cover : cover}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 160 220%22 fill=%22%231e2d3a%22%3E%3Crect width=%22160%22 height=%22220%22/%3E%3Ctext x=%2280%22 y=%22110%22 fill=%22%235a6a7a%22 text-anchor=%22middle%22 font-size=%2222%22%3E🎮%3C/text%3E%3C/svg%3E'">`
-          : `<div style="width:100%;height:220px;background:#1e2d3a;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎮</div>`;
         card.innerHTML = `
-              <span class="trending-rank">#${idx + 1}</span>
-              ${coverImg}
-              <div class="trending-overlay">
-                <div class="trending-name">${name}</div>
-                ${rating ? `<div class="trending-rating">★ ${rating}%</div>` : ''}
-                <div class="trending-description">${summary}</div>
-              </div>
-            `;
+          <div class="trending-card-inner">
+            <span class="trending-rank">#${idx + 1}</span>
+            ${coverImg}
+            <div class="trending-overlay">
+              <div class="trending-name">${name}</div>
+              ${rating ? `<div class="trending-rating">★ ${rating}%</div>` : ''}
+            </div>
+          </div>
+          <div class="trending-hover-content">
+            <div class="steam-screenshot-pane" style="background-image: url('${mainScreenshot}')"></div>
+            <div class="steam-details-pane">
+              <div class="steam-hover-name">${name}</div>
+              <div class="steam-release-date">Released: ${releaseDate}</div>
+              
+              ${rating > 0 ? `
+                <div class="steam-review-box">
+                  <div class="steam-review-label">Overall Reviews:</div>
+                  <div class="steam-review-status ${reviewClass}">${reviewStatus} (${Math.floor(game.total_rating_count || 100).toLocaleString()})</div>
+                </div>
+              ` : ''}
+
+              <div class="steam-hover-description">${summary}</div>
+              <div class="steam-tags">${tagsHtml}</div>
+            </div>
+          </div>
+        `;
         card.addEventListener('click', () => {
           window.location.href = '/search?q=' + encodeURIComponent(name);
         });

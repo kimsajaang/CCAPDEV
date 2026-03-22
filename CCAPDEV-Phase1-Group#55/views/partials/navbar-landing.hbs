@@ -7,7 +7,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                <li class="nav-item d-none" id="nav-dashboard"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item d-none" id="nav-dashboard"><a class="nav-link" href="/Dashboard">Dashboard</a></li>
                 <li class="nav-item d-none" id="nav-library"><a class="nav-link" href="/library">My Library</a></li>
                 <li class="nav-item"><a class="nav-link" href="/search">Search Games</a></li>
                 <li class="nav-item"><a class="nav-link" href="/stats">Community</a></li>
@@ -25,7 +25,7 @@
     function smartHomeClick(e) {
         e.preventDefault();
         fetch('/api/auth/current', { credentials: 'include' })
-            .then(r => { window.location.href = r.ok ? '/dashboard' : '/'; })
+            .then(r => { window.location.href = r.ok ? '/Dashboard' : '/'; })
             .catch(() => { window.location.href = '/'; });
     }
 

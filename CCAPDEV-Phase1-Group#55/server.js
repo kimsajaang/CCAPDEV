@@ -1085,7 +1085,7 @@ app.get('/api/games/popular', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name,screenshots.url; where first_release_date > ${sixMonthsAgo} & first_release_date < ${now} & cover != null & videos != null; sort total_rating_count desc; limit 20;`
+      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name,screenshots.*; where first_release_date > ${sixMonthsAgo} & first_release_date < ${now} & cover != null & videos != null; sort total_rating_count desc; limit 20;`
     });
 
     const data = await igdbRes.json();

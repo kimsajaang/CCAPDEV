@@ -1,4 +1,4 @@
-# Backlog Hero - Phase 2
+# Backlog Hero - Phase 3
 
 A game collection tracker web application built with Node.js, Express, and MongoDB. Users can search for games, manage their personal game library, and track their gaming progress.
 
