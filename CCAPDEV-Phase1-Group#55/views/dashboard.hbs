@@ -16,10 +16,6 @@ plagiarized the work of other students and/or persons.
     overflow: hidden;
   }
 
-  .spin-icon {
-    display: inline-block;
-    animation: spin 0.8s linear infinite;
-  }
 
   .user-post-item {
     border-left: 4px solid var(--primary) !important;
@@ -372,6 +368,34 @@ plagiarized the work of other students and/or persons.
     color: var(--text);
     font-weight: 700;
   }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .suggestion-item {
+    transition: background 0.2s ease, transform 0.2s ease;
+    border-radius: var(--radius-md);
+    padding: 8px;
+    margin: -8px; /* Offset the padding for the container */
+  }
+
+  .suggestion-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+  }
+
+  .suggest-result.highlight {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 20px rgba(83, 131, 232, 0.2);
+  }
 </style>
 
 
@@ -389,48 +413,58 @@ plagiarized the work of other students and/or persons.
 <div class="container my-5">
   <!-- Welcome hero card with user stats -->
   <div class="hero hero-compact mb-4 reveal">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <h2 class="mb-2" id="welcomeTitle"
+          style="font-size:clamp(1.8rem, 4vw, 2.8rem); font-weight:900; letter-spacing:-0.03em; line-height:1.1;">
+          Play smarter, <span class="gradient-text">finish more.</span>
+        </h2>
+        <p class="hero-sub mb-4 opacity-75" style="font-size: 1.1rem;">Your personal command center for game tracking
+          and discovery.</p>
 
-    <h2 class="mb-2" id="welcomeTitle"
-      style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;letter-spacing:-0.02em;">Play smarter, <span
-        class="gradient-text">finish more.</span></h2>
-    <p class="hero-sub mb-3">Quick picks based on your free time.</p>
-    <div class="d-flex flex-wrap gap-2 mb-2">
-      <a class="btn btn-primary" href="search+_"><i class="bi bi-search me-1"></i>Find Games</a>
-      <a class="btn btn-outline-primary" href="library+_"><i class="bi bi-collection me-1"></i>My Library</a>
+        <div class="d-flex flex-wrap gap-3 mb-4">
+          <a class="btn btn-premium" href="/search">
+            <i class="bi bi-search me-2"></i>Find Games
+          </a>
+          <a class="btn btn-premium-outline" href="/library">
+            <i class="bi bi-collection-play me-2"></i>My Library
+          </a>
+        </div>
+
+        <div id="steamLiveStatus" class="mb-4" style="display:none;">
+          <div class="badge-live">
+            <span class="dot-live"></span>
+            <span>Currently Playing: <strong id="steamLiveGameName" class="text-white ms-1"></strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="hero-stats justify-content-lg-end">
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-check-circle-fill"></i>Completed</div>
+            <div class="hero-stat-value counter-animate" id="statCompleted">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-controller"></i>Collection</div>
+            <div class="hero-stat-value counter-animate" id="statTotal">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-hourglass-split"></i>Backlog</div>
+            <div class="hero-stat-value counter-animate" id="statBacklog">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-play-fill"></i>Playing</div>
+            <div class="hero-stat-value counter-animate" id="statPlaying">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-clock-history"></i>Hours</div>
+            <div class="hero-stat-value counter-animate" id="statHours">0</div>
+          </div>
+        </div>
+
+      </div>
     </div>
-    <div id="steamLiveStatus" class="mb-3" style="display:none; font-size: 0.85rem;">
-      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 p-2"
-        style="border-radius: var(--radius-md)">
-        <i class="bi bi-steam me-1"></i><span class="spinner-grow spinner-grow-sm text-success me-2" role="status"
-          style="width: 0.75rem; height: 0.75rem;"></span>Currently Playing: <strong id="steamLiveGameName"
-          class="text-white ms-1"></strong>
-      </span>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <div class="hero-stat-label"><span class="dot dot-played"></span>Completed</div>
-        <div class="hero-stat-value counter-animate" id="statCompleted">0</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-label"><span class="dot dot-games"></span>Games</div>
-        <div class="hero-stat-value counter-animate" id="statTotal">0</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-label"><span class="dot dot-ratings"></span>Backlog</div>
-        <div class="hero-stat-value counter-animate" id="statBacklog">0</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-label"><span class="dot dot-reviews"></span>Playing</div>
-        <div class="hero-stat-value counter-animate" id="statPlaying">0</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-label"><span class="dot dot-lists"></span>Hours</div>
-        <div class="hero-stat-value counter-animate" id="statHours">0</div>
-      </div>
-    </div>
-    <button class="btn btn-sm btn-outline-light mt-2" id="steamSyncBtn" style="display:none;" onclick="syncSteam()">
-      <i class="bi bi-steam me-1"></i>Sync Steam Hours
-    </button>
   </div>
 
   <!-- Trending Games -->
@@ -561,6 +595,7 @@ plagiarized the work of other students and/or persons.
         <div class="mb-3">
           <label class="form-label small">What type of update?</label>
           <select id="updateType" class="form-select">
+            <option value="session">Question</option>
             <option value="session">Logged a session</option>
             <option value="review">Reviewed a game</option>
             <option value="completed">Completed a game</option>
@@ -665,7 +700,16 @@ plagiarized the work of other students and/or persons.
     { name: "Persona 5 Royal", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2t97.jpg", genre: "JRPG", minSession: 45, avgSession: 90, note: "Story-heavy, plan long sessions" },
     { name: "Elden Ring", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg", genre: "Action RPG", minSession: 30, avgSession: 60, note: "Open world exploration" },
     { name: "Portal 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg", genre: "Puzzle", minSession: 20, avgSession: 40, note: "Clever puzzles, quick chapters" },
-    { name: "Disco Elysium", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.jpg", genre: "RPG", minSession: 30, avgSession: 60, note: "Dialogue-heavy detective RPG" }
+    { name: "Disco Elysium", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.jpg", genre: "RPG", minSession: 30, avgSession: 60, note: "Dialogue-heavy detective RPG" },
+    { name: "The Witcher 3", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg", genre: "Action RPG", minSession: 40, avgSession: 80, note: "Incredible world-building" },
+    { name: "Cyberpunk 2077", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mdf.jpg", genre: "Action RPG", minSession: 30, avgSession: 60, note: "Futuristic open world" },
+    { name: "Minecraft", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg", genre: "Sandbox", minSession: 10, avgSession: 40, note: "Infinite possibilities" },
+    { name: "Grand Theft Auto V", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1qx8.jpg", genre: "Action", minSession: 30, avgSession: 60, note: "Los Santos awaits" },
+    { name: "God of War", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r8h.jpg", genre: "Action", minSession: 30, avgSession: 60, note: "Cinematic combat" },
+    { name: "Resident Evil 4", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5v96.jpg", genre: "Horror", minSession: 20, avgSession: 45, note: "Survival horror at its best" },
+    { name: "Dota 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1n00.jpg", genre: "MOBA", minSession: 35, avgSession: 50, note: "Intense team battles" },
+    { name: "Among Us", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2nl0.jpg", genre: "Social Deduction", minSession: 5, avgSession: 15, note: "Find the imposter" },
+    { name: "Apex Legends", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2v6i.jpg", genre: "Battle Royale", minSession: 15, avgSession: 30, note: "Fast-paced hero shooter" }
   ];
 
   let dashboardLibraryCache = null;
@@ -770,27 +814,43 @@ plagiarized the work of other students and/or persons.
       return;
     }
 
-    // Pick random from fitting games
-    const pick = fits[Math.floor(Math.random() * fits.length)];
-    const sessions = Math.max(1, Math.floor(totalMins / pick.avgSession));
-    const imgTag = pick.img
-      ? `<img src="${pick.img}" style="width:42px;height:56px;border-radius:6px;object-fit:cover;border:1px solid #2a3843;" alt="${pick.name}" loading="lazy">`
-      : `<div style="width:42px;height:56px;border-radius:6px;background:#2a3843;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#6f7d8a;"><i class="bi bi-controller"></i></div>`;
+    // Fisher-Yates Shuffle for true randomness
+    const shuffle = (array) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
 
-    const sourceLabel = source === 'library'
-      ? '<span class="badge bg-primary">From Library</span>'
-      : '<span class="badge bg-success">New Discovery</span>';
+    const shuffled = shuffle([...fits]);
+    const selected = shuffled.slice(0, 3);
+    
+    let html = '';
+    selected.forEach((pick, index) => {
+      const sessions = Math.max(1, Math.floor(totalMins / pick.avgSession));
+      const imgTag = pick.img
+        ? `<img src="${pick.img}" style="width:44px;height:58px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);" alt="${pick.name}" loading="lazy">`
+        : `<div style="width:44px;height:58px;border-radius:6px;background:#2a3843;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#6f7d8a;"><i class="bi bi-controller"></i></div>`;
 
-    planResult.innerHTML = `
-            <div class="d-flex align-items-center gap-3">
-              ${imgTag}
-              <div>
-                <p class="mb-0 small"><strong>Recommended:</strong> ${pick.name} ${sourceLabel}</p>
-                <small class="text-info">~${pick.avgSession} mins/session · ${sessions > 1 ? sessions + ' sessions fit' : '1 session'}</small><br/>
-                <small class="text-muted">${pick.genre} · ${pick.note}</small>
-              </div>
+      const sourceLabel = pick.fromLibrary
+        ? '<span class="badge bg-primary ms-1" style="font-size:0.6rem; vertical-align:middle;">Library</span>'
+        : '<span class="badge bg-success ms-1" style="font-size:0.6rem; vertical-align:middle;">New Discovery</span>';
+
+      html += `
+        <div class="suggestion-item d-flex align-items-center gap-3 ${index > 0 ? 'mt-3 pt-3 border-top border-secondary' : ''}" style="animation: fadeInScale 0.3s ease forwards ${index * 0.1}s; opacity:0; transform:scale(0.95);">
+          ${imgTag}
+          <div style="flex:1; min-width:0;">
+            <p class="mb-0 small text-truncate"><strong>${pick.name}</strong>${sourceLabel}</p>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <small class="text-info" style="font-size:0.7rem; font-weight:600;">~${pick.avgSession}m/sess · ${sessions > 1 ? sessions + ' fit' : '1 fits'}</small>
+              <small class="text-muted text-truncate ms-2" style="font-size:0.7rem;">${pick.genre}</small>
             </div>
-          `;
+          </div>
+        </div>
+      `;
+    });
+    planResult.innerHTML = html;
 
     // Highlight animation
     planResult.classList.add("highlight");
@@ -940,7 +1000,7 @@ plagiarized the work of other students and/or persons.
   });
 </script>
 <!-- Floating CTA button — always visible in bottom-right corner -->
-<a class="sticky-cta" href="search+_">Find Games</a>
+<a class="sticky-cta" href="/search">Find Games</a>
 <script>
   // Logout function
   async function logout(event) {
@@ -950,41 +1010,14 @@ plagiarized the work of other students and/or persons.
         method: 'POST',
         credentials: 'include'
       });
-      window.location.href = 'login+_';
+      window.location.href = 'login';
     } catch (err) {
       console.error('Logout failed:', err);
-      window.location.href = 'login+_';
+      window.location.href = 'login';
     }
   }
 
   // Steam sync function
-  async function syncSteam() {
-    const btn = document.getElementById('steamSyncBtn');
-    const origText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1 spin-icon"></i>Syncing...';
-    try {
-      const res = await fetch('/api/steam/sync', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById('statHours').textContent = data.totalHours;
-        btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + data.message;
-        btn.classList.replace('btn-outline-light', 'btn-outline-success');
-        setTimeout(() => { btn.innerHTML = origText; btn.classList.replace('btn-outline-success', 'btn-outline-light'); btn.disabled = false; }, 3000);
-      } else {
-        btn.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>' + (data.error || 'Sync failed');
-        btn.classList.replace('btn-outline-light', 'btn-outline-danger');
-        setTimeout(() => { btn.innerHTML = origText; btn.classList.replace('btn-outline-danger', 'btn-outline-light'); btn.disabled = false; }, 3000);
-      }
-    } catch (err) {
-      btn.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Network error';
-      btn.classList.replace('btn-outline-light', 'btn-outline-danger');
-      setTimeout(() => { btn.innerHTML = origText; btn.classList.replace('btn-outline-danger', 'btn-outline-light'); btn.disabled = false; }, 3000);
-    }
-  }
 
   // Check if user is logged in and fetch data
   async function initDashboard() {
@@ -1030,7 +1063,6 @@ plagiarized the work of other students and/or persons.
                 animateCounter('statBacklog', stats.backlog);
                 animateCounter('statPlaying', stats.playing);
                 animateCounter('statHours', Math.round(stats.totalHours));
-                // streak removed — replaced by trailers
               }
             } catch (statsErr) {
               console.warn('[Dashboard] Could not fetch stats:', statsErr);
@@ -1038,7 +1070,8 @@ plagiarized the work of other students and/or persons.
 
             // Show Steam sync button if user has a Steam ID
             if (currentUserData.steamId) {
-              document.getElementById('steamSyncBtn').style.display = '';
+              const syncBtn = document.getElementById('steamSyncBtn');
+              if (syncBtn) syncBtn.style.display = '';
 
               // Check if currently playing a game on Steam
               try {
@@ -1046,8 +1079,10 @@ plagiarized the work of other students and/or persons.
                 if (steamRes.ok) {
                   const steamData = await steamRes.json();
                   if (steamData.playing && steamData.gameName) {
-                    document.getElementById('steamLiveGameName').textContent = steamData.gameName;
-                    document.getElementById('steamLiveStatus').style.display = '';
+                    const gameNameEl = document.getElementById('steamLiveGameName');
+                    const statusEl = document.getElementById('steamLiveStatus');
+                    if (gameNameEl) gameNameEl.textContent = steamData.gameName;
+                    if (statusEl) statusEl.style.display = '';
                   }
                 }
               } catch (steamErr) {
@@ -1081,13 +1116,13 @@ plagiarized the work of other students and/or persons.
       // If all retries exhausted, do one final redirect attempt
       console.error('[Dashboard] Auth check failed after all retries - redirecting');
       setTimeout(() => {
-        window.location.href = 'login+_';
+        window.location.href = 'login';
       }, 500);
 
     } catch (err) {
       console.error('[Dashboard] Failed to load dashboard:', err);
       setTimeout(() => {
-        window.location.href = 'login+_';
+        window.location.href = 'login';
       }, 500);
     }
   }
@@ -1106,12 +1141,12 @@ plagiarized the work of other students and/or persons.
     e.preventDefault();
     try {
       const res = await fetch('/api/auth/current', { credentials: 'include' });
-      const dest = res.ok ? 'dashboard+_' : 'index+_';
+      const dest = res.ok ? 'dashboard' : '/';
       document.body.classList.add('page-exit');
       setTimeout(() => window.location = dest, 300);
     } catch (err) {
       console.error('Auth check failed:', err);
-      window.location = 'index+_';
+      window.location = '/';
     }
   }
 
@@ -1145,7 +1180,7 @@ plagiarized the work of other students and/or persons.
       const top = allEntries.slice(0, 10);
 
       if (top.length === 0) {
-        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. <a href="search+_" style="color:#5383e8;">Find games to play!</a></div>';
+        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. <a href="/search" style="color:#5383e8;">Find games to play!</a></div>';
         return;
       }
 
@@ -1167,7 +1202,7 @@ plagiarized the work of other students and/or persons.
         const ratingText = entry.rating ? '★'.repeat(entry.rating) + '☆'.repeat(5 - entry.rating) : '';
         const displayName = u.displayName || u.username || 'User';
         const userAvatar = u.avatar || '';
-        const profileLink = item.isOwn ? 'profile+_' : `profile+_?user=${u._id}`;
+        const profileLink = item.isOwn ? 'profile' : `profile?user=${u._id}`;
         html += `
               <div class="list-group-item p-3 ${borderClass} reveal is-visible">
                 <div class="d-flex align-items-center mb-2">
@@ -1244,7 +1279,7 @@ plagiarized the work of other students and/or persons.
       if (!res.ok) return;
       const requests = await res.json();
       if (requests.length > 0) {
-        const profileLink = document.querySelector('a.nav-link[href="profile+_"]');
+        const profileLink = document.querySelector('a.nav-link[href="profile"]');
         if (profileLink) {
           profileLink.innerHTML = `Profile <span style="display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;margin-left:4px;">${requests.length}</span>`;
         }
@@ -1389,6 +1424,7 @@ plagiarized the work of other students and/or persons.
           name: g.name,
           coverUrl: g.img,
           rating: 80 + Math.floor(Math.random() * 15),
+          summary: g.note || '',
           _fallback: true
         }));
       }
@@ -1402,6 +1438,11 @@ plagiarized the work of other students and/or persons.
         if (cover.includes('t_thumb')) cover = cover.replace('t_thumb', 't_cover_big');
         if (cover.includes('t_micro')) cover = cover.replace('t_micro', 't_cover_big');
         const rating = (game.total_rating || game.rating) ? Math.round(game.total_rating || game.rating) : '';
+        
+        // Truncate summary for hover tooltip
+        const rawSummary = game.summary || game.note || '';
+        const summary = rawSummary.length > 140 ? rawSummary.substring(0, 137) + '...' : rawSummary;
+
         const card = document.createElement('div');
         card.className = 'trending-card';
         card.style.animationDelay = `${idx * 0.06}s`;
@@ -1415,10 +1456,11 @@ plagiarized the work of other students and/or persons.
               <div class="trending-overlay">
                 <div class="trending-name">${name}</div>
                 ${rating ? `<div class="trending-rating">★ ${rating}%</div>` : ''}
+                <div class="trending-description">${summary}</div>
               </div>
             `;
         card.addEventListener('click', () => {
-          window.location.href = 'search+_?q=' + encodeURIComponent(name);
+          window.location.href = '/search?q=' + encodeURIComponent(name);
         });
         container.appendChild(card);
       });
@@ -1459,7 +1501,7 @@ plagiarized the work of other students and/or persons.
                 ${rating ? `<div class="top50-rating">★ ${rating}%</div>` : ''}
               </div>
             `;
-        card.addEventListener('click', () => { window.location.href = 'search+_?q=' + encodeURIComponent(name); });
+        card.addEventListener('click', () => { window.location.href = '/search?q=' + encodeURIComponent(name); });
         grid.appendChild(card);
       });
     } catch (err) {

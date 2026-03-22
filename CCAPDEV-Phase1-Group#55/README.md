@@ -204,13 +204,12 @@ Response:
 ## Features
 
 ### Core
-- User registration and login with password hashing (bcryptjs)
-- Personal game library management (add, edit, remove games)
-- Track game status: Backlog, Playing, Completed
-- Rate games (1–5 stars) and log playtime
-- Search for games via IGDB API with HD cover art
-- Customizable user profiles (avatar, bio, display name, favorite games)
-- Responsive dark-themed UI (Bootstrap 5)
+- **User Authentication** — Registration and login with password hashing (bcryptjs)
+- **Library Management** — Personal game library to track backlog, playing, and completed games
+- **Ratings & Playtime** — Rate games (1–5 stars) and log custom playtime
+- **Game Discovery** — Search for games via IGDB API with HD cover art, and view trending games and trailers on your dashboard
+- **Profile Customization** — Customizable user profiles (avatar, bio, display name) including a dynamic top 5 favorite games showcase
+- **Responsive & Dynamic UI** — Responsive dark-themed UI (Bootstrap 5 / Handlebars) featuring an animated interactive Plexus background
 
 ### Steam Integration
 - **Steam Login** — Sign in with your Steam account via OpenID (passport-steam)
@@ -219,9 +218,6 @@ Response:
 - **IGDB Cover Art** — Game covers are fetched from IGDB for high-quality images; falls back to Steam CDN
 
 ### Activity & Gamification
-- **Daily Streak** — Tracks consecutive days of activity
-  - Steam users: streak counts days you actually played games on Steam (detected via playtime changes)
-  - Non-Steam users: streak counts consecutive days you visit the app
 - **Activity Feed** — Dashboard shows recent library activity with game covers, status badges, ratings, and playtime
 - **Community Quality Scores** — Average ratings from your library displayed on dashboard
 
@@ -232,13 +228,15 @@ Response:
 - **Post Search** — Filter community posts by keywords
 - **Active Members Sidebar** — Dynamically shows users who contribute posts and comments
 
+## Tech Stack
 
-- **Frontend**: HTML5, Bootstrap 5, JavaScript
+- **Frontend**: HTML5, Bootstrap 5, JavaScript, Handlebars
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: bcryptjs (password hashing), express-session, passport-steam (Steam OpenID)
 - **External APIs**: IGDB (via Twitch OAuth), Steam Web API
 
+## Environment Setup
 
 Create a `.env` file in the root directory:
 

@@ -6,6 +6,7 @@ const express = require('express');
 const { engine } = require('express-handlebars');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const MongoStore = require('connect-mongo').default;
 const compression = require('compression');
 const fetch = require('node-fetch');
 const passport = require('passport');
@@ -20,6 +21,7 @@ const axios = require('axios'); // Ensure axios is installed: npm install axios
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/backlog-hero';
 app.use(express.json({ limit: '20mb' })); // Allow large base64 image payloads
 // --- Handlebars Template Engine ---
 app.engine('hbs', engine({
@@ -33,11 +35,16 @@ app.set('view engine', 'hbs');
 app.set('views', __dirname + '/views');
 app.set('view cache', true); // Compile templates once instead of on every request
 
-// --- Session Configuration ---
+// --- Session Configuration (MongoDB-backed for persistence across restarts) ---
 app.use(session({
   secret: 'backlog-hero-secret-key-change-in-prod',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: MONGO_URI,
+    collectionName: 'sessions',
+    ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+  }),
   cookie: { secure: false, httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 days
 }));
 
@@ -63,7 +70,8 @@ app.get('/intro', (req, res) => {
 });
 app.get('/login', (req, res) => res.render('login', { title: 'Login', user: req.user }));
 app.get('/register', (req, res) => res.render('register', { title: 'Register', user: req.user }));
-app.get('/dashboard', (req, res) => res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading', user: req.user }));
+app.get('/Dashboard', (req, res) => res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading', user: req.user }));
+app.get('/dashboard', (req, res) => res.redirect('/Dashboard'));
 app.get('/library', (req, res) => res.render('library', { title: 'My Library', user: req.user }));
 app.get('/profile', (req, res) => res.render('profile', { title: 'Profile', user: req.user }));
 app.get('/profile-edit', (req, res) => res.render('profile-edit', { title: 'Edit Profile', user: req.user }));
@@ -91,10 +99,10 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
-      clientID: GOOGLE_CLIENT_ID,
-      clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: `http://localhost:${PORT}/auth/google/callback`
-    },
+    clientID: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    callbackURL: `http://localhost:${PORT}/auth/google/callback`
+  },
     async (accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
@@ -132,10 +140,10 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 }
 
 passport.use(new SteamStrategy({
-    returnURL: `http://localhost:${PORT}/auth/steam/callback`,
-    realm: `http://localhost:${PORT}/`,
-    apiKey: STEAM_API_KEY
-  },
+  returnURL: `http://localhost:${PORT}/auth/steam/callback`,
+  realm: `http://localhost:${PORT}/`,
+  apiKey: STEAM_API_KEY
+},
   async (identifier, profile, done) => {
     try {
       const steamId = profile.id;
@@ -149,8 +157,8 @@ passport.use(new SteamStrategy({
           password: require('crypto').randomBytes(32).toString('hex'),
           displayName: profile.displayName || 'Steam User',
           avatar: profile.photos && profile.photos[2] ? profile.photos[2].value
-                : profile.photos && profile.photos[0] ? profile.photos[0].value
-                : undefined,
+            : profile.photos && profile.photos[0] ? profile.photos[0].value
+              : undefined,
           steamId: steamId,
         });
         await user.save();
@@ -216,27 +224,33 @@ let tokenExpiry = 0;
 async function getAccessToken() {
   if (accessToken && Date.now() < tokenExpiry) return accessToken;
 
-  console.log('[IGDB] Fetching new Twitch access token...');
-  const res = await fetch('https://id.twitch.tv/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: process.env.TWITCH_CLIENT_ID,
-      client_secret: process.env.TWITCH_CLIENT_SECRET,
-      grant_type: 'client_credentials'
-    })
-  });
+  try {
+    console.log('[IGDB] Fetching new Twitch access token...');
+    const res = await fetch('https://id.twitch.tv/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.TWITCH_CLIENT_ID,
+        client_secret: process.env.TWITCH_CLIENT_SECRET,
+        grant_type: 'client_credentials'
+      })
+    });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Twitch auth failed: ${err}`);
+    if (!res.ok) {
+      const err = await res.text();
+      console.error(`[IGDB] Twitch auth failed: ${err}`);
+      return null;
+    }
+
+    const data = await res.json();
+    accessToken = data.access_token;
+    tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
+    console.log('[IGDB] Got access token, expires in', Math.round(data.expires_in / 3600), 'hours');
+    return accessToken;
+  } catch (err) {
+    console.error('[IGDB] Network error fetching access token:', err.message);
+    return null;
   }
-
-  const data = await res.json();
-  accessToken = data.access_token;
-  tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
-  console.log('[IGDB] Got access token, expires in', Math.round(data.expires_in / 3600), 'hours');
-  return accessToken;
 }
 
 // Helper to get IGDB Access Token (Twitch OAuth)
@@ -257,7 +271,7 @@ app.get('/api/steam/friends', async (req, res) => {
     if (!friendRes.ok) return res.status(404).json({ error: 'Could not fetch friends list' });
     const friendData = await friendRes.json();
     if (!friendData.friendslist || !friendData.friendslist.friends) return res.json([]);
-    
+
     // Sort friends by friend_since and take up to 100
     const friendIds = friendData.friendslist.friends.map(f => f.steamid).slice(0, 100);
     if (friendIds.length === 0) return res.json([]);
@@ -267,9 +281,9 @@ app.get('/api/steam/friends', async (req, res) => {
     const summaryRes = await fetch(summaryUrl);
     if (!summaryRes.ok) return res.status(500).json({ error: 'Could not fetch player summaries' });
     const summaryData = await summaryRes.json();
-    
+
     if (!summaryData.response || !summaryData.response.players) return res.json([]);
-    
+
     const players = summaryData.response.players.map(p => ({
       steamId: p.steamid,
       name: p.personaname,
@@ -279,16 +293,16 @@ app.get('/api/steam/friends', async (req, res) => {
       isOnline: p.personastate > 0,
       profileUrl: p.profileurl
     }));
-    
+
     // Sort: Playing -> Online -> Offline -> Alphabetical
     players.sort((a, b) => {
       if (a.isPlaying && !b.isPlaying) return -1;
       if (!a.isPlaying && b.isPlaying) return 1;
       if (a.isPlaying && b.isPlaying) return a.name.localeCompare(b.name);
-      
+
       if (a.isOnline && !b.isOnline) return -1;
       if (!a.isOnline && b.isOnline) return 1;
-      
+
       return a.name.localeCompare(b.name);
     });
 
@@ -323,15 +337,14 @@ app.post('/api/users/register', async (req, res) => {
     });
 
     await newUser.save();
-    
+
     // Set session
-    req.session.userId = newUser._id;
+    req.session.userId = newUser._id.toString();
     req.session.username = newUser.username;
     console.log('[REGISTER] Session set for user:', newUser.displayName, '| Session ID:', req.sessionID);
 
-    // Start login streak (non-Steam users get visit-based streak)
-    try { await updateStreak(newUser._id, true); } catch (e) { console.warn('[REGISTER] Streak update failed:', e.message); }
-    
+
+
     // Save session before responding
     req.session.save((err) => {
       if (err) {
@@ -373,14 +386,11 @@ app.post('/api/users/login', async (req, res) => {
     }
 
     // Set session
-    req.session.userId = user._id;
+    req.session.userId = user._id.toString();
     req.session.username = user.username;
     console.log('[LOGIN] Session set for user:', user.displayName, '| Session ID:', req.sessionID);
 
-    // Update login streak (non-Steam users get visit-based streak)
-    if (!user.steamId) {
-      try { await updateStreak(user._id, true); } catch (e) { console.warn('[LOGIN] Streak update failed:', e.message); }
-    }
+
 
     // Save session before responding
     req.session.save((err) => {
@@ -461,7 +471,7 @@ app.get('/api/auth/steam-status', isLoggedIn, async (req, res) => {
 
     if (data && data.response && data.response.players && data.response.players.length > 0) {
       const player = data.response.players[0];
-      
+
       if (player.gameextrainfo) {
         // User is currently playing a game on Steam
         return res.json({
@@ -471,7 +481,7 @@ app.get('/api/auth/steam-status', isLoggedIn, async (req, res) => {
         });
       }
     }
-    
+
     // Not currently playing anything
     res.json({ playing: false });
   } catch (err) {
@@ -480,27 +490,7 @@ app.get('/api/auth/steam-status', isLoggedIn, async (req, res) => {
   }
 });
 
-// Helper: update a user's streak
-// For Steam users: based on whether playtime increased (they actually gamed)
-// For non-Steam users: based on daily app visits
-async function updateStreak(userId, hadGamingActivity) {
-  const user = await User.findById(userId);
-  if (!user) return;
-  const today = new Date().toISOString().slice(0, 10);
-  if (user.lastActiveDate === today) return; // already counted today
 
-  // For Steam users, only count days with actual gaming activity
-  if (user.steamId && !hadGamingActivity) return;
-
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (user.lastActiveDate === yesterday) {
-    user.streakCount += 1;
-  } else {
-    user.streakCount = 1;
-  }
-  user.lastActiveDate = today;
-  await user.save();
-}
 
 // ─── STEAM AUTH ROUTES ───
 
@@ -531,98 +521,103 @@ async function getIgdbCover(gameName) {
 
 // Helper: import a user's Steam games into their Backlog Hero library
 async function importSteamGames(user) {
-  const steamUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${encodeURIComponent(user.steamId)}&format=json&include_appinfo=1&include_played_free_games=1`;
-  const steamRes = await fetch(steamUrl);
-  const steamData = await steamRes.json();
+  try {
+    const steamUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${encodeURIComponent(user.steamId)}&format=json&include_appinfo=1&include_played_free_games=1`;
+    const steamRes = await fetch(steamUrl);
+    const steamData = await steamRes.json();
 
-  if (!steamData.response || !steamData.response.games) {
-    console.log('[STEAM IMPORT] No games found (profile may be private). Steam ID:', user.steamId);
-    return { imported: 0, updated: 0 };
-  }
-
-  const steamGames = steamData.response.games;
-  let imported = 0, updated = 0;
-
-  for (const sg of steamGames) {
-    if (!sg.name) continue;
-
-    // Find or create the Game document
-    let game = await Game.findOne({ name: { $regex: new RegExp('^' + sg.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') } });
-    const steamCover = `https://cdn.cloudflare.steamstatic.com/steam/apps/${sg.appid}/library_600x900_2x.jpg`;
-    if (!game) {
-      // Try IGDB first, fall back to Steam CDN
-      const igdbCover = await getIgdbCover(sg.name);
-      game = new Game({
-        name: sg.name,
-        coverUrl: igdbCover || steamCover,
-        platforms: ['PC'],
-      });
-      await game.save();
-    } else if (game.coverUrl && (game.coverUrl.includes('via.placeholder.com') || game.coverUrl.includes('/header.jpg'))) {
-      // Upgrade placeholder or old header URLs
-      const igdbCover = await getIgdbCover(sg.name);
-      game.coverUrl = igdbCover || steamCover;
-      await game.save();
+    if (!steamData.response || !steamData.response.games) {
+      console.log('[STEAM IMPORT] No games found (profile may be private). Steam ID:', user.steamId);
+      return { imported: 0, updated: 0 };
     }
 
-    // Check if already in library (including hidden/removed entries)
-    const existing = await LibraryEntry.findOne({ userId: user._id, gameId: game._id });
-    const steamHours = Math.round((sg.playtime_forever / 60) * 10) / 10;
+    const steamGames = steamData.response.games;
+    let imported = 0, updated = 0;
 
-    if (!existing) {
-      // Determine status based on playtime
-      let status = 'backlog';
-      if (steamHours > 0) status = 'playing';
+    for (const sg of steamGames) {
+      if (!sg.name) continue;
 
-      const entry = new LibraryEntry({
-        userId: user._id,
-        gameId: game._id,
-        status,
-        playtime: steamHours,
-      });
-      await entry.save();
-      imported++;
-    } else if (existing.hidden) {
-      // User previously removed this game — don't re-import, just update playtime silently
-      if (steamHours > (existing.playtime || 0)) {
+      // Find or create the Game document
+      let game = await Game.findOne({ name: { $regex: new RegExp('^' + sg.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') } });
+      const steamCover = `https://cdn.cloudflare.steamstatic.com/steam/apps/${sg.appid}/library_600x900_2x.jpg`;
+      if (!game) {
+        // Try IGDB first, fall back to Steam CDN
+        const igdbCover = await getIgdbCover(sg.name);
+        game = new Game({
+          name: sg.name,
+          coverUrl: igdbCover || steamCover,
+          platforms: ['PC'],
+        });
+        await game.save();
+      } else if (game.coverUrl && (game.coverUrl.includes('via.placeholder.com') || game.coverUrl.includes('/header.jpg'))) {
+        // Upgrade placeholder or old header URLs
+        const igdbCover = await getIgdbCover(sg.name);
+        game.coverUrl = igdbCover || steamCover;
+        await game.save();
+      }
+
+      // Check if already in library (including hidden/removed entries)
+      const existing = await LibraryEntry.findOne({ userId: user._id, gameId: game._id });
+      const steamHours = Math.round((sg.playtime_forever / 60) * 10) / 10;
+
+      if (!existing) {
+        // Determine status based on playtime
+        let status = 'backlog';
+        if (steamHours > 0) status = 'playing';
+
+        const entry = new LibraryEntry({
+          userId: user._id,
+          gameId: game._id,
+          status,
+          playtime: steamHours,
+        });
+        await entry.save();
+        imported++;
+      } else if (existing.hidden) {
+        // User previously removed this game — don't re-import, just update playtime silently
+        if (steamHours > (existing.playtime || 0)) {
+          existing.playtime = steamHours;
+          await existing.save();
+        }
+      } else if (steamHours > (existing.playtime || 0)) {
+        // Update playtime if Steam has more
         existing.playtime = steamHours;
         await existing.save();
+        updated++;
       }
-    } else if (steamHours > (existing.playtime || 0)) {
-      // Update playtime if Steam has more
-      existing.playtime = steamHours;
-      await existing.save();
-      updated++;
     }
-  }
 
-  console.log(`[STEAM IMPORT] ${user.displayName}: imported ${imported} new games, updated ${updated} playtimes (${steamGames.length} total Steam games)`);
-  return { imported, updated, total: steamGames.length, hadActivity: imported > 0 || updated > 0 };
+    console.log(`[STEAM IMPORT] ${user.displayName}: imported ${imported} new games, updated ${updated} playtimes (${steamGames.length} total Steam games)`);
+    return { imported, updated, total: steamGames.length, hadActivity: imported > 0 || updated > 0 };
+  } catch (err) {
+    console.error(`[STEAM IMPORT] Fatal error for ${user.displayName}:`, err.message);
+    return { imported: 0, updated: 0, total: 0, hadActivity: false, error: err.message };
+  }
 }
 
 // Helper: auto-sync Steam friends that have Backlog Hero accounts
 async function syncSteamFriends(user) {
   if (!user || !user.steamId) return 0;
-  
+
   try {
     const steamUrl = `https://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=${STEAM_API_KEY}&steamid=${user.steamId}&relationship=friend`;
     const steamRes = await fetch(steamUrl);
-    
+
     // Steam API returns 401/403 or empty if profile is private
     if (!steamRes.ok) return 0;
-    
+
     const steamData = await steamRes.json();
     if (!steamData.friendslist || !steamData.friendslist.friends) return 0;
-    
+
     const steamFriendIds = steamData.friendslist.friends.map(f => f.steamid);
     if (steamFriendIds.length === 0) return 0;
-    
+
     // Find all Backlog Hero users that match these steam IDs
     const matchingPlatformUsers = await User.find({ steamId: { $in: steamFriendIds } });
     if (matchingPlatformUsers.length === 0) return 0;
-    
+
     let newFriendsAdded = 0;
-    
+
     for (const friendUser of matchingPlatformUsers) {
       // Check if they are already friends
       const alreadyFriends = user.friends && user.friends.includes(friendUser._id);
@@ -630,23 +625,23 @@ async function syncSteamFriends(user) {
         // Add to current user's friends list
         if (!user.friends) user.friends = [];
         user.friends.push(friendUser._id);
-        
+
         // Add to the other user's friends list (two-way)
         if (!friendUser.friends) friendUser.friends = [];
         if (!friendUser.friends.includes(user._id)) {
           friendUser.friends.push(user._id);
           await friendUser.save();
         }
-        
+
         newFriendsAdded++;
       }
     }
-    
+
     if (newFriendsAdded > 0) {
       await user.save();
       console.log(`[STEAM FRIENDS] ${user.displayName}: Auto-synced ${newFriendsAdded} friends from Steam!`);
     }
-    
+
     return newFriendsAdded;
   } catch (err) {
     console.error(`[STEAM FRIENDS] Sync failed for ${user.displayName}:`, err.message);
@@ -675,13 +670,12 @@ app.get('/auth/steam/callback',
       console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
     }
 
-    // Update streak based on actual gaming activity
-    try { await updateStreak(req.user._id, hadActivity); } catch (e) { console.warn('[STEAM AUTH] Streak update failed:', e.message); }
+
 
     // Auto-sync Steam friends
     try { await syncSteamFriends(req.user); } catch (e) { console.warn('[STEAM AUTH] Friends sync failed:', e.message); }
 
-    res.redirect('/dashboard');
+    res.redirect('/Dashboard');
   }
 );
 
@@ -698,12 +692,9 @@ app.get('/auth/google/callback',
     req.session.userId = req.user._id.toString();
     console.log('[GOOGLE AUTH] Login successful. User:', req.user.displayName);
 
-    // Update login streak (non-Steam users get visit-based streak, so Google users get it too)
-    if (!req.user.steamId) {
-      try { await updateStreak(req.user._id, true); } catch (e) { console.warn('[GOOGLE AUTH] Streak update failed:', e.message); }
-    }
 
-    res.redirect('/dashboard');
+
+    res.redirect('/Dashboard');
   }
 );
 
@@ -713,7 +704,7 @@ app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
     const userId = req.session.userId;
     const user = await User.findById(userId);
 
-    // For Steam users: auto-sync playtime and count gaming days for streak
+    // For Steam users: auto-sync playtime
     // Throttle to once every 5 minutes to prevent lag on every page load
     let hadGamingActivity = false;
     if (user && user.steamId) {
@@ -725,30 +716,26 @@ app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
           const result = await importSteamGames(user);
           hadGamingActivity = result.hadActivity;
           // Also sync friends silently in background
-          syncSteamFriends(user).catch(() => {});
+          syncSteamFriends(user).catch(() => { });
         } catch (err) {
           console.warn('[STATS] Steam auto-sync failed (non-blocking):', err.message);
         }
       }
     }
 
-    // Update streak — Steam users need gaming activity, others get visit streak
-    await updateStreak(userId, user && user.steamId ? hadGamingActivity : true);
+
 
     const entries = await LibraryEntry.find({ userId, hidden: { $ne: true } });
-    
-    // Re-read user to get updated streak count
-    const updatedUser = await User.findById(userId);
+
     const stats = {
       total: entries.length,
       completed: entries.filter(e => e.status === 'completed').length,
       playing: entries.filter(e => e.status === 'playing').length,
       backlog: entries.filter(e => e.status === 'backlog').length,
       totalHours: entries.reduce((sum, e) => sum + (e.playtime || 0), 0),
-      avgRating: entries.length > 0 
+      avgRating: entries.length > 0
         ? (entries.reduce((sum, e) => sum + (e.rating || 0), 0) / entries.length).toFixed(1)
         : 0,
-      streak: updatedUser ? updatedUser.streakCount : 0,
     };
 
     res.json(stats);
@@ -860,9 +847,9 @@ app.post('/api/games', async (req, res) => {
     if (game) {
       // Update missing fields if the new request has better data
       let updated = false;
-      if (coverUrl && (!game.coverUrl || game.coverUrl.includes('via.placeholder.com'))) { 
-        game.coverUrl = coverUrl; 
-        updated = true; 
+      if (coverUrl && (!game.coverUrl || game.coverUrl.includes('via.placeholder.com'))) {
+        game.coverUrl = coverUrl;
+        updated = true;
       }
       if (genres && genres.length && !game.genres.length) { game.genres = genres; updated = true; }
       if (releaseDate && !game.releaseDate) { game.releaseDate = releaseDate; updated = true; }
@@ -902,7 +889,7 @@ app.get('/api/library/:userId', async (req, res) => {
       if (seen.has(key)) {
         // Mark this duplicate hidden so it won't appear again
         entry.hidden = true;
-        entry.save().catch(() => {});
+        entry.save().catch(() => { });
         continue;
       }
       seen.set(key, true);
@@ -1098,7 +1085,7 @@ app.get('/api/games/popular', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'text/plain'
       },
-      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name; where first_release_date > ${sixMonthsAgo} & first_release_date < ${now} & cover != null & videos != null; sort total_rating_count desc; limit 20;`
+      body: `fields name,cover.url,total_rating,total_rating_count,genres.name,first_release_date,summary,hypes,videos.video_id,videos.name,screenshots.url; where first_release_date > ${sixMonthsAgo} & first_release_date < ${now} & cover != null & videos != null; sort total_rating_count desc; limit 20;`
     });
 
     const data = await igdbRes.json();
@@ -1467,8 +1454,8 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
     }
 
     await post.save();
-    res.json({ 
-      upvotes: post.upvotes.length, 
+    res.json({
+      upvotes: post.upvotes.length,
       downvotes: post.downvotes.length,
       score: post.upvotes.length - post.downvotes.length
     });
@@ -1499,7 +1486,7 @@ app.post('/api/posts/:id/comment', isLoggedIn, async (req, res) => {
     // Re-populate to get author info
     const updatedPost = await Post.findById(req.params.id)
       .populate('comments.author', 'username displayName avatar');
-    
+
     res.json(updatedPost.comments[updatedPost.comments.length - 1]);
   } catch (err) {
     console.error('[COMMENT POST] Error:', err.message);

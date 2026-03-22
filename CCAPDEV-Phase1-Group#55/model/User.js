@@ -64,14 +64,6 @@ const userSchema = new mongoose.Schema(
       status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
       createdAt: { type: Date, default: Date.now },
     }],
-    streakCount: {
-      type: Number,
-      default: 0,
-    },
-    lastActiveDate: {
-      type: String,
-      default: null,
-    },
     createdAt: {
       type: Date,
       default: Date.now,
