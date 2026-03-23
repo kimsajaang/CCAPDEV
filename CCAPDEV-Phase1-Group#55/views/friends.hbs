@@ -37,6 +37,20 @@
                     <p class="mb-0">Type a username to start searching</p>
                 </div>
             </div>
+
+            <!-- Suggested Profiles (Community Directory) -->
+            <div class="mt-5">
+                <h5 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-globe2" style="color:#5383e8;"></i> Community Members
+                </h5>
+                <p class="text-muted small mb-3">Browse and connect with everyone on Backlog Hero.</p>
+                <div id="suggestedProfilesGrid" class="row g-3">
+                    <div class="col-12 text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        <span class="text-muted">Loading members...</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Right Column: Friends sidebar -->
@@ -374,5 +388,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initUser();
+    loadSuggestedProfiles();
 });
+
+async function loadSuggestedProfiles() {
+    const grid = document.getElementById('suggestedProfilesGrid');
+    if (!grid) return;
+    try {
+        const res = await fetch('/api/users-list', { credentials: 'include' });
+        if (!res.ok) throw new Error();
+        const users = await res.json();
+        if (!users || users.length === 0) {
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-4">No community members found.</div>';
+            return;
+        }
+        const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E";
+        grid.innerHTML = users.map(u => {
+            const name = (u.displayName || u.username || 'User').replace(/</g, '&lt;');
+            const handle = ('@' + (u.username || '')).replace(/</g, '&lt;');
+            const avatar = u.avatar || defaultAvatar;
+            const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '';
+            return `
+            <div class="col-sm-6 col-xl-4">
+                <div class="card bg-section border-0 shadow-sm user-card cursor-pointer h-100 text-center p-3"
+                     onclick="window.location='/profile-view?username=${u.username}'" style="border-radius:14px;">
+                    <img src="${avatar}" class="rounded-circle mx-auto mb-2 object-fit-cover"
+                         style="width:64px;height:64px;border:2px solid rgba(83,131,232,0.35);"
+                         onerror="this.src='${defaultAvatar}'">
+                    <div class="fw-bold">${name}</div>
+                    <span class="text-primary small">${handle}</span>
+                    ${u.bio ? `<p class="text-muted small mt-1 mb-0" style="-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;">${u.bio.replace(/</g,'&lt;')}</p>` : ''}
+                    ${joined ? `<div class="text-muted mt-2" style="font-size:0.72rem;">Joined ${joined}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        grid.innerHTML = '<div class="col-12 text-center text-muted py-4">Could not load community members.</div>';
+    }
+}
 </script>

@@ -10,6 +10,7 @@
                 <li class="nav-item d-none" id="nav-dashboard"><a class="nav-link" href="/Dashboard">Dashboard</a></li>
                 <li class="nav-item d-none" id="nav-library"><a class="nav-link" href="/library">My Library</a></li>
                 <li class="nav-item"><a class="nav-link" href="/search">Search Games</a></li>
+                <li class="nav-item d-none" id="nav-feedback"><a class="nav-link" href="/feedback">Feedback</a></li>
                 <li class="nav-item"><a class="nav-link" href="/stats">Community</a></li>
                 <li class="nav-item d-none" id="nav-profile"><a class="nav-link" href="/profile">Profile</a></li>
                 <li class="nav-item" id="nav-login"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1"
@@ -37,12 +38,14 @@
                 document.getElementById('nav-dashboard').classList.remove('d-none');
                 document.getElementById('nav-library').classList.remove('d-none');
                 document.getElementById('nav-profile').classList.remove('d-none');
+                document.getElementById('nav-feedback').classList.remove('d-none');
                 document.getElementById('nav-logout').classList.remove('d-none');
                 document.getElementById('nav-login').classList.add('d-none');
             } else {
                 document.getElementById('nav-dashboard').classList.add('d-none');
                 document.getElementById('nav-library').classList.add('d-none');
                 document.getElementById('nav-profile').classList.add('d-none');
+                document.getElementById('nav-feedback').classList.add('d-none');
                 document.getElementById('nav-logout').classList.add('d-none');
                 document.getElementById('nav-login').classList.remove('d-none');
             }

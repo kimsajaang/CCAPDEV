@@ -17,6 +17,7 @@ const User = require('./model/User');
 const Game = require('./model/Game');
 const LibraryEntry = require('./model/LibraryEntry');
 const Post = require('./model/Post');
+const Feedback = require('./model/Feedback');
 const axios = require('axios'); // Ensure axios is installed: npm install axios
 
 const app = express();
@@ -53,21 +54,61 @@ app.use(compression()); // Gzip compression to vastly reduce HTML payload sizes
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
 
+// --- Auth Middleware ---
+const isLoggedIn = (req, res, next) => {
+  if (req.session && req.session.userId) {
+    next();
+  } else {
+    // If it's a browser request for a view, redirect to login
+    if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+      return res.redirect('/login');
+    }
+    res.status(401).json({ error: 'Unauthorized. Please log in.' });
+  }
+};
+
 // --- View Routes (Handlebars) ---
 // These are defined BEFORE express.static so the template engine handles  routes
 // instead of serving raw files from public/
-app.get('/', (req, res) => {
+// Cache intro stats to avoid DB hits on every page load
+let introStatsCache = null;
+let introStatsCacheTime = 0;
+const INTRO_STATS_TTL = 60 * 1000; // 1 minute
+
+app.get('/', async (req, res) => {
   if (req.session && req.session.userId) return res.redirect('/dashboard');
-  res.render('intro', { title: 'Welcome', user: req.user });
+
+  try {
+    const now = Date.now();
+    if (!introStatsCache || (now - introStatsCacheTime) > INTRO_STATS_TTL) {
+      const [totalUsers, totalReviews, platforms, totalIGDBGames] = await Promise.all([
+        User.countDocuments(),
+        Post.countDocuments(),
+        Game.distinct('platforms'),
+        getIgdbGameCount()
+      ]);
+      introStatsCache = {
+        totalUsers,
+        totalGames: (totalIGDBGames / 1000).toFixed(1),
+        totalReviews,
+        totalPlatforms: platforms.length || 15
+      };
+      introStatsCacheTime = now;
+    }
+
+    res.render('intro', {
+      title: 'Welcome',
+      user: req.user,
+      stats: introStatsCache
+    });
+  } catch (err) {
+    console.error('[INTRO STATS] Error:', err.message);
+    res.render('intro', { title: 'Welcome', user: req.user, stats: { totalUsers: 0, totalGames: '357.1', totalReviews: 0, totalPlatforms: 15 } });
+  }
 });
-app.get('/index', (req, res) => {
-  if (req.session && req.session.userId) return res.redirect('/dashboard');
-  res.render('intro', { title: 'Welcome', user: req.user });
-});
-app.get('/intro', (req, res) => {
-  if (req.session && req.session.userId) return res.redirect('/dashboard');
-  res.render('intro', { title: 'Welcome', user: req.user });
-});
+
+app.get('/index', (req, res) => res.redirect('/'));
+app.get('/intro', (req, res) => res.redirect('/'));
 app.get('/login', (req, res) => res.render('login', { title: 'Login', user: req.user }));
 app.get('/register', (req, res) => res.render('register', { title: 'Register', user: req.user }));
 app.get('/Dashboard', (req, res) => res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading', user: req.user }));
@@ -78,6 +119,9 @@ app.get('/profile-edit', (req, res) => res.render('profile-edit', { title: 'Edit
 app.get('/search', (req, res) => res.render('search', { title: 'Search Games', user: req.user }));
 app.get('/stats', (req, res) => res.render('stats', { title: 'Community', user: req.user }));
 app.get('/friends', (req, res) => res.render('friends', { title: 'Find Friends', user: req.user }));
+app.get('/feedback', isLoggedIn, (req, res) => res.render('feedback', { title: 'Feedback', user: req.user }));
+app.get('/feedback-list', isLoggedIn, (req, res) => res.render('feedback-list', { title: 'Feedback Management', user: req.user }));
+app.get('/users-list', isLoggedIn, (req, res) => res.render('users-list', { title: 'Community Directory', user: req.user }));
 
 // Static files (CSS, images, client-side assets) — after view routes
 app.use(express.static(__dirname + '/public'));
@@ -176,16 +220,6 @@ passport.use(new SteamStrategy({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// --- Auth Middleware ---
-const isLoggedIn = (req, res, next) => {
-  if (req.session && req.session.userId) {
-    console.log('[AUTH] User authenticated. Session ID:', req.sessionID);
-    next();
-  } else {
-    console.log('[AUTH] Unauthorized access. Session:', req.session, 'SessionID:', req.sessionID);
-    res.status(401).json({ error: 'Unauthorized. Please log in.' });
-  }
-};
 
 // --- Database Connection ---
 let dbConnected = false;
@@ -212,6 +246,9 @@ const initializeServer = async () => {
 };
 
 initializeServer();
+
+// Warm up IGDB game count in background after startup
+setTimeout(() => getIgdbGameCount(), 2000);
 
 // Per-user Steam sync cooldown: only sync once every 5 minutes max
 const steamSyncCooldown = new Map();
@@ -251,6 +288,37 @@ async function getAccessToken() {
     console.error('[IGDB] Network error fetching access token:', err.message);
     return null;
   }
+}
+
+// Global cache for IGDB stats
+let igdbGameCount = 285000; // Fallback
+let lastCountFetch = 0;
+const COUNT_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+async function getIgdbGameCount() {
+  if (Date.now() - lastCountFetch < COUNT_CACHE_TTL && lastCountFetch !== 0) return igdbGameCount;
+  try {
+    const token = await getAccessToken();
+    if (!token) return igdbGameCount;
+    const res = await fetch('https://api.igdb.com/v4/games/count', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.count) {
+        igdbGameCount = data.count;
+        lastCountFetch = Date.now();
+        console.log('[IGDB] Updated total game count:', igdbGameCount);
+      }
+    }
+  } catch (err) {
+    console.warn('[IGDB COUNT] Failed to fetch:', err.message);
+  }
+  return igdbGameCount;
 }
 
 // Helper to get IGDB Access Token (Twitch OAuth)
@@ -801,6 +869,52 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[UPDATE USER] Error:', err.message);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// GET /api/users-list - Get all users for the list
+app.get('/api/users-list', isLoggedIn, async (req, res) => {
+  try {
+    const users = await User.find({}, 'username displayName avatar bio createdAt').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    console.error('[GET USERS LIST] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// POST /api/feedback - Submit feedback
+app.post('/api/feedback', isLoggedIn, async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const feedback = new Feedback({
+      userId: req.session.userId || null,
+      name,
+      email,
+      subject,
+      message
+    });
+
+    await feedback.save();
+    res.status(201).json({ message: 'Feedback submitted successfully' });
+  } catch (err) {
+    console.error('[SUBMIT FEEDBACK] Error:', err.message);
+    res.status(500).json({ error: 'Failed to submit feedback' });
+  }
+});
+
+// GET /api/feedback-list - Get all feedback
+app.get('/api/feedback-list', isLoggedIn, async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find().sort({ createdAt: -1 });
+    res.json(feedbacks);
+  } catch (err) {
+    console.error('[GET FEEDBACK LIST] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch feedback' });
   }
 });
 
