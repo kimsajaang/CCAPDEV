@@ -191,10 +191,10 @@ plagiarized the work of other students and/or persons.
   </header>
 
   <!-- Results grid — dynamically populated by search -->
-  <main class="container my-5">
+  <div class="container my-5">
     <h4 class="mb-4 text-muted">Search for games above to get started</h4>
-    <div class="row row-cols-1 row-cols-md-5 g-4"></div>
-  </main>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4"></div>
+  </div>
 
   <!-- Toast -->
   <div style="position:fixed;bottom:20px;right:20px;z-index:1080">
@@ -270,8 +270,8 @@ plagiarized the work of other students and/or persons.
   <script>
     const searchInput = document.querySelector('.search-container input');
     const searchBtn = document.querySelector('.search-container .btn-primary');
-    const resultsGrid = document.querySelector('main .row');
-    const sectionTitle = document.querySelector('main h4');
+    const resultsGrid = document.querySelector('.container.my-5 .row');
+    const sectionTitle = document.querySelector('.container.my-5 h4');
     const autocompleteDropdown = document.getElementById('autocompleteDropdown');
     let detailModal;
 
@@ -580,7 +580,7 @@ plagiarized the work of other students and/or persons.
         return `
             <div class="col">
               <div class="card h-100 shadow-sm game-result-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" data-game='${JSON.stringify(game).replace(/'/g, "&#39;")}'>
-                <div class="card-img-top-wrap position-relative" style="aspect-ratio: 3/4; overflow: hidden;">
+                <div class="card-img-top-wrap position-relative" style="overflow: hidden;">
                   <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
                        onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
                   <div class="cover-placeholder" style="display: none; height: 100%;">
