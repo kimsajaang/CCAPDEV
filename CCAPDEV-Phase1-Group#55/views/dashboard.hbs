@@ -1425,6 +1425,113 @@ plagiarized the work of other students and/or persons.
       const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       dateEl.textContent = fmt(thirtyAgo) + ' — ' + fmt(now);
     }
+
+    // ── Build the single global hover panel (created once, reused per card) ──
+    let ghPanel = document.getElementById('ghp-panel');
+    if (!ghPanel) {
+      ghPanel = document.createElement('div');
+      ghPanel.id = 'ghp-panel';
+      ghPanel.className = 'ghp-panel';
+      ghPanel.innerHTML = `
+        <div class="ghp-media">
+          <iframe class="ghp-iframe" frameborder="0"
+            allow="autoplay; encrypted-media; fullscreen"
+            allowfullscreen></iframe>
+          <div class="ghp-screenshot" style="display:none;"></div>
+          <div class="ghp-no-media" style="display:none;"><i class="bi bi-controller"></i></div>
+        </div>
+        <div class="ghp-body">
+          <div class="ghp-title"></div>
+          <div class="ghp-release"></div>
+          <div class="ghp-reviews"></div>
+          <div class="ghp-description"></div>
+          <div class="ghp-tags"></div>
+        </div>
+      `;
+      document.body.appendChild(ghPanel);
+
+      // Prevent scroll inside panel from leaking to page
+      ghPanel.addEventListener('wheel', e => e.stopPropagation(), { passive: true });
+    }
+
+    const ghpIframe     = ghPanel.querySelector('.ghp-iframe');
+    const ghpScreenshot = ghPanel.querySelector('.ghp-screenshot');
+    const ghpNoMedia    = ghPanel.querySelector('.ghp-no-media');
+    let   ghpHideTimer  = null;
+
+    const openPanel = (gameData, cardEl) => {
+      clearTimeout(ghpHideTimer);
+      const { name, videoId, screenshot, releaseDate, rating, reviewStatus, reviewClass, summary, tagsHtml, totalRatingCount } = gameData;
+
+      // Media
+      if (videoId) {
+        ghpIframe.src  = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&loop=1&playlist=${videoId}&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0`;
+        ghpIframe.style.display    = 'block';
+        ghpScreenshot.style.display = 'none';
+        ghpNoMedia.style.display   = 'none';
+      } else if (screenshot) {
+        ghpIframe.src  = 'about:blank';
+        ghpIframe.style.display    = 'none';
+        ghpScreenshot.style.backgroundImage = `url('${screenshot}')`;
+        ghpScreenshot.style.display = 'block';
+        ghpNoMedia.style.display   = 'none';
+      } else {
+        ghpIframe.src  = 'about:blank';
+        ghpIframe.style.display    = 'none';
+        ghpScreenshot.style.display = 'none';
+        ghpNoMedia.style.display   = 'flex';
+      }
+
+      // Text content
+      ghPanel.querySelector('.ghp-title').textContent   = name;
+      ghPanel.querySelector('.ghp-release').textContent = `Released: ${releaseDate}`;
+      ghPanel.querySelector('.ghp-reviews').innerHTML   = rating > 0
+        ? `<div class="steam-review-label">Overall Reviews:</div>
+           <div class="steam-review-status ${reviewClass}">${reviewStatus} (${Math.floor(totalRatingCount || 100).toLocaleString()})</div>`
+        : '';
+      ghPanel.querySelector('.ghp-description').textContent = summary;
+      ghPanel.querySelector('.ghp-tags').innerHTML = tagsHtml;
+      ghPanel.scrollTop = 0;
+
+      // Position the panel above the hovered card (or below if not enough room)
+      const PANEL_W = 320;
+      const GAP = 10;
+      const rect = cardEl.getBoundingClientRect();
+
+      // Temporarily show at 0,0 to measure height
+      ghPanel.style.visibility = 'hidden';
+      ghPanel.style.display    = 'flex';
+      ghPanel.style.flexDirection = 'column';
+      const panelH = Math.min(ghPanel.scrollHeight, 520);
+
+      // Horizontal: center panel on card, clamp to viewport
+      let left = rect.left + rect.width / 2 - PANEL_W / 2;
+      if (left < 8) left = 8;
+      if (left + PANEL_W > window.innerWidth - 8) left = window.innerWidth - PANEL_W - 8;
+
+      // Vertical: prefer above; fall back to below
+      let top = rect.top - panelH - GAP;
+      if (top < 8) top = rect.bottom + GAP;
+
+      ghPanel.style.left = left + 'px';
+      ghPanel.style.top  = top  + 'px';
+      ghPanel.style.visibility = '';
+      ghPanel.style.display    = '';
+
+      ghPanel.classList.add('active');
+    };
+
+    const closePanel = () => {
+      ghpHideTimer = setTimeout(() => {
+        ghPanel.classList.remove('active');
+        ghpIframe.src = 'about:blank';
+      }, 150);
+    };
+
+    // Keep panel alive when mouse moves into it
+    ghPanel.addEventListener('mouseenter', () => clearTimeout(ghpHideTimer));
+    ghPanel.addEventListener('mouseleave', closePanel);
+
     try {
       let games = await fetchTrendingGames();
       // Fallback to hardcoded popular games if API fails
@@ -1443,38 +1550,29 @@ plagiarized the work of other students and/or persons.
       top.forEach((game, idx) => {
         const name = game.name || 'Unknown';
         let cover = game.coverUrl || game.cover?.url || '';
-        // Upgrade IGDB thumbnail to high-res cover
         if (cover.includes('t_thumb')) cover = cover.replace('t_thumb', 't_cover_big');
         if (cover.includes('t_micro')) cover = cover.replace('t_micro', 't_cover_big');
         const rating = (game.total_rating || game.rating) ? Math.round(game.total_rating || game.rating) : 0;
-        
-        // Steam-style review mapping
-        let reviewStatus = 'No User Reviews';
-        let reviewClass = '';
-        if (rating >= 95) { reviewStatus = 'Overwhelmingly Positive'; reviewClass = 'positive'; }
-        else if (rating >= 85) { reviewStatus = 'Very Positive'; reviewClass = 'positive'; }
-        else if (rating >= 70) { reviewStatus = 'Mostly Positive'; reviewClass = 'positive'; }
-        else if (rating >= 40) { reviewStatus = 'Mixed'; reviewClass = 'mixed'; }
-        else if (rating > 0) { reviewStatus = 'Mostly Negative'; reviewClass = 'negative'; }
 
-        // Truncate summary for hover tooltip
-        const rawSummary = game.summary || game.note || '';
-        const summary = rawSummary.length > 150 ? rawSummary.substring(0, 147) + '...' : rawSummary;
+        let reviewStatus = 'No User Reviews', reviewClass = '';
+        if (rating >= 95)      { reviewStatus = 'Overwhelmingly Positive'; reviewClass = 'positive'; }
+        else if (rating >= 85) { reviewStatus = 'Very Positive';           reviewClass = 'positive'; }
+        else if (rating >= 70) { reviewStatus = 'Mostly Positive';         reviewClass = 'positive'; }
+        else if (rating >= 40) { reviewStatus = 'Mixed';                   reviewClass = 'mixed';    }
+        else if (rating >  0)  { reviewStatus = 'Mostly Negative';         reviewClass = 'negative'; }
 
-        // Release Date
-        const releaseDate = game.first_release_date 
+        const summary     = game.summary || game.note || '';
+        const releaseDate = game.first_release_date
           ? new Date(game.first_release_date * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
           : 'TBA';
+        const tagsHtml    = (game.genres || []).slice(0, 6).map(g => `<span class="steam-tag">${g.name}</span>`).join('');
+        const videoId     = (game.videos && game.videos.length > 0) ? game.videos[0].video_id : null;
 
-        // Genres as Tags
-        const tagsHtml = (game.genres || []).slice(0, 4).map(g => `<span class="steam-tag">${g.name}</span>`).join('');
-
-        // Main Screenshot (the first one)
-        let mainScreenshot = '';
-        if (game.screenshots && game.screenshots.length > 0) {
-          mainScreenshot = game.screenshots[0].url || '';
-          if (mainScreenshot.startsWith('//')) mainScreenshot = 'https:' + mainScreenshot;
-          mainScreenshot = mainScreenshot.replace('t_thumb', 't_screenshot_med');
+        let screenshot = '';
+        if (!videoId && game.screenshots && game.screenshots.length > 0) {
+          screenshot = game.screenshots[0].url || '';
+          if (screenshot.startsWith('//')) screenshot = 'https:' + screenshot;
+          screenshot = screenshot.replace('t_thumb', 't_screenshot_med');
         }
 
         const coverImg = cover
@@ -1483,7 +1581,6 @@ plagiarized the work of other students and/or persons.
 
         const card = document.createElement('div');
         card.className = 'trending-card';
-        card.style.animationDelay = `${idx * 0.06}s`;
         card.style.animation = `fadeInUp 0.5s ease ${idx * 0.06}s both`;
         card.innerHTML = `
           <div class="trending-card-inner">
@@ -1494,27 +1591,18 @@ plagiarized the work of other students and/or persons.
               ${rating ? `<div class="trending-rating">★ ${rating}%</div>` : ''}
             </div>
           </div>
-          <div class="trending-hover-content">
-            <div class="steam-screenshot-pane" style="background-image: url('${mainScreenshot}')"></div>
-            <div class="steam-details-pane">
-              <div class="steam-hover-name">${name}</div>
-              <div class="steam-release-date">Released: ${releaseDate}</div>
-              
-              ${rating > 0 ? `
-                <div class="steam-review-box">
-                  <div class="steam-review-label">Overall Reviews:</div>
-                  <div class="steam-review-status ${reviewClass}">${reviewStatus} (${Math.floor(game.total_rating_count || 100).toLocaleString()})</div>
-                </div>
-              ` : ''}
-
-              <div class="steam-hover-description">${summary}</div>
-              <div class="steam-tags">${tagsHtml}</div>
-            </div>
-          </div>
         `;
+
+        // Click → search
         card.addEventListener('click', () => {
           window.location.href = '/search?q=' + encodeURIComponent(name);
         });
+
+        // Hover → populate + show global panel near this card
+        const gameData = { name, videoId, screenshot, releaseDate, rating, reviewStatus, reviewClass, summary, tagsHtml, totalRatingCount: game.total_rating_count };
+        card.addEventListener('mouseenter', () => openPanel(gameData, card));
+        card.addEventListener('mouseleave', closePanel);
+
         container.appendChild(card);
       });
     } catch (err) {

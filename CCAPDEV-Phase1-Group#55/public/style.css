@@ -166,16 +166,15 @@ body::after {
 
 /* ═══════════ Page Transitions ═══════════ */
 @keyframes pageSlideIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.99); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 body {
   animation: pageSlideIn 0.5s var(--ease-out) both;
 }
 body.page-exit {
   opacity: 0;
-  transform: translateY(-10px) scale(0.99);
-  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+  transition: opacity 0.3s var(--ease);
 }
 
 /* ═══════════ Shared Animations ═══════════ */
@@ -1355,30 +1354,219 @@ input[type="number"] {
 .trending-card:hover {
   z-index: 200;
 }
-.trending-hover-content {
-  position: absolute;
-  top: 0;
-  left: 0;
+
+/* ═══════════ Global Game Hover Panel ═══════════ */
+.ghp-panel {
+  position: fixed;
   width: 320px;
-  height: 100%;
-  background: #1b2838;
-  display: flex;
+  max-height: 520px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  background: linear-gradient(160deg, rgba(20,28,36,0.98), rgba(10,14,19,0.99));
+  border: 1px solid rgba(83, 131, 232, 0.4);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.85), 0 0 40px rgba(83,131,232,0.15);
+  z-index: 9999;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease-in-out;
-  transition-delay: 0.1s;
-  z-index: 201;
-  box-shadow: 0 15px 45px rgba(0,0,0,0.6);
-  border-radius: 4px;
-  overflow: hidden;
-  transform: translateX(-5px);
-  pointer-events: auto;
-  border: 1px solid rgba(255,255,255,0.1);
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s cubic-bezier(0.34,1.2,0.64,1);
+  transform: translateY(6px) scale(0.97);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(83,131,232,0.35) transparent;
 }
-.trending-card:hover .trending-hover-content {
+.ghp-panel::-webkit-scrollbar { width: 4px; }
+.ghp-panel::-webkit-scrollbar-thumb { background: rgba(83,131,232,0.35); border-radius: 99px; }
+.ghp-panel.active {
   opacity: 1;
   visibility: visible;
-  transform: translateX(0);
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.ghp-media {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  background: #000;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+  border-bottom: 2px solid var(--primary);
+  position: relative;
+}
+
+.ghp-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.ghp-screenshot {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.ghp-no-media {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: var(--text-faint);
+  background: var(--bg-card);
+}
+
+.ghp-body {
+  padding: 20px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ghp-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.ghp-release {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: -6px;
+}
+
+.ghp-reviews {
+  background: rgba(0,0,0,0.3);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.ghp-description {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.ghp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+
+.steam-media-pane {
+  width: 100%;
+  height: 180px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid var(--primary);
+  background: #000;
+}
+
+.steam-screenshot-pane {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.steam-screenshot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--text-faint);
+  background: var(--bg-card);
+}
+
+.steam-trailer-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  pointer-events: none; /* prevent clicks from focusing iframe and stealing scroll */
+}
+
+.steam-details-pane {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: linear-gradient(to bottom, var(--bg-card), rgba(10, 14, 19, 0.98));
+  flex: 1;
+}
+
+.steam-hover-name {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.steam-release-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.steam-review-box {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.steam-review-label {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.steam-review-status {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.steam-review-status.positive { 
+  color: #66c0f4; 
+  text-shadow: 0 0 10px rgba(102, 192, 244, 0.3); 
+}
+.steam-review-status.mixed { color: #b9a074; }
+.steam-review-status.negative { color: #eb4b4b; }
+
+.steam-hover-description {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.steam-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.steam-tag {
+  background: rgba(83, 131, 232, 0.12);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(83, 131, 232, 0.2);
 }
 .trending-scroll {
   display: flex;
@@ -1409,7 +1597,6 @@ input[type="number"] {
   border: 1px solid var(--border);
 }
 .trending-card:hover {
-  transform: translateY(-6px) scale(1.03);
   z-index: 200;
 }
 .trending-card:hover .trending-card-inner {

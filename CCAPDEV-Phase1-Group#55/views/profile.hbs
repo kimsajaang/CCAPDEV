@@ -173,18 +173,54 @@ plagiarized the work of other students and/or persons.
         margin-top: 12px;
     }
 
+    @keyframes achieveBadgeIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.92); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes floatIcon {
+        0%, 100% { transform: translateY(0); }
+        50%       { transform: translateY(-4px); }
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 4px 12px rgba(254, 188, 46, 0.25); }
+        50%       { box-shadow: 0 4px 22px rgba(254, 188, 46, 0.55); }
+    }
+
     .achievement-badge {
-        background: linear-gradient(135deg, rgba(21, 29, 36, 0.8), rgba(15, 21, 25, 0.9));
-        border: 2px solid var(--border);
-        border-radius: var(--radius-lg);
+        background: linear-gradient(145deg, rgba(28, 37, 46, 0.9), rgba(16, 22, 27, 0.95));
+        border: 2px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-sm);
         padding: 16px 12px;
         text-align: center;
-        transition: transform 0.35s var(--ease), border-color 0.35s var(--ease), box-shadow 0.35s var(--ease);
+        transition: transform 0.35s cubic-bezier(.4,0,.2,1), border-color 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
         cursor: default;
         position: relative;
         overflow: hidden;
+        opacity: 0;
+        animation: achieveBadgeIn 0.5s var(--ease, cubic-bezier(.4,0,.2,1)) forwards;
     }
 
+    /* Stagger each badge entry by index */
+    .achievements-container .achievement-badge:nth-child(1)  { animation-delay: 0.05s; }
+    .achievements-container .achievement-badge:nth-child(2)  { animation-delay: 0.10s; }
+    .achievements-container .achievement-badge:nth-child(3)  { animation-delay: 0.15s; }
+    .achievements-container .achievement-badge:nth-child(4)  { animation-delay: 0.20s; }
+    .achievements-container .achievement-badge:nth-child(5)  { animation-delay: 0.25s; }
+    .achievements-container .achievement-badge:nth-child(6)  { animation-delay: 0.30s; }
+    .achievements-container .achievement-badge:nth-child(7)  { animation-delay: 0.35s; }
+    .achievements-container .achievement-badge:nth-child(8)  { animation-delay: 0.40s; }
+    .achievements-container .achievement-badge:nth-child(9)  { animation-delay: 0.45s; }
+    .achievements-container .achievement-badge:nth-child(10) { animation-delay: 0.50s; }
+    .achievements-container .achievement-badge:nth-child(11) { animation-delay: 0.55s; }
+    .achievements-container .achievement-badge:nth-child(12) { animation-delay: 0.60s; }
+    .achievements-container .achievement-badge:nth-child(13) { animation-delay: 0.65s; }
+    .achievements-container .achievement-badge:nth-child(14) { animation-delay: 0.70s; }
+    .achievements-container .achievement-badge:nth-child(15) { animation-delay: 0.75s; }
+    .achievements-container .achievement-badge:nth-child(16) { animation-delay: 0.80s; }
+
+    /* Shimmer sweep on hover */
     .achievement-badge::after {
         content: '';
         position: absolute;
@@ -192,57 +228,89 @@ plagiarized the work of other students and/or persons.
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        transition: left 0.6s var(--ease);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+        transition: left 0.6s ease;
+        pointer-events: none;
     }
 
     .achievement-badge.unlocked {
-        border-color: var(--warning);
-        background: linear-gradient(135deg, rgba(254, 188, 46, 0.15), rgba(255, 165, 0, 0.08));
-        box-shadow: 0 0 24px rgba(254, 188, 46, 0.3), inset 0 0 24px rgba(254, 188, 46, 0.08);
+        border-color: rgba(83, 131, 232, 0.4);
+        background: linear-gradient(145deg, rgba(83, 131, 232, 0.1), rgba(16, 22, 27, 0.95));
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 0 15px rgba(83, 131, 232, 0.05);
     }
-
-    .achievement-badge.unlocked:hover::after {
-        left: 100%;
-    }
+    .achievement-badge.unlocked:hover::after { left: 100%; }
 
     .achievement-badge.locked {
-        opacity: 0.4;
-        filter: grayscale(85%);
+        opacity: 0;
+        animation: achieveBadgeInLocked 0.5s var(--ease, cubic-bezier(.4,0,.2,1)) forwards;
+        filter: grayscale(100%) brightness(0.4) contrast(1.2);
+    }
+
+    .achievement-badge.locked { --final-opacity: 0.25; }
+    @keyframes achieveBadgeInLocked {
+        from { opacity: 0; transform: translateY(20px) scale(0.92); }
+        to   { opacity: 0.25; transform: translateY(0) scale(1); }
     }
 
     .achievement-badge:hover:not(.locked) {
-        transform: translateY(-8px) scale(1.03);
-        border-color: var(--primary);
-        box-shadow: 0 16px 32px rgba(83, 131, 232, 0.3), inset 0 0 24px rgba(254, 188, 46, 0.08);
+        transform: translateY(-4px) scale(1.02);
+        border-color: rgba(83, 131, 232, 0.8);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(83, 131, 232, 0.1);
+        z-index: 2;
+    }
+
+    /* Icon circle container - make it slightly squared for a Steam vibe */
+    .achievement-icon-wrap {
+        width: 54px;
+        height: 54px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        background: rgba(255,255,255,0.06);
+        border: 2px solid rgba(255,255,255,0.1);
+        transition: border-color 0.35s var(--ease), background 0.35s var(--ease);
+        position: relative;
+    }
+
+    .achievement-badge.unlocked .achievement-icon-wrap {
+        background: rgba(83, 131, 232, 0.15);
+        border-color: rgba(83, 131, 232, 0.5);
+    }
+
+    .achievement-badge:hover:not(.locked) .achievement-icon-wrap {
+        background: rgba(83, 131, 232, 0.25);
     }
 
     .achievement-icon {
-        font-size: 3.2rem;
-        margin-bottom: 8px;
-        display: block;
-        transition: transform 0.35s var(--ease);
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.75);
+        transition: transform 0.35s ease, color 0.35s ease;
+        line-height: 1;
     }
 
-    .achievement-badge:hover:not(.locked) .achievement-icon {
-        transform: scale(1.2) rotate(-12deg);
-    }
+    .achievement-badge.unlocked .achievement-icon { color: #dbe7ff; filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.6)); }
 
     .achievement-name {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         font-weight: 700;
         color: #dbe7ff;
         margin-bottom: 4px;
+        line-height: 1.3;
     }
 
     .achievement-desc {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         color: var(--text-muted);
         line-height: 1.4;
     }
 
     .achievement-locked-text {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         color: var(--text-faint);
         font-style: italic;
     }
@@ -252,27 +320,14 @@ plagiarized the work of other students and/or persons.
         background: linear-gradient(135deg, var(--warning), #ffa500);
         color: var(--bg-base);
         border-radius: 6px;
-        padding: 3px 8px;
-        font-size: 0.65rem;
+        padding: 2px 8px;
+        font-size: 0.6rem;
         font-weight: 800;
-        margin-top: 8px;
+        margin-top: 7px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 12px rgba(254, 188, 46, 0.25);
-        animation: pulseGlow 2s ease-in-out infinite;
+        letter-spacing: 0.6px;
+        animation: pulseGlow 2.2s ease-in-out infinite;
         will-change: box-shadow;
-    }
-
-    @keyframes pulseGlow {
-
-        0%,
-        100% {
-            box-shadow: 0 4px 12px rgba(254, 188, 46, 0.25);
-        }
-
-        50% {
-            box-shadow: 0 4px 20px rgba(254, 188, 46, 0.5);
-        }
     }
 
     /* Profile action buttons */
@@ -312,8 +367,9 @@ plagiarized the work of other students and/or persons.
 
     .profile-grid {
         display: grid;
-        grid-template-columns: 1.3fr 1fr;
+        grid-template-columns: 320px 1fr;
         gap: 24px;
+        align-items: start;
     }
 
     .profile-header {
@@ -391,9 +447,9 @@ plagiarized the work of other students and/or persons.
 
     .stat-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 14px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 0;
     }
 
     .stat-card {
@@ -770,6 +826,23 @@ plagiarized the work of other students and/or persons.
         object-fit: cover;
     }
 
+    /* Steam level badge */
+    .steam-level {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid var(--primary);
+        background: transparent;
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 0.9rem;
+        margin-left: 10px;
+        box-shadow: 0 0 10px rgba(83, 131, 232, 0.2);
+    }
+
     /* Responsive */
     @media (max-width: 991px) {
         .profile-grid {
@@ -840,113 +913,95 @@ plagiarized the work of other students and/or persons.
                             </a>
                             <!-- Friend buttons injected by JS when viewing another user's profile -->
                         </div>
-                    </div>
-
-                    <div class="profile-grid mt-3">
-                        <!-- Left column: stat cards + about + highlights -->
+                    </div>                    <div class="profile-grid mt-3">
+                        <!-- Left column: Bio, Identity, Friends -->
                         <div>
-                            <!-- Stat grid � 4 stat cards in a 2x2 layout.
-                                     Numbers are calculated from user library data -->
-                            <div class="stat-grid">
-                                <div class="stat-card reveal-item">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <i class="bi bi-check-circle" style="font-size: 1.3rem; color: #50d6b4;"></i>
-                                        <div class="text-muted small">Completed</div>
-                                    </div>
-                                    <div class="stat-value" id="completedCount">0</div>
-                                    <div class="text-muted extra-small">Games </div>
+                            <div class="section-card reveal-item" style="padding: 18px;">
+                                <div class="section-title mb-2">About <span id="steamLevel" class="steam-level" title="Profile Level Based on Achievements" style="display:none;">1</span></div>
+                                <div id="bioContainer" class="bio-section">
+                                    <p id="userBio" class="mb-0">No bio yet. <a href="/profile-edit" style="color: #5383e8;">Add one now!</a></p>
                                 </div>
-                                <div class="stat-card reveal-item">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <i class="bi bi-bookmark" style="font-size: 1.3rem; color: #5383e8;"></i>
-                                        <div class="text-muted small">Backlog</div>
-                                    </div>
-                                    <div class="stat-value" id="backlogCount">0</div>
-                                    <div class="text-muted extra-small">Queued </div>
-                                </div>
-                                <div class="stat-card reveal-item">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <i class="bi bi-hourglass-split" style="font-size: 1.3rem; color: #febc2e;"></i>
-                                        <div class="text-muted small">Hours</div>
-                                    </div>
-                                    <div class="stat-value" id="totalHours">0</div>
-                                    <div class="text-muted extra-small">Total time </div>
-                                </div>
-                                <div class="stat-card reveal-item">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <i class="bi bi-fire" style="font-size: 1.3rem; color: #ff6b6b;"></i>
-                                        <div class="text-muted small">Current</div>
-                                    </div>
-                                    <div class="stat-value" id="playingCount">0</div>
-                                    <div class="text-muted extra-small">Playing</div>
-                                </div>
-                            </div>
-
-                            <!-- About + Highlights sections stacked below stats -->
-                            <div class="section-grid">
-                                <div class="section-card reveal-item">
-                                    <div class="section-title mb-2">About You</div>
-                                    <div id="bioContainer" class="bio-section">
-                                        <p id="userBio" class="mb-0">No bio yet. <a href="/profile-edit"
-                                                style="color: #5383e8;">Add one now!</a></p>
-                                    </div>
-                                    <div id="gamingIdentity" style="margin-top: 12px;">
-                                        <div class="d-flex flex-wrap gap-2">
-                                            <span class="tag" id="identityTag" style="display:none;"><i
-                                                    class="bi bi-star"></i> <span id="identityText"></span></span>
-                                            <span class="tag" id="platformTag" style="display:none;"><i
-                                                    class="bi bi-pc-display"></i> <span id="platformText"></span></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="section-card reveal-item">
-                                    <div class="section-title mb-3">Favourite Games</div>
-                                    <div id="favGamesContainer" class="fav-games-container">
-                                        <div class="empty-state-text">No favourite games yet. <a href="/profile-edit"
-                                                style="color: #5383e8;">Choose some!</a></div>
+                                <div id="gamingIdentity" style="margin-top: 12px;">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="tag" id="identityTag" style="display:none;"><i class="bi bi-star"></i> <span id="identityText"></span></span>
+                                        <span class="tag" id="platformTag" style="display:none;"><i class="bi bi-pc-display"></i> <span id="platformText"></span></span>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Achievements section -->
-                            <div class="section-card reveal-item mt-3">
-                                <div class="section-title mb-3">Achievements <span id="achievementCount"
-                                        style="color: #febc2e; font-size: 0.8rem; font-weight: 600;">(0/12)</span></div>
-                                <div id="achievementsContainer" class="achievements-container">
-                                    <div class="empty-state-text">Complete games to unlock achievements!</div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- Right column: friends + recent activity feed -->
-                        <div>
+                            
                             <!-- Friends section -->
-                            <div class="section-card reveal-item mb-3" id="friendsSection">
-                                <div class="section-title mb-3">
-                                    Friends <span id="friendsCount"
-                                        style="color: var(--accent); font-size: 0.8rem; font-weight: 600;">(0)</span>
-                                </div>
+                            <div class="section-card reveal-item mt-3 mb-3" id="friendsSection" style="padding: 18px;">
+                                <div class="section-title mb-3">Friends <span id="friendsCount" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; margin-left: 6px;">(0)</span></div>
                                 <!-- Friend requests (own profile only) -->
                                 <div id="friendRequestsContainer" style="display:none;"></div>
                                 <div id="friendsListContainer" class="friends-grid">
                                     <div class="empty-state-text">No friends yet. Search for users to add!</div>
                                 </div>
                                 <div class="mt-3 text-center" id="addFriendSection" style="display:none;">
-                                    <a href="/friends" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-person-plus me-1"></i> Find Friends
-                                    </a>
+                                    <a href="/friends" class="btn btn-sm btn-outline-primary"><i class="bi bi-person-plus me-1"></i> Find Friends</a>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="section-card reveal-item">
-                                <div class="section-title mb-3">Recent Activity</div>
+                        <!-- Right column: Stats, Favorite Games, Achievements Showcase, Recent Activity -->
+                        <div>
+                            <!-- Stat grid — 4 stat cards in one row -->
+                            <div class="stat-grid mb-3">
+                                <div class="stat-card reveal-item px-2 py-3">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                                        <i class="bi bi-check-circle" style="font-size: 1.1rem; color: #50d6b4;"></i>
+                                        <div class="text-muted small">Completed</div>
+                                    </div>
+                                    <div class="stat-value" id="completedCount" style="font-size: 1.4rem;">0</div>
+                                </div>
+                                <div class="stat-card reveal-item px-2 py-3">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                                        <i class="bi bi-bookmark" style="font-size: 1.1rem; color: #5383e8;"></i>
+                                        <div class="text-muted small">Backlog</div>
+                                    </div>
+                                    <div class="stat-value" id="backlogCount" style="font-size: 1.4rem;">0</div>
+                                </div>
+                                <div class="stat-card reveal-item px-2 py-3">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                                        <i class="bi bi-hourglass-split" style="font-size: 1.1rem; color: #febc2e;"></i>
+                                        <div class="text-muted small">Hours</div>
+                                    </div>
+                                    <div class="stat-value" id="totalHours" style="font-size: 1.4rem;">0</div>
+                                </div>
+                                <div class="stat-card reveal-item px-2 py-3">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                                        <i class="bi bi-fire" style="font-size: 1.1rem; color: #ff6b6b;"></i>
+                                        <div class="text-muted small">Current</div>
+                                    </div>
+                                    <div class="stat-value" id="playingCount" style="font-size: 1.4rem;">0</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Favorite games showcase -->
+                            <div class="section-card reveal-item mb-3 py-3 px-4">
+                                <div class="section-title mb-2">Favorite Games Showcase</div>
+                                <div id="favGamesContainer" class="fav-games-container">
+                                    <div class="empty-state-text">No favourite games yet. <a href="/profile-edit" style="color: #5383e8;">Choose some!</a></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Achievement Showcase -->
+                            <div class="section-card reveal-item mb-3 py-3 px-4">
+                                <div class="section-title mb-2">Achievement Showcase <span id="achievementCount" style="color: #febc2e; font-size: 0.8rem; font-weight: 600; margin-left: 6px;">(0/16)</span></div>
+                                <div id="achievementsContainer" class="achievements-container" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));">
+                                    <div class="empty-state-text">Complete games to unlock achievements!</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Recent Activity -->
+                            <div class="section-card reveal-item py-3 px-4">
+                                <div class="section-title mb-2">Recent Activity</div>
                                 <div id="activityContainer">
                                     <div class="empty-state-text">Loading activity...</div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div></div>
                 </div>
             </div>
         </div>
@@ -1003,18 +1058,22 @@ plagiarized the work of other students and/or persons.
 
     /* Achievement definitions */
     const ACHIEVEMENTS = [
-        { id: 'first_game', name: 'First Step', icon: '??', description: 'Add your first game', condition: (games) => games.length >= 1 },
-        { id: 'collector', name: 'Collector', icon: '??', description: 'Add 10 games to library', condition: (games) => games.length >= 10 },
-        { id: 'hoarder', name: 'Hoarder', icon: '??', description: 'Add 25 games to library', condition: (games) => games.length >= 25 },
-        { id: 'completionist_badge', name: 'Completionist', icon: '?', description: 'Complete 5 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 5 },
-        { id: 'platinum', name: 'Platinum Elite', icon: '??', description: 'Complete 10 games', condition: (games) => games.filter(g => g.status === 'completed').length >= 10 },
-        { id: 'backlog_master', name: 'Backlog Master', icon: '??', description: 'Have 20 games in backlog', condition: (games) => games.filter(g => g.status === 'backlog').length >= 20 },
-        { id: 'multitasker', name: 'Multitasker', icon: '?', description: 'Play 5 games simultaneously', condition: (games) => games.filter(g => g.status === 'playing').length >= 5 },
-        { id: 'curator', name: 'Perfect Profile', icon: '?', description: 'Customize your profile', condition: (games, profile) => profile.bio && profile.bio !== 'No bio yet' && profile.favoriteGames && profile.favoriteGames.length > 0 },
-        { id: 'speedrunner', name: 'Quick Finisher', icon: '??', description: 'Complete a game in 5 hours', condition: () => false },
-        { id: 'reviewer', name: 'Critic', icon: '??', description: 'Rate 5 completed games', condition: (games) => games.filter(g => g.status === 'completed' && g.rating > 0).length >= 5 },
-        { id: 'hybrid', name: 'Balanced Gamer', icon: '??', description: 'Have games in all 3 statuses', condition: (games) => games.filter(g => g.status === 'backlog').length > 0 && games.filter(g => g.status === 'playing').length > 0 && games.filter(g => g.status === 'completed').length > 0 },
-        { id: 'legendary', name: 'Legendary', icon: '??', description: 'Complete 20 games with 5-star ratings', condition: (games) => games.filter(g => g.status === 'completed' && g.rating === 5).length >= 20 },
+        { id: 'first_game',        name: 'First Step',      icon: '<i class="bi bi-controller"></i>',       description: 'Add your first game',                     condition: (games) => games.length >= 1 },
+        { id: 'collector',         name: 'Collector',       icon: '<i class="bi bi-collection-fill"></i>',  description: 'Add 10 games to library',                 condition: (games) => games.length >= 10 },
+        { id: 'hoarder',           name: 'Hoarder',         icon: '<i class="bi bi-archive-fill"></i>',     description: 'Add 25 games to library',                 condition: (games) => games.length >= 25 },
+        { id: 'completionist_badge', name: 'Completionist', icon: '<i class="bi bi-trophy-fill"></i>',     description: 'Complete 5 games',                        condition: (games) => games.filter(g => g.status === 'completed').length >= 5 },
+        { id: 'platinum',          name: 'Platinum Elite',  icon: '<i class="bi bi-gem"></i>',              description: 'Complete 10 games',                       condition: (games) => games.filter(g => g.status === 'completed').length >= 10 },
+        { id: 'grandmaster',       name: 'Grandmaster',     icon: '<i class="bi bi-award-fill"></i>',       description: 'Complete 50 games',                       condition: (games) => games.filter(g => g.status === 'completed').length >= 50 },
+        { id: 'backlog_master',    name: 'Backlog Master',  icon: '<i class="bi bi-stack"></i>',            description: 'Have 20 games in backlog',                condition: (games) => games.filter(g => g.status === 'backlog').length >= 20 },
+        { id: 'indecisive',        name: 'Indecisive',      icon: '<i class="bi bi-question-circle-fill"></i>',description: 'Have 50 games in backlog',            condition: (games) => games.filter(g => g.status === 'backlog').length >= 50 },
+        { id: 'multitasker',       name: 'Multitasker',     icon: '<i class="bi bi-lightning-fill"></i>',   description: 'Play 5 games simultaneously',             condition: (games) => games.filter(g => g.status === 'playing').length >= 5 },
+        { id: 'curator',           name: 'Perfect Profile', icon: '<i class="bi bi-person-badge-fill"></i>', description: 'Customize your profile bio and favs',  condition: (games, profile) => profile && profile.bio && profile.bio !== 'No bio yet' && profile.favoriteGames && profile.favoriteGames.length > 0 },
+        { id: 'reviewer',          name: 'Critic',          icon: '<i class="bi bi-star-fill"></i>',        description: 'Rate 5 completed games',                  condition: (games) => games.filter(g => g.status === 'completed' && g.rating > 0).length >= 5 },
+        { id: 'ultimate_critic',   name: 'Top Critic',      icon: '<i class="bi bi-vector-pen"></i>',       description: 'Rate 50 completed games',                 condition: (games) => games.filter(g => g.status === 'completed' && g.rating > 0).length >= 50 },
+        { id: 'hybrid',            name: 'Balanced Gamer',  icon: '<i class="bi bi-bar-chart-fill"></i>',   description: 'Games in all 3 statuses',                 condition: (games) => games.filter(g => g.status === 'backlog').length > 0 && games.filter(g => g.status === 'playing').length > 0 && games.filter(g => g.status === 'completed').length > 0 },
+        { id: 'legendary',         name: 'Legendary',       icon: '<i class="bi bi-fire"></i>',             description: 'Complete 20 games with 5-star ratings',  condition: (games) => games.filter(g => g.status === 'completed' && g.rating === 5).length >= 20 },
+        { id: 'no_life',           name: 'No Life',         icon: '<i class="bi bi-moon-stars-fill"></i>',  description: 'Total playtime over 1,000 hours',         condition: (games) => games.reduce((acc, g) => acc + (g.playtime || 0), 0) >= 1000 },
+        { id: 'retro_appreciator', name: 'Retro Gamer',     icon: '<i class="bi bi-cassette-fill"></i>',    description: '10 games released before 2010',           condition: (games) => games.filter(g => g.year && g.year < 2010).length >= 10 }
     ];
 
     function loadAchievements() {
@@ -1040,10 +1099,10 @@ plagiarized the work of other students and/or persons.
     }
     function showAchievementNotification(achievement) {
         const notification = document.createElement('div');
-        notification.style.cssText = `position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#febc2e,#ffa500);color:#0f1519;padding:16px 20px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:10000;font-weight:700;animation:slideIn 0.4s ease;max-width:280px;`;
-        notification.innerHTML = `<div style="font-size:1.2rem;margin-bottom:6px;">?? Achievement Unlocked!</div><div>${achievement.icon} <strong>${achievement.name}</strong></div><div style="font-size:0.85rem;opacity:0.9;margin-top:4px;">${achievement.description}</div>`;
+        notification.style.cssText = `position:fixed;top:24px;right:24px;background:linear-gradient(135deg,#1c2530,#0f1519);border:1px solid rgba(254,188,46,0.5);color:#fff;padding:16px 20px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 20px rgba(254,188,46,0.2);z-index:10000;font-weight:600;animation:slideIn 0.4s cubic-bezier(.4,0,.2,1);max-width:300px;display:flex;gap:14px;align-items:flex-start;`;
+        notification.innerHTML = `<div style="font-size:1.6rem;color:#febc2e;flex-shrink:0;margin-top:2px;">${achievement.icon}</div><div><div style="font-size:0.7rem;color:#febc2e;letter-spacing:0.08em;text-transform:uppercase;font-weight:800;margin-bottom:4px;">Achievement Unlocked</div><div style="font-weight:700;font-size:0.95rem;color:#fff;">${achievement.name}</div><div style="font-size:0.8rem;color:rgba(180,200,230,0.7);margin-top:3px;">${achievement.description}</div></div>`;
         document.body.appendChild(notification);
-        setTimeout(() => { notification.style.animation = 'slideOut 0.4s ease forwards'; setTimeout(() => notification.remove(), 400); }, 3000);
+        setTimeout(() => { notification.style.opacity = '0'; notification.style.transform = 'translateX(20px)'; notification.style.transition = 'opacity 0.4s,transform 0.4s'; setTimeout(() => notification.remove(), 400); }, 3500);
     }
 
     async function renderProfile(profile) {
@@ -1123,16 +1182,21 @@ plagiarized the work of other students and/or persons.
                 : '<div class="empty-state-text">No favourite games yet.</div>';
         }
 
-        // Achievements
         const achievementsContainer = document.getElementById('achievementsContainer');
         const achievementCountEl = document.getElementById('achievementCount');
+        const steamLevelEl = document.getElementById('steamLevel');
         let achievementHtml = '';
         ACHIEVEMENTS.forEach(achievement => {
             const isUnlocked = unlockedAchievements.some(a => a.id === achievement.id);
-            achievementHtml += `<div class="achievement-badge ${isUnlocked ? 'unlocked' : 'locked'}" title="${achievement.description}"><span class="achievement-icon">${achievement.icon}</span><div class="achievement-name">${achievement.name}</div><div class="${isUnlocked ? 'achievement-desc' : 'achievement-locked-text'}">${isUnlocked ? achievement.description : 'Locked'}</div>${isUnlocked ? '<div class="unlock-badge">UNLOCKED</div>' : ''}</div>`;
+            achievementHtml += `<div class="achievement-badge ${isUnlocked ? 'unlocked' : 'locked'}" title="${achievement.description}"><div class="achievement-icon-wrap"><span class="achievement-icon">${achievement.icon}</span></div><div class="achievement-name">${achievement.name}</div><div class="${isUnlocked ? 'achievement-desc' : 'achievement-locked-text'}">${isUnlocked ? achievement.description : '<i class="bi bi-lock-fill" style="font-size:0.6rem;margin-right:3px;"></i>Locked'}</div>${isUnlocked ? '<div class="unlock-badge">✓ Unlocked</div>' : ''}</div>`;
         });
         achievementsContainer.innerHTML = achievementHtml;
         achievementCountEl.textContent = `(${unlockedAchievements.length}/${ACHIEVEMENTS.length})`;
+        
+        // Update "Steam Level"
+        const level = Math.max(1, Math.floor(unlockedAchievements.length / 2));
+        steamLevelEl.textContent = level;
+        steamLevelEl.style.display = 'inline-flex';
 
         // Stats from server
         const userId = profile._id || profile.id;

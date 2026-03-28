@@ -267,8 +267,16 @@ plagiarized the work of other students and/or persons.
             { id: 'hoarder', condition: games.length >= 25 },
             { id: 'completionist_badge', condition: games.filter(g => g.status === 'completed').length >= 5 },
             { id: 'platinum', condition: games.filter(g => g.status === 'completed').length >= 10 },
+            { id: 'grandmaster', condition: games.filter(g => g.status === 'completed').length >= 50 },
             { id: 'backlog_master', condition: games.filter(g => g.status === 'backlog').length >= 20 },
+            { id: 'indecisive', condition: games.filter(g => g.status === 'backlog').length >= 50 },
             { id: 'multitasker', condition: games.filter(g => g.status === 'playing').length >= 5 },
+            { id: 'reviewer', condition: games.filter(g => g.status === 'completed' && g.rating > 0).length >= 5 },
+            { id: 'ultimate_critic', condition: games.filter(g => g.status === 'completed' && g.rating > 0).length >= 50 },
+            { id: 'hybrid', condition: games.filter(g => g.status === 'backlog').length > 0 && games.filter(g => g.status === 'playing').length > 0 && games.filter(g => g.status === 'completed').length > 0 },
+            { id: 'legendary', condition: games.filter(g => g.status === 'completed' && g.rating === 5).length >= 20 },
+            { id: 'no_life', condition: games.reduce((acc, g) => acc + (g.playtime || 0), 0) >= 1000 },
+            { id: 'retro_appreciator', condition: games.filter(g => g.year && g.year < 2010).length >= 10 }
         ];
 
         conditions.forEach(ach => {

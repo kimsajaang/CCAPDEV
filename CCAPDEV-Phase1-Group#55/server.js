@@ -123,6 +123,23 @@ app.get('/feedback', isLoggedIn, (req, res) => res.render('feedback', { title: '
 app.get('/feedback-list', isLoggedIn, (req, res) => res.render('feedback-list', { title: 'Feedback Management', user: req.user }));
 app.get('/users-list', isLoggedIn, (req, res) => res.render('users-list', { title: 'Community Directory', user: req.user }));
 
+// /profile-view?username=xxx  OR  /profile-view?user=<id>  →  redirects to /profile?user=<id>
+app.get('/profile-view', async (req, res) => {
+  try {
+    const { username, user: userId } = req.query;
+    let found = null;
+    if (userId) {
+      found = await User.findById(userId).select('_id').lean();
+    } else if (username) {
+      found = await User.findOne({ username }).select('_id').lean();
+    }
+    if (found) return res.redirect(`/profile?user=${found._id}`);
+    res.redirect('/friends');
+  } catch (e) {
+    res.redirect('/friends');
+  }
+});
+
 // Static files (CSS, images, client-side assets) — after view routes
 app.use(express.static(__dirname + '/public'));
 

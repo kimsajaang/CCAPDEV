@@ -411,7 +411,7 @@ async function loadSuggestedProfiles() {
             return `
             <div class="col-sm-6 col-xl-4">
                 <div class="card bg-section border-0 shadow-sm user-card cursor-pointer h-100 text-center p-3"
-                     onclick="window.location='/profile-view?username=${u.username}'" style="border-radius:14px;">
+                     onclick="window.location='/profile?user=${u._id}'" style="border-radius:14px;">
                     <img src="${avatar}" class="rounded-circle mx-auto mb-2 object-fit-cover"
                          style="width:64px;height:64px;border:2px solid rgba(83,131,232,0.35);"
                          onerror="this.src='${defaultAvatar}'">
