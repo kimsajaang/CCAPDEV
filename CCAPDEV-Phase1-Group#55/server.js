@@ -119,6 +119,7 @@ app.get('/profile-edit', (req, res) => res.render('profile-edit', { title: 'Edit
 app.get('/search', (req, res) => res.render('search', { title: 'Search Games', user: req.user }));
 app.get('/stats', (req, res) => res.render('stats', { title: 'Community', user: req.user }));
 app.get('/friends', (req, res) => res.render('friends', { title: 'Find Friends', user: req.user }));
+app.get('/about', (req, res) => res.render('about', { title: 'About', user: req.user }));
 app.get('/feedback', isLoggedIn, (req, res) => res.render('feedback', { title: 'Feedback', user: req.user }));
 app.get('/feedback-list', isLoggedIn, (req, res) => res.render('feedback-list', { title: 'Feedback Management', user: req.user }));
 app.get('/users-list', isLoggedIn, (req, res) => res.render('users-list', { title: 'Community Directory', user: req.user }));
@@ -559,15 +560,33 @@ app.get('/api/auth/steam-status', isLoggedIn, async (req, res) => {
 
       if (player.gameextrainfo) {
         // User is currently playing a game on Steam
+        const coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${player.gameid}/library_600x900_2x.jpg`;
         return res.json({
           playing: true,
           gameName: player.gameextrainfo,
-          gameId: player.gameid
+          gameId: player.gameid,
+          coverUrl: coverUrl
         });
       }
     }
 
-    // Not currently playing anything
+    // Fallback: Check user's Backlog Hero library for any game actively marked as "playing"
+    const LibraryEntry = require('./model/LibraryEntry');
+    const activeGame = await LibraryEntry.findOne({ userId: user._id, status: 'playing' })
+      .sort({ updatedAt: -1 })
+      .populate('gameId');
+
+    if (activeGame && activeGame.gameId) {
+      return res.json({
+        playing: true,
+        gameName: activeGame.gameId.name,
+        gameId: activeGame.gameId._id,
+        coverUrl: activeGame.gameId.coverUrl || '',
+        isFallback: true
+      });
+    }
+
+    // Not currently playing anything (Steam or Local)
     res.json({ playing: false });
   } catch (err) {
     console.error('[STEAM STATUS] Error checking live status:', err.message);
@@ -810,18 +829,23 @@ app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
 
 
 
-    const entries = await LibraryEntry.find({ userId, hidden: { $ne: true } });
+    const [entries, postsCount] = await Promise.all([
+      LibraryEntry.find({ userId, hidden: { $ne: true } }),
+      Post.countDocuments({ author: userId })
+    ]);
 
     const stats = {
       total: entries.length,
       completed: entries.filter(e => e.status === 'completed').length,
       playing: entries.filter(e => e.status === 'playing').length,
       backlog: entries.filter(e => e.status === 'backlog').length,
+      postsCount,
       totalHours: entries.reduce((sum, e) => sum + (e.playtime || 0), 0),
       avgRating: entries.length > 0
         ? (entries.reduce((sum, e) => sum + (e.rating || 0), 0) / entries.length).toFixed(1)
         : 0,
     };
+
 
     res.json(stats);
   } catch (err) {
@@ -932,6 +956,20 @@ app.get('/api/feedback-list', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[GET FEEDBACK LIST] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch feedback' });
+  }
+});
+
+// DELETE /api/feedback/:id - Delete feedback (protected)
+app.delete('/api/feedback/:id', isLoggedIn, async (req, res) => {
+  try {
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) return res.status(404).json({ error: 'Feedback not found' });
+    
+    await Feedback.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Feedback deleted successfully' });
+  } catch (err) {
+    console.error('[DELETE FEEDBACK] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete feedback' });
   }
 });
 
@@ -1622,6 +1660,58 @@ app.post('/api/posts/:id/comment', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[COMMENT POST] Error:', err.message);
     res.status(500).json({ error: 'Commenting failed' });
+  }
+});
+
+// PUT /api/posts/:id - Edit a post
+app.put('/api/posts/:id', isLoggedIn, async (req, res) => {
+  try {
+    const { title, body, flair, game, photo } = req.body;
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (post.author.toString() !== req.session.userId) {
+      return res.status(403).json({ error: 'Only the author can edit this post' });
+    }
+    
+    if (title && title.length < 3) {
+      return res.status(400).json({ error: 'Title must be at least 3 characters' });
+    }
+
+    if (title) post.title = title;
+    if (body !== undefined) post.body = body;
+    if (flair) post.flair = flair;
+    if (game !== undefined) post.game = game;
+    if (photo !== undefined) post.photo = photo;
+
+    // Remove empty fields
+    if (!post.game) post.game = undefined;
+    if (!post.photo) post.photo = undefined;
+
+    await post.save();
+    const populated = await post.populate('author', 'username displayName avatar');
+    res.json(populated);
+  } catch (err) {
+    console.error('[EDIT POST] Error:', err.message);
+    res.status(500).json({ error: 'Failed to edit post' });
+  }
+});
+
+// DELETE /api/posts/:id - Delete a post
+app.delete('/api/posts/:id', isLoggedIn, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (post.author.toString() !== req.session.userId) {
+      return res.status(403).json({ error: 'Only the author can delete this post' });
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (err) {
+    console.error('[DELETE POST] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete post' });
   }
 });
 

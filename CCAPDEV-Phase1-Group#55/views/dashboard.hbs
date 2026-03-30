@@ -250,6 +250,33 @@ plagiarized the work of other students and/or persons.
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
   }
 
+  /* --- Game Suggestion Highlight --- */
+  .highlight {
+    animation: highlightGlow 1.2s ease-out;
+  }
+
+  @keyframes highlightGlow {
+    0% {
+      background: rgba(83, 131, 232, 0);
+      box-shadow: 0 0 0 rgba(83, 131, 232, 0);
+    }
+    15% {
+      background: rgba(83, 131, 232, 0.15);
+      box-shadow: 0 0 30px rgba(83, 131, 232, 0.3);
+      transform: scale(1.02);
+    }
+    100% {
+      background: rgba(83, 131, 232, 0);
+      box-shadow: 0 0 0 rgba(83, 131, 232, 0);
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
   .trailer-name {
     position: absolute;
     bottom: 0;
@@ -402,10 +429,13 @@ plagiarized the work of other students and/or persons.
 <!-- Fake loading screen -->
 <div id="page-loader" class="loader" aria-label="Loading">
   <div class="loader-card">
-    <div class="loader-orb"></div>
+    <div class="loader-icon-wrap">
+      <i class="bi bi-controller"></i>
+      <div class="loader-glow"></div>
+    </div>
     <div>
-      <div class="loader-text">Loading your dashboard</div>
-      <div class="loader-sub">Warming up your backlog picks</div>
+      <div class="loader-text">Loading Dashboard<span class="loading-dots"></span></div>
+      <div class="loader-sub">Warming up your backlog recommendations</div>
     </div>
   </div>
 </div>{{> navbar-app activePage="dashboard"}}
@@ -414,7 +444,7 @@ plagiarized the work of other students and/or persons.
   <!-- Welcome hero card with user stats -->
   <div class="hero hero-compact mb-4 reveal">
     <div class="row align-items-center">
-      <div class="col-lg-7">
+      <div class="col-lg-6">
         <h2 class="mb-2" id="welcomeTitle"
           style="font-size:clamp(1.8rem, 4vw, 2.8rem); font-weight:900; letter-spacing:-0.03em; line-height:1.1;">
           Play smarter, <span class="gradient-text">finish more.</span>
@@ -422,7 +452,7 @@ plagiarized the work of other students and/or persons.
         <p class="hero-sub mb-4 opacity-75" style="font-size: 1.1rem;">Your personal command center for game tracking
           and discovery.</p>
 
-        <div class="d-flex flex-wrap gap-3 mb-4">
+        <div class="d-flex flex-wrap gap-3">
           <a class="btn btn-premium" href="/search">
             <i class="bi bi-search me-2"></i>Find Games
           </a>
@@ -430,16 +460,10 @@ plagiarized the work of other students and/or persons.
             <i class="bi bi-collection-play me-2"></i>My Library
           </a>
         </div>
-
-        <div id="steamLiveStatus" class="mb-4" style="display:none;">
-          <div class="badge-live">
-            <span class="dot-live"></span>
-            <span>Currently Playing: <strong id="steamLiveGameName" class="text-white ms-1"></strong></span>
-          </div>
-        </div>
       </div>
 
-      <div class="col-lg-5">
+      <div class="col-lg-6 d-flex gap-4 justify-content-lg-end align-items-center mt-4 mt-lg-0">
+        
         <div class="hero-stats justify-content-lg-end">
           <div class="hero-stat">
             <div class="hero-stat-label"><i class="bi bi-check-circle-fill"></i>Completed</div>
@@ -461,6 +485,19 @@ plagiarized the work of other students and/or persons.
             <div class="hero-stat-label"><i class="bi bi-clock-history"></i>Hours</div>
             <div class="hero-stat-value counter-animate" id="statHours">0</div>
           </div>
+        </div>
+
+        <div id="steamLiveCard" style="display:none; width: 160px; flex-shrink: 0; animation: fadeInScale 0.4s ease forwards;">
+            <div style="font-size: 0.8rem; color: #4ab76b; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                <span class="dot-live" style="width:7px; height:7px; background:#4ab76b; border-radius:50%; box-shadow: 0 0 10px #4ab76b; animation: pulseLive 2s infinite; display: inline-block;"></span>
+                Playing
+            </div>
+            <div class="game-card" style="border-radius: 12px; overflow: hidden; position: relative; border: 1px solid rgba(74, 183, 107, 0.4); box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 20px rgba(74, 183, 107, 0.2); cursor: pointer;" onclick="window.location.href='/library'">
+                <img id="steamLiveGameCover" src="" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block;" alt="Game Cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x400/1a2634/5383e8?text=Playing';">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); padding: 30px 10px 10px;">
+                    <span id="steamLiveGameNameCard" style="font-size: 0.95rem; font-weight: 800; color: #fff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,0.9);">Game Name</span>
+                </div>
+            </div>
         </div>
 
       </div>
@@ -1059,44 +1096,38 @@ plagiarized the work of other students and/or persons.
             currentUser = currentUserData;
             document.getElementById('welcomeTitle').innerHTML = `Welcome back, <span class="gradient-text">${currentUser.displayName}!</span>`;
 
-            // Fetch user stats
-            try {
-              const statsRes = await fetch('/api/auth/stats', {
-                credentials: 'include'
-              });
-
-              if (statsRes.ok) {
-                const stats = await statsRes.json();
-                animateCounter('statCompleted', stats.completed);
-                animateCounter('statTotal', stats.total);
-                animateCounter('statBacklog', stats.backlog);
-                animateCounter('statPlaying', stats.playing);
-                animateCounter('statHours', Math.round(stats.totalHours));
-              }
-            } catch (statsErr) {
-              console.warn('[Dashboard] Could not fetch stats:', statsErr);
-            }
+            // Fetch user stats without blocking the rest of the dashboard
+            fetch('/api/auth/stats', { credentials: 'include' })
+              .then(res => res.json())
+              .then(stats => {
+                animateCounter('statCompleted', stats.completed || 0);
+                animateCounter('statTotal', stats.total || 0);
+                animateCounter('statBacklog', stats.backlog || 0);
+                animateCounter('statPlaying', stats.playing || 0);
+                animateCounter('statHours', Math.round(stats.totalHours || 0));
+              })
+              .catch(statsErr => console.warn('[Dashboard] Could not fetch stats:', statsErr));
 
             // Show Steam sync button if user has a Steam ID
             if (currentUserData.steamId) {
               const syncBtn = document.getElementById('steamSyncBtn');
               if (syncBtn) syncBtn.style.display = '';
 
-              // Check if currently playing a game on Steam
-              try {
-                const steamRes = await fetch('/api/auth/steam-status', { credentials: 'include' });
-                if (steamRes.ok) {
-                  const steamData = await steamRes.json();
+              // Check if currently playing a game on Steam without blocking
+              fetch('/api/auth/steam-status', { credentials: 'include' })
+                .then(res => res.json())
+                .then(steamData => {
                   if (steamData.playing && steamData.gameName) {
-                    const gameNameEl = document.getElementById('steamLiveGameName');
-                    const statusEl = document.getElementById('steamLiveStatus');
+                    const gameNameEl = document.getElementById('steamLiveGameNameCard');
+                    const coverEl = document.getElementById('steamLiveGameCover');
+                    const statusEl = document.getElementById('steamLiveCard');
+                    
                     if (gameNameEl) gameNameEl.textContent = steamData.gameName;
-                    if (statusEl) statusEl.style.display = '';
+                    if (coverEl && steamData.coverUrl) coverEl.src = steamData.coverUrl;
+                    if (statusEl) statusEl.style.display = 'block';
                   }
-                }
-              } catch (steamErr) {
-                console.warn('[Dashboard] Could not fetch live Steam status:', steamErr);
-              }
+                })
+                .catch(steamErr => console.warn('[Dashboard] Could not fetch live Steam status:', steamErr));
             }
 
             // Load dynamic content — fire all in parallel, no need to await
@@ -1136,8 +1167,8 @@ plagiarized the work of other students and/or persons.
     }
   }
 
-  // Hide loader after initialization
-  window.addEventListener('load', () => {
+  // Hide loader after DOM is ready to avoid hanging on slow images/iframes
+  document.addEventListener('DOMContentLoaded', () => {
     initDashboard();
     setTimeout(() => {
       const loader = document.getElementById('page-loader');
