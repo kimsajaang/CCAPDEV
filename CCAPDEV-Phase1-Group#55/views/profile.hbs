@@ -14,150 +14,552 @@ plagiarized the work of other students and/or persons.
 {{> navbar-app activePage="profile"}}
 
 <style>
-:root {
-  --bg-deep: #0b0e14;
-  --bg-primary: #0f1419;
-  --bg-secondary: #1a1f2e;
-  --bg-tertiary: #242d3d;
-  --accent: #8b5cf6;
-  --accent-glow: rgba(139, 92, 246, 0.3);
-  --blue-accent: #5b7fee;
-  --text-primary: #e4e6eb;
-  --text-secondary: #9ca3af;
-  --text-tertiary: #6b7280;
-  --border: rgba(255, 255, 255, 0.08);
-  --card-border: rgba(255, 255, 255, 0.03);
-  --success: #10b981;
-}
+  :root {
+    --bg-deep: #0b0e14;
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #242d3d;
+    --accent: #8b5cf6;
+    --accent-glow: rgba(139, 92, 246, 0.3);
+    --blue-accent: #5b7fee;
+    --text-primary: #e4e6eb;
+    --text-secondary: #9ca3af;
+    --text-tertiary: #6b7280;
+    --border: rgba(255, 255, 255, 0.08);
+    --card-border: rgba(255, 255, 255, 0.03);
+    --success: #10b981;
+  }
 
-body { 
-  background-color: var(--bg-deep) !important; 
-  color: var(--text-primary); 
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden; 
-}
+  body {
+    background-color: var(--bg-deep) !important;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
 
-.profile-dashboard {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-}
+  .profile-dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
 
-/* ── Layout ── */
-.pg-wrap { display: flex; gap: 24px; min-height: calc(100vh - 100px); }
-.pg-main { flex: 1; min-width: 0; }
-.pg-chat-sidebar { 
-  width: 320px; 
-  flex-shrink: 0; 
-  background: var(--bg-secondary); 
-  border: 1px solid var(--border); 
-  border-radius: 16px;
-  display: flex; 
-  flex-direction: column; 
-  height: calc(100vh - 120px);
-  position: sticky;
-  top: 80px;
-}
+  /* ── Layout ── */
+  .pg-wrap {
+    display: flex;
+    gap: 24px;
+    min-height: calc(100vh - 100px);
+  }
 
-/* ── Hero Banner ── */
-.hero-banner {
-  position: relative;
-  background: linear-gradient(110deg, rgba(11,14,20,1) 30%, rgba(11,14,20,0.7) 100%), 
-              url('https://images.igdb.com/igdb/image/upload/t_original/co5wex.jpg') right center / cover no-repeat;
-  border-radius: 16px;
-  padding: 40px;
-  margin-bottom: 30px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  border: 1px solid var(--card-border);
-  overflow: hidden;
-}
+  .pg-main {
+    flex: 1;
+    min-width: 0;
+  }
 
-.hero-top { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; position: relative; z-index: 2; }
-.hero-avatar { width: 70px; height: 70px; border-radius: 12px; border: 2px solid var(--accent); object-fit: cover; box-shadow: 0 0 20px var(--accent-glow); }
-.hero-name { font-size: 1.1rem; font-weight: 700; color: #fff; margin: 0; }
-.hero-handle { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
-.hero-bio { font-size: 3.2rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 30px; color: #fff; position: relative; z-index: 2; }
-.hero-stats { display: flex; gap: 25px; font-size: 0.9rem; color: var(--text-secondary); align-items: center; flex-wrap: wrap; position: relative; z-index: 2; }
-.hero-stats strong { color: #fff; font-weight: 700; margin-right: 4px; }
-.hero-meta { margin-left: auto; display: flex; gap: 20px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px; }
+  .pg-chat-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    position: sticky;
+    top: 80px;
+  }
 
-/* ── Level Progress ── */
-.lvl-progress-wrap { position: relative; height: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 30px; max-width: 800px; }
-.lvl-progress-bar { height: 100%; background: linear-gradient(90deg, #6d28d9, var(--accent)); border-radius: 10px; box-shadow: 0 0 15px var(--accent-glow); transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); width: 0%; }
-.lvl-star { position: absolute; right: -18px; top: -13px; width: 36px; height: 36px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); box-shadow: 0 0 20px var(--accent-glow); }
+  /* ── Hero Banner ── */
+  .hero-banner {
+    position: relative;
+    background: linear-gradient(110deg, rgba(11, 14, 20, 1) 30%, rgba(11, 14, 20, 0.7) 100%),
+      url('https://images.igdb.com/igdb/image/upload/t_original/co5wex.jpg') right center / cover no-repeat;
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+  }
 
-/* ── Grid Sections ── */
-.sec-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-.sec-title i { color: var(--accent); }
+  .hero-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 2;
+  }
 
-.acc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 40px; }
-.acc-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; transition: all 0.3s; cursor: pointer; }
-.acc-card:hover { transform: translateY(-3px); border-color: var(--accent); background: rgba(139, 92, 246, 0.05); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-.acc-icon { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg-tertiary); flex-shrink: 0; }
-.acc-icon img { width: 100%; height: 100%; object-fit: cover; }
-.acc-info h6 { margin: 0; font-size: 0.95rem; font-weight: 700; color: #fff; }
-.acc-info small { color: var(--text-tertiary); font-size: 0.75rem; }
+  .hero-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    border: 2px solid var(--accent);
+    object-fit: cover;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
 
-.split-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.split-col { min-width: 0; }
+  .hero-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
 
-.ach-item { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; margin-bottom: 12px; transition: all 0.2s; }
-.ach-icon-box { font-size: 1.2rem; color: var(--accent); margin-right: 16px; }
-.ach-name { font-weight: 700; font-size: 0.85rem; color: #e4e6eb; flex: 1; text-transform: uppercase; letter-spacing: 0.02em; }
-.ach-status { font-size: 0.75rem; font-weight: 700; color: var(--success); }
-.ach-prog-val { font-size: 0.8rem; font-weight: 600; color: var(--text-tertiary); }
+  .hero-handle {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
 
-.act-item { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; margin-bottom: 12px; }
-.act-status { font-size: 0.7rem; color: var(--text-tertiary); font-weight: 800; text-transform: uppercase; width: 85px; flex-shrink: 0; }
-.act-info { flex: 1; min-width: 0; }
-.act-game-name { display: block; font-weight: 700; font-size: 0.9rem; color: #fff; }
-.act-game-meta { font-size: 0.75rem; color: var(--text-tertiary); }
-.act-cover { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; margin-left: 15px; border: 1px solid var(--border); }
+  .hero-bio {
+    font-size: 3.2rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 30px;
+    color: #fff;
+    position: relative;
+    z-index: 2;
+  }
 
-/* ── Sidebar Chat ── */
-.sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.sidebar-header h6 { margin: 0; font-weight: 700; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-.group-select { background: transparent; border: none; color: #fff; font-weight: 700; cursor: pointer; outline: none; }
-.group-select option { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; padding: 5px; }
+  .hero-stats {
+    display: flex;
+    gap: 25px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 2;
+  }
 
-.chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
-.cm-bubble { background: transparent; }
-.cm-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 4px; }
-.cm-user { font-weight: 600; color: var(--accent); }
-.cm-text { font-size: 0.85rem; color: var(--text-primary); line-height: 1.4; }
-.cm-system { text-align: center; font-size: 0.7rem; color: var(--text-tertiary); background: rgba(255,255,255,0.03); padding: 4px 10px; border-radius: 10px; align-self: center; }
+  .hero-stats strong {
+    color: #fff;
+    font-weight: 700;
+    margin-right: 4px;
+  }
 
-.chat-input-box { padding: 20px; border-top: 1px solid var(--border); }
-.chat-input-box input { width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; padding: 10px 15px; color: #fff; font-size: 0.85rem; outline: none; transition: border 0.2s; }
-.chat-input-box input:focus { border-color: var(--accent); }
+  .hero-meta {
+    margin-left: auto;
+    display: flex;
+    gap: 20px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 20px;
+  }
 
-.empty-state { text-align: center; padding: 40px 20px; color: var(--text-tertiary); font-size: 0.85rem; }
+  /* ── Level Progress ── */
+  .lvl-progress-wrap {
+    position: relative;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-top: 30px;
+    max-width: 800px;
+  }
 
-/* ── Shared/Edit Buttons ── */
-.edit-prof-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; transition: all 0.2s; text-decoration: none; border: 1px solid var(--border); }
-.edit-prof-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .lvl-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6d28d9, var(--accent));
+    border-radius: 10px;
+    box-shadow: 0 0 15px var(--accent-glow);
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
 
-.prof-btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: #7c3aed; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
-.btn-outline:hover { border-color: var(--accent); color: #fff; }
+  .lvl-star {
+    position: absolute;
+    right: -18px;
+    top: -13px;
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.9rem;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
 
-/* ── Modal ── */
-.custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; }
-.custom-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-.modal-title { font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 20px; }
+  /* ── Grid Sections ── */
+  .sec-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 
-@media (max-width: 1100px) { .pg-chat-sidebar { display: none; } }
-@media (max-width: 768px) { .split-row { grid-template-columns: 1fr; } .hero-bio { font-size: 2.2rem; } }
+  .sec-title i {
+    color: var(--accent);
+  }
+
+  .acc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .acc-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .acc-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    background: rgba(139, 92, 246, 0.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .acc-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    flex-shrink: 0;
+  }
+
+  .acc-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .acc-info h6 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .acc-info small {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+  }
+
+  .split-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .split-col {
+    min-width: 0;
+  }
+
+  .ach-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+
+  .ach-icon-box {
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-right: 16px;
+  }
+
+  .ach-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #e4e6eb;
+    flex: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .ach-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--success);
+  }
+
+  .ach-prog-val {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+  }
+
+  .act-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .act-status {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    font-weight: 800;
+    text-transform: uppercase;
+    width: 85px;
+    flex-shrink: 0;
+  }
+
+  .act-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .act-game-name {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+  }
+
+  .act-game-meta {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+  }
+
+  .act-cover {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+    margin-left: 15px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Sidebar Chat ── */
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-header h6 {
+    margin: 0;
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .group-select {
+    font-family: inherit;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .group-select option {
+    font-family: inherit;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 500;
+    padding: 5px;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .cm-bubble {
+    background: transparent;
+  }
+
+  .cm-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-bottom: 4px;
+  }
+
+  .cm-user {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .cm-text {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .cm-system {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 4px 10px;
+    border-radius: 10px;
+    align-self: center;
+  }
+
+  .chat-input-box {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .chat-input-box input {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: #fff;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+
+  .chat-input-box input:focus {
+    border-color: var(--accent);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-tertiary);
+    font-size: 0.85rem;
+  }
+
+  /* ── Shared/Edit Buttons ── */
+  .edit-prof-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: 1px solid var(--border);
+  }
+
+  .edit-prof-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .prof-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #7c3aed;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Modal ── */
+  .custom-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .custom-modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 420px;
+    padding: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-title {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 1100px) {
+    .pg-chat-sidebar {
+      display: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .split-row {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-bio {
+      font-size: 2.2rem;
+    }
+  }
 </style>
 
 <div class="profile-dashboard">
   <div class="pg-wrap">
-    
+
     <!-- MAIN CONTENT -->
     <div class="pg-main">
-      
+
       <!-- HERO BANNER -->
       <div class="hero-banner" id="heroBanner">
         <div class="hero-top">
@@ -166,28 +568,29 @@ body {
             <h6 class="hero-name" id="profileDisplayName">Loading...</h6>
             <div class="hero-handle" id="profileHandle">@username</div>
           </div>
-          <a href="/profile-edit" class="edit-prof-btn ms-2" id="editProfileBtn" style="display:none;" title="Edit Profile">
+          <a href="/profile-edit" class="edit-prof-btn ms-2" id="editProfileBtn" style="display:none;"
+            title="Edit Profile">
             <i class="bi bi-pencil-fill" style="font-size:0.75rem;"></i>
           </a>
           <button class="prof-btn btn-outline ms-auto" id="shareProfileBtn"><i class="bi bi-share"></i> Share</button>
           <div id="friendBtnContainer" class="ms-2"></div>
         </div>
-        
+
         <h1 class="hero-bio" id="userBio">Your gaming legacy starts here.</h1>
-        
+
         <div class="hero-stats">
           <div><strong id="totalGamesCount">0</strong> games played</div>
           <div style="width:1px; height:12px; background:rgba(255,255,255,0.1);"></div>
           <div><strong id="totalExp">0</strong> exp earned</div>
           <div style="width:1px; height:12px; background:rgba(255,255,255,0.1);"></div>
           <div><strong id="completedCount">0</strong> completed</div>
-          
+
           <div class="hero-meta">
             <div><i class="bi bi-geo-alt"></i> <span id="userLocation">Global</span></div>
             <div><i class="bi bi-calendar3"></i> <span id="memberSince">Member for 0 months</span></div>
           </div>
         </div>
-        
+
         <div class="lvl-progress-wrap">
           <div class="lvl-progress-bar" id="lvlProgressBar">
             <div class="lvl-star" id="userLevel">1</div>
@@ -204,12 +607,13 @@ body {
       <div class="split-row">
         <!-- ACHIEVEMENTS -->
         <div class="split-col">
-          <div class="sec-title"><i class="bi bi-stars"></i> Achievements <span class="ms-auto" id="achProgBadge" style="color:var(--accent); font-weight:800; font-size:0.7rem;">0/0</span></div>
+          <div class="sec-title"><i class="bi bi-stars"></i> Achievements <span class="ms-auto" id="achProgBadge"
+              style="color:var(--accent); font-weight:800; font-size:0.7rem;">0/0</span></div>
           <div id="achievementsContainer">
             <div class="empty-state">No achievements earned yet.</div>
           </div>
         </div>
-        
+
         <!-- RECENT ACTIVITY -->
         <div class="split-col">
           <div class="sec-title"><i class="bi bi-clock-history"></i> Recent Activity</div>
@@ -220,26 +624,6 @@ body {
       </div>
     </div>
 
-    <!-- SIDEBAR CHAT -->
-    <aside class="pg-chat-sidebar">
-      <div class="sidebar-header">
-        <h6><i class="bi bi-people-fill"></i> 
-          <select id="chatGroupSelect" onchange="switchChatGroup(this.value)" class="group-select">
-            <!-- Populated via JS -->
-          </select>
-        </h6>
-        <button class="btn btn-sm btn-link p-0" onclick="openCreateGroupModal()" style="color:var(--accent);"><i class="bi bi-plus-circle-fill" style="font-size:1.1rem;"></i></button>
-      </div>
-      
-      <div class="chat-messages" id="chatMessages">
-        <div class="empty-state">Loading chat history...</div>
-      </div>
-      
-      <div class="chat-input-box">
-        <input type="text" id="chatInput" placeholder="Send a message..." onkeypress="handleChatInput(event)">
-      </div>
-    </aside>
-
   </div>
 </div>
 
@@ -249,9 +633,9 @@ body {
     <h5 class="modal-title">New Group Chat</h5>
     <div class="mb-4">
       <label style="color:var(--text-tertiary); font-size:0.8rem; margin-bottom:8px; display:block;">Group Name</label>
-      <input type="text" id="newGroupNameInput" class="form-control" placeholder="e.g. Valorant Squad" 
-             style="background:var(--bg-tertiary); border:1px solid var(--border); color:#fff; padding:12px; border-radius:8px; width:100%; outline:none;" 
-             onkeypress="if(event.key === 'Enter') confirmCreateGroup()">
+      <input type="text" id="newGroupNameInput" class="form-control" placeholder="e.g. Valorant Squad"
+        style="background:var(--bg-tertiary); border:1px solid var(--border); color:#fff; padding:12px; border-radius:8px; width:100%; outline:none;"
+        onkeypress="if(event.key === 'Enter') confirmCreateGroup()">
     </div>
     <div class="d-flex justify-content-end gap-2">
       <button class="btn-outline prof-btn" onclick="closeCreateGroupModal()">Cancel</button>
@@ -274,169 +658,171 @@ body {
 </div>
 
 <script>
-/* ── Constants ── */
-const AVATAR_FALLBACK = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%231a1f2e%22/%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2216%22 fill=%22%238b5cf6%22/%3E%3Cellipse cx=%2240%22 cy=%2272%22 rx=%2228%22 ry=%2220%22 fill=%22%238b5cf6%22/%3E%3C/svg%3E";
-const CHATS_STORAGE_KEY = 'bh_groupchats_v1';
+  /* ── Constants ── */
+  const AVATAR_FALLBACK = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%231a1f2e%22/%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2216%22 fill=%22%238b5cf6%22/%3E%3Cellipse cx=%2240%22 cy=%2272%22 rx=%2228%22 ry=%2220%22 fill=%22%238b5cf6%22/%3E%3C/svg%3E";
+  const GLOBAL_CHAT_KEY = 'bh_global_chat_v1';
+  let PRIVATE_CHATS_KEY = '';
 
-const ACHIEVEMENTS_DEF = [
-  { id: 'first_game', name: 'First Step', icon: 'bi-controller', max: 1 },
-  { id: 'collector', name: 'Collector', icon: 'bi-collection-fill', max: 10 },
-  { id: 'completionist_badge', name: 'Completionist', icon: 'bi-trophy-fill', max: 5 },
-  { id: 'devoted', name: 'Devoted', icon: 'bi-moon-stars-fill', max: 100 }
-];
+  const ACHIEVEMENTS_DEF = [
+    { id: 'first_game', name: 'First Step', icon: 'bi-controller', max: 1 },
+    { id: 'collector', name: 'Collector', icon: 'bi-collection-fill', max: 10 },
+    { id: 'completionist_badge', name: 'Completionist', icon: 'bi-trophy-fill', max: 5 },
+    { id: 'devoted', name: 'Devoted', icon: 'bi-moon-stars-fill', max: 100 }
+  ];
 
-/* ── State ── */
-let currentUser = null;
-let profileUser = null;
-let isOwnProfile = true;
-let _profileStorageKey, _libraryStorageKey, _achievementsStorageKey;
+  /* ── State ── */
+  let currentUser = null;
+  let profileUser = null;
+  let isOwnProfile = true;
+  let _profileStorageKey, _libraryStorageKey, _achievementsStorageKey;
 
-let localGroupChats = [];
-let activeGroupId = 'general';
-window.myFriends = [];
+  let localGroupChats = [];
+  let activeGroupId = 'general';
+  window.myFriends = [];
 
-/* ── Initialization ── */
-async function initProfile() {
-  const params = new URLSearchParams(window.location.search);
-  const targetId = params.get('user');
-  
-  try {
-    const authRes = await fetch('/api/auth/current', { credentials: 'include' });
-    if (!authRes.ok) { window.location.href = '/login'; return; }
-    currentUser = await authRes.json();
-    
-    if (targetId && targetId !== currentUser._id) {
-      isOwnProfile = false;
-      const uRes = await fetch('/api/users/' + targetId);
-      if (uRes.ok) profileUser = await uRes.json();
-      else { document.querySelector('.profile-dashboard').innerHTML = '<h4 class="text-center mt-5">User not found</h4>'; return; }
-    } else {
-      isOwnProfile = true;
-      profileUser = currentUser;
-    }
-    
-    initializeKeys(profileUser._id);
-    renderProfileView();
-    await fetchStatsAndActivity();
-    await loadFriendsAndChat();
-  } catch (e) { console.error("Init failed", e); }
-}
+  /* ── Initialization ── */
+  async function initProfile() {
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('user');
 
-function initializeKeys(uid) {
-  _profileStorageKey = `prfl_v1_${uid}`;
-  _libraryStorageKey = `lib_v1_${uid}`;
-  _achievementsStorageKey = `ach_v1_${uid}`;
-}
+    try {
+      const authRes = await fetch('/api/auth/current', { credentials: 'include' });
+      if (!authRes.ok) { window.location.href = '/login'; return; }
+      currentUser = await authRes.json();
 
-/* ── UI Rendering ── */
-function renderProfileView() {
-  const p = profileUser;
-  document.getElementById('profileDisplayName').textContent = p.displayName || p.username;
-  document.getElementById('profileHandle').textContent = `@${p.username}`;
-  document.getElementById('profileAvatar').src = p.avatar || AVATAR_FALLBACK;
-  
-  if (p.wallpaper) document.getElementById('heroBanner').style.backgroundImage = `linear-gradient(110deg, rgba(11,14,20,1) 30%, rgba(11,14,20,0.65) 100%), url('${p.wallpaper}')`;
-  
-  const bio = (p.bio && p.bio !== 'No bio yet') ? p.bio : (isOwnProfile ? "Customize your bio in settings!" : "Player has not set a bio yet.");
-  document.getElementById('userBio').textContent = bio;
-  
-  if (isOwnProfile) document.getElementById('editProfileBtn').style.display = 'flex';
-  else renderFriendButton(p._id);
-  
-  const createdDate = new Date(p.createdAt || Date.now());
-  const monthDiff = Math.max(1, Math.floor((Date.now() - createdDate) / (1000 * 60 * 60 * 24 * 30)));
-  document.getElementById('memberSince').textContent = `Member for ${monthDiff} month${monthDiff !== 1 ? 's' : ''}`;
-  if (p.favoritePlatform) document.getElementById('userLocation').textContent = p.favoritePlatform;
-}
+      if (targetId && targetId !== currentUser._id) {
+        isOwnProfile = false;
+        const uRes = await fetch('/api/users/' + targetId);
+        if (uRes.ok) profileUser = await uRes.json();
+        else { document.querySelector('.profile-dashboard').innerHTML = '<h4 class="text-center mt-5">User not found</h4>'; return; }
+      } else {
+        isOwnProfile = true;
+        profileUser = currentUser;
+      }
 
-async function fetchStatsAndActivity() {
-  const uid = profileUser._id;
-  let stats = { total: 0, completed: 0, totalHours: 0, games: [] };
-  
-  try {
-    const res = await fetch('/api/library/' + uid);
-    if (res.ok) {
-      const entries = await res.json();
-      stats.games = entries;
-      stats.total = entries.length;
-      stats.completed = entries.filter(e => e.status === 'completed').length;
-      stats.totalHours = entries.reduce((s, e) => s + (e.playtime || 0), 0);
-    }
-  } catch (e) {}
+      initializeKeys(profileUser._id);
+      renderProfileView();
+      await fetchStatsAndActivity();
+      await loadFriendsAndChat();
+    } catch (e) { console.error("Init failed", e); }
+  }
 
-  // Local Achievements
-  const unlockedIds = JSON.parse(localStorage.getItem(_achievementsStorageKey) || '[]');
-  
-  // Render Stats
-  document.getElementById('totalGamesCount').textContent = stats.total;
-  document.getElementById('completedCount').textContent = stats.completed;
-  
-  const exp = (stats.total * 100) + Math.round(stats.totalHours * 10);
-  document.getElementById('totalExp').textContent = exp.toLocaleString();
-  
-  const level = Math.floor(exp / 1500) + 1;
-  const progress = Math.min((exp % 1500) / 1500 * 100, 100);
-  document.getElementById('userLevel').textContent = level;
-  setTimeout(() => { document.getElementById('lvlProgressBar').style.width = Math.max(5, progress) + '%'; }, 300);
+  function initializeKeys(uid) {
+    _profileStorageKey = `prfl_v1_${uid}`;
+    _libraryStorageKey = `lib_v1_${uid}`;
+    _achievementsStorageKey = `ach_v1_${uid}`;
+    PRIVATE_CHATS_KEY = `priv_chats_v1_${uid}`;
+  }
 
-  renderAccGid(profileUser, stats.games);
-  renderAchievementsList(unlockedIds, stats);
-  renderActivityList(stats.games);
-}
+  /* ── UI Rendering ── */
+  function renderProfileView() {
+    const p = profileUser;
+    document.getElementById('profileDisplayName').textContent = p.displayName || p.username;
+    document.getElementById('profileHandle').textContent = `@${p.username}`;
+    document.getElementById('profileAvatar').src = p.avatar || AVATAR_FALLBACK;
 
-function renderAccGid(user, games) {
-  const container = document.getElementById('accGrid');
-  const favs = (user.favoriteGames || []).map(g => ({ name: g.name || g, cover: g.coverUrl || '' }));
-  const topPlayed = games.filter(g => g.gameId && g.gameId.coverUrl).sort((a,b) => b.playtime - a.playtime).slice(0, 3).map(g => ({ name: g.gameId.name, cover: g.gameId.coverUrl }));
-  
-  const items = [...favs, ...topPlayed].slice(0, 6);
-  if (!items.length) { container.innerHTML = '<div class="empty-state">No accomplishments yet. Add games to your library!</div>'; return; }
-  
-  container.innerHTML = items.map(i => `
+    if (p.wallpaper) document.getElementById('heroBanner').style.backgroundImage = `linear-gradient(110deg, rgba(11,14,20,1) 30%, rgba(11,14,20,0.65) 100%), url('${p.wallpaper}')`;
+
+    const bio = (p.bio && p.bio !== 'No bio yet') ? p.bio : (isOwnProfile ? "" : "Player has not set a bio yet.");
+    document.getElementById('userBio').textContent = bio;
+
+    if (isOwnProfile) document.getElementById('editProfileBtn').style.display = 'flex';
+    else renderFriendButton(p._id);
+
+    const createdDate = new Date(p.createdAt || Date.now());
+    const monthDiff = Math.max(1, Math.floor((Date.now() - createdDate) / (1000 * 60 * 60 * 24 * 30)));
+    document.getElementById('memberSince').textContent = `Member for ${monthDiff} month${monthDiff !== 1 ? 's' : ''}`;
+    if (p.favoritePlatform) document.getElementById('userLocation').textContent = p.favoritePlatform;
+  }
+
+  async function fetchStatsAndActivity() {
+    const uid = profileUser._id;
+    let stats = { total: 0, completed: 0, totalHours: 0, games: [] };
+
+    try {
+      const res = await fetch('/api/library/' + uid);
+      if (res.ok) {
+        const entries = await res.json();
+        stats.games = entries;
+        stats.total = entries.length;
+        stats.completed = entries.filter(e => e.status === 'completed').length;
+        stats.totalHours = entries.reduce((s, e) => s + (e.playtime || 0), 0);
+      }
+    } catch (e) { }
+
+    // Local Achievements
+    const unlockedIds = JSON.parse(localStorage.getItem(_achievementsStorageKey) || '[]');
+
+    // Render Stats
+    document.getElementById('totalGamesCount').textContent = stats.total;
+    document.getElementById('completedCount').textContent = stats.completed;
+
+    const exp = (stats.total * 100) + Math.round(stats.totalHours * 10);
+    document.getElementById('totalExp').textContent = exp.toLocaleString();
+
+    const level = Math.floor(exp / 1500) + 1;
+    const progress = Math.min((exp % 1500) / 1500 * 100, 100);
+    document.getElementById('userLevel').textContent = level;
+    setTimeout(() => { document.getElementById('lvlProgressBar').style.width = Math.max(5, progress) + '%'; }, 300);
+
+    renderAccGid(profileUser, stats.games);
+    renderAchievementsList(unlockedIds, stats);
+    renderActivityList(stats.games);
+  }
+
+  function renderAccGid(user, games) {
+    const container = document.getElementById('accGrid');
+    const favs = (user.favoriteGames || []).map(g => ({ name: g.name || g, cover: g.coverUrl || '' }));
+    const topPlayed = games.filter(g => g.gameId && g.gameId.coverUrl).sort((a, b) => b.playtime - a.playtime).slice(0, 3).map(g => ({ name: g.gameId.name, cover: g.gameId.coverUrl }));
+
+    const items = [...favs, ...topPlayed].slice(0, 6);
+    if (!items.length) { container.innerHTML = '<div class="empty-state">No accomplishments yet. Add games to your library!</div>'; return; }
+
+    container.innerHTML = items.map(i => `
     <div class="acc-card">
       <div class="acc-icon"><img src="${i.cover}" alt="icon" onerror="this.src='/img/placeholder.jpg'"></div>
       <div class="acc-info"><h6>${i.name}</h6><small>Showcased Title</small></div>
     </div>
   `).join('');
-}
+  }
 
-function renderAchievementsList(unlockedIds, stats) {
-  const container = document.getElementById('achievementsContainer');
-  const badge = document.getElementById('achProgBadge');
-  
-  let earnedCount = 0;
-  const html = ACHIEVEMENTS_DEF.map(a => {
-    let current = 0;
-    if (a.id === 'first_game' || a.id === 'collector') current = stats.total;
-    if (a.id === 'completionist_badge') current = stats.completed;
-    if (a.id === 'devoted') current = stats.totalHours;
-    
-    const isDone = current >= a.max || unlockedIds.includes(a.id);
-    if (isDone) earnedCount++;
-    
-    return `
+  function renderAchievementsList(unlockedIds, stats) {
+    const container = document.getElementById('achievementsContainer');
+    const badge = document.getElementById('achProgBadge');
+
+    let earnedCount = 0;
+    const html = ACHIEVEMENTS_DEF.map(a => {
+      let current = 0;
+      if (a.id === 'first_game' || a.id === 'collector') current = stats.total;
+      if (a.id === 'completionist_badge') current = stats.completed;
+      if (a.id === 'devoted') current = stats.totalHours;
+
+      const isDone = current >= a.max || unlockedIds.includes(a.id);
+      if (isDone) earnedCount++;
+
+      return `
       <div class="ach-item" style="opacity: ${isDone ? 1 : 0.4}">
         <div class="ach-icon-box"><i class="bi ${a.icon}"></i></div>
         <div class="ach-name">${a.name}</div>
         ${isDone ? '<div class="ach-status">ACHIEVED</div>' : `<div class="ach-prog-val">${Math.min(current, a.max)}/${a.max}</div>`}
       </div>
     `;
-  }).join('');
-  
-  container.innerHTML = html;
-  badge.textContent = `${earnedCount}/${ACHIEVEMENTS_DEF.length}`;
-}
+    }).join('');
 
-function renderActivityList(games) {
-  const container = document.getElementById('activityContainer');
-  // Only show completed games, filter out "playing" status entirely
-  const sorted = games.filter(g => g.gameId && g.status === 'completed').sort((a,b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0)).slice(0, 5);
-  
-  if (!sorted.length) { container.innerHTML = '<div class="empty-state">Nothing lately.</div>'; return; }
-  
-  container.innerHTML = sorted.map(g => {
-    const status = 'Completed';
-    return `
+    container.innerHTML = html;
+    badge.textContent = `${earnedCount}/${ACHIEVEMENTS_DEF.length}`;
+  }
+
+  function renderActivityList(games) {
+    const container = document.getElementById('activityContainer');
+    // Only show completed games, filter out "playing" status entirely
+    const sorted = games.filter(g => g.gameId && g.status === 'completed').sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0)).slice(0, 5);
+
+    if (!sorted.length) { container.innerHTML = '<div class="empty-state">Nothing lately.</div>'; return; }
+
+    container.innerHTML = sorted.map(g => {
+      const status = 'Completed';
+      return `
       <div class="act-item">
         <div class="act-status">${status}</div>
         <div class="act-info">
@@ -446,112 +832,131 @@ function renderActivityList(games) {
         ${g.gameId.coverUrl ? `<img src="${g.gameId.coverUrl}" class="act-cover">` : ''}
       </div>
     `;
-  }).join('');
-}
+    }).join('');
+  }
 
-/* ── Group Chat Features ── */
-async function loadFriendsAndChat() {
-  const groupSelect = document.getElementById('chatGroupSelect');
-  try {
-    const res = await fetch('/api/friends');
-    if (res.ok) window.myFriends = await res.json();
-    
-    const saved = localStorage.getItem(CHATS_STORAGE_KEY);
-    if (saved) localGroupChats = JSON.parse(saved);
-    else {
-      localGroupChats = [
-        { id: 'general', name: 'General Chat', messages: [{ userId: 'system', text: 'Welcome to General Chat!' }] },
-        { id: 'squad', name: 'Valorant Squad', messages: [] }
-      ];
-      saveLocalChats();
+  /* ── Group Chat Features ── */
+  async function loadFriendsAndChat() {
+    const groupSelect = document.getElementById('chatGroupSelect');
+    try {
+      const res = await fetch('/api/friends');
+      if (res.ok) window.myFriends = await res.json();
+
+      // 1. Load Global General Chat
+      let globalChat = JSON.parse(localStorage.getItem(GLOBAL_CHAT_KEY));
+      if (!globalChat) {
+        globalChat = { id: 'general', name: 'General Chat', messages: [{ userId: 'system', text: 'Welcome to General Chat!' }] };
+        localStorage.setItem(GLOBAL_CHAT_KEY, JSON.stringify(globalChat));
+      }
+
+      // 2. Load Private User Chats
+      let privChats = JSON.parse(localStorage.getItem(PRIVATE_CHATS_KEY));
+      if (!privChats) {
+        privChats = [];
+        localStorage.setItem(PRIVATE_CHATS_KEY, JSON.stringify(privChats));
+      }
+
+      localGroupChats = [globalChat, ...privChats];
+      activeGroupId = 'general';
+
+      renderGroupChatOptions();
+      switchChatGroup('general');
+    } catch (e) { }
+  }
+
+  function renderGroupChatOptions() {
+    const select = document.getElementById('chatGroupSelect');
+    select.innerHTML = localGroupChats.map(c => `<option value="${c.id}" ${activeGroupId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+  }
+
+  function switchChatGroup(id) {
+    activeGroupId = id;
+    const inviteBtn = document.getElementById('addMemberBtn');
+    if (id === 'general') {
+      inviteBtn.style.display = 'none';
+    } else {
+      inviteBtn.style.display = 'inline-block';
     }
-    
-    renderGroupChatOptions();
     renderActiveChat();
-  } catch (e) {}
-}
+  }
 
-function renderGroupChatOptions() {
-  const select = document.getElementById('chatGroupSelect');
-  select.innerHTML = localGroupChats.map(c => `<option value="${c.id}" ${activeGroupId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
-}
+  function saveLocalChats() {
+    const globalChat = localGroupChats.find(c => c.id === 'general');
+    const privChats = localGroupChats.filter(c => c.id !== 'general');
 
-function switchChatGroup(id) {
-  activeGroupId = id;
-  renderActiveChat();
-}
+    if (globalChat) localStorage.setItem(GLOBAL_CHAT_KEY, JSON.stringify(globalChat));
+    localStorage.setItem(PRIVATE_CHATS_KEY, JSON.stringify(privChats));
+  }
 
-function saveLocalChats() { localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(localGroupChats)); }
+  function renderActiveChat() {
+    const container = document.getElementById('chatMessages');
+    const chat = localGroupChats.find(c => c.id === activeGroupId);
+    if (!chat) return;
 
-function renderActiveChat() {
-  const container = document.getElementById('chatMessages');
-  const chat = localGroupChats.find(c => c.id === activeGroupId);
-  if (!chat) return;
-
-  if (!chat.messages.length) {
-    container.innerHTML = `
+    if (!chat.messages.length) {
+      container.innerHTML = `
       <div class="empty-state">
         <i class="bi bi-chat-dots" style="font-size:2.5rem; display:block; margin-bottom:15px; opacity:0.1;"></i>
         No messages yet.<br>
         <button class="btn-primary prof-btn mt-3" onclick="openInviteModal()" style="font-size:0.75rem; padding: 6px 12px;">Invite Friends</button>
       </div>
     `;
-  } else {
-    container.innerHTML = chat.messages.map(m => {
-      if (m.userId === 'system') return `<div class="cm-system">${m.text}</div>`;
-      return `
+    } else {
+      container.innerHTML = chat.messages.map(m => {
+        if (m.userId === 'system') return `<div class="cm-system">${m.text}</div>`;
+        return `
         <div class="cm-bubble">
           <div class="cm-header"><span class="cm-user">${m.name || 'Gamer'}</span><span>${m.time || 'Just now'}</span></div>
           <div class="cm-text">${m.text}</div>
         </div>
       `;
-    }).join('');
-    container.scrollTop = container.scrollHeight;
-  }
-}
-
-function handleChatInput(e) {
-  if (e.key === 'Enter' && e.target.value.trim()) {
-    const val = e.target.value.trim();
-    const chat = localGroupChats.find(c => c.id === activeGroupId);
-    if (chat) {
-      chat.messages.push({
-        id: Date.now(),
-        userId: currentUser._id,
-        name: currentUser.displayName || currentUser.username,
-        text: val,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-      saveLocalChats();
-      renderActiveChat();
-      e.target.value = '';
+      }).join('');
+      container.scrollTop = container.scrollHeight;
     }
   }
-}
 
-/* Modals */
-function openCreateGroupModal() { document.getElementById('createGroupModal').style.display = 'flex'; document.getElementById('newGroupNameInput').focus(); }
-function closeCreateGroupModal() { document.getElementById('createGroupModal').style.display = 'none'; }
-function confirmCreateGroup() {
-  const input = document.getElementById('newGroupNameInput');
-  if (!input.value.trim()) return;
-  const newChat = { id: 'group_' + Date.now(), name: input.value.trim(), messages: [] };
-  localGroupChats.push(newChat);
-  saveLocalChats();
-  activeGroupId = newChat.id;
-  renderGroupChatOptions();
-  renderActiveChat();
-  closeCreateGroupModal();
-}
+  function handleChatInput(e) {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      const val = e.target.value.trim();
+      const chat = localGroupChats.find(c => c.id === activeGroupId);
+      if (chat) {
+        chat.messages.push({
+          id: Date.now(),
+          userId: currentUser._id,
+          name: currentUser.displayName || currentUser.username,
+          text: val,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        saveLocalChats();
+        renderActiveChat();
+        e.target.value = '';
+      }
+    }
+  }
 
-function openInviteModal() {
-  const overlay = document.getElementById('inviteFriendsModal');
-  const list = document.getElementById('inviteFriendsList');
-  overlay.style.display = 'flex';
-  
-  if (!window.myFriends.length) { list.innerHTML = '<div class="text-center py-4 text-muted">You have no friends to invite!</div>'; return; }
-  
-  list.innerHTML = window.myFriends.map(f => `
+  /* Modals */
+  function openCreateGroupModal() { document.getElementById('createGroupModal').style.display = 'flex'; document.getElementById('newGroupNameInput').focus(); }
+  function closeCreateGroupModal() { document.getElementById('createGroupModal').style.display = 'none'; }
+  function confirmCreateGroup() {
+    const input = document.getElementById('newGroupNameInput');
+    if (!input.value.trim()) return;
+    const newChat = { id: 'group_' + Date.now(), name: input.value.trim(), messages: [] };
+    localGroupChats.push(newChat);
+    saveLocalChats();
+    activeGroupId = newChat.id;
+    renderGroupChatOptions();
+    renderActiveChat();
+    closeCreateGroupModal();
+  }
+
+  function openInviteModal() {
+    const overlay = document.getElementById('inviteFriendsModal');
+    const list = document.getElementById('inviteFriendsList');
+    overlay.style.display = 'flex';
+
+    if (!window.myFriends.length) { list.innerHTML = '<div class="text-center py-4 text-muted">You have no friends to invite!</div>'; return; }
+
+    list.innerHTML = window.myFriends.map(f => `
     <div class="d-flex align-items-center justify-content-between mb-3 p-2" style="background:rgba(255,255,255,0.02); border-radius:10px;">
       <div class="d-flex align-items-center gap-3">
         <img src="${f.avatar || AVATAR_FALLBACK}" style="width:34px; height:34px; border-radius:50%; object-fit:cover;">
@@ -560,44 +965,44 @@ function openInviteModal() {
       <button class="btn-primary prof-btn" style="font-size:0.7rem; padding: 4px 10px;" onclick="addSystemJoin('${f.displayName || f.username.replace(/'/g, "\\'")}')">Invite</button>
     </div>
   `).join('');
-}
-
-function closeInviteModal() { document.getElementById('inviteFriendsModal').style.display = 'none'; }
-
-function addSystemJoin(name) {
-  const chat = localGroupChats.find(c => c.id === activeGroupId);
-  if (chat) {
-    chat.messages.push({ userId: 'system', text: name + ' joined the chat!' });
-    saveLocalChats();
-    renderActiveChat();
-    closeInviteModal();
   }
-}
 
-/* ── Friend Interactions ── */
-async function renderFriendButton(tid) {
-  const container = document.getElementById('friendBtnContainer');
-  try {
-    const res = await fetch('/api/friends/status/' + tid);
-    const d = await res.json();
-    if (d.status === 'friends') container.innerHTML = '<button class="prof-btn btn-outline" disabled><i class="bi bi-person-check"></i> Friends</button>';
-    else if (d.status === 'pending_sent') container.innerHTML = '<button class="prof-btn btn-outline" disabled><i class="bi bi-clock"></i> Sent</button>';
-    else container.innerHTML = `<button class="prof-btn btn-primary" onclick="sendRequest('${tid}')"><i class="bi bi-person-plus"></i> Add Friend</button>`;
-  } catch (e) {}
-}
+  function closeInviteModal() { document.getElementById('inviteFriendsModal').style.display = 'none'; }
 
-async function sendRequest(uid) {
-  const res = await fetch('/api/friends/request/' + uid, { method: 'POST' });
-  if (res.ok) window.location.reload();
-}
-
-/* ── Initialization Entry ── */
-document.addEventListener('DOMContentLoaded', initProfile);
-
-// Nav Exit Transition
-document.querySelectorAll('a[href]').forEach(link => {
-  if (link.hostname === window.location.hostname && !link.hash && !link.getAttribute('href').startsWith('#')) {
-    link.addEventListener('click', () => { document.body.classList.add('page-exit'); });
+  function addSystemJoin(name) {
+    const chat = localGroupChats.find(c => c.id === activeGroupId);
+    if (chat) {
+      chat.messages.push({ userId: 'system', text: name + ' joined the chat!' });
+      saveLocalChats();
+      renderActiveChat();
+      closeInviteModal();
+    }
   }
-});
+
+  /* ── Friend Interactions ── */
+  async function renderFriendButton(tid) {
+    const container = document.getElementById('friendBtnContainer');
+    try {
+      const res = await fetch('/api/friends/status/' + tid);
+      const d = await res.json();
+      if (d.status === 'friends') container.innerHTML = '<button class="prof-btn btn-outline" disabled><i class="bi bi-person-check"></i> Friends</button>';
+      else if (d.status === 'pending_sent') container.innerHTML = '<button class="prof-btn btn-outline" disabled><i class="bi bi-clock"></i> Sent</button>';
+      else container.innerHTML = `<button class="prof-btn btn-primary" onclick="sendRequest('${tid}')"><i class="bi bi-person-plus"></i> Add Friend</button>`;
+    } catch (e) { }
+  }
+
+  async function sendRequest(uid) {
+    const res = await fetch('/api/friends/request/' + uid, { method: 'POST' });
+    if (res.ok) window.location.reload();
+  }
+
+  /* ── Initialization Entry ── */
+  document.addEventListener('DOMContentLoaded', initProfile);
+
+  // Nav Exit Transition
+  document.querySelectorAll('a[href]').forEach(link => {
+    if (link.hostname === window.location.hostname && !link.hash && !link.getAttribute('href').startsWith('#')) {
+      link.addEventListener('click', () => { document.body.classList.add('page-exit'); });
+    }
+  });
 </script>

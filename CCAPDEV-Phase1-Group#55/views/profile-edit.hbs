@@ -113,15 +113,15 @@ plagiarized the work of other students and/or persons.
                     <strong>Profile</strong>
                     <span>Customize your avatar and profile</span>
                 </li>
-                <li class="disabled" title="Coming Soon">
+                <li onclick="switchTab('defaults-sec', this)">
                     <strong>Defaults</strong>
                     <span>Set your defaults across the site</span>
                 </li>
-                <li class="disabled" title="Coming Soon">
+                <li onclick="switchTab('notifications-sec', this)">
                     <strong>Notifications</strong>
                     <span>Customize how you're notified</span>
                 </li>
-                <li class="disabled" title="Coming Soon">
+                <li onclick="switchTab('backer-sec', this)">
                     <strong>Backer</strong>
                     <span>Connect your Patreon account</span>
                 </li>
@@ -129,7 +129,7 @@ plagiarized the work of other students and/or persons.
                     <strong>Integrations</strong>
                     <span>Hook into external sites / apps</span>
                 </li>
-                <li class="disabled" title="Coming Soon">
+                <li onclick="switchTab('account-sec', this)">
                     <strong>Account</strong>
                     <span>Update your email / password</span>
                 </li>
@@ -228,28 +228,193 @@ plagiarized the work of other students and/or persons.
                         </div>
                     </div>
 
-                    <h2 class="section-title mt-5">Features</h2>
-                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: #30363d !important;">
+                </div>
+
+                <!-- ================= DEFAULTS TAB ================= -->
+                <div id="defaults-sec" class="settings-section">
+                    <h2 class="section-title">Defaults</h2>
+                    <div class="field-hint mb-4">Set your default preferences across the Backlog Hero dashboard.</div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
                         <div>
                             <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Community Visibility</div>
-                            <div class="field-hint mt-0">Show my profile on the community feed</div>
+                            <div class="field-hint mt-0">Allow other users to find your profile on the community feed</div>
                         </div>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="privacyToggle" checked>
+                            <input class="form-check-input" type="checkbox" id="privacyToggle">
                         </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Library Sorting</div>
+                            <div class="field-hint mt-0">The default sorting method used when viewing your library</div>
+                        </div>
+                        <select class="settings-select" id="inputDefaultSort" style="width: auto;">
+                            <option value="date_added">Date Added</option>
+                            <option value="playtime">Playtime</option>
+                            <option value="rating">Rating</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ================= NOTIFICATIONS TAB ================= -->
+                <div id="notifications-sec" class="settings-section">
+                    <h2 class="section-title">Notifications</h2>
+                    <div class="field-hint mb-4">Choose what we can send you. Your email is kept private.</div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Friend Requests</div>
+                            <div class="field-hint mt-0">Get notified when someone wants to add you</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifFriendReq" checked>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Group Chats</div>
+                            <div class="field-hint mt-0">Get notified when you are added to a private group</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifChatMsg" checked>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Marketing & Offers</div>
+                            <div class="field-hint mt-0">Receive platform updates, beta invites, and partner offers</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifMarketing">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= BACKER TAB ================= -->
+                <div id="backer-sec" class="settings-section">
+                    <h2 class="section-title">Backer Support</h2>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(83, 131, 232, 0.1) 0%, rgba(31, 35, 43, 0.8) 100%); border: 1px solid var(--primary); border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 24px;">
+                        <i class="bi bi-star-fill mb-3" style="font-size: 2.5rem; color: var(--primary);"></i>
+                        <h4 style="color: #fff; font-weight: 700;">Become a Backlog Hero Pro</h4>
+                        <p style="color: #a8c0e0; font-size: 0.9rem; max-width: 400px; margin: 0 auto 20px;">
+                            Support development and get access to exclusive badges, animated profile backgrounds, and unlimited library entries.
+                        </p>
+                        <a href="#" class="btn-primary" style="padding: 10px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Support on Patreon</a>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Link Account</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="settings-input" placeholder="Paste Patreon access code here..." disabled>
+                            <button type="button" class="btn-change" disabled>Verify</button>
+                        </div>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="simBackerToggle">
+                        <label class="form-check-label text-muted small" for="simBackerToggle">
+                            Simulate active backer status (Dev Tool)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ================= ACCOUNT TAB ================= -->
+                <div id="account-sec" class="settings-section">
+                    <h2 class="section-title text-danger border-danger">Account Security</h2>
+                    <div class="field-hint mb-4">Manage your authentication methods and destructive actions.</div>
+
+                    <div class="field-group mb-4">
+                        <label>Linked Email Address</label>
+                        <input type="email" class="settings-input" id="inputEmail" placeholder="your@email.com" disabled>
+                        <div class="field-hint">Email address cannot be changed currently. Contact support for assistance.</div>
+                    </div>
+
+                    <div style="background: rgba(26, 31, 46, 0.5); padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 30px;">
+                        <h6 class="mb-3 text-white">Change Password</h6>
+                        <div class="field-group mb-3">
+                            <label>Current Password</label>
+                            <input type="password" class="settings-input" id="currentPassword" placeholder="Enter current password">
+                        </div>
+                        <div class="form-row mb-3">
+                            <div class="field-group">
+                                <label>New Password</label>
+                                <input type="password" class="settings-input" id="newPassword" placeholder="Create new password">
+                            </div>
+                            <div class="field-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" class="settings-input" id="confirmPassword" placeholder="Repeat new password">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-change" id="changePasswordBtn" style="background: var(--bg-secondary); border-color: var(--primary); color: #fff;">
+                            <i class="bi bi-shield-lock me-1"></i> Update Security
+                        </button>
                     </div>
                 </div>
 
                 <!-- ================= INTEGRATIONS TAB ================= -->
                 <div id="integrations-sec" class="settings-section">
                     <h2 class="section-title">Integrations</h2>
+                    <div class="field-hint mb-4">Connect your external accounts to sync your gaming library and playtime automatically.</div>
                     
-                    <div class="field-group">
-                        <label>Steam Integration</label>
-                        <input type="text" class="settings-input" id="inputSteamId" placeholder="Your 17-digit Steam ID (e.g. 76561198012345678)">
-                        <div class="field-hint mt-2">
-                            Find your Steam ID at <a href="https://steamid.io" target="_blank" rel="noopener" style="color:var(--primary);">steamid.io</a>. Needed to sync playtime and games automatically from Steam.
+                    <!-- Steam Integration -->
+                    <div style="background: rgba(26, 31, 46, 0.5); border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 16px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#5b7fee'" onmouseout="this.style.borderColor='#30363d'">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #171a21, #0b0e14); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #c7d5e0; border: 1px solid #30363d;">
+                                <i class="bi bi-steam"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h6 class="mb-1 text-white" style="font-weight: 700;">Steam</h6>
+                                <div class="field-hint mt-0">Sync your games, playtime, and reviews directly from Valve.</div>
+                            </div>
                         </div>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <input type="text" class="settings-input" id="inputSteamId" placeholder="Paste 17-digit Steam ID..." style="flex: 1; min-width: 0;">
+                            <button type="button" class="btn-change" style="padding: 10px 24px; border-radius: 8px; flex-shrink: 0; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);" disabled><i class="bi bi-check-lg me-1"></i> Connected</button>
+                        </div>
+                    </div>
+
+                    <!-- PlayStation Integration -->
+                    <div style="background: rgba(26, 31, 46, 0.5); border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 16px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#00439c'" onmouseout="this.style.borderColor='#30363d'">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00439c, #00224d); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #fff; border: 1px solid #00439c;">
+                                <i class="bi bi-playstation"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h6 class="mb-1 text-white" style="font-weight: 700;">PlayStation Network</h6>
+                                <div class="field-hint mt-0">Enter your PSN ID to sync your game library from PlayStation.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <input type="text" class="settings-input" id="inputPsnId" placeholder="Your PSN ID (e.g. YourPSNHandle)" style="flex: 1; min-width: 0;">
+                            <button type="button" id="psnSyncBtn" onclick="syncPSN()" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(0,67,156,0.2); border-color: #00439c; color: #60a5fa;">
+                                <i class="bi bi-arrow-repeat me-1"></i> Sync Library
+                            </button>
+                        </div>
+                        <div id="psnSyncResult" class="field-hint mt-0" style="display:none;"></div>
+                    </div>
+
+                    <!-- Xbox Integration -->
+                    <div style="background: rgba(26, 31, 46, 0.5); border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#107c10'" onmouseout="this.style.borderColor='#30363d'">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #107c10, #0b4a09); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #fff; border: 1px solid #107c10;">
+                                <i class="bi bi-xbox"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h6 class="mb-1 text-white" style="font-weight: 700;">Xbox Live</h6>
+                                <div class="field-hint mt-0">Enter your Gamertag to import your Xbox games into Backlog Hero.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <input type="text" class="settings-input" id="inputXboxGamertag" placeholder="Your Gamertag (e.g. MajorNelson)" style="flex: 1; min-width: 0;">
+                            <button type="button" id="xboxSyncBtn" onclick="syncXbox()" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(16,124,16,0.2); border-color: #107c10; color: #4ade80;">
+                                <i class="bi bi-arrow-repeat me-1"></i> Sync Library
+                            </button>
+                        </div>
+                        <div id="xboxSyncResult" class="field-hint mt-0" style="display:none;"></div>
                     </div>
                 </div>
 
@@ -375,6 +540,10 @@ plagiarized the work of other students and/or persons.
             document.getElementById('inputPlatform').value = profile.favoritePlatform || '';
             document.getElementById('avatarPreview').src = profile.avatar;
             document.getElementById('inputSteamId').value = profile.steamId || '';
+            if (serverUser) {
+                document.getElementById('inputXboxGamertag').value = serverUser.xboxGamertag || '';
+                document.getElementById('inputPsnId').value = serverUser.psnId || '';
+            }
             document.getElementById('editPageName').textContent = profile.displayName;
 
             if (profile.wallpaper) {
@@ -386,6 +555,22 @@ plagiarized the work of other students and/or persons.
                 const pos = profile.wallpaperPosition != null ? profile.wallpaperPosition : 50;
                 document.getElementById('wallpaperPositionSlider').value = pos;
                 document.getElementById('wallpaperPreview').style.objectPosition = `center ${pos}%`;
+            }
+
+            // Populate Additional Settings
+            if (serverUser) {
+                if (serverUser.email) document.getElementById('inputEmail').value = serverUser.email;
+                if (serverUser.settings) {
+                    const setts = serverUser.settings;
+                    if (setts.privacy) document.getElementById('privacyToggle').checked = (setts.privacy === 'public');
+                    if (setts.defaultSort) document.getElementById('inputDefaultSort').value = setts.defaultSort;
+                    if (setts.emailNotifs) {
+                        document.getElementById('notifFriendReq').checked = !!setts.emailNotifs.friendRequests;
+                        document.getElementById('notifChatMsg').checked = !!setts.emailNotifs.chatMessages;
+                        document.getElementById('notifMarketing').checked = !!setts.emailNotifs.marketing;
+                    }
+                    if (setts.isBacker !== undefined) document.getElementById('simBackerToggle').checked = !!setts.isBacker;
+                }
             }
 
             // Render existing favorite games
@@ -562,16 +747,21 @@ plagiarized the work of other students and/or persons.
         // Form submission
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const displayName = document.getElementById('inputName').value.trim();
             if (!displayName) {
                 showNotification('Missing Information', 'Please enter a display name', 'error');
                 return;
             }
 
+            const username = document.getElementById('inputUsername').value.trim() || displayName.toLowerCase().replace(/\s+/g, '');
+            if (username.length < 3) {
+                showNotification('Invalid Username', 'Username must be at least 3 characters long', 'error');
+                return;
+            }
+
             const profile = {
                 displayName: displayName,
-                username: document.getElementById('inputUsername').value.trim() || displayName.toLowerCase().replace(/\s+/g, ''),
+                username: username,
                 bio: document.getElementById('inputBio').value.trim(),
                 avatar: document.getElementById('avatarPreview').src,
                 wallpaper: document.getElementById('wallpaperPreview').src,
@@ -596,12 +786,23 @@ plagiarized the work of other students and/or persons.
                   credentials: 'include',
                   body: JSON.stringify({
                     displayName: profile.displayName,
+                    username: profile.username,
                     bio: profile.bio,
                     avatar: profile.avatar,
                     wallpaper: profile.wallpaper && profile.wallpaper !== window.location.href ? profile.wallpaper : '',
                     wallpaperPosition: profile.wallpaperPosition,
                     steamId: profile.steamId,
-                    favoriteGames: selectedFavoriteGames
+                    favoriteGames: selectedFavoriteGames,
+                    settings: {
+                        privacy: document.getElementById('privacyToggle').checked ? 'public' : 'private',
+                        defaultSort: document.getElementById('inputDefaultSort').value,
+                        emailNotifs: {
+                            friendRequests: document.getElementById('notifFriendReq').checked,
+                            chatMessages: document.getElementById('notifChatMsg').checked,
+                            marketing: document.getElementById('notifMarketing').checked
+                        },
+                        isBacker: document.getElementById('simBackerToggle').checked
+                    }
                   })
                 });
               }
@@ -623,6 +824,139 @@ plagiarized the work of other students and/or persons.
             showNotification('Profile Updated', 'Your profile has been saved successfully!', 'success');
             setTimeout(() => window.location.href = '/profile', 1500);
         });
+
+        // Change Password logic
+        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+            const currentPass = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (!currentPass || !newPass || !confirmPass) {
+                showNotification('Missing Fields', 'Please fill out all password fields', 'error');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                showNotification('Mismatch', 'New passwords do not match', 'error');
+                return;
+            }
+            if (newPass.length < 6) {
+                showNotification('Too Short', 'New password must be at least 6 characters', 'error');
+                return;
+            }
+
+            // Get userId to POST to
+            let userId = null;
+            try {
+                const me = await (await fetch('/api/auth/current')).json();
+                userId = me._id || me.id;
+            } catch (e) {
+                showNotification('Error', 'Session expired', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('changePasswordBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon"></i> Updating...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/users/' + userId + '/security', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Failed to update password');
+                }
+
+                showNotification('Security Updated', 'Password successfully changed', 'success');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } catch (err) {
+                showNotification('Error', err.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // ─── Xbox / PSN Sync ───
+        async function syncXbox() {
+            const gamertag = document.getElementById('inputXboxGamertag').value.trim();
+            if (!gamertag) { showNotification('Missing Gamertag', 'Please enter an Xbox Gamertag', 'error'); return; }
+            const btn = document.getElementById('xboxSyncBtn');
+            const result = document.getElementById('xboxSyncResult');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon me-1"></i> Syncing...';
+            result.style.display = 'none';
+            try {
+                const res = await fetch('/api/integrations/xbox/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ gamertag })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Sync failed');
+                if (data.demo) {
+                    result.innerHTML = '⚠️ Demo mode — no XBL_API_KEY configured. Games were not imported.';
+                    result.style.color = '#facc15';
+                } else {
+                    result.innerHTML = `✅ Synced! Imported <strong>${data.imported}</strong> new games, updated <strong>${data.updated}</strong> (${data.total} total).`;
+                    result.style.color = '#4ade80';
+                    showNotification('Xbox Synced!', `Imported ${data.imported} games from Xbox Live`, 'success');
+                }
+                result.style.display = 'block';
+            } catch (err) {
+                result.innerHTML = '❌ ' + err.message;
+                result.style.color = '#f87171';
+                result.style.display = 'block';
+                showNotification('Xbox Sync Failed', err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Sync Library';
+            }
+        }
+
+        async function syncPSN() {
+            const psnId = document.getElementById('inputPsnId').value.trim();
+            if (!psnId) { showNotification('Missing PSN ID', 'Please enter your PSN ID', 'error'); return; }
+            const btn = document.getElementById('psnSyncBtn');
+            const result = document.getElementById('psnSyncResult');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon me-1"></i> Syncing...';
+            result.style.display = 'none';
+            try {
+                const res = await fetch('/api/integrations/psn/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ psnId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Sync failed');
+                if (data.demo) {
+                    result.innerHTML = '⚠️ Demo mode — no PSN_NPSSO token configured. Games were not imported.';
+                    result.style.color = '#facc15';
+                } else {
+                    result.innerHTML = `✅ Synced! Imported <strong>${data.imported}</strong> new games (${data.total} total).`;
+                    result.style.color = '#60a5fa';
+                    showNotification('PSN Synced!', `Imported ${data.imported} games from PlayStation`, 'success');
+                }
+                result.style.display = 'block';
+            } catch (err) {
+                result.innerHTML = '❌ ' + err.message;
+                result.style.color = '#f87171';
+                result.style.display = 'block';
+                showNotification('PSN Sync Failed', err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Sync Library';
+            }
+        }
 
         // Logout function
         async function logout(event) {

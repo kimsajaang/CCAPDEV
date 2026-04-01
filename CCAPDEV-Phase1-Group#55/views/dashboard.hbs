@@ -526,7 +526,7 @@ plagiarized the work of other students and/or persons.
   </div>
 
   <div class="row g-4 reveal">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <!-- Backlog suggestion tool — user enters available minutes, gets a game pick.
      Right now the recommendation is hardcoded
      based on the user's actual library and avg session lengths. -->
@@ -589,8 +589,7 @@ plagiarized the work of other students and/or persons.
         </div>
       </div>
 
-      <!-- Community ratings sidebar — just showing top-rated games from the community
-     TODO: pull these from actual community reviews when backend is ready -->
+      <!-- Community ratings sidebar -->
       <div class="card reveal">
         <div class="card-body">
           <h6 class="mb-3">Community Quality Scores</h6>
@@ -601,11 +600,8 @@ plagiarized the work of other students and/or persons.
       </div>
     </div>
 
-    <div class="col-md-8">
-      <!-- Friend Activity Feed — the main content area of the dashboard.
-     Shows what friends are playing, reviewing, completing, etc.
-     Each feed item has a different left-border color to indicate type.
-     Data is static HTML for now. -->
+    <div class="col-md-5">
+      <!-- Friend Activity Feed -->
       <div class="d-flex justify-content-between align-items-center mb-4 reveal">
         <h4><i class="bi bi-broadcast me-2" style="color:var(--accent);"></i>Friend Activity <span
             class="gradient-text-accent">Feed</span></h4>
@@ -615,6 +611,29 @@ plagiarized the work of other students and/or persons.
 
       <div class="list-group shadow-sm" id="activityFeed">
         <div class="list-group-item p-3 text-center text-muted">Loading activity feed...</div>
+      </div>
+    </div>
+
+    <!-- CHAT SIDEBAR -->
+    <div class="col-md-4">
+      <div class="card" style="position: sticky; top: 80px; height: calc(100vh - 120px); display: flex; flex-direction: column; overflow: hidden;">
+        <div class="card-header d-flex align-items-center justify-content-between py-2 px-3" style="border-bottom: 1px solid var(--border);">
+          <h6 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-people-fill" style="color:var(--accent);"></i>
+            <select id="chatGroupSelect" onchange="switchChatGroup(this.value)" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; font-size: 0.82rem; font-family: inherit;">
+              <!-- Populated via JS -->
+            </select>
+          </h6>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-link p-1" id="addMemberBtn" onclick="openInviteModal()" style="color:var(--text-muted); display:none;" title="Invite Members"><i class="bi bi-person-plus-fill"></i></button>
+            <button class="btn btn-sm btn-link p-1" onclick="openCreateGroupModal()" style="color:var(--accent);" title="Create Group"><i class="bi bi-plus-circle-fill"></i></button>
+          </div>
+        </div>
+        <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 12px;">
+          <div class="text-center text-muted small py-5"><i class="bi bi-chat-dots" style="font-size:2rem; display:block; margin-bottom:10px; opacity:0.15;"></i>Loading chat...</div>
+        </div>
+        <div class="card-footer p-2" style="border-top: 1px solid var(--border);">
+          <input type="text" id="chatInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Send a message..." onkeypress="handleChatInput(event)" style="font-size: 0.85rem;">
+        </div>
       </div>
     </div>
   </div>

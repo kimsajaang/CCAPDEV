@@ -55,6 +55,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    xboxGamertag: {
+      type: String,
+      default: '',
+    },
+    psnId: {
+      type: String,
+      default: '',
+    },
     friends: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -64,6 +72,16 @@ const userSchema = new mongoose.Schema(
       status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
       createdAt: { type: Date, default: Date.now },
     }],
+    settings: {
+      privacy: { type: String, enum: ['public', 'private'], default: 'public' },
+      defaultSort: { type: String, enum: ['date_added', 'playtime', 'rating'], default: 'date_added' },
+      emailNotifs: {
+        friendRequests: { type: Boolean, default: true },
+        chatMessages: { type: Boolean, default: true },
+        marketing: { type: Boolean, default: false }
+      },
+      isBacker: { type: Boolean, default: false }
+    },
     createdAt: {
       type: Date,
       default: Date.now,

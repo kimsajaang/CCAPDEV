@@ -520,10 +520,13 @@ app.get('/api/auth/current', isLoggedIn, async (req, res) => {
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
       steamId: user.steamId || '',
+      xboxGamertag: user.xboxGamertag || '',
+      psnId: user.psnId || '',
       wallpaper: user.wallpaper || '',
       wallpaperPosition: user.wallpaperPosition != null ? user.wallpaperPosition : 50,
       friendsCount: (user.friends || []).length,
       pendingRequests,
+      settings: user.settings,
       createdAt: user.createdAt,
     });
   } catch (err) {
@@ -803,6 +806,145 @@ app.get('/auth/google/callback',
 );
 
 // GET /api/auth/stats - Get user library stats
+
+// ─── XBOX INTEGRATION ───
+
+// Helper: import games into a user's library from a list of {name, playtime}
+async function importGamesFromList(userId, gamesList, source) {
+  let imported = 0, updated = 0;
+  for (const g of gamesList) {
+    if (!g.name) continue;
+    const escaped = g.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let game = await Game.findOne({ name: { $regex: new RegExp('^' + escaped + '$', 'i') } });
+    if (!game) {
+      const igdbCover = await getIgdbCover(g.name);
+      game = new Game({ name: g.name, coverUrl: igdbCover || '', platforms: [source] });
+      await game.save();
+    }
+    const existing = await LibraryEntry.findOne({ userId, gameId: game._id });
+    const hours = g.playtime || 0;
+    if (!existing) {
+      const entry = new LibraryEntry({ userId, gameId: game._id, status: hours > 0 ? 'playing' : 'backlog', playtime: hours });
+      await entry.save();
+      imported++;
+    } else if (!existing.hidden && hours > (existing.playtime || 0)) {
+      existing.playtime = hours;
+      await existing.save();
+      updated++;
+    }
+  }
+  return { imported, updated };
+}
+
+// POST /api/integrations/xbox/sync
+app.post('/api/integrations/xbox/sync', isLoggedIn, async (req, res) => {
+  try {
+    const { gamertag } = req.body;
+    if (!gamertag) return res.status(400).json({ error: 'Gamertag is required' });
+
+    const XBL_API_KEY = process.env.XBL_API_KEY;
+    if (!XBL_API_KEY) {
+      // Simulate mode (no API key) — return a mock success response
+      console.log('[XBOX SYNC] No XBL_API_KEY set — running in demo mode');
+      return res.json({ imported: 0, updated: 0, total: 0, demo: true, message: 'No API key configured. Set XBL_API_KEY in your .env to enable live sync.' });
+    }
+
+    // Use OpenXBL (xbl.io) — free tier: 150 req/hour
+    // Step 1: resolve gamertag → XUID
+    const lookupRes = await fetch(`https://xbl.io/api/v2/search/${encodeURIComponent(gamertag)}`, {
+      headers: { 'x-authorization': XBL_API_KEY, 'Accept': 'application/json' }
+    });
+    if (!lookupRes.ok) {
+      const err = await lookupRes.json().catch(() => ({}));
+      return res.status(400).json({ error: err.message || 'Gamertag not found or profile is private' });
+    }
+    const lookupData = await lookupRes.json();
+    const xuid = lookupData?.people?.[0]?.xuid;
+    if (!xuid) return res.status(404).json({ error: 'Gamertag not found' });
+
+    // Step 2: fetch titles (game history)
+    const titlesRes = await fetch(`https://xbl.io/api/v2/${xuid}/achievements`, {
+      headers: { 'x-authorization': XBL_API_KEY, 'Accept': 'application/json' }
+    });
+
+    if (!titlesRes.ok) {
+      return res.status(400).json({ error: 'Could not fetch games. The Xbox profile may be private.' });
+    }
+    const titlesData = await titlesRes.json();
+    const titles = titlesData?.titles || [];
+
+    const gamesList = titles.map(t => ({
+      name: t.name,
+      playtime: t.minutesPlayed ? Math.round(t.minutesPlayed / 60 * 10) / 10 : 0
+    }));
+
+    // Save gamertag to user profile
+    await User.findByIdAndUpdate(req.session.userId, { xboxGamertag: gamertag });
+
+    const result = await importGamesFromList(req.session.userId, gamesList, 'Xbox');
+    console.log(`[XBOX SYNC] ${gamertag}: imported ${result.imported}, updated ${result.updated}`);
+    res.json({ ...result, total: gamesList.length });
+  } catch (err) {
+    console.error('[XBOX SYNC] Error:', err.message);
+    res.status(500).json({ error: 'Xbox sync failed: ' + err.message });
+  }
+});
+
+// POST /api/integrations/psn/sync
+app.post('/api/integrations/psn/sync', isLoggedIn, async (req, res) => {
+  try {
+    const { psnId } = req.body;
+    if (!psnId) return res.status(400).json({ error: 'PSN ID is required' });
+
+    // PSN has no public official API for 3rd parties.
+    // We use the community psn-api wrapper via npsso token, OR fall back to demo mode.
+    const NPSSO_TOKEN = process.env.PSN_NPSSO;
+    if (!NPSSO_TOKEN) {
+      console.log('[PSN SYNC] No PSN_NPSSO token set — running in demo mode');
+      return res.json({ imported: 0, updated: 0, total: 0, demo: true, message: 'No PSN token configured. Set PSN_NPSSO in your .env to enable live sync.' });
+    }
+
+    // Get access token from npsso
+    const authRes = await fetch('https://ca.account.sony.com/api/authz/v3/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Cookie': `npsso=${NPSSO_TOKEN}` },
+      body: 'scope=psn%3Amobile.v2.core+psn%3Aclientapp&grant_type=sso_cookie&token_format=jwt'
+    });
+
+    if (!authRes.ok) return res.status(401).json({ error: 'PSN token expired or invalid. Please refresh your npsso.' });
+    const { access_token } = await authRes.json();
+
+    // Lookup the user's accountId by online ID
+    const profileRes = await fetch(`https://us-prof.np.community.playstation.net/userProfile/v1/users/${encodeURIComponent(psnId)}/profile2?fields=accountId`, {
+      headers: { 'Authorization': `Bearer ${access_token}` }
+    });
+    if (!profileRes.ok) return res.status(404).json({ error: 'PSN ID not found or profile is private.' });
+    const profileData = await profileRes.json();
+    const accountId = profileData?.profile?.accountId;
+    if (!accountId) return res.status(404).json({ error: 'Could not resolve PSN account ID.' });
+
+    // Fetch titles
+    const titlesRes = await fetch(`https://m.np.community.playstation.net/trophy/v1/users/${accountId}/titles?fields=@default&limit=200`, {
+      headers: { 'Authorization': `Bearer ${access_token}` }
+    });
+
+    if (!titlesRes.ok) return res.status(400).json({ error: 'Could not retrieve game titles. Profile may be private.' });
+    const titlesData = await titlesRes.json();
+    const titles = titlesData?.titles || [];
+
+    const gamesList = titles.map(t => ({ name: t.trophyTitleName || t.npTitleId, playtime: 0 }));
+
+    await User.findByIdAndUpdate(req.session.userId, { psnId });
+    const result = await importGamesFromList(req.session.userId, gamesList, 'PlayStation');
+    console.log(`[PSN SYNC] ${psnId}: imported ${result.imported}, updated ${result.updated}`);
+    res.json({ ...result, total: gamesList.length });
+  } catch (err) {
+    console.error('[PSN SYNC] Error:', err.message);
+    res.status(500).json({ error: 'PSN sync failed: ' + err.message });
+  }
+});
+
+
 app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -871,9 +1013,12 @@ app.get('/api/users/:userId', isLoggedIn, async (req, res) => {
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
       steamId: user.steamId || '',
+      xboxGamertag: user.xboxGamertag || '',
+      psnId: user.psnId || '',
       wallpaper: user.wallpaper || '',
       wallpaperPosition: user.wallpaperPosition != null ? user.wallpaperPosition : 50,
       friendsCount: (user.friends || []).length,
+      settings: user.settings,
       createdAt: user.createdAt,
     });
   } catch (err) {
@@ -890,7 +1035,7 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden. You can only edit your own profile.' });
     }
 
-    const { displayName, bio, avatar, favoriteGames, steamId, wallpaper, wallpaperPosition } = req.body;
+    const { displayName, username, bio, avatar, favoriteGames, steamId, xboxGamertag, psnId, wallpaper, wallpaperPosition, settings } = req.body;
     const user = await User.findById(req.params.userId);
 
     if (!user) {
@@ -898,18 +1043,66 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
     }
 
     if (displayName) user.displayName = displayName;
+    if (username) user.username = username;
     if (bio !== undefined) user.bio = bio;
     if (avatar) user.avatar = avatar;
     if (wallpaper !== undefined) user.wallpaper = wallpaper;
     if (wallpaperPosition !== undefined) user.wallpaperPosition = wallpaperPosition;
     if (favoriteGames) user.favoriteGames = favoriteGames;
     if (steamId !== undefined) user.steamId = steamId;
+    if (xboxGamertag !== undefined) user.xboxGamertag = xboxGamertag;
+    if (psnId !== undefined) user.psnId = psnId;
+    if (settings) {
+      if (!user.settings) user.settings = {};
+      if (settings.privacy) user.settings.privacy = settings.privacy;
+      if (settings.defaultSort) user.settings.defaultSort = settings.defaultSort;
+      if (settings.emailNotifs) {
+        if (!user.settings.emailNotifs) user.settings.emailNotifs = {};
+        if (settings.emailNotifs.friendRequests !== undefined) user.settings.emailNotifs.friendRequests = settings.emailNotifs.friendRequests;
+        if (settings.emailNotifs.chatMessages !== undefined) user.settings.emailNotifs.chatMessages = settings.emailNotifs.chatMessages;
+        if (settings.emailNotifs.marketing !== undefined) user.settings.emailNotifs.marketing = settings.emailNotifs.marketing;
+      }
+      if (settings.isBacker !== undefined) user.settings.isBacker = settings.isBacker;
+    }
 
     await user.save();
     res.json({ message: 'Profile updated', user });
   } catch (err) {
     console.error('[UPDATE USER] Error:', err.message);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// PUT /api/users/:userId/security - Update password
+app.put('/api/users/:userId/security', isLoggedIn, async (req, res) => {
+  try {
+    if (req.session.userId !== req.params.userId && req.session.userId.toString() !== req.params.userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.params.userId);
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // For users created via auth providers, they might have random hashed passwords
+    // Ensure we correctly validate the old one
+    const isValid = await user.comparePassword(currentPassword);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    user.password = newPassword;
+    await user.save(); // pre-save hook handles hashing
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('[UPDATE SECURITY] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update security settings' });
   }
 });
 
@@ -997,6 +1190,36 @@ app.get('/api/games/db/:gameId', async (req, res) => {
   } catch (err) {
     console.error('[GET GAME] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch game' });
+  }
+});
+
+// POST /api/games/search - Search IGDB for games
+app.post('/api/games/search', async (req, res) => {
+  try {
+    const { query, limit } = req.body;
+    if (!query) return res.status(400).json({ error: 'Query is required' });
+
+    const maxResults = limit || 10;
+    const token = await getAccessToken();
+    const escaped = query.replace(/"/g, '\\"');
+    
+    console.log(`[IGDB SEARCH] Querying: "${query}"`);
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain'
+      },
+      body: `search "${escaped}"; fields name,cover.url,rating,genres.name,first_release_date,summary; limit ${maxResults};`
+    });
+
+    const data = await igdbRes.json();
+    console.log(`[IGDB SEARCH RESPONSE] ${data ? data.length : 0} results`);
+    res.json(data);
+  } catch (err) {
+    console.error('[IGDB SEARCH] Error:', err.message);
+    res.status(500).json({ error: 'Search failed' });
   }
 });
 
