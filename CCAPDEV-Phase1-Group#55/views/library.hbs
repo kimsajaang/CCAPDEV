@@ -225,6 +225,7 @@ plagiarized the work of other students and/or persons.
         pageInitComplete = true;
         const authOk = await initializePage();
         if (authOk) {
+          ACHIEVEMENTS_STORAGE_KEY = `ach_v1_${currentUserId}`;
           await fetchLibrary();
           render();
           checkAchievements();
@@ -236,7 +237,7 @@ plagiarized the work of other students and/or persons.
        Library — localStorage-backed game collection with full CRUD
        Key: bh_library_v1
     ====================================================================== */
-    const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
+    let ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
     let libraryCache = [];
     const grid = document.getElementById('libraryGrid');
     const searchInput = document.getElementById('librarySearch');

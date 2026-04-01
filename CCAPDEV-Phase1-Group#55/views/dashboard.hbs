@@ -1117,7 +1117,7 @@ plagiarized the work of other students and/or persons.
               fetch('/api/auth/steam-status', { credentials: 'include' })
                 .then(res => res.json())
                 .then(steamData => {
-                  if (steamData.playing && steamData.gameName) {
+                  if (steamData.playing && steamData.gameName && !steamData.isFallback) {
                     const gameNameEl = document.getElementById('steamLiveGameNameCard');
                     const coverEl = document.getElementById('steamLiveGameCover');
                     const statusEl = document.getElementById('steamLiveCard');

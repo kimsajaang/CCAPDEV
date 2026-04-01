@@ -11,171 +11,262 @@ plagiarized the work of other students and/or persons.
       <Fortea, Seanne Clarence - <12410969> -<S22>
 ****************************************************************************** -->
 <style>
-        /* Page-specific: profile edit form */
-        body { background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.12), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.08), transparent 25%), var(--bg-base); }
-        .section-title { color: var(--text-muted); }
-        .card { animation: fadeInScale 0.6s ease both; }
-        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.97) translateY(14px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        .avatar-preview-container { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
-        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; background: #151d24; }
-        .avatar-upload-controls { flex: 1; }
-        .avatar-upload-controls input[type="file"], .wallpaper-upload-controls input[type="file"] { display: none; }
-        .avatar-upload-btn, .wallpaper-upload-btn { cursor: pointer; }
-        .wallpaper-preview-container { margin-bottom: 24px; position: relative; }
-        .wallpaper-preview { width: 100%; height: 160px; border-radius: var(--radius-md); border: 2px dashed var(--border); object-fit: cover; background: linear-gradient(135deg, rgba(83, 131, 232, 0.1), rgba(45, 212, 191, 0.05)); }
-        .wallpaper-preview.has-image { border: 2px solid var(--primary); }
-        .wallpaper-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s ease; border-radius: var(--radius-md); }
+        /* Page-specific: profile edit form, letterboxd-style settings */
+        body { background: #0e1217; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+        .settings-layout { display: flex; max-width: 1000px; margin: 40px auto; gap: 40px; padding: 0 20px; }
+        
+        /* Sidebar */
+        .settings-sidebar { width: 240px; flex-shrink: 0; }
+        .sidebar-header { text-transform: uppercase; font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 12px; padding: 0 16px; letter-spacing: 0.5px; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li { padding: 12px 16px; border-radius: 6px; cursor: pointer; color: #c9d1d9; transition: all 0.2s; margin-bottom: 4px; display: flex; flex-direction: column; }
+        .sidebar-nav li strong { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .sidebar-nav li span { font-size: 0.75rem; color: #8b949e; opacity: 0.8; }
+        .sidebar-nav li:hover { background: rgba(255,255,255,0.05); }
+        .sidebar-nav li.active { background: #1f232b; box-shadow: inset 4px 0 0 var(--primary); }
+        .sidebar-nav li.active strong { color: var(--primary); }
+        .sidebar-nav li.disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Main Content */
+        .settings-main { flex: 1; min-width: 0; background: transparent; }
+        .settings-section { display: none; animation: fadeIn 0.3s ease; }
+        .settings-section.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+        
+        .section-title { font-size: 1.5rem; font-weight: 600; color: #fff; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #30363d; }
+        
+        /* Form fields */
+        .field-group { margin-bottom: 24px; }
+        .field-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #c9d1d9; margin-bottom: 8px; }
+        .settings-input { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #c9d1d9; font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .settings-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(83, 131, 232, 0.3); }
+        textarea.settings-input { resize: vertical; min-height: 80px; }
+        .settings-select { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #c9d1d9; font-size: 0.9rem; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; transition: border-color 0.2s; }
+        .settings-select:focus { outline: none; border-color: var(--primary); }
+        .field-hint { font-size: 0.75rem; color: #8b949e; margin-top: 6px; }
+        
+        /* Avatar & Cover */
+        .avatar-edit-box { display: flex; align-items: center; gap: 16px; }
+        .avatar-preview { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #161b22; border: 1px solid #30363d; }
+        
+        .wallpaper-preview-container { width: 100%; height: 140px; border-radius: 8px; border: 1px dashed #30363d; background: #161b22; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; cursor: pointer; }
+        .wallpaper-preview-container:hover { border-color: var(--primary); border-style: solid; }
+        .wallpaper-preview { width: 100%; height: 100%; object-fit: cover; background: #0e1217; }
+        .wallpaper-empty { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #8b949e; font-size: 0.85rem; pointer-events: none; }
+        .wallpaper-overlay { position: absolute; inset:0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
         .wallpaper-preview-container:hover .wallpaper-overlay { opacity: 1; }
-        .wallpaper-position-control { margin-top: 8px; display: none; }
-        .wallpaper-position-control.visible { display: flex; align-items: center; gap: 12px; }
-        .wallpaper-position-control label { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
-        .wallpaper-position-control input[type="range"] { flex: 1; accent-color: var(--primary); }
-        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 12px 0; }
-        .game-option { background: #151d24; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease), transform var(--duration) var(--ease); font-size: 0.75rem; }
-        .game-option:hover { border-color: var(--primary); transform: translateY(-2px); }
-        .game-option.selected { border-color: var(--primary); background: rgba(83, 131, 232, 0.15); box-shadow: 0 0 12px rgba(83, 131, 232, 0.3); }
-        .game-option-icon { font-size: 2rem; margin-bottom: 6px; display: block; }
-        .game-count { display: inline-block; background: var(--primary); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.7rem; margin-left: 8px; }
+        .has-image + .wallpaper-empty { display: none; !important; }
+        
+        /* Grid / Layout */
+        .form-row { display: flex; gap: 20px; }
+        .form-row .field-group { flex: 1; min-width: 0; }
+        
+        /* Buttons */
+        .btn-change { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-change:hover { background: #30363d; border-color: #8b949e; color: #fff; }
+        .settings-save-btn { background: #238636; border: 1px solid rgba(240,246,252,0.1); color: #fff; padding: 6px 16px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .settings-save-btn:hover { background: #2ea043; }
+        
+        /* Fav Games Grid */
+        .favorite-games-selected { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+        .fav-game-slot { aspect-ratio: 3/4; border-radius: 6px; border: 1px dashed #30363d; display: flex; align-items: center; justify-content: center; position: relative; background: #161b22; }
+        .fav-game-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+        .fav-game-slot .remove-btn { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; background: #da3633; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; border: none; opacity: 0; transition: opacity 0.2s; padding: 0; z-index: 10; }
+        .fav-game-slot:hover .remove-btn { opacity: 1; }
+
+        /* Search Results */
+        .search-results-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #161b22; border: 1px solid #30363d; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 100; max-height: 250px; overflow-y: auto; display: none; margin-top: 4px; }
+        .search-result-item { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; transition: background 0.2s; color: #c9d1d9; }
+        .search-result-item:hover { background: #1f232b; }
+
+        @media (max-width: 768px) {
+            .settings-layout { flex-direction: column; }
+            .settings-sidebar { width: 100%; margin-bottom: 20px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .favorite-games-selected { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        /* Notifications & Alert */
+        .settings-alert { background: rgba(83, 131, 232, 0.1); border: 1px solid rgba(83, 131, 232, 0.2); border-radius: 6px; padding: 12px 16px; font-size: 0.85rem; color: #dbe7ff; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+        .settings-alert a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .settings-alert a:hover { text-decoration: underline; }
+        
+        /* Slide alerts */
         .notification-container { position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none; }
-        .notification { background: linear-gradient(135deg, rgba(83, 131, 232, 0.95), rgba(45, 212, 191, 0.9)); color: #fff; padding: 16px 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; margin-bottom: 12px; animation: slideIn 0.4s ease forwards; pointer-events: all; border: 1px solid rgba(255, 255, 255, 0.2); }
-        .notification.error { background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(255, 107, 107, 0.9)); }
-        .notification.success { background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(83, 131, 232, 0.85)); }
+        .notification { background: #1f232b; color: #fff; padding: 16px 24px; border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; margin-bottom: 12px; animation: slideIn 0.4s ease forwards; pointer-events: all; border: 1px solid #30363d; }
+        .notification.error { border-left: 4px solid #da3633; }
+        .notification.success { border-left: 4px solid var(--primary); }
         .notification-icon { font-size: 1.5rem; flex-shrink: 0; }
         .notification-content { display: flex; flex-direction: column; gap: 2px; }
         .notification-title { font-weight: 700; font-size: 0.95rem; }
-        .notification-message { font-size: 0.85rem; opacity: 0.95; }
+        .notification-message { font-size: 0.85rem; opacity: 0.8; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(400px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(400px); } }
     </style>{{> navbar-app activePage="profile"}}
 
-    <div class="container my-5">
-        <div class="row justify-content-center">
-            <!-- Edit form card — centered on the page, max col-md-8 so it doesn't stretch too wide -->
-            <div class="col-md-8">
-                <div class="card shadow-lg">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-                            <div>
-                                <div class="section-title mb-2">Edit Profile</div>
-                                <h3 class="fw-bold mb-1" id="editPageName">Loading...</h3>
-                                <p class="text-muted mb-0">Update your gaming identity and preferences.</p>
+    <div class="settings-layout">
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+            <div class="sidebar-header">Settings</div>
+            <ul class="sidebar-nav">
+                <li class="active" onclick="switchTab('profile-sec', this)">
+                    <strong>Profile</strong>
+                    <span>Customize your avatar and profile</span>
+                </li>
+                <li class="disabled" title="Coming Soon">
+                    <strong>Defaults</strong>
+                    <span>Set your defaults across the site</span>
+                </li>
+                <li class="disabled" title="Coming Soon">
+                    <strong>Notifications</strong>
+                    <span>Customize how you're notified</span>
+                </li>
+                <li class="disabled" title="Coming Soon">
+                    <strong>Backer</strong>
+                    <span>Connect your Patreon account</span>
+                </li>
+                <li onclick="switchTab('integrations-sec', this)">
+                    <strong>Integrations</strong>
+                    <span>Hook into external sites / apps</span>
+                </li>
+                <li class="disabled" title="Coming Soon">
+                    <strong>Account</strong>
+                    <span>Update your email / password</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content (Form) -->
+        <div class="settings-main">
+            <div class="settings-alert">
+                <i class="bi bi-envelope"></i> Confirm your email to access logging / reviewing features! <a href="#">Resend here</a>
+            </div>
+
+            <form id="profileForm">
+                <!-- ================= PROFILE TAB ================= -->
+                <div id="profile-sec" class="settings-section active">
+                    <h2 class="section-title">Profile</h2>
+                    
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Username</label>
+                            <input type="text" class="settings-input" id="inputUsername" placeholder="@username">
+                            <div class="field-hint">You may change your username once every 30 days</div>
+                        </div>
+                        <div class="field-group">
+                            <label>Display Name</label>
+                            <input type="text" class="settings-input" id="inputName" placeholder="Your gaming name">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Avatar</label>
+                        <div class="avatar-edit-box">
+                            <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="avatar-preview" alt="Avatar Preview">
+                            <button type="button" class="btn-change" id="uploadAvatarBtn">Change</button>
+                            <input type="file" id="avatarInput" accept="image/*" class="d-none">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Profile Cover</label>
+                        <div class="wallpaper-preview-container wallpaper-upload-controls" onclick="document.getElementById('wallpaperInput').click()">
+                            <img id="wallpaperPreview" class="wallpaper-preview" style="display: none;">
+                            <div id="wallpaperEmptyState" class="wallpaper-empty">
+                                <i class="bi bi-image fs-4"></i> Upload a wide image
                             </div>
-                            <a href="/profile" class="btn btn-outline-secondary">Back to Profile</a>
+                            <div class="wallpaper-overlay"><button type="button" class="btn-change">Change Cover</button></div>
+                        </div>
+                        <input type="file" id="wallpaperInput" accept="image/*" class="d-none">
+                        
+                        <div class="wallpaper-position-control mt-2" id="wallpaperPositionControl" style="display:none; align-items:center; gap:12px;">
+                            <label class="mb-0 text-muted small">Position</label>
+                            <input type="range" id="wallpaperPositionSlider" class="form-range" style="flex:1;" min="0" max="100" value="50">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group" style="flex: 1.5;">
+                            <label>Biography</label>
+                            <textarea id="inputBio" class="settings-input" placeholder="Write a bio"></textarea>
+                        </div>
+                        <div class="field-group" style="flex: 1;">
+                            <label>Gaming Details</label>
+                            <select class="settings-select mb-2" id="inputIdentity">
+                                <option value="">Select your playstyle...</option>
+                                <option value="Completionist">Completionist</option>
+                                <option value="Casual">Casual</option>
+                                <option value="Speedrunner">Speedrunner</option>
+                                <option value="Explorer">Explorer</option>
+                                <option value="Competitive">Competitive</option>
+                                <option value="Story-Driven">Story-Driven</option>
+                            </select>
+                            <select class="settings-select" id="inputPlatform">
+                                <option value="">Select favorite platform...</option>
+                                <option value="PC">PC</option>
+                                <option value="PlayStation">PlayStation</option>
+                                <option value="Xbox">Xbox</option>
+                                <option value="Nintendo Switch">Nintendo Switch</option>
+                                <option value="Mobile">Mobile</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group mt-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label style="margin-bottom:0;" class="mb-0">Favorite games <span class="badge bg-secondary ms-1 fw-normal" id="gameCount" style="font-size:0.7rem;">0/5</span></label>
+                            <span class="field-hint mb-0" style="margin-top:0;">Reorder your favorites by dragging the covers (coming soon)</span>
+                        </div>
+                        
+                        <div class="position-relative">
+                            <input type="text" class="settings-input mb-1" id="favGameSearchInput" placeholder="Search a game to add..." autocomplete="off">
+                            <div id="favGameSearchResults" class="search-results-dropdown w-100"></div>
                         </div>
 
-                        <!-- Profile edit form — fields pre-filled with hardcoded data.
-                             Gaming identity and timezone add fun profile details -->
-                        <form id="profileForm">
-                            <!-- Wallpaper section -->
-                            <label class="form-label">Profile Cover Wallpaper</label>
-                            <div class="wallpaper-preview-container wallpaper-upload-controls">
-                                <img id="wallpaperPreview" class="wallpaper-preview" alt="Wallpaper Preview" style="display: none;">
-                                <div id="wallpaperEmptyState" class="wallpaper-preview d-flex align-items-center justify-content-center text-muted flex-column">
-                                    <i class="bi bi-image" style="font-size: 2rem;"></i>
-                                    <span>Upload a wide image</span>
-                                </div>
-                                <div class="wallpaper-overlay wallpaper-upload-btn" onclick="document.getElementById('wallpaperInput').click()">
-                                    <button type="button" class="btn btn-primary btn-sm"><i class="bi bi-camera me-1"></i> Change Cover</button>
-                                </div>
-                                <input type="file" id="wallpaperInput" accept="image/*">
-                            </div>
-                            <div class="wallpaper-position-control" id="wallpaperPositionControl">
-                                <label><i class="bi bi-arrows-vertical me-1"></i>Position</label>
-                                <input type="range" id="wallpaperPositionSlider" min="0" max="100" value="50">
-                            </div>
+                        <div class="favorite-games-selected" id="favoriteGamesSelected">
+                            <!-- 5 slots total -->
+                        </div>
+                    </div>
 
-                            <!-- Avatar section -->
-                            <div class="avatar-preview-container">
-                                <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="avatar-preview" alt="Avatar Preview">
-                                <div class="avatar-upload-controls">
-                                    <label class="form-label">Profile Picture</label>
-                                    <input type="file" id="avatarInput" accept="image/*">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" id="uploadAvatarBtn">
-                                        <i class="bi bi-upload me-1"></i> Upload Avatar
-                                    </button>
-                                    <p class="text-muted small mt-2">JPG, PNG (Max 5MB)</p>
-                                </div>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Display Name</label>
-                                    <input type="text" class="form-control" id="inputName" placeholder="Your gaming name">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="inputUsername" placeholder="@username">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Bio</label>
-                                    <textarea class="form-control" rows="3" id="inputBio" placeholder="Tell the gaming community about yourself..."></textarea>
-                                    <small class="text-muted">Share your gaming passions, favorite genres, or gaming philosophy.</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Gaming Identity</label>
-                                    <select class="form-select" id="inputIdentity">
-                                        <option value="">Select your playstyle...</option>
-                                        <option value="Completionist">Completionist</option>
-                                        <option value="Casual">Casual</option>
-                                        <option value="Speedrunner">Speedrunner</option>
-                                        <option value="Explorer">Explorer</option>
-                                        <option value="Competitive">Competitive</option>
-                                        <option value="Story-Driven">Story-Driven</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Favorite Platform</label>
-                                    <select class="form-select" id="inputPlatform">
-                                        <option value="">Select favorite platform...</option>
-                                        <option value="PC">PC</option>
-                                        <option value="PlayStation">PlayStation</option>
-                                        <option value="Xbox">Xbox</option>
-                                        <option value="Nintendo Switch">Nintendo Switch</option>
-                                        <option value="Mobile">Mobile</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Favorite Games <span class="game-count" id="gameCount">0/5</span></label>
-                                    <p class="text-muted small mb-2">Choose up to 5 games from your library to showcase on your profile.</p>
-                                    <div class="favorite-games-search mb-3 position-relative">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
-                                            <input type="text" class="form-control bg-dark border-secondary text-light" id="favGameSearchInput" placeholder="Search a game to add..." autocomplete="off">
-                                        </div>
-                                        <div id="favGameSearchResults" class="position-absolute w-100 bg-dark border border-secondary rounded mt-1 shadow-lg" style="display:none; z-index: 1000; max-height: 300px; overflow-y: auto;"></div>
-                                    </div>
-                                    <div class="favorite-games-selected" id="favoriteGamesSelected" style="display: flex; gap: 12px; flex-wrap: wrap;"></div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label"><i class="bi bi-steam me-1"></i>Steam ID</label>
-                                    <input type="text" class="form-control" id="inputSteamId" placeholder="Your 17-digit Steam ID (e.g. 76561198012345678)">
-                                    <small class="text-muted">Find your Steam ID at <a href="https://steamid.io" target="_blank" rel="noopener" style="color:#5383e8;">steamid.io</a>. Needed to sync playtime from Steam.</small>
-                                </div>
-                                <!-- Privacy toggle — controls whether activity shows on the community feed.
-                                     Defaults to checked (public) -->
-                                <div class="col-12">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="privacyToggle" checked>
-                                        <label class="form-check-label" for="privacyToggle">Show my profile on community</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2 mt-4">
-                                <button type="submit" class="btn btn-primary">Save Profile</button>
-                                <a href="/profile" class="btn btn-outline-secondary">Cancel</a>
-                            </div>
-                        </form>
+                    <h2 class="section-title mt-5">Features</h2>
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Community Visibility</div>
+                            <div class="field-hint mt-0">Show my profile on the community feed</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="privacyToggle" checked>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <!-- ================= INTEGRATIONS TAB ================= -->
+                <div id="integrations-sec" class="settings-section">
+                    <h2 class="section-title">Integrations</h2>
+                    
+                    <div class="field-group">
+                        <label>Steam Integration</label>
+                        <input type="text" class="settings-input" id="inputSteamId" placeholder="Your 17-digit Steam ID (e.g. 76561198012345678)">
+                        <div class="field-hint mt-2">
+                            Find your Steam ID at <a href="https://steamid.io" target="_blank" rel="noopener" style="color:var(--primary);">steamid.io</a>. Needed to sync playtime and games automatically from Steam.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit area (Shared) -->
+                <div class="mt-4 pt-3 d-flex gap-2">
+                    <button type="submit" class="settings-save-btn">Save Profile</button>
+                    <a href="/profile" class="btn-change bg-transparent" style="text-decoration: none; padding: 7px 16px;">Cancel</a>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Notification Container -->
     <div class="notification-container" id="notificationContainer"></div>
     <script>
-        const PROFILE_STORAGE_KEY = 'bh_profile_v1';
-        const LIBRARY_STORAGE_KEY = 'bh_library_v1';
+        let PROFILE_STORAGE_KEY = 'bh_profile_v1';
+        let LIBRARY_STORAGE_KEY = 'bh_library_v1';
 
         const defaultProfile = {
             displayName: 'Gamer',
@@ -231,14 +322,19 @@ plagiarized the work of other students and/or persons.
         let serverLibraryGames = []; // populated from server
 
         async function initializeForm() {
-            const localProfile = loadProfile();
-
             // Fetch current user from server to get the latest avatar & profile data
             let serverUser = null;
             try {
                 const res = await fetch('/api/auth/current', { credentials: 'include' });
-                if (res.ok) serverUser = await res.json();
+                if (res.ok) {
+                    serverUser = await res.json();
+                    const uid = serverUser._id || serverUser.id;
+                    PROFILE_STORAGE_KEY = `prfl_v1_${uid}`;
+                    LIBRARY_STORAGE_KEY = `lib_v1_${uid}`;
+                }
             } catch (e) { console.warn('Could not fetch server profile:', e); }
+
+            const localProfile = loadProfile();
 
             // Fetch user's library from server for the favorite games picker
             if (serverUser) {
@@ -384,23 +480,32 @@ plagiarized the work of other students and/or persons.
 
         function renderSelectedFavoriteGames() {
             updateGameCount();
-            if (selectedFavoriteGames.length === 0) {
-                favSelectedContainer.innerHTML = '<div class="text-muted w-100 text-center py-3 border border-secondary rounded" style="border-style: dashed !important;">Search above to add your favorite games</div>';
-                return;
-            }
             let html = '';
-            selectedFavoriteGames.forEach((game, index) => {
-                const name = typeof game === 'object' ? game.name : game;
-                const coverUrl = typeof game === 'object' && game.cover ? game.cover : 'https://via.placeholder.com/130x180?text=No+Cover';
-                const safeName = name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                html += `
-                <div class="position-relative" style="width: 100px;">
-                    <button type="button" class="btn btn-danger btn-sm position-absolute rounded-circle shadow" style="top: -8px; right: -8px; width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 10;" onclick="removeFavoriteGame(${index})" title="Remove"> <i class="bi bi-x"></i> </button>
-                    <img src="${coverUrl}" alt="${safeName}" title="${safeName}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 2px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                    <div class="text-center small mt-1 text-truncate" style="color: #dbe7ff; font-weight: 500;" title="${safeName}">${safeName}</div>
-                </div>`;
-            });
+            for (let i = 0; i < 5; i++) {
+                if (i < selectedFavoriteGames.length) {
+                    const game = selectedFavoriteGames[i];
+                    const name = typeof game === 'object' ? game.name : game;
+                    const coverUrl = typeof game === 'object' && game.cover ? game.cover : 'https://via.placeholder.com/130x180?text=No+Cover';
+                    const safeName = name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    html += `
+                    <div class="fav-game-slot" title="${safeName}">
+                        <img src="${coverUrl}" alt="${safeName}">
+                        <button type="button" class="remove-btn" onclick="removeFavoriteGame(${i})" title="Remove"><i class="bi bi-x"></i></button>
+                    </div>`;
+                } else {
+                    html += `<div class="fav-game-slot"></div>`;
+                }
+            }
             favSelectedContainer.innerHTML = html;
+        }
+
+        // Tab switching function
+        function switchTab(targetId, liElement) {
+            if (liElement.classList.contains('disabled')) return;
+            document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+            liElement.classList.add('active');
+            document.querySelectorAll('.settings-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
         }
 
         function updateGameCount() {
@@ -504,7 +609,7 @@ plagiarized the work of other students and/or persons.
 
             // Check for achievements
             const games = loadLibrary();
-            const achievementsKey = 'bh_achievements_v1';
+            const achievementsKey = PROFILE_STORAGE_KEY.replace('prfl_', 'ach_');
             const unlockedAchievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');
             
             // Check for curator achievement

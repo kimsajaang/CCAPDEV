@@ -184,7 +184,7 @@
             const res = await fetch('/api/auth/steam-status', { credentials: 'include' });
             if (!res.ok) return;
             const data = await res.json();
-            if (data.playing && data.gameName) {
+            if (data.playing && data.gameName && !data.isFallback) {
                 bar.style.background = 'linear-gradient(90deg, rgba(26,45,36,0.97), rgba(22,58,42,0.95))';
                 bar.classList.add('steam-playing');
                 statusText.textContent = 'Now Playing:';

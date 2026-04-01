@@ -118,6 +118,7 @@ body {
 .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .sidebar-header h6 { margin: 0; font-weight: 700; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
 .group-select { background: transparent; border: none; color: #fff; font-weight: 700; cursor: pointer; outline: none; }
+.group-select option { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; padding: 5px; }
 
 .chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
 .cm-bubble { background: transparent; }
@@ -428,12 +429,13 @@ function renderAchievementsList(unlockedIds, stats) {
 
 function renderActivityList(games) {
   const container = document.getElementById('activityContainer');
-  const sorted = games.filter(g => g.gameId).sort((a,b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0)).slice(0, 5);
+  // Only show completed games, filter out "playing" status entirely
+  const sorted = games.filter(g => g.gameId && g.status === 'completed').sort((a,b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0)).slice(0, 5);
   
   if (!sorted.length) { container.innerHTML = '<div class="empty-state">Nothing lately.</div>'; return; }
   
   container.innerHTML = sorted.map(g => {
-    const status = g.status === 'completed' ? 'Completed' : (g.status === 'playing' ? 'Playing' : 'Added');
+    const status = 'Completed';
     return `
       <div class="act-item">
         <div class="act-status">${status}</div>
