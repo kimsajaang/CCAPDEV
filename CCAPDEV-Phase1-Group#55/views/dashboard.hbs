@@ -1154,6 +1154,12 @@ plagiarized the work of other students and/or persons.
             loadCommunityScores(currentUserData);
             loadGameDropdown(currentUserData);
             loadPendingBadge();
+            // Initialize chat without blocking - fire and forget with error handling
+            try {
+              initChat(currentUserData);
+            } catch (err) {
+              console.warn('[Dashboard] Chat init error:', err.message);
+            }
             // Pre-fetch trending data once, then both sections use it
             fetchTrendingGames();
             loadTrendingGames();
@@ -1329,6 +1335,274 @@ plagiarized the work of other students and/or persons.
     } catch (err) {
       sel.innerHTML = '<option value="">Could not load games</option>';
     }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // CHAT FUNCTIONALITY - General & Group Chats
+  // ════════════════════════════════════════════════════════════════
+
+  let currentUser = null;
+  let activeGroupId = 'general';
+  let allGroups = [];
+  let messageRefreshInterval = null;
+
+  async function initChat(user) {
+    try {
+      currentUser = user;
+      // Don't block - load groups asynchronously
+      loadChatGroups().catch(err => console.warn('[Chat] Error loading groups:', err));
+      
+      // Initialize with general chat, but don't await it
+      // Use a very short delay to avoid blocking the main dashboard render
+      setTimeout(() => {
+        refreshChatMessages()
+          .then(() => {
+            // Only set up refresh interval after first message fetch succeeds
+            if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+            messageRefreshInterval = setInterval(() => {
+              if (activeGroupId && document.getElementById('chatMessages')) {
+                refreshChatMessages().catch(err => {
+                  if (err.message.includes('Failed to fetch')) {
+                    console.warn('[Chat] Network error during refresh, will retry next cycle');
+                  }
+                });
+              }
+            }, 5000);
+          })
+          .catch(err => {
+            console.warn('[Chat] Failed to load initial messages:', err.message);
+            // Even if initial load fails, set up the refresh interval to retry
+            if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+            messageRefreshInterval = setInterval(() => {
+              refreshChatMessages().catch(() => {});
+            }, 5000);
+          });
+      }, 50); // Very short delay
+    } catch (err) {
+      console.warn('[Chat] Init error:', err.message);
+    }
+  }
+
+  async function loadChatGroups() {
+    try {
+      const res = await fetch('/api/chat/groups', { credentials: 'include' });
+      if (!res.ok) {
+        console.warn('[Chat] Failed to load groups, status:', res.status);
+        return;
+      }
+      allGroups = await res.json();
+      renderChatGroupSelect();
+    } catch (err) {
+      console.warn('[Chat] Failed to load groups:', err.message);
+    }
+  }
+
+  function renderChatGroupSelect() {
+    const select = document.getElementById('chatGroupSelect');
+    // General chat + user's groups
+    const options = [
+      { id: 'general', name: '🌍 General Chat' },
+      ...allGroups.map(g => ({ id: g._id, name: `👥 ${g.name}` }))
+    ];
+    select.innerHTML = options.map(opt => 
+      `<option value="${opt.id}" ${activeGroupId === opt.id ? 'selected' : ''}>${opt.name}</option>`
+    ).join('');
+  }
+
+  async function switchToChat(groupId) {
+    activeGroupId = groupId;
+    
+    // Show/hide the "Add Member" button
+    const addMemberBtn = document.getElementById('addMemberBtn');
+    if (groupId === 'general') {
+      addMemberBtn.style.display = 'none';
+    } else {
+      addMemberBtn.style.display = 'inline-block';
+    }
+
+    renderChatGroupSelect();
+    await refreshChatMessages();
+  }
+
+  function switchChatGroup(groupId) {
+    switchToChat(groupId).catch(err => console.warn('[Chat] Failed to switch group:', err.message));
+  }
+
+  async function refreshChatMessages() {
+    try {
+      const container = document.getElementById('chatMessages');
+      if (!container) return;
+
+      let messages = [];
+      if (activeGroupId === 'general') {
+        const res = await fetch('/api/chat/general?limit=50', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch general chat');
+        messages = await res.json();
+      } else {
+        const res = await fetch(`/api/chat/group/${activeGroupId}?limit=50`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch group chat');
+        messages = await res.json();
+      }
+
+      if (!messages || !messages.length) {
+        container.innerHTML = `
+          <div class="text-center text-muted small py-5">
+            <i class="bi bi-chat-dots" style="font-size:2rem; display:block; margin-bottom:10px; opacity:0.15;"></i>
+            No messages yet.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = messages.map(m => `
+        <div class="cm-bubble">
+          <div class="cm-header">
+            <span class="cm-user">${m.senderName || 'Anonymous'}</span>
+            <span class="cm-time">${new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div class="cm-text">${escapeHtml(m.text)}</div>
+        </div>
+      `).join('');
+
+      container.scrollTop = container.scrollHeight;
+    } catch (err) {
+      console.warn('[Chat] Refresh failed:', err.message);
+    }
+  }
+
+  async function handleChatInput(e) {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      const text = e.target.value.trim();
+      e.target.value = ''; // Clear immediately for UX
+      try {
+        const res = await fetch('/api/chat/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ text, chatRoom: activeGroupId })
+        });
+        if (!res.ok) {
+          console.warn('[Chat] Failed to send, status:', res.status);
+          return;
+        }
+        // Refresh after sending
+        setTimeout(() => refreshChatMessages().catch(err => console.warn('[Chat] Refresh after send failed:', err)), 300);
+      } catch (err) {
+        console.warn('[Chat] Send error:', err.message);
+      }
+    }
+  }
+
+  async function openCreateGroupModal() {
+    const modal = `
+      <div id="createGroupModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:400px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+          <h5 style="margin-bottom:16px; color:#fff;">Create Group Chat</h5>
+          <input type="text" id="newGroupNameInput" class="form-control form-control-sm bg-dark text-white border-secondary mb-3" placeholder="Group name..." maxlength="50" style="color: #fff !important; border-color: var(--border) !important;">
+          <textarea id="newGroupDescInput" class="form-control form-control-sm bg-dark text-white border-secondary mb-3" placeholder="Description (optional)" maxlength="200" rows="3" style="color: #fff !important; border-color: var(--border) !important;"></textarea>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-primary" onclick="confirmCreateGroup()" style="flex:1;">Create</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="this.closest('#createGroupModal').remove()" style="flex:1;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+    document.getElementById('newGroupNameInput').focus();
+  }
+
+  async function confirmCreateGroup() {
+    const nameInput = document.getElementById('newGroupNameInput');
+    const descInput = document.getElementById('newGroupDescInput');
+    if (!nameInput.value.trim()) {
+      alert('Group name is required');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/chat/group', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: nameInput.value.trim(), description: descInput.value.trim() })
+      });
+      if (res.ok) {
+        const group = await res.json();
+        document.getElementById('createGroupModal').remove();
+        await loadChatGroups();
+        await switchToChat(group._id);
+      } else {
+        alert('Failed to create group');
+      }
+    } catch (err) {
+      console.error('[Chat] Failed to create group:', err);
+      alert('Error creating group');
+    }
+  }
+
+  async function openInviteModal() {
+    // Get friends
+    let friends = [];
+    try {
+      const res = await fetch('/api/friends', { credentials: 'include' });
+      if (res.ok) friends = await res.json();
+    } catch (err) {
+      console.error('[Chat] Failed to load friends:', err);
+    }
+
+    const modal = `
+      <div id="inviteFriendsModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.5); max-height:80vh; overflow-y:auto;">
+          <h5 style="margin-bottom:16px; color:#fff;">Invite Friends to ${allGroups.find(g => g._id === activeGroupId)?.name}</h5>
+          <div id="inviteFriendsList">
+            ${friends.length === 0 ? `<div class="text-center py-4 text-muted">You have no friends to invite!</div>` : 
+              friends.map(f => `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${f.avatar || 'https://ui-avatars.com/api/?name=User'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                    <span style="font-weight:600; color:#fff;">${f.displayName || f.username}</span>
+                  </div>
+                  <button class="btn btn-sm btn-primary" onclick="addFriendToGroup('${f._id}', '${f.displayName || f.username}')" style="font-size:0.75rem;">Add</button>
+                </div>
+              `).join('')
+            }
+          </div>
+          <button class="btn btn-sm btn-outline-secondary mt-3" onclick="this.closest('#inviteFriendsModal').remove()" style="width:100%;">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+  }
+
+  async function addFriendToGroup(friendId, friendName) {
+    try {
+      const res = await fetch(`/api/chat/group/${activeGroupId}/member`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId: friendId })
+      });
+      if (res.ok) {
+        // Show success message
+        const btn = event.target;
+        btn.textContent = '✓ Added';
+        btn.disabled = true;
+        setTimeout(() => {
+          document.getElementById('inviteFriendsModal').remove();
+        }, 1000);
+      } else {
+        alert('Failed to add friend');
+      }
+    } catch (err) {
+      console.error('[Chat] Failed to add friend:', err);
+      alert('Error adding friend');
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   // --- Pending Friend Requests Badge ---

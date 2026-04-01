@@ -18,6 +18,8 @@ const Game = require('./model/Game');
 const LibraryEntry = require('./model/LibraryEntry');
 const Post = require('./model/Post');
 const Feedback = require('./model/Feedback');
+const Message = require('./model/Message');
+const GroupChat = require('./model/GroupChat');
 const axios = require('axios'); // Ensure axios is installed: npm install axios
 
 const app = express();
@@ -1784,6 +1786,197 @@ app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[FRIEND ACTIVITY] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch friend activity' });
+  }
+});
+
+// ─── COMMUNITY / POST ROUTES ───
+
+// ─── CHAT ROUTES ───
+
+// GET /api/chat/general - Get general chat messages
+app.get('/api/chat/general', isLoggedIn, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const messages = await Message.find({ chatRoom: 'general' })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .lean();
+    res.json(messages.reverse());
+  } catch (err) {
+    console.error('[GET GENERAL CHAT] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// POST /api/chat/message - Send a message to general or group chat
+app.post('/api/chat/message', isLoggedIn, async (req, res) => {
+  try {
+    const { text, chatRoom } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: 'Message cannot be empty' });
+    }
+    if (!chatRoom || !chatRoom.trim()) {
+      return res.status(400).json({ error: 'Chat room is required' });
+    }
+
+    const user = await User.findById(req.session.userId);
+    const message = new Message({
+      sender: req.session.userId,
+      senderName: user.displayName || user.username,
+      senderAvatar: user.avatar,
+      chatRoom: chatRoom.trim(),
+      text: text.trim().substring(0, 1000),
+      timestamp: new Date(),
+    });
+
+    await message.save();
+    res.json(message);
+  } catch (err) {
+    console.error('[POST MESSAGE] Error:', err.message);
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+// GET /api/chat/group/:groupId - Get group chat messages
+app.get('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+    const limit = parseInt(req.query.limit) || 50;
+
+    // Verify user is a member of the group
+    const group = await GroupChat.findById(groupId);
+    if (!group || !group.members.includes(req.session.userId)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const messages = await Message.find({ chatRoom: groupId })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .lean();
+    res.json(messages.reverse());
+  } catch (err) {
+    console.error('[GET GROUP CHAT] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// POST /api/chat/group - Create a new group chat
+app.post('/api/chat/group', isLoggedIn, async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Group name is required' });
+    }
+
+    const groupChat = new GroupChat({
+      name: name.trim().substring(0, 50),
+      description: description ? description.trim().substring(0, 200) : '',
+      owner: req.session.userId,
+      members: [req.session.userId],
+    });
+
+    await groupChat.save();
+    res.json(groupChat);
+  } catch (err) {
+    console.error('[CREATE GROUP] Error:', err.message);
+    res.status(500).json({ error: 'Failed to create group chat' });
+  }
+});
+
+// GET /api/chat/groups - Get all group chats for current user
+app.get('/api/chat/groups', isLoggedIn, async (req, res) => {
+  try {
+    const groups = await GroupChat.find({
+      members: req.session.userId,
+      isActive: true
+    })
+      .populate('owner', '_id username displayName avatar')
+      .populate('members', '_id username displayName avatar')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(groups);
+  } catch (err) {
+    console.error('[GET GROUPS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch group chats' });
+  }
+});
+
+// POST /api/chat/group/:groupId/member - Add member to group chat (owner only)
+app.post('/api/chat/group/:groupId/member', isLoggedIn, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const groupId = req.params.groupId;
+
+    const group = await GroupChat.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+    if (group.owner.toString() !== req.session.userId) {
+      return res.status(403).json({ error: 'Only group owner can add members' });
+    }
+
+    if (!group.members.includes(userId)) {
+      group.members.push(userId);
+      await group.save();
+    }
+
+    const updatedGroup = await GroupChat.findById(groupId)
+      .populate('members', '_id username displayName avatar')
+      .populate('owner', '_id username displayName avatar');
+    res.json(updatedGroup);
+  } catch (err) {
+    console.error('[ADD MEMBER] Error:', err.message);
+    res.status(500).json({ error: 'Failed to add member' });
+  }
+});
+
+// DELETE /api/chat/group/:groupId/member/:userId - Remove member from group (owner only)
+app.delete('/api/chat/group/:groupId/member/:userId', isLoggedIn, async (req, res) => {
+  try {
+    const { groupId, userId } = req.params;
+
+    const group = await GroupChat.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+    if (group.owner.toString() !== req.session.userId) {
+      return res.status(403).json({ error: 'Only group owner can remove members' });
+    }
+
+    group.members.pull(userId);
+    await group.save();
+    res.json({ message: 'Member removed' });
+  } catch (err) {
+    console.error('[REMOVE MEMBER] Error:', err.message);
+    res.status(500).json({ error: 'Failed to remove member' });
+  }
+});
+
+// DELETE /api/chat/group/:groupId - Delete or leave group chat
+app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+    const group = await GroupChat.findById(groupId);
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // If owner, delete the entire group
+    if (group.owner.toString() === req.session.userId) {
+      await GroupChat.findByIdAndDelete(groupId);
+      await Message.deleteMany({ chatRoom: groupId });
+      return res.json({ message: 'Group deleted' });
+    }
+
+    // Otherwise, just remove the user from members (leave the group)
+    group.members.pull(req.session.userId);
+    await group.save();
+    res.json({ message: 'Left group' });
+  } catch (err) {
+    console.error('[DELETE GROUP] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete group' });
   }
 });
 

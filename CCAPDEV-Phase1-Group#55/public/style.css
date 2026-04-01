@@ -230,6 +230,12 @@ body.page-exit {
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+
+/* Reduced animation for performance — only on hover */
+@keyframes gradientShiftHover {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
 @keyframes borderGlow {
   0%, 100% { border-color: var(--border); }
   50%      { border-color: rgba(83, 131, 232, 0.4); }
@@ -258,8 +264,8 @@ body.page-exit {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradientShift 6s ease infinite;
-  will-change: background-position;
+  /* Animation disabled for performance — enable on hover if needed */
+  transition: background-position 0.3s ease;
 }
 .gradient-text-accent {
   background: var(--gradient-accent);
@@ -267,8 +273,8 @@ body.page-exit {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradientShift 6s ease infinite;
-  will-change: background-position;
+  /* Animation disabled for performance */
+  transition: background-position 0.3s ease;
 }
 
 /* ═══════════ Utility: Glow Border ═══════════ */
@@ -284,6 +290,7 @@ body.page-exit {
   opacity: 0;
   z-index: -1;
   transition: opacity var(--duration-slow) var(--ease);
+  will-change: opacity;
 }
 .glow-border:hover::before {
   opacity: 0.6;
@@ -301,8 +308,9 @@ body.page-exit {
   inset: 0;
   background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.04) 50%, transparent 70%);
   background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-  will-change: background-position;
+  /* Shimmer disabled by default for performance */
+  pointer-events: none;
+  contain: paint;
 }
 
 /* ═══════════ Typography ═══════════ */
@@ -424,12 +432,13 @@ a:hover {
   background-size: 200% 200% !important;
   border: none !important;
   color: #fff !important;
-  animation: gradientShift 4s ease infinite;
-  will-change: background-position;
+  /* Gradient animation disabled for performance */
+  will-change: auto;
+  contain: layout style paint;
 }
 .btn-primary:hover,
 .btn-primary:focus-visible {
-  box-shadow: 0 6px 24px rgba(83, 131, 232, 0.4), 0 0 60px rgba(83, 131, 232, 0.15);
+  box-shadow: 0 4px 16px rgba(83, 131, 232, 0.3);
   transform: translateY(-2px);
 }
 .btn-primary:active {
@@ -479,12 +488,10 @@ a:hover {
   border-radius: var(--radius-lg) !important;
   color: var(--text);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.3s var(--ease),
-              border-color 0.3s var(--ease),
-              box-shadow 0.3s var(--ease);
+  transition: transform 0.3s var(--ease), box-shadow 0.2s var(--ease);
   position: relative;
   overflow: hidden;
-  contain: layout style;
+  contain: layout style paint;
 }
 .card:hover {
   border-color: rgba(83, 131, 232, 0.3) !important;
@@ -584,7 +591,8 @@ a:hover {
   border-color: var(--border) !important;
   color: var(--text);
   border-radius: var(--radius-md) !important;
-  transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), background-color 0.3s var(--ease);
+  transition: transform 0.3s var(--ease), box-shadow 0.2s var(--ease);
+  contain: layout style paint;
 }
 .list-group-item:hover {
   background-color: var(--bg-card-hover) !important;
@@ -729,11 +737,11 @@ a:hover {
   font-size: 1rem;
   border-radius: var(--radius-sm);
   transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-  animation: gradientShift 4s ease infinite;
-  will-change: background-position;
+  will-change: transform, box-shadow;
+  contain: layout style paint;
 }
 .hero-cta:hover {
-  box-shadow: 0 8px 30px rgba(83, 131, 232, 0.4), 0 0 60px rgba(83, 131, 232, 0.12);
+  box-shadow: 0 6px 20px rgba(83, 131, 232, 0.3);
   transform: translateY(-3px);
 }
 
@@ -776,8 +784,8 @@ a:hover {
   transform: rotate(30deg);
   pointer-events: none;
   z-index: 2;
-  opacity: 0.4;
-  animation: shimmer 8s linear infinite;
+  opacity: 0.2;
+  /* Shimmer animation disabled for performance */
 }
 
 .hero > * {
@@ -803,12 +811,11 @@ a:hover {
   gap: var(--sp-1);
   padding: var(--sp-4) var(--sp-5);
   border-radius: var(--radius-lg);
-  background: rgba(20, 28, 36, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(20, 28, 36, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s var(--ease-spring);
+  transition: transform 0.3s var(--ease), background 0.3s var(--ease), border-color 0.3s var(--ease);
   position: relative;
+  contain: layout style paint;
 }
 
 .hero-stat:hover {
@@ -869,7 +876,7 @@ a:hover {
   height: 8px;
   background: var(--success);
   border-radius: 50%;
-  animation: pulse-live 2s infinite;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
 }
 
 /* Premium Buttons */
@@ -1025,8 +1032,7 @@ a:hover {
   inset: 0;
   background: var(--gradient-shine);
   background-size: 200% 100%;
-  animation: shimmer 4s ease-in-out infinite;
-  will-change: background-position;
+  will-change: auto;
 }
 
 /* ═══════════ Footer ═══════════ */
@@ -1140,9 +1146,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 14, 19, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 14, 19, 0.98);
   z-index: 9999;
   transition: opacity 0.6s var(--ease), visibility 0.6s var(--ease);
 }
@@ -1172,18 +1176,15 @@ a:hover {
 .loader-icon-wrap i {
   font-size: 3rem;
   color: var(--primary);
-  z-index: 2;
-  animation: pulse-icon 2s infinite ease-in-out;
-}
+  z-index: 2;\n}
 
 .loader-glow {
   position: absolute;
   inset: 0;
   background: var(--primary);
-  filter: blur(25px);
-  opacity: 0.5;
+  box-shadow: 0 0 30px rgba(83, 131, 232, 0.4);
+  opacity: 0.6;
   border-radius: 50%;
-  animation: pulse-glow 2s infinite ease-in-out;
   z-index: 1;
 }
 
@@ -1214,11 +1215,8 @@ a:hover {
 
 /* Beautiful pulse dots for "Loading..." */
 .loading-dots::after {
-  content: '';
-  animation: dots 1.5s steps(4, end) infinite;
+  content: '...';
   display: inline-block;
-  width: 1em;
-  text-align: left;
 }
 
 @keyframes dots {
@@ -1261,8 +1259,7 @@ a:hover {
   box-shadow: var(--shadow-md), 0 0 30px rgba(83, 131, 232, 0.2);
   text-decoration: none;
   transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-  animation: gradientShift 4s ease infinite;
-  will-change: background-position, transform;
+  will-change: transform, box-shadow;
 }
 .sticky-cta:hover {
   color: #fff;
@@ -1850,4 +1847,4 @@ input[type="number"] {
 
 /* ─── Global Animations ─── */
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.spin-icon { display: inline-block; animation: spin 1s linear infinite; }
+.spin-icon { display: inline-block; }

@@ -347,6 +347,82 @@ plagiarized the work of other students and/or persons.
     border: 1px solid var(--border);
   }
 
+  /* ── XP Tooltip ── */
+  .xp-tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+  }
+
+  .xp-tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1a1f2e 0%, #242d3d 100%);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    color: #fff;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    width: 280px;
+    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.2);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  .xp-tooltip.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .xp-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: #242d3d;
+  }
+
+  .xp-tooltip-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: #8b5cf6;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .xp-tooltip-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 8px;
+  }
+
+  .xp-tooltip-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .xp-tooltip-label {
+    color: #9ca3af;
+  }
+
+  .xp-tooltip-value {
+    color: #8b5cf6;
+    font-weight: 600;
+  }
+
   /* ── Sidebar Chat ── */
   .sidebar-header {
     padding: 20px;
@@ -551,6 +627,66 @@ plagiarized the work of other students and/or persons.
     .hero-bio {
       font-size: 2.2rem;
     }
+
+    .hero-stats {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hero-meta {
+      margin-left: 0;
+      border-left: none;
+      padding-left: 0;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .xp-tooltip {
+      width: 240px;
+      bottom: 110%;
+    }
+
+    .hero-banner {
+      padding: 30px 20px;
+    }
+
+    .hero-avatar {
+      width: 60px;
+      height: 60px;
+    }
+
+    .hero-bio {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+    }
+
+    .acc-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-stats {
+      font-size: 0.85rem;
+    }
+
+    .hero-bio {
+      font-size: 1.5rem;
+    }
+
+    .xp-tooltip {
+      width: 220px;
+      left: -50%;
+      margin-left: -10%
+    }
+
+    .lvl-star {
+      width: 28px;
+      height: 28px;
+      font-size: 0.75rem;
+      right: -12px;
+      top: -10px;
+    }
   }
 </style>
 
@@ -581,7 +717,35 @@ plagiarized the work of other students and/or persons.
         <div class="hero-stats">
           <div><strong id="totalGamesCount">0</strong> games played</div>
           <div style="width:1px; height:12px; background:rgba(255,255,255,0.1);"></div>
-          <div><strong id="totalExp">0</strong> exp earned</div>
+          <div class="xp-tooltip-wrapper" id="xpTooltipWrapper">
+            <div onmouseenter="showXpTooltip()" onmouseleave="hideXpTooltip()">
+              <strong id="totalExp">0</strong> exp earned
+              <i class="bi bi-info-circle-fill" style="font-size:0.75rem; color:var(--accent); margin-left:6px; opacity:0.7; cursor:help;"></i>
+            </div>
+            <div class="xp-tooltip" id="xpTooltip">
+              <div class="xp-tooltip-title">How to Gain XP</div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Games Played</span>
+                <span class="xp-tooltip-value">+100 XP each</span>
+              </div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Hours Played</span>
+                <span class="xp-tooltip-value">+10 XP/hour</span>
+              </div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Game Completed</span>
+                <span class="xp-tooltip-value">+500 XP</span>
+              </div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Achievement</span>
+                <span class="xp-tooltip-value">+250 XP</span>
+              </div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Level Up</span>
+                <span class="xp-tooltip-value">1,500 XP/level</span>
+              </div>
+            </div>
+          </div>
           <div style="width:1px; height:12px; background:rgba(255,255,255,0.1);"></div>
           <div><strong id="completedCount">0</strong> completed</div>
 
@@ -976,6 +1140,21 @@ plagiarized the work of other students and/or persons.
       saveLocalChats();
       renderActiveChat();
       closeInviteModal();
+    }
+  }
+
+  /* ── XP Tooltip Functions ── */
+  function showXpTooltip() {
+    const tooltip = document.getElementById('xpTooltip');
+    if (tooltip) {
+      tooltip.classList.add('show');
+    }
+  }
+
+  function hideXpTooltip() {
+    const tooltip = document.getElementById('xpTooltip');
+    if (tooltip) {
+      tooltip.classList.remove('show');
     }
   }
 

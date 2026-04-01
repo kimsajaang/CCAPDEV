@@ -1,19 +1,22 @@
 /**
  * Plexus Background Effect
  * A canvas-based particle system with connecting lines and glowing nodes.
+ * Optimized for performance with reduced calculations and frame throttling.
  */
 
 console.log("Plexus BG: Initializing...");
 const canvas = document.getElementById('plexus-canvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { alpha: false });
 
 let particles = [];
-const particleCount = 40; // Lowered for better performance
-const connectionDistance = 140;
-const mouseRange = 250;
+const particleCount = 30; // Reduced from 40 for better performance
+const connectionDistanceSq = 140 * 140; // Use squared distance to avoid sqrt
+const mouseRangeSq = 250 * 250;
 
 let width, height;
 let mouse = { x: null, y: null };
+let frameCounter = 0;
+const frameSkip = 1; // Adjust for performance (1 = every frame, 2 = every other frame)
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -56,10 +59,10 @@ class Particle {
         if (mouse.x !== null && mouse.y !== null) {
             let dx = mouse.x - this.x;
             let dy = mouse.y - this.y;
-            let dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < mouseRange) {
-                this.x -= dx * 0.02;
-                this.y -= dy * 0.02;
+            let distSq = dx * dx + dy * dy;
+            if (distSq < mouseRangeSq) {
+                this.x -= dx * 0.015;
+                this.y -= dy * 0.015;
             }
         }
     }
@@ -82,6 +85,12 @@ function init() {
 }
 
 function animate() {
+    frameCounter++;
+    if (frameCounter % frameSkip !== 0) {
+        requestAnimationFrame(animate);
+        return;
+    }
+
     // Solid background clear
     ctx.fillStyle = '#05070a';
     ctx.fillRect(0, 0, width, height);
@@ -93,12 +102,14 @@ function animate() {
         for (let j = i + 1; j < particles.length; j++) {
             let dx = particles[i].x - particles[j].x;
             let dy = particles[i].y - particles[j].y;
-            let dist = Math.sqrt(dx * dx + dy * dy);
+            let distSq = dx * dx + dy * dy;
 
-            if (dist < connectionDistance) {
+            if (distSq < connectionDistanceSq) {
                 ctx.beginPath();
-                ctx.strokeStyle = `rgba(255, 255, 255, ${Math.max(0, (1 - dist / connectionDistance) - 0.4)})`;
-                ctx.lineWidth = 0.8;
+                let dist = Math.sqrt(distSq);
+                let alpha = Math.max(0, (1 - dist / 140) - 0.4);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 0.7;
                 ctx.moveTo(particles[i].x, particles[i].y);
                 ctx.lineTo(particles[j].x, particles[j].y);
                 ctx.stroke();
