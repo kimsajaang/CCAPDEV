@@ -121,10 +121,6 @@ plagiarized the work of other students and/or persons.
                     <strong>Notifications</strong>
                     <span>Customize how you're notified</span>
                 </li>
-                <li onclick="switchTab('backer-sec', this)">
-                    <strong>Backer</strong>
-                    <span>Connect your Patreon account</span>
-                </li>
                 <li onclick="switchTab('integrations-sec', this)">
                     <strong>Integrations</strong>
                     <span>Hook into external sites / apps</span>
@@ -291,34 +287,6 @@ plagiarized the work of other students and/or persons.
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="notifMarketing">
                         </div>
-                    </div>
-                </div>
-
-                <!-- ================= BACKER TAB ================= -->
-                <div id="backer-sec" class="settings-section">
-                    <h2 class="section-title">Backer Support</h2>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(83, 131, 232, 0.1) 0%, rgba(31, 35, 43, 0.8) 100%); border: 1px solid var(--primary); border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 24px;">
-                        <i class="bi bi-star-fill mb-3" style="font-size: 2.5rem; color: var(--primary);"></i>
-                        <h4 style="color: #fff; font-weight: 700;">Become a Backlog Hero Pro</h4>
-                        <p style="color: #a8c0e0; font-size: 0.9rem; max-width: 400px; margin: 0 auto 20px;">
-                            Support development and get access to exclusive badges, animated profile backgrounds, and unlimited library entries.
-                        </p>
-                        <a href="#" class="btn-primary" style="padding: 10px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Support on Patreon</a>
-                    </div>
-
-                    <div class="field-group">
-                        <label>Link Account</label>
-                        <div class="d-flex gap-2">
-                            <input type="text" class="settings-input" placeholder="Paste Patreon access code here..." disabled>
-                            <button type="button" class="btn-change" disabled>Verify</button>
-                        </div>
-                    </div>
-                    <div class="form-check mt-3">
-                        <input class="form-check-input" type="checkbox" id="simBackerToggle">
-                        <label class="form-check-label text-muted small" for="simBackerToggle">
-                            Simulate active backer status (Dev Tool)
-                        </label>
                     </div>
                 </div>
 
@@ -569,7 +537,6 @@ plagiarized the work of other students and/or persons.
                         document.getElementById('notifChatMsg').checked = !!setts.emailNotifs.chatMessages;
                         document.getElementById('notifMarketing').checked = !!setts.emailNotifs.marketing;
                     }
-                    if (setts.isBacker !== undefined) document.getElementById('simBackerToggle').checked = !!setts.isBacker;
                 }
             }
 
@@ -800,8 +767,7 @@ plagiarized the work of other students and/or persons.
                             friendRequests: document.getElementById('notifFriendReq').checked,
                             chatMessages: document.getElementById('notifChatMsg').checked,
                             marketing: document.getElementById('notifMarketing').checked
-                        },
-                        isBacker: document.getElementById('simBackerToggle').checked
+                        }
                     }
                   })
                 });

@@ -123,7 +123,7 @@ plagiarized the work of other students and/or persons.
 
 					<!-- Registration form — connects to backend API.
 					     2-column grid layout for better UX -->
-					<form id="registerForm">
+					<form id="registerForm" onsubmit="return false;">
 						<div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
 						<div id="successAlert" class="alert alert-success d-none" role="alert"></div>
 
@@ -185,23 +185,6 @@ plagiarized the work of other students and/or persons.
 
 						<!-- SSO provider buttons -->
 						<div class="d-grid gap-3 mb-4">
-							<button type="button"
-								class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center justify-content-center gap-3 transition-all"
-								id="steamRegisterBtn" style="border-radius: 8px;">
-								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 259"
-									fill="none">
-									<path
-										d="M127.779 0C60.42 0 5.24 52.412 0 119.014l68.724 28.674a35.872 35.872 0 0 1 20.426-6.366l30.64-44.74v-.627c0-26.903 21.69-48.795 48.345-48.795 26.655 0 48.345 21.892 48.345 48.795 0 26.903-21.69 48.795-48.345 48.795h-1.13l-43.68 31.413c0 .418-.04.837-.04 1.255 0 20.178-16.268 36.59-36.263 36.59-17.702 0-32.434-12.738-35.558-29.57L4.93 162.96C22.612 217.266 70.946 258.107 128.736 258.107c70.96 0 128.488-57.93 128.488-129.382C257.224 57.321 199.696 0 128.736 0z"
-										fill="#ffffff" />
-									<path
-										d="M81.218 191.398l-15.612-6.508c5.558 11.56 17.295 19.583 30.908 19.583 18.825 0 34.106-15.422 34.106-34.422 0-18.998-15.281-34.421-34.106-34.421-6.507 0-12.573 1.88-17.736 5.056l16.14 6.729c12.28 5.118 18.109 19.14 13.026 31.323-5.082 12.182-19.002 17.977-31.282 12.86z"
-										fill="#ffffff" opacity="0.8" />
-									<path
-										d="M200.186 144.755c0-17.895-14.432-32.463-32.233-32.463-17.8 0-32.233 14.568-32.233 32.463 0 17.894 14.432 32.463 32.233 32.463 17.8 0 32.233-14.569 32.233-32.463zm-56.085.07c0-13.268 10.666-24.034 23.852-24.034 13.186 0 23.852 10.766 23.852 24.034 0 13.267-10.666 24.032-23.852 24.032-13.186 0-23.852-10.765-23.852-24.032z"
-										fill="#ffffff" opacity="0.8" />
-								</svg>
-								<span class="fw-semibold">Sign up with Steam</span>
-							</button>
 							<button type="button"
 								class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center justify-content-center gap-3 transition-all"
 								id="googleRegisterBtn" style="border-radius: 8px;">
@@ -319,6 +302,14 @@ plagiarized the work of other students and/or persons.
 			} catch (err) {
 				errorAlert.textContent = '✗ ' + err.message;
 				errorAlert.classList.remove('d-none');
+				
+				// If email already exists, suggest login
+				if (err.message.includes('Email already exists')) {
+					setTimeout(() => {
+						errorAlert.innerHTML = '✗ ' + err.message + ' <a href="/login" class="link-accent ms-2" style="text-decoration: underline;">Log in instead</a>';
+					}, 500);
+				}
+				
 				registerBtn.disabled = false;
 				registerBtn.innerHTML = 'Create Account';
 			}
@@ -326,14 +317,9 @@ plagiarized the work of other students and/or persons.
 	}
 
 	// SSO provider button handler
-	if (document.getElementById('steamRegisterBtn')) {
-		document.getElementById('steamRegisterBtn').addEventListener('click', () => {
-			window.location.href = '/auth/steam';
-		});
-	}
 	if (document.getElementById('googleRegisterBtn')) {
 		document.getElementById('googleRegisterBtn').addEventListener('click', () => {
-			window.location.href = '/auth/google';
+			window.location.href = '/auth/google/register';
 		});
 	}
 </script>

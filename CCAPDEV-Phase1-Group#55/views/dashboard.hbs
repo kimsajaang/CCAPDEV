@@ -578,54 +578,51 @@ plagiarized the work of other students and/or persons.
 
   <div class="row g-4 reveal">
     <div class="col-md-3">
-      <!-- Backlog suggestion tool — user enters available minutes, gets a game pick.
-     Right now the recommendation is hardcoded
-     based on the user's actual library and avg session lengths. -->
+      <!-- Backlog suggestion tool — user enters available minutes, gets a game pick. -->
       <div class="card mb-4 reveal">
-        <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-magic me-2"></i>What's the Plan?</h5>
-          <p class="text-muted small">Pick a source, choose genres, and enter your time.</p>
-          <div class="btn-group w-100 mb-3 plan-source-group" role="group">
-            <input type="radio" class="btn-check" name="planSource" id="planSourceLibrary" value="library" checked>
-            <label class="btn btn-sm btn-plan-toggle" for="planSourceLibrary"><i class="bi bi-collection me-1"></i>My
-              Library</label>
-            <input type="radio" class="btn-check" name="planSource" id="planSourceNew" value="new">
-            <label class="btn btn-sm btn-plan-toggle" for="planSourceNew"><i class="bi bi-stars me-1"></i>Try Something
-              New</label>
-          </div>
+        <div class="card-body" style="padding: 16px;">
+          <h5 class="card-title mb-2" style="font-size: 1.1rem;"><i class="bi bi-lightning me-2" style="color: var(--primary);"></i>What's the Plan?</h5>
+          <p class="text-muted mb-3" style="font-size: 0.85rem;">Pick a source and enter your time.</p>
+          
+          <!-- Source Selection -->
           <div class="mb-3">
-            <label class="form-label small text-muted mb-1">Genres <span
-                class="text-secondary">(optional)</span></label>
-            <div class="genre-chips" id="genreChips">
-              <input type="checkbox" class="btn-check" id="gAction" value="Action"><label class="genre-chip"
-                for="gAction">Action</label>
-              <input type="checkbox" class="btn-check" id="gRPG" value="RPG"><label class="genre-chip"
-                for="gRPG">RPG</label>
-              <input type="checkbox" class="btn-check" id="gShooter" value="Shooter"><label class="genre-chip"
-                for="gShooter">Shooter</label>
-              <input type="checkbox" class="btn-check" id="gMOBA" value="MOBA"><label class="genre-chip"
-                for="gMOBA">MOBA</label>
-              <input type="checkbox" class="btn-check" id="gRoguelike" value="Roguelike"><label class="genre-chip"
-                for="gRoguelike">Roguelike</label>
-              <input type="checkbox" class="btn-check" id="gPuzzle" value="Puzzle"><label class="genre-chip"
-                for="gPuzzle">Puzzle</label>
-              <input type="checkbox" class="btn-check" id="gOpenWorld" value="Open World"><label class="genre-chip"
-                for="gOpenWorld">Open World</label>
-              <input type="checkbox" class="btn-check" id="gPlatformer" value="Platformer"><label class="genre-chip"
-                for="gPlatformer">Platformer</label>
-              <input type="checkbox" class="btn-check" id="gSim" value="Sim"><label class="genre-chip"
-                for="gSim">Sim</label>
+            <div class="btn-group w-100 plan-source-group" role="group" style="gap: 6px; height: 40px;">
+              <input type="radio" class="btn-check" name="planSource" id="planSourceLibrary" value="library" checked>
+              <label class="btn btn-sm" for="planSourceLibrary" style="flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-weight: 500; transition: all 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;">
+                <i class="bi bi-collection me-1"></i><span>My Library</span>
+              </label>
+              <input type="radio" class="btn-check" name="planSource" id="planSourceNew" value="new">
+              <label class="btn btn-sm" for="planSourceNew" style="flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-weight: 500; transition: all 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;">
+                <i class="bi bi-sparkles me-1"></i><span>Try New</span>
+              </label>
+            </div>
+            <style>
+              .plan-source-group .btn-check:checked + .btn {
+                background: var(--primary-subtle) !important;
+                border-color: var(--primary) !important;
+                color: var(--primary) !important;
+              }
+            </style>
+          </div>
+
+          <!-- Time Input -->
+          <div class="mb-3">
+            <div class="input-group" style="gap: 6px; height: 40px;">
+              <input id="planHours" type="number" min="0" inputmode="numeric" class="form-control bg-dark text-white border-secondary" placeholder="Hours" style="border-radius: 6px; font-size: 0.85rem;">
+              <input id="planMinutes" type="number" min="0" max="59" inputmode="numeric" class="form-control bg-dark text-white border-secondary" placeholder="Minutes" style="border-radius: 6px; font-size: 0.85rem;">
             </div>
           </div>
-          <div class="input-group mb-3">
-            <input id="planHours" type="number" min="0" inputmode="numeric"
-              class="form-control bg-dark text-white border-secondary" placeholder="Hours">
-            <input id="planMinutes" type="number" min="0" max="59" inputmode="numeric"
-              class="form-control bg-dark text-white border-secondary" placeholder="Minutes">
-            <button id="planSuggestBtn" class="btn btn-primary" type="button">Suggest</button>
-          </div>
-          <div id="planResult" class="suggest-result p-3 rounded bg-dark border border-secondary">
-            <p class="mb-0 small text-muted">Pick a source and hit Suggest!</p>
+
+          <!-- Suggest Button -->
+          <button id="planSuggestBtn" class="btn btn-primary w-100 mb-3" type="button" style="border-radius: 6px; font-weight: 600; font-size: 0.9rem; padding: 8px; height: 40px;">
+            <i class="bi bi-arrow-right me-1"></i>Get Suggestion
+          </button>
+
+          <!-- Result Area -->
+          <div id="planResult" class="suggest-result p-2 rounded border border-secondary bg-dark" style="border-radius: 6px;">
+            <p class="mb-0 small text-muted text-center" style="font-size: 0.8rem;">
+              <i class="bi bi-info-circle me-1"></i>Enter time
+            </p>
           </div>
         </div>
       </div>
@@ -641,10 +638,10 @@ plagiarized the work of other students and/or persons.
       </div>
 
       <!-- Community ratings sidebar -->
-      <div class="card reveal">
-        <div class="card-body">
-          <h6 class="mb-3">Community Quality Scores</h6>
-          <div id="communityScores">
+      <div class="card reveal" style="min-height: 400px; display: flex; flex-direction: column;">
+        <div class="card-body" style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
+          <h6 class="mb-4" style="font-size: 1.1rem;">Community Quality Scores</h6>
+          <div id="communityScores" style="flex: 1; overflow-y: auto; padding-right: 8px;">
             <p class="text-muted small mb-0">Loading scores...</p>
           </div>
         </div>
@@ -893,9 +890,6 @@ plagiarized the work of other students and/or persons.
       return;
     }
 
-    // Collect selected genre filters
-    const selectedGenres = [...document.querySelectorAll('#genreChips input:checked')].map(c => c.value.toLowerCase());
-
     let pool;
     if (source === 'library') {
       pool = await getLibraryGames(totalMins);
@@ -907,23 +901,6 @@ plagiarized the work of other students and/or persons.
       pool = await getNewGames(totalMins);
       if (pool.length === 0) {
         planResult.innerHTML = `<p class="mb-0 small text-info">You already have all our suggestions! Nice collection.</p>`;
-        return;
-      }
-    }
-
-    // Filter by selected genres (if any selected)
-    if (selectedGenres.length > 0) {
-      pool = pool.filter(g => {
-        // Use genreTags if available (for discover games), fallback to genre string match
-        if (g.genreTags && Array.isArray(g.genreTags)) {
-          return selectedGenres.some(sg => g.genreTags.includes(sg));
-        }
-        // Fallback for library games: split genre string and match
-        const gGenre = (g.genre || '').toLowerCase().split('•').join('').split(/\s+/);
-        return selectedGenres.some(sg => gGenre.some(g => g.includes(sg) || sg.includes(g)));
-      });
-      if (pool.length === 0) {
-        planResult.innerHTML = `<p class="mb-0 small text-warning">No games match those genres. Try selecting different ones!</p>`;
         return;
       }
     }
@@ -951,21 +928,23 @@ plagiarized the work of other students and/or persons.
     selected.forEach((pick, index) => {
       const sessions = Math.max(1, Math.floor(totalMins / pick.avgSession));
       const imgTag = pick.img
-        ? `<img src="${pick.img}" style="width:44px;height:58px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);" alt="${pick.name}" loading="lazy">`
-        : `<div style="width:44px;height:58px;border-radius:6px;background:#2a3843;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#6f7d8a;"><i class="bi bi-controller"></i></div>`;
+        ? `<img src="${pick.img}" style="width:60px;height:85px;border-radius:4px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);flex-shrink:0;" alt="${pick.name}" loading="lazy">`
+        : `<div style="width:60px;height:85px;border-radius:4px;background:#2a3843;display:flex;align-items:center;justify-content:center;color:#6f7d8a;flex-shrink:0;"><i class="bi bi-controller"></i></div>`;
 
       const sourceLabel = pick.fromLibrary
-        ? '<span class="badge bg-primary ms-1" style="font-size:0.6rem; vertical-align:middle;">Library</span>'
-        : '<span class="badge bg-success ms-1" style="font-size:0.6rem; vertical-align:middle;">New Discovery</span>';
+        ? '<span class="badge bg-primary" style="font-size:0.55rem; padding: 2px 6px;">Lib</span>'
+        : '<span class="badge bg-success" style="font-size:0.55rem; padding: 2px 6px;">New</span>';
 
       html += `
-        <div class="suggestion-item d-flex align-items-center gap-3 ${index > 0 ? 'mt-3 pt-3 border-top border-secondary' : ''}" style="animation: fadeInScale 0.3s ease forwards ${index * 0.1}s; opacity:0; transform:scale(0.95);">
+        <div class="suggestion-item" style="animation: fadeInScale 0.3s ease forwards ${index * 0.1}s; opacity:0; transform:scale(0.95);">
           ${imgTag}
-          <div style="flex:1; min-width:0;">
-            <p class="mb-0 small text-truncate"><strong>${pick.name}</strong>${sourceLabel}</p>
-            <div class="d-flex justify-content-between align-items-center mt-1">
-              <small class="text-info" style="font-size:0.7rem; font-weight:600;">~${pick.avgSession}m/sess · ${sessions > 1 ? sessions + ' fit' : '1 fits'}</small>
-              <small class="text-muted text-truncate ms-2" style="font-size:0.7rem;">${pick.genre}</small>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+            <div style="min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <p style="font-size: 0.8rem; font-weight: 700; color: var(--text); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${pick.name}</p>
+                ${sourceLabel}
+              </div>
+              <small class="text-info" style="font-size:0.7rem; font-weight:600; display: block;">~${pick.avgSession}m · ${sessions > 1 ? sessions + 'x' : '1x'}</small>
             </div>
           </div>
         </div>
@@ -1278,77 +1257,70 @@ plagiarized the work of other students and/or persons.
   async function loadActivityFeed(user) {
     const feedEl = document.getElementById('activityFeed');
     try {
-      const userId = user._id || user.id;
-      // Fetch own library
-      const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
-      let ownEntries = [];
-      if (libRes.ok) {
-        const entries = await libRes.json();
-        ownEntries = entries.filter(e => e.gameId).map(e => ({ ...e, _user: user }));
-      }
-
-      // Fetch friends' activity
-      let friendEntries = [];
-      try {
-        const friendRes = await fetch('/api/friends/activity', { credentials: 'include' });
-        if (friendRes.ok) {
-          const fEntries = await friendRes.json();
-          friendEntries = fEntries.filter(e => e.gameId && e.userId);
-        }
-      } catch (e) { console.warn('[Dashboard] Friends activity fetch failed:', e); }
-
-      // Combine own (last 5) + friend entries, sort by addedAt desc
-      const ownRecent = ownEntries.slice(0, 5);
-      const allEntries = [...ownRecent.map(e => ({ entry: e, user: user, isOwn: true })), ...friendEntries.map(e => ({ entry: e, user: e.userId, isOwn: false }))];
-      allEntries.sort((a, b) => new Date(b.entry.addedAt || 0) - new Date(a.entry.addedAt || 0));
-      const top = allEntries.slice(0, 10);
-
-      if (top.length === 0) {
-        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity yet. <a href="/search" style="color:#5383e8;">Find games to play!</a></div>';
+      // Fetch friend achievements and recommendations
+      const res = await fetch('/api/friends/activity', { credentials: 'include' });
+      if (!res.ok) {
+        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load friend activity.</div>';
         return;
       }
 
+      const feedItems = await res.json();
       let html = '';
-      for (const item of top) {
-        const entry = item.entry;
-        const u = item.user;
-        const game = entry.gameId;
-        const gameName = (typeof game === 'object' ? game.name : '') || 'Unknown Game';
-        const coverUrl = (typeof game === 'object' ? game.coverUrl : '') || '';
-        const coverTag = coverUrl
-          ? `<img src="${coverUrl}" class="feed-cover" alt="${gameName} cover" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'feed-cover d-flex align-items-center justify-content-center\\' style=\\'background:#1a2634;\\'><i class=\\'bi bi-controller\\' style=\\'font-size:1.2rem;color:#5383e8;\\'></i></div>')">`
-          : `<div class="feed-cover d-flex align-items-center justify-content-center" style="background:#1a2634;"><i class="bi bi-controller" style="font-size:1.2rem;color:#5383e8;"></i></div>`;
-        let typeLabel = 'added to library', borderClass = '', badgeHtml = '';
-        if (entry.status === 'completed') { typeLabel = 'completed'; borderClass = 'border-start border-success border-4'; badgeHtml = '<span class="badge bg-success extra-small">COMPLETED</span>'; }
-        else if (entry.status === 'playing') { typeLabel = 'is playing'; borderClass = 'border-start border-primary border-4'; }
-        else if (entry.status === 'backlog') { typeLabel = 'added to backlog'; borderClass = 'border-start border-warning border-4'; }
-        const hoursText = entry.playtime ? `${Math.round(entry.playtime * 10) / 10}h played` : '';
-        const ratingText = entry.rating ? '★'.repeat(entry.rating) + '☆'.repeat(5 - entry.rating) : '';
-        const displayName = u.displayName || u.username || 'User';
-        const userAvatar = u.avatar || '';
-        const profileLink = item.isOwn ? 'profile' : `profile?user=${u._id}`;
-        html += `
-              <div class="list-group-item p-3 ${borderClass} reveal is-visible">
-                <div class="d-flex align-items-center mb-2">
-                  <a href="${profileLink}"><img src="${userAvatar}" class="rounded-circle me-2 avatar-sm" alt="User" style="width:32px;height:32px;" onerror="this.style.display='none'"></a>
-                  <a href="${profileLink}" class="text-primary fw-bold text-decoration-none">${displayName}</a>
-                  <span class="text-muted ms-2 small">${typeLabel}</span>
-                </div>
-                <div class="d-flex align-items-start gap-3">
-                  ${coverTag}
-                  <div>
-                    <h6 class="mb-1 small">${gameName}</h6>
-                    ${badgeHtml}
-                    ${ratingText ? `<div class="text-warning extra-small">${ratingText}</div>` : ''}
-                    ${hoursText ? `<div class="text-muted extra-small">${hoursText}</div>` : ''}
-                  </div>
-                </div>
-              </div>`;
+
+      if (!feedItems || feedItems.length === 0) {
+        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No friend activity yet. Add some friends to see their achievements and recommendations!</div>';
+        return;
       }
+
+      // Render each feed item based on type
+      for (const item of feedItems) {
+        if (item.type === 'achievement') {
+          // Achievement card: Friend achievement milestone
+          const iconMap = {
+            'completion': '🏁',
+            'playtime': '⏱️',
+            'rating': '⭐'
+          };
+          const icon = iconMap[item.subtype] || '🎮';
+          
+          html += `
+            <div class="list-group-item p-3 border-start border-primary border-4 reveal is-visible" style="background: rgba(83, 131, 232, 0.05);">
+              <div class="d-flex align-items-start gap-2">
+                <div style="font-size: 1.5rem; flex-shrink: 0;">${icon}</div>
+                <div style="flex: 1; min-width: 0;">
+                  <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
+                  <p class="mb-1 small" style="color: var(--text-secondary);">${item.message}</p>
+                  <div class="badge bg-primary" style="font-size: 0.75rem;">📈 ${item.count}</div>
+                </div>
+              </div>
+            </div>`;
+        } else if (item.type === 'recommendation') {
+          // Recommendation card: Friend recommends a 5-star game
+          const coverUrl = item.coverUrl ? `style="width: 50px; height: 70px; object-fit: cover; border-radius: 4px;"` : '';
+          const gameImage = item.coverUrl 
+            ? `<img src="${item.coverUrl}" alt="${item.game}" ${coverUrl}>`
+            : `<div style="width: 50px; height: 70px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-muted); text-align: center; padding: 4px;">No Cover</div>`;
+          
+          html += `
+            <div class="list-group-item p-3 border-start border-success border-4 reveal is-visible" style="background: rgba(45, 212, 191, 0.05);">
+              <div class="d-flex align-items-start gap-3">
+                <div style="flex-shrink: 0;">
+                  ${gameImage}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName} Recommends</h6>
+                  <p class="mb-2 small fw-500" style="color: var(--text-primary);">${item.game}</p>
+                  <p class="mb-0 small" style="color: var(--text-secondary);">5★ Rating • Highly Enjoyed</p>
+                </div>
+              </div>
+            </div>`;
+        }
+      }
+
       feedEl.innerHTML = html;
     } catch (err) {
-      console.warn('[Dashboard] Activity feed error:', err);
-      feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load activity feed.</div>';
+      console.warn('[Dashboard] Friend activity error:', err);
+      feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load friend activity.</div>';
     }
   }
 
@@ -1356,38 +1328,41 @@ plagiarized the work of other students and/or persons.
   async function loadCommunityScores(user) {
     const scoresEl = document.getElementById('communityScores');
     try {
-      const userId = user._id || user.id;
-      const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
-      if (!libRes.ok) { 
-        scoresEl.innerHTML = '<p class="text-muted small mb-0">No rated games yet.</p>'; 
-        return; 
-      }
-      const entries = await libRes.json();
-      
-      // Filter games with ratings (rating > 0), include all statuses
-      const rated = entries.filter(e => {
-        return e.rating && e.rating > 0 && (e.gameId || e.gameName);
-      })
-      .map(e => ({
-        name: (e.gameId && e.gameId.name) || e.gameName || 'Unknown Game',
-        rating: e.rating
-      }))
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 5);
-      
-      if (rated.length === 0) {
-        scoresEl.innerHTML = '<p class="text-muted small mb-0">Rate games in your library to see scores here.</p>';
+      // Fetch aggregated community-wide scores from all users
+      const res = await fetch('/api/community/quality-scores', { credentials: 'include' });
+      if (!res.ok) {
+        scoresEl.innerHTML = '<p class="text-muted small mb-0">Could not load community scores.</p>';
         return;
       }
-      
+
+      const communityGames = await res.json();
+
+      if (!communityGames || communityGames.length === 0) {
+        scoresEl.innerHTML = '<p class="text-muted small mb-0">No community ratings yet. Be the first to rate a game!</p>';
+        return;
+      }
+
       let html = '';
-      rated.forEach((game, idx) => {
-        const stars = '★'.repeat(game.rating) + '☆'.repeat(5 - game.rating);
-        html += `<div class="d-flex justify-content-between align-items-center mb-2 small" style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both;">
-          <span class="text-truncate">${game.name}</span>
-          <span class="text-warning fw-bold" style="white-space: nowrap; margin-left: 8px;">${stars}</span>
+      communityGames.forEach((game, idx) => {
+        // Generate stars based on actual average rating
+        const avgRating = parseFloat(game.averageRating);
+        const fullStars = Math.floor(avgRating);
+        const hasHalfStar = (avgRating % 1) >= 0.5;
+        const emptyStars = 5 - Math.ceil(avgRating);
+
+        let stars = '★'.repeat(fullStars);
+        if (hasHalfStar && fullStars < 5) stars += '½';
+        stars += '☆'.repeat(emptyStars);
+
+        html += `<div style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+          <div style="flex: 1; min-width: 0;">
+            <div class="text-truncate fw-500" title="${game.name}" style="word-break: break-word;">${game.name}</div>
+            <div class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">${game.ratingCount} ${game.ratingCount === 1 ? 'rating' : 'ratings'}</div>
+          </div>
+          <div style="font-weight: bold; white-space: nowrap; font-size: 1rem; color: #fbbf24; flex-shrink: 0;">${stars}</div>
         </div>`;
       });
+
       scoresEl.innerHTML = html;
     } catch (err) {
       console.warn('[Dashboard] Community scores error:', err);

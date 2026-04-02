@@ -234,10 +234,126 @@ const seedDatabase = async () => {
         rating: 5,
         playtime: 150,
       },
+      // Add more entries to generate achievements for friends
+      // Justin (speedrunner) - add more games for completion milestone
+      {
+        userId: users[1]._id,
+        gameId: games[2]._id, // BOTW
+        status: 'completed',
+        rating: 5,
+        playtime: 95,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[1]._id, // BG3
+        status: 'completed',
+        rating: 5,
+        playtime: 110,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[3]._id, // DS3
+        status: 'completed',
+        rating: 5,
+        playtime: 115,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[4]._id, // Hollow Knight
+        status: 'completed',
+        rating: 5,
+        playtime: 32,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[5]._id, // Celeste
+        status: 'completed',
+        rating: 5,
+        playtime: 8,
+      },
+      // Seanne (casualplayer) - add more for achievements
+      {
+        userId: users[2]._id,
+        gameId: games[6]._id, // Portal 2
+        status: 'completed',
+        rating: 5,
+        playtime: 12,
+      },
+      {
+        userId: users[2]._id,
+        gameId: games[5]._id, // Celeste
+        status: 'completed',
+        rating: 4,
+        playtime: 36,
+      },
+      {
+        userId: users[2]._id,
+        gameId: games[0]._id, // Elden Ring
+        status: 'playing',
+        rating: 4,
+        playtime: 95,
+      },
+      // Alex (indiegames) - add for high playtime
+      {
+        userId: users[3]._id,
+        gameId: games[0]._id, // Elden Ring
+        status: 'completed',
+        rating: 5,
+        playtime: 175,
+      },
+      {
+        userId: users[3]._id,
+        gameId: games[2]._id, // BOTW
+        status: 'playing',
+        rating: 5,
+        playtime: 110,
+      },
+      {
+        userId: users[3]._id,
+        gameId: games[6]._id, // Portal 2
+        status: 'completed',
+        rating: 5,
+        playtime: 38,
+      },
+      // Mike (competitiveking) - add more completions
+      {
+        userId: users[4]._id,
+        gameId: games[6]._id, // Portal 2
+        status: 'completed',
+        rating: 5,
+        playtime: 40,
+      },
+      {
+        userId: users[4]._id,
+        gameId: games[3]._id, // DS3
+        status: 'completed',
+        rating: 5,
+        playtime: 130,
+      },
+      {
+        userId: users[4]._id,
+        gameId: games[1]._id, // BG3
+        status: 'playing',
+        rating: 4,
+        playtime: 85,
+      },
     ]);
     console.log(`✓ Created ${libraryEntries.length} sample library entries`);
 
+    // ===== ADD FRIEND RELATIONSHIPS =====
+    // Make user[0] (gaminglead/Kane) friends with everyone else
+    await User.findByIdAndUpdate(
+      users[0]._id,
+      {
+        $set: {
+          friends: [users[1]._id, users[2]._id, users[3]._id, users[4]._id],
+        },
+      }
+    );
+    console.log(`✓ Added friends to ${users[0].displayName}`);
+
     console.log('\n✓ Database seeded successfully!');
+    console.log('Sample user: gaminglead (joshua@backlog-hero.local) / password123');
     process.exit(0);
   } catch (err) {
     console.error('✗ Seed error:', err);

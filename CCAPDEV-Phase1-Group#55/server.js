@@ -175,36 +175,52 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: `http://localhost:${PORT}/auth/google/callback`
+    callbackURL: `http://localhost:${PORT}/auth/google/callback`,
+    passReqToCallback: true  // Allow access to req object
   },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req, accessToken, refreshToken, profile, done) => {
       try {
+        // Try to find by Google ID first
         let user = await User.findOne({ googleId: profile.id });
-        if (!user) {
-          const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
-          if (email) {
-            user = await User.findOne({ email });
-          }
+        if (user) {
+          console.log('[GOOGLE AUTH] Existing user found:', user.displayName, '| Google ID:', profile.id);
+          return done(null, user);
+        }
+        
+        // Try to find by email (to link accounts)
+        const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+        if (email) {
+          user = await User.findOne({ email });
           if (user) {
-            // Link to existing account
+            // Link Google ID to existing account
             user.googleId = profile.id;
             await user.save();
-          } else {
-            // Create new account
-            user = new User({
-              username: 'google_' + profile.id,
-              email: email || profile.id + '@google.local',
-              password: require('crypto').randomBytes(32).toString('hex'),
-              displayName: profile.displayName || 'Google User',
-              avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : undefined,
-              googleId: profile.id,
-            });
-            await user.save();
-            console.log('[GOOGLE AUTH] Created new user:', user.displayName, '| Google ID:', profile.id);
+            console.log('[GOOGLE AUTH] Linked Google profile to existing email:', email);
+            return done(null, user);
           }
-        } else {
-          console.log('[GOOGLE AUTH] Existing user found:', user.displayName, '| Google ID:', profile.id);
         }
+        
+        // Check if this is a login flow (strict) or signup flow (permissive)
+        const flow = req.session?.googleFlow || 'signup';
+        
+        if (flow === 'login') {
+          // Login flow: account must exist, show error if not found
+          console.log('[GOOGLE AUTH] Login flow - account not found for email:', email);
+          return done(null, false, { message: 'Account not found' });
+        }
+        
+        // Signup flow: Auto-create new account for Google sign-up
+        console.log('[GOOGLE AUTH] Creating new user for Google ID:', profile.id);
+        user = new User({
+          username: 'google_' + profile.id,
+          email: email || profile.id + '@google.local',
+          password: require('crypto').randomBytes(32).toString('hex'),
+          displayName: profile.displayName || 'Google User',
+          avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : undefined,
+          googleId: profile.id,
+        });
+        await user.save();
+        console.log('[GOOGLE AUTH] Created new user:', user.displayName, '| Google ID:', profile.id);
         return done(null, user);
       } catch (err) {
         return done(err, null);
@@ -221,25 +237,27 @@ passport.use(new SteamStrategy({
   async (identifier, profile, done) => {
     try {
       const steamId = profile.id;
-      // Find existing user with this Steam ID
+      // Try to find user by Steam ID
       let user = await User.findOne({ steamId });
-      if (!user) {
-        // Create a new user from Steam profile
-        user = new User({
-          username: 'steam_' + steamId,
-          email: steamId + '@steam.local',
-          password: require('crypto').randomBytes(32).toString('hex'),
-          displayName: profile.displayName || 'Steam User',
-          avatar: profile.photos && profile.photos[2] ? profile.photos[2].value
-            : profile.photos && profile.photos[0] ? profile.photos[0].value
-              : undefined,
-          steamId: steamId,
-        });
-        await user.save();
-        console.log('[STEAM AUTH] Created new user:', user.displayName, '| Steam ID:', steamId);
-      } else {
+      if (user) {
         console.log('[STEAM AUTH] Existing user found:', user.displayName, '| Steam ID:', steamId);
+        return done(null, user);
       }
+      
+      // Auto-create new account for Steam users
+      console.log('[STEAM AUTH] Creating new user for Steam ID:', steamId);
+      user = new User({
+        username: 'steam_' + steamId,
+        email: steamId + '@steam.local',
+        password: require('crypto').randomBytes(32).toString('hex'),
+        displayName: profile.displayName || 'Steam User',
+        avatar: profile.photos && profile.photos[2] ? profile.photos[2].value
+          : profile.photos && profile.photos[0] ? profile.photos[0].value
+            : undefined,
+        steamId: steamId,
+      });
+      await user.save();
+      console.log('[STEAM AUTH] Created new user:', user.displayName, '| Steam ID:', steamId);
       return done(null, user);
     } catch (err) {
       return done(err, null);
@@ -418,20 +436,48 @@ app.post('/api/users/register', async (req, res) => {
   try {
     const { username, email, password, displayName } = req.body;
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Username, email, and password are required' });
+    // Strict validation
+    if (!username || !username.trim()) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+    if (!email || !email.trim()) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    if (!password || !password.trim()) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+    
+    // Validate username length
+    if (username.trim().length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters' });
+    }
+    
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
     }
 
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    // Check if user already exists (by username or email)
+    const existingUser = await User.findOne({ $or: [{ username: username.trim() }, { email: email.trim().toLowerCase() }] });
     if (existingUser) {
-      return res.status(409).json({ error: 'Username or email already exists' });
+      if (existingUser.username === username.trim()) {
+        return res.status(409).json({ error: 'Username already exists. Please choose a different username.' });
+      } else {
+        return res.status(409).json({ error: 'Email already exists. Please log in or use a different email.' });
+      }
     }
 
     const newUser = new User({
-      username,
-      email,
+      username: username.trim(),
+      email: email.trim().toLowerCase(),
       password,
-      displayName: displayName || username,
+      displayName: displayName || username.trim(),
     });
 
     await newUser.save();
@@ -440,8 +486,6 @@ app.post('/api/users/register', async (req, res) => {
     req.session.userId = newUser._id.toString();
     req.session.username = newUser.username;
     console.log('[REGISTER] Session set for user:', newUser.displayName, '| Session ID:', req.sessionID);
-
-
 
     // Save session before responding
     req.session.save((err) => {
@@ -469,26 +513,39 @@ app.post('/api/users/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+    // Strict validation
+    if (!username || !username.trim()) {
+      return res.status(400).json({ error: 'Username or email is required' });
+    }
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
     }
 
-    const user = await User.findOne({ $or: [{ username }, { email: username }] });
+    // Try to find user by username or email
+    const user = await User.findOne({ 
+      $or: [
+        { username: username.trim() },
+        { email: username.trim().toLowerCase() }
+      ] 
+    });
+    
+    // User not found - recommend registration
     if (!user) {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      console.log('[LOGIN] User not found with username/email:', username);
+      return res.status(401).json({ error: 'Account not found. Please create a new account or check your username/email.' });
     }
 
+    // Validate password
     const isValid = await user.comparePassword(password);
     if (!isValid) {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      console.log('[LOGIN] Invalid password for user:', user.username);
+      return res.status(401).json({ error: 'Incorrect password. Please try again.' });
     }
 
     // Set session
     req.session.userId = user._id.toString();
     req.session.username = user.username;
     console.log('[LOGIN] Session set for user:', user.displayName, '| Session ID:', req.sessionID);
-
-
 
     // Save session before responding
     req.session.save((err) => {
@@ -772,50 +829,130 @@ async function syncSteamFriends(user) {
 app.get('/auth/steam', passport.authenticate('steam', { failureRedirect: '/login' }));
 
 // GET /auth/steam/callback - Steam redirects back here after login
-app.get('/auth/steam/callback',
-  passport.authenticate('steam', { failureRedirect: '/login' }),
-  async (req, res) => {
-    // Set our session userId so existing auth middleware works
-    req.session.userId = req.user._id.toString();
-    console.log('[STEAM AUTH] Login successful. User:', req.user.displayName);
-
-    // Auto-import Steam games into library
-    let hadActivity = false;
-    try {
-      const result = await importSteamGames(req.user);
-      hadActivity = result.hadActivity;
-      console.log('[STEAM AUTH] Import result:', result);
-    } catch (err) {
-      console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
+app.get('/auth/steam/callback', (req, res, next) => {
+  passport.authenticate('steam', (err, user, info) => {
+    if (err) {
+      console.error('[STEAM AUTH] Error:', err);
+      return res.redirect('/login');
     }
 
+    if (!user) {
+      console.log('[STEAM AUTH] Authentication failed');
+      return res.redirect('/login');
+    }
 
+    // User authenticated successfully - establish session
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('[STEAM AUTH] Login error:', err);
+        return res.redirect('/login');
+      }
 
-    // Auto-sync Steam friends
-    try { await syncSteamFriends(req.user); } catch (e) { console.warn('[STEAM AUTH] Friends sync failed:', e.message); }
+      // Set session userId so existing auth middleware works
+      req.session.userId = user._id.toString();
+      console.log('[STEAM AUTH] Login successful. User:', user.displayName);
 
-    res.redirect('/Dashboard');
-  }
-);
+      // Auto-import Steam games into library
+      let hadActivity = false;
+      try {
+        importSteamGames(user).then(result => {
+          hadActivity = result.hadActivity;
+          console.log('[STEAM AUTH] Import result:', result);
+        }).catch(err => {
+          console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
+        });
+      } catch (err) {
+        console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
+      }
+
+      // Auto-sync Steam friends
+      try { 
+        syncSteamFriends(user).catch(e => console.warn('[STEAM AUTH] Friends sync failed:', e.message));
+      } catch (e) { 
+        console.warn('[STEAM AUTH] Friends sync failed:', e.message); 
+      }
+
+      res.redirect('/Dashboard');
+    });
+  })(req, res, next);
+});
 
 // --- GOOGLE AUTH ROUTES ---
 
-// GET /auth/google - Redirect to Google login page
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// GET /auth/google - Redirect to Google login page (STRICT - account must exist)
+app.get('/auth/google', (req, res, next) => {
+  req.session.googleFlow = 'login';
+  req.session.save(() => {
+    passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  });
+});
+
+// GET /auth/google/register - Redirect to Google for signup (PERMISSIVE - auto-create account)
+app.get('/auth/google/register', (req, res, next) => {
+  req.session.googleFlow = 'signup';
+  req.session.save(() => {
+    passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  });
+});
 
 // GET /auth/google/callback - Google redirects back here after login
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  async (req, res) => {
-    // Set session userId
-    req.session.userId = req.user._id.toString();
-    console.log('[GOOGLE AUTH] Login successful. User:', req.user.displayName);
+app.get('/auth/google/callback', (req, res, next) => {
+  passport.authenticate('google', (err, user, info) => {
+    if (err) {
+      console.error('[GOOGLE AUTH] Error:', err);
+      return res.redirect('/auth/login-error?provider=google&reason=failed');
+    }
 
+    if (!user) {
+      // Authentication failed - check why
+      const reason = info?.message === 'Account not found' ? 'not_found' : 'failed';
+      console.log('[GOOGLE AUTH] Authentication failed:', reason);
+      return res.redirect(`/auth/login-error?provider=google&reason=${reason}`);
+    }
 
+    // User authenticated successfully
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('[GOOGLE AUTH] Login error:', err);
+        return res.redirect('/login');
+      }
 
-    res.redirect('/Dashboard');
+      // Set session userId
+      req.session.userId = user._id.toString();
+      console.log('[GOOGLE AUTH] Login successful. User:', user.displayName);
+      res.redirect('/Dashboard');
+    });
+  })(req, res, next);
+});
+
+// GET /auth/login-error - Show authentication error on login page
+app.get('/auth/login-error', (req, res) => {
+  const provider = req.query.provider || 'unknown';
+  const reason = req.query.reason || 'failed';
+  
+  let errorMessage = '';
+  
+  if (provider === 'google') {
+    if (reason === 'not_found') {
+      errorMessage = 'Account not registered. This Google account is not registered with Backlog Hero. Please create an account first.';
+    } else {
+      errorMessage = 'Google login failed. Please try again or use another login method.';
+    }
+  } else if (provider === 'steam') {
+    if (reason === 'not_found') {
+      errorMessage = 'Account not registered. This Steam account is not registered with Backlog Hero. Please create an account first.';
+    } else {
+      errorMessage = 'Steam login failed. Please try again or use another login method.';
+    }
   }
-);
+  
+  res.render('login', {
+    title: 'Login',
+    user: req.user,
+    oauthError: errorMessage,
+    provider: provider
+  });
+});
 
 // GET /api/auth/stats - Get user library stats
 
@@ -1074,7 +1211,6 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
         if (settings.emailNotifs.chatMessages !== undefined) user.settings.emailNotifs.chatMessages = settings.emailNotifs.chatMessages;
         if (settings.emailNotifs.marketing !== undefined) user.settings.emailNotifs.marketing = settings.emailNotifs.marketing;
       }
-      if (settings.isBacker !== undefined) user.settings.isBacker = settings.isBacker;
     }
 
     await user.save();
@@ -1448,11 +1584,10 @@ app.get('/api/reviews/game', async (req, res) => {
       return res.json([]);
     }
 
-    // Find all library entries for this game with reviews
+    // Find all library entries for this game with reviews (notes exist, regardless of rating)
     const entries = await LibraryEntry.find({
       gameId: game._id,
-      notes: { $exists: true, $ne: '' },
-      rating: { $gt: 0 }
+      notes: { $exists: true, $ne: '' }
     })
     .populate('userId', 'username profileImage')
     .sort({ createdAt: -1 })
@@ -1613,6 +1748,199 @@ app.get('/api/games/top', async (req, res) => {
     console.error('[IGDB TOP] Error:', err.message);
     if (_topCache) return res.json(_topCache);
     res.status(500).json({ error: 'Failed to get top games' });
+  }
+});
+
+// GET /api/community/quality-scores - Get aggregated community quality scores from all users (cached 5 min)
+let _communityScoresCache = null;
+let _communityScoresCacheTime = 0;
+const COMMUNITY_SCORES_TTL = 5 * 60 * 1000;
+
+app.get('/api/community/quality-scores', async (req, res) => {
+  try {
+    // Check cache
+    if (_communityScoresCache && Date.now() - _communityScoresCacheTime < COMMUNITY_SCORES_TTL) {
+      return res.json(_communityScoresCache);
+    }
+
+    // Exclude test/seed users from community scores
+    const testUsernames = ['gaminglead', 'speedrunner99', 'casualplayer', 'indiegames'];
+    const testUsers = await User.find({ username: { $in: testUsernames } }).select('_id');
+    const testUserIds = testUsers.map(u => u._id.toString());
+
+    // Aggregate ratings from all users EXCEPT test users
+    const entries = await LibraryEntry.find({
+      rating: { $gt: 0 },
+      hidden: { $ne: true },
+      userId: { $nin: testUsers.map(u => u._id) } // Exclude test users
+    })
+      .populate('gameId', 'name coverUrl _id')
+      .lean();
+
+    // Group by game and calculate averages
+    const gameScoresMap = new Map();
+
+    for (const entry of entries) {
+      if (!entry.gameId || !entry.rating || entry.rating < 1 || entry.rating > 5) continue;
+
+      const gameId = entry.gameId._id.toString();
+      const gameName = entry.gameId.name;
+      const rating = parseFloat(entry.rating);
+
+      if (!gameScoresMap.has(gameId)) {
+        gameScoresMap.set(gameId, {
+          id: gameId,
+          name: gameName,
+          coverUrl: entry.gameId.coverUrl,
+          ratings: []
+        });
+      }
+
+      gameScoresMap.get(gameId).ratings.push(rating);
+    }
+
+    // Calculate averages and format
+    const result = Array.from(gameScoresMap.values())
+      .map(game => {
+        const sum = game.ratings.reduce((a, b) => a + b, 0);
+        const average = sum / game.ratings.length;
+        return {
+          ...game,
+          ratingCount: game.ratings.length,
+          averageRating: parseFloat(average.toFixed(1)),
+          ratings: undefined // Don't send raw ratings to frontend
+        };
+      })
+      .filter(game => game.ratingCount >= 1) // Only games with at least 1 rating
+      .sort((a, b) => b.averageRating - a.averageRating)
+      .slice(0, 10); // Top 10
+
+    _communityScoresCache = result;
+    _communityScoresCacheTime = Date.now();
+
+    console.log('[COMMUNITY SCORES] Calculated:', result.length, 'games (excluded test users)');
+    res.json(result);
+  } catch (err) {
+    console.error('[COMMUNITY SCORES] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch community scores' });
+  }
+});
+
+// GET /api/gaming-news - Get real gaming/esports news articles
+let _gaminNewsCache = null;
+let _gamingNewsCacheTime = 0;
+const GAMING_NEWS_TTL = 6 * 60 * 60 * 1000; // 6 hours
+
+app.get('/api/gaming-news', isLoggedIn, async (req, res) => {
+  try {
+    // Check cache
+    if (_gaminNewsCache && Date.now() - _gamingNewsCacheTime < GAMING_NEWS_TTL) {
+      return res.json(_gaminNewsCache);
+    }
+
+    const newsItems = [];
+    const newsApiKey = process.env.NEWS_API_KEY;
+
+    if (!newsApiKey) {
+      console.warn('[GAMING NEWS] No NEWS_API_KEY configured, returning mock data');
+      // Return mock data if no API key
+      const mockNews = [
+        {
+          type: 'article',
+          title: '🎮 Final Fantasy VII Rebirth Releases Next Week',
+          description: 'The highly anticipated PS5 exclusive launches March 29th',
+          image: 'https://via.placeholder.com/300x200?text=FF7+Rebirth',
+          url: '#',
+          source: 'GameSpot',
+          date: new Date()
+        },
+        {
+          type: 'article',
+          title: '📊 GPU Prices Drop 15% - Best Gaming PC Builds 2024',
+          description: 'RTX 4070 and RX 7800 XT see significant price cuts',
+          image: 'https://via.placeholder.com/300x200?text=GPU+Prices',
+          url: '#',
+          source: 'TechPowerUp',
+          date: new Date(Date.now() - 24 * 60 * 60 * 1000)
+        },
+        {
+          type: 'article',
+          title: '🏆 Esports Update: T1 Wins LCK Spring Finals',
+          description: 'Faker leads team to dominant 3-0 victory',
+          image: 'https://via.placeholder.com/300x200?text=T1+Esports',
+          url: '#',
+          source: 'ESPN Esports',
+          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+        }
+      ];
+      return res.json(mockNews);
+    }
+
+    // Fetch real gaming news from NewsAPI
+    const queries = [
+      'gaming news',
+      'video game releases',
+      'esports',
+      'game patch notes'
+    ];
+
+    for (const query of queries) {
+      if (newsItems.length >= 10) break;
+
+      try {
+        const response = await fetch(
+          `https://newsapi.org/v2/everything?q=${query}&sortBy=publishedAt&language=en&pageSize=10&apiKey=${newsApiKey}`
+        );
+
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        if (!data.articles) continue;
+
+        for (const article of data.articles) {
+          if (newsItems.length >= 10) break;
+
+          // Filter out low-quality or duplicate articles
+          if (!article.title || !article.description || !article.url) continue;
+          if (article.description.includes('[Removed]')) continue;
+
+          newsItems.push({
+            type: 'article',
+            title: article.title,
+            description: article.description,
+            image: article.urlToImage,
+            url: article.url,
+            source: article.source.name,
+            date: new Date(article.publishedAt),
+            author: article.author
+          });
+        }
+      } catch (err) {
+        console.warn(`[GAMING NEWS] Fetch for "${query}" failed:`, err.message);
+      }
+    }
+
+    // Remove duplicates (by title)
+    const uniqueNews = [];
+    const titles = new Set();
+    for (const item of newsItems) {
+      if (!titles.has(item.title)) {
+        uniqueNews.push(item);
+        titles.add(item.title);
+      }
+    }
+
+    // Sort by date descending
+    uniqueNews.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    _gaminNewsCache = uniqueNews.slice(0, 12); // Top 12 items
+    _gamingNewsCacheTime = Date.now();
+
+    console.log('[GAMING NEWS] Fetched:', _gaminNewsCache.length, 'real articles');
+    res.json(_gaminNewsCache);
+  } catch (err) {
+    console.error('[GAMING NEWS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch gaming news' });
   }
 });
 
@@ -1860,17 +2188,110 @@ app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
     const friendIds = me.friends || [];
     if (friendIds.length === 0) return res.json([]);
 
-    const entries = await LibraryEntry.find({
+    const feed = [];
+
+    // ═══ FRIEND ACHIEVEMENTS ═══
+    for (const friendId of friendIds) {
+      const friendLibrary = await LibraryEntry.find({ userId: friendId });
+      const completedGames = friendLibrary.filter(e => e.status === 'completed').length;
+      const totalHours = friendLibrary.reduce((sum, e) => sum + (e.hoursPlayed || 0), 0);
+      const fiveStarGames = friendLibrary.filter(e => e.rating === 5).length;
+      
+      const friend = await User.findById(friendId);
+      
+      // Completion milestones
+      if (completedGames === 5 || completedGames === 10 || completedGames === 20) {
+        feed.push({
+          type: 'achievement',
+          subtype: 'completion',
+          friendId,
+          friendName: friend.displayName || friend.username,
+          friendAvatar: friend.avatar,
+          message: `Completed ${completedGames} games!`,
+          count: completedGames,
+          timestamp: new Date(),
+          icon: '🏁'
+        });
+      }
+
+      // Playtime milestones
+      if (totalHours >= 100 && totalHours < 150) {
+        feed.push({
+          type: 'achievement',
+          subtype: 'playtime',
+          friendId,
+          friendName: friend.displayName || friend.username,
+          friendAvatar: friend.avatar,
+          message: `Reached 100+ hours!`,
+          count: Math.floor(totalHours),
+          timestamp: new Date(),
+          icon: '⏱️'
+        });
+      } else if (totalHours >= 500 && totalHours < 550) {
+        feed.push({
+          type: 'achievement',
+          subtype: 'playtime',
+          friendId,
+          friendName: friend.displayName || friend.username,
+          friendAvatar: friend.avatar,
+          message: `Reached 500+ hours!`,
+          count: Math.floor(totalHours),
+          timestamp: new Date(),
+          icon: '⏱️'
+        });
+      }
+
+      // 5-star achievements
+      if (fiveStarGames === 3 || fiveStarGames === 10) {
+        feed.push({
+          type: 'achievement',
+          subtype: 'rating',
+          friendId,
+          friendName: friend.displayName || friend.username,
+          friendAvatar: friend.avatar,
+          message: `Found ${fiveStarGames} masterpieces!`,
+          count: fiveStarGames,
+          timestamp: new Date(),
+          icon: '⭐'
+        });
+      }
+    }
+
+    // ═══ FRIEND RECOMMENDATIONS ═══
+    // Get games my friends rated 5 stars
+    const myGames = await LibraryEntry.find({ userId: req.session.userId });
+    const myGameIds = myGames.map(g => g.gameId.toString());
+    
+    const friendFiveStars = await LibraryEntry.find({
       userId: { $in: friendIds },
-      hidden: { $ne: true }
+      rating: 5,
+      gameId: { $nin: myGameIds }
     })
       .populate('gameId', 'name coverUrl')
       .populate('userId', '_id username displayName avatar')
-      .sort({ addedAt: -1 })
-      .limit(20)
+      .sort({ rating: -1 })
+      .limit(10)
       .lean();
 
-    res.json(entries);
+    for (const entry of friendFiveStars) {
+      feed.push({
+        type: 'recommendation',
+        friendId: entry.userId._id,
+        friendName: entry.userId.displayName || entry.userId.username,
+        friendAvatar: entry.userId.avatar,
+        game: entry.gameId.name,
+        gameId: entry.gameId._id,
+        coverUrl: entry.gameId.coverUrl,
+        message: `${entry.userId.displayName || entry.userId.username} recommends`,
+        timestamp: entry.createdAt || new Date(),
+        icon: '💎'
+      });
+    }
+
+    // Sort by timestamp descending
+    feed.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    res.json(feed.slice(0, 15)); // Return top 15 items
   } catch (err) {
     console.error('[FRIEND ACTIVITY] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch friend activity' });

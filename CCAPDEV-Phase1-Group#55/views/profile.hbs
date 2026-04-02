@@ -254,6 +254,132 @@ plagiarized the work of other students and/or persons.
     font-size: 0.75rem;
   }
 
+  /* ── Friend Request Card ── */
+  .friend-request-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    transition: all 0.3s;
+  }
+
+  .friend-request-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    background: rgba(139, 92, 246, 0.05);
+  }
+
+  .friend-request-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .friend-request-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    flex-shrink: 0;
+  }
+
+  .friend-request-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .friend-request-details h6 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .friend-request-details small {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+  }
+
+  .friend-request-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .friend-request-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .friend-request-accept {
+    background: var(--success);
+    color: #fff;
+  }
+
+  .friend-request-accept:hover {
+    background: #059669;
+    transform: translateY(-1px);
+  }
+
+  .friend-request-reject {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .friend-request-reject:hover {
+    background: rgba(255, 99, 71, 0.15);
+    border-color: rgba(255, 99, 71, 0.3);
+  }
+
+  /* ── Community Scores ── */
+  .community-score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: rgba(139, 92, 246, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    transition: all 0.2s;
+  }
+
+  .community-score-item:hover {
+    background: rgba(139, 92, 246, 0.1);
+    transform: translateX(2px);
+  }
+
+  .community-score-name {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-truncate;
+    flex: 1;
+  }
+
+  .community-score-rating {
+    font-size: 0.95rem;
+    color: #fbbf24;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+
   .split-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -768,6 +894,12 @@ plagiarized the work of other students and/or persons.
         <!-- Rendered via JS -->
       </div>
 
+      <!-- NOTIFICATIONS / FRIEND REQUESTS SECTION -->
+      <div class="sec-title" id="notificationsTitleContainer" style="display:none;"><i class="bi bi-bell-fill"></i> Friend Requests <span class="ms-auto" id="friendRequestCount" style="color:var(--accent); font-weight:800; font-size:0.7rem;">0</span></div>
+      <div id="friendRequestsContainer" class="acc-grid" style="display:none; grid-template-columns: 1fr;">
+        <!-- Rendered via JS -->
+      </div>
+
       <div class="split-row">
         <!-- ACHIEVEMENTS -->
         <div class="split-col">
@@ -778,6 +910,16 @@ plagiarized the work of other students and/or persons.
           </div>
         </div>
 
+        <!-- COMMUNITY QUALITY SCORES -->
+        <div class="split-col">
+          <div class="sec-title"><i class="bi bi-star-fill"></i> Community Quality Scores</div>
+          <div id="communityScoresContainer">
+            <div class="empty-state">No rated games yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split-row">
         <!-- RECENT ACTIVITY -->
         <div class="split-col">
           <div class="sec-title"><i class="bi bi-clock-history"></i> Recent Activity</div>
@@ -785,6 +927,9 @@ plagiarized the work of other students and/or persons.
             <div class="empty-state">No recent activity detected.</div>
           </div>
         </div>
+
+        <!-- Empty col for layout -->
+        <div class="split-col"></div>
       </div>
     </div>
 
@@ -932,6 +1077,8 @@ plagiarized the work of other students and/or persons.
     renderAccGid(profileUser, stats.games);
     renderAchievementsList(unlockedIds, stats);
     renderActivityList(stats.games);
+    loadCommunityScores(stats.games);
+    loadFriendRequests(); // Load friend requests for own profile
   }
 
   function renderAccGid(user, games) {
@@ -997,6 +1144,136 @@ plagiarized the work of other students and/or persons.
       </div>
     `;
     }).join('');
+  }
+
+  // Load friend requests (only for own profile)
+  async function loadFriendRequests() {
+    if (!isOwnProfile) return;
+
+    try {
+      const res = await fetch('/api/friends/requests', { credentials: 'include' });
+      if (!res.ok) return;
+
+      const requests = await res.json();
+      const container = document.getElementById('friendRequestsContainer');
+      const titleContainer = document.getElementById('notificationsTitleContainer');
+      const countBadge = document.getElementById('friendRequestCount');
+
+      if (!requests.length) {
+        container.style.display = 'none';
+        titleContainer.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'grid';
+      titleContainer.style.display = 'flex';
+      countBadge.textContent = requests.length;
+
+      container.innerHTML = requests.map(req => {
+        const from = req.from;
+        const avatar = from.avatar || AVATAR_FALLBACK;
+        const displayName = from.displayName || from.username;
+        const requestId = req._id;
+
+        return `
+          <div class="friend-request-card">
+            <div class="friend-request-info">
+              <div class="friend-request-avatar">
+                <img src="${avatar}" alt="${displayName}" onerror="this.src='${AVATAR_FALLBACK}'">
+              </div>
+              <div class="friend-request-details">
+                <h6>${displayName}</h6>
+                <small>Want to be friends</small>
+              </div>
+            </div>
+            <div class="friend-request-actions">
+              <button class="friend-request-btn friend-request-accept" onclick="acceptFriendRequest('${requestId}')">
+                <i class="bi bi-check-lg"></i> Accept
+              </button>
+              <button class="friend-request-btn friend-request-reject" onclick="rejectFriendRequest('${requestId}')">
+                <i class="bi bi-x-lg"></i> Reject
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('[Friend Requests] Load failed:', err);
+    }
+  }
+
+  // Accept friend request
+  async function acceptFriendRequest(requestId) {
+    try {
+      const res = await fetch('/api/friends/accept/' + requestId, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        loadFriendRequests(); // Refresh the list
+      }
+    } catch (err) {
+      console.error('[Accept Friend] Error:', err);
+    }
+  }
+
+  // Reject friend request
+  async function rejectFriendRequest(requestId) {
+    try {
+      const res = await fetch('/api/friends/reject/' + requestId, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        loadFriendRequests(); // Refresh the list
+      }
+    } catch (err) {
+      console.error('[Reject Friend] Error:', err);
+    }
+  }
+
+  // Load community quality scores
+  function loadCommunityScores(games) {
+    const container = document.getElementById('communityScoresContainer');
+    
+    try {
+      // Fetch community-wide aggregated scores instead of individual user ratings
+      fetch('/api/community/quality-scores', { credentials: 'include' })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch');
+          return res.json();
+        })
+        .then(communityGames => {
+          if (!communityGames || communityGames.length === 0) {
+            container.innerHTML = '<div class="empty-state">No community ratings yet.</div>';
+            return;
+          }
+
+          let html = '';
+          communityGames.forEach((game, idx) => {
+            // Generate stars based on actual average rating (not fixed decimal)
+            const avgRating = parseFloat(game.averageRating);
+            const fullStars = Math.floor(avgRating);
+            const hasHalfStar = (avgRating % 1) >= 0.5;
+            const emptyStars = 5 - Math.ceil(avgRating);
+            
+            let stars = '★'.repeat(fullStars);
+            if (hasHalfStar && fullStars < 5) stars += '½';
+            stars += '☆'.repeat(emptyStars);
+
+            html += `<div style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+              <div style="flex: 1; min-width: 0;">
+                <div class="text-truncate fw-500" title="${game.name}" style="word-break: break-word;">${game.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">${game.ratingCount} ${game.ratingCount === 1 ? 'rating' : 'ratings'}</div>
+              </div>
+              <div style="font-weight: bold; white-space: nowrap; font-size: 1rem; color: #fbbf24; flex-shrink: 0;">${stars}</div>
+            </div>`;
+          });
+
+          container.innerHTML = html;
+        })
+        .catch(err => {
+          console.error('[Community Scores] Error:', err);
+          container.innerHTML = '<div class="empty-state">Could not load community scores.</div>';
+        });
+    } catch (err) {
+      console.error('[Community Scores] Error:', err);
+      container.innerHTML = '<div class="empty-state">Could not load community scores.</div>';
+    }
   }
 
   /* ── Group Chat Features ── */

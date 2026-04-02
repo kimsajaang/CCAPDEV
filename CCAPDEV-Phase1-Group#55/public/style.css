@@ -1328,11 +1328,36 @@ a:hover {
   transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  min-height: auto;
+  max-height: 350px;
+  overflow-y: auto;
+  padding: var(--sp-2) !important;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
 }
 .suggest-result.highlight {
   border-color: var(--primary) !important;
   box-shadow: 0 0 20px rgba(83, 131, 232, 0.3), inset 0 0 30px rgba(83, 131, 232, 0.04);
   animation: fadeInScale 0.3s var(--ease-out);
+}
+
+.suggestion-item {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: var(--sp-2) !important;
+  padding: var(--sp-2) !important;
+  border: 1px solid rgba(83, 131, 232, 0.2) !important;
+  border-radius: var(--radius-sm) !important;
+  background: rgba(83, 131, 232, 0.02) !important;
+  transition: all 0.2s var(--ease);
+  align-items: center;
+}
+
+.suggestion-item:hover {
+  border-color: rgba(83, 131, 232, 0.4);
+  box-shadow: 0 0 20px rgba(83, 131, 232, 0.1);
+  background: rgba(83, 131, 232, 0.04);
 }
 
 /* ═══════════ Toast Overrides ═══════════ */
@@ -1393,9 +1418,58 @@ input[type="number"] {
 .trending-section {
   padding: var(--sp-5) 0;
 }
+.trending-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-5);
+}
 .trending-section h5 {
   font-weight: 800;
   letter-spacing: -0.01em;
+}
+.trending-scroll-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding-left: 50px;
+  padding-right: 50px;
+}
+.scroll-btn {
+  position: absolute;
+  z-index: 20;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s var(--ease);
+}
+.scroll-btn.scroll-left {
+  left: 0;
+}
+.scroll-btn.scroll-right {
+  right: 0;
+}
+.scroll-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.scroll-btn i {
+  font-size: 1.1rem;
+}
+.trending-scroll {
+  flex: 1;
+  min-width: 0;
 }
 .trending-card:hover {
   z-index: 200;

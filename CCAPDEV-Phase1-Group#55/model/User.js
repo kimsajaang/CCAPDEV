@@ -17,6 +17,18 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      default: null,
+    },
+    emailVerificationTokenExpiry: {
+      type: Date,
+      default: null,
+    },
     googleId: {
       type: String,
       default: '',
@@ -79,8 +91,7 @@ const userSchema = new mongoose.Schema(
         friendRequests: { type: Boolean, default: true },
         chatMessages: { type: Boolean, default: true },
         marketing: { type: Boolean, default: false }
-      },
-      isBacker: { type: Boolean, default: false }
+      }
     },
     createdAt: {
       type: Date,

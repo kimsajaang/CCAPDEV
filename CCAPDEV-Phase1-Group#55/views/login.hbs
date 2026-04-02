@@ -96,7 +96,7 @@ plagiarized the work of other students and/or persons.
 							</div>
 						</form>
 
-						<p class="text-center text-muted mb-0">New to Backlog Hero? <a class="link-accent" href="register">Create an account</a></p>
+						<p class="text-center text-muted mb-0">New to Backlog Hero? <a class="link-accent" href="/register">Create an account</a></p>
 					</div>
 				</div>
 			</div>
@@ -105,6 +105,14 @@ plagiarized the work of other students and/or persons.
 
 	<!-- Login form and API handling scripts -->
 	<script>
+		// Check for OAuth errors passed from backend
+		const oauthError = `{{{oauthError}}}`;
+		if (oauthError) {
+			const errorAlert = document.getElementById('errorAlert');
+			errorAlert.textContent = '✗ ' + oauthError;
+			errorAlert.classList.remove('d-none');
+		}
+		
 		// Password show/hide toggle
 		const togglePassword = document.getElementById('togglePassword');
 		const passwordInput = document.getElementById('password');
@@ -160,15 +168,24 @@ plagiarized the work of other students and/or persons.
 					// Show success message
 					successAlert.textContent = '✓ Login successful! Redirecting...';
 					successAlert.classList.remove('d-none');
+				
+				// Add short delay to ensure session is established
+				setTimeout(() => {
+					window.location.href = '/dashboard';
+				}, 1500);
 
-					// Redirect after a short delay
+			} catch (err) {
+				errorAlert.textContent = '✗ ' + err.message;
+				errorAlert.classList.remove('d-none');
+				
+				// Try to guide user to registration if account not found
+				if (err.message.includes('Account not found')) {
+					// Show registration link after error
 					setTimeout(() => {
-						window.location.href = 'dashboard';
-					}, 1500);
-
-				} catch (err) {
-					errorAlert.textContent = '✗ ' + err.message;
-					errorAlert.classList.remove('d-none');
+						errorAlert.innerHTML = '✗ ' + err.message + ' <a href="/register" class="link-accent ms-2" style="text-decoration: underline;">Create account</a>';
+					}, 500);
+				}
+				
 					loginBtn.disabled = false;
 					loginBtn.innerHTML = 'Log In';
 				}
