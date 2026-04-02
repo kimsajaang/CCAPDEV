@@ -153,6 +153,31 @@ plagiarized the work of other students and/or persons.
             </div>
         </div>
     </div>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-chat-left-text me-2"></i>Write Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3" id="reviewGameTitle">Game Title</p>
+                    <div class="mb-3">
+                        <label class="form-label small">Your Review</label>
+                        <textarea id="reviewText" class="form-control bg-dark text-white border-secondary" rows="5" placeholder="What did you think about this game? (0-500 characters)" maxlength="500" style="resize: none;"></textarea>
+                        <small class="text-muted" id="reviewCharCount">0/500</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveReview()">Save Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     /* ======================================================================
        AUTH & PAGE INITIALIZATION
@@ -451,7 +476,19 @@ plagiarized the work of other students and/or persons.
                     <div class="card-body d-flex flex-column">
                         <h6 class="card-title mb-1 lib-game-link" data-game-name="${displayName}" style="cursor: pointer; color: #5383e8; transition: color 0.2s;">${displayName}</h6>
                         <p class="text-muted small mb-2">${game.genre || 'Game'}${game.year ? ' • ' + game.year : ''}</p>
-                        ${game.status === 'completed' && game.rating ? `<div class="mb-2">${renderStars(game.rating)}</div>` : ''}
+                        <!-- Rating stars for all games -->
+                        <div class="mb-2 d-flex gap-2 align-items-center">
+                          <div class="star-rating" data-entry-id="${game.id}">
+                            ${[1, 2, 3, 4, 5].map(i => `<i class="bi bi-star-fill ${i <= (game.rating || 0) ? 'active' : ''}" data-rating="${i}" style="cursor: pointer; font-size: 0.95rem; color: ${i <= (game.rating || 0) ? '#febc2e' : '#2a3843'}; transition: color 0.15s, transform 0.15s;" onmouseover="this.parentElement.querySelectorAll('i').forEach((s, idx) => s.style.color = idx < ${i} ? '#febc2e' : '#2a3843')" onmouseout="this.parentElement.querySelectorAll('i').forEach((s, idx) => s.style.color = s.classList.contains('active') ? '#febc2e' : '#2a3843')" onclick="setRating('${game.id}', ${i})"></i>`).join('')}
+                          </div>
+                          ${game.rating ? `<span class="small text-warning fw-bold">${game.rating}/5</span>` : '<span class="small text-muted">Not rated</span>'}
+                        </div>
+                        <!-- Review button -->
+                        <div class="mb-2">
+                          <button class="btn btn-sm btn-outline-primary w-100" onclick="openReviewModal('${game.id}', '${displayName.replace(/'/g, "\\'")}', '${game.notes ? game.notes.replace(/'/g, "\\'") : ''}')" style="font-size: 0.8rem;">
+                            <i class="bi bi-chat-left-text me-1"></i>${game.notes ? 'Edit Review' : 'Write Review'}
+                          </button>
+                        </div>
                         <div class="mt-auto">
                             <select class="form-select form-select-sm status-select lib-status-select" data-entry-id="${game.id}">
                                 <option value="backlog" ${game.status === 'backlog' ? 'selected' : ''}>Backlog</option>
@@ -488,13 +525,79 @@ plagiarized the work of other students and/or persons.
         new bootstrap.Modal(document.getElementById('addGameModal')).show();
     }
 
+    /* ---------- set rating ---------- */
+    async function setRating(entryId, rating) {
+        const game = libraryCache.find(g => g.id === entryId);
+        if (!game) return;
+        try {
+            const res = await fetch('/api/library/' + entryId, {
+                method: 'PUT', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating })
+            });
+            if (!res.ok) throw new Error('Rating update failed');
+            await fetchLibrary();
+            checkAchievements();
+            showToast(`${game.name} rated ${rating}/5 ★`, 'bg-warning');
+            render();
+        } catch (err) {
+            console.error('[Library] Rating update error:', err);
+            showToast('Failed to update rating', 'bg-danger');
+        }
+    }
+
+    /* ---------- review system ---------- */
+    let currentReviewEntryId = null;
+
+    function openReviewModal(entryId, gameName, existingReview) {
+        currentReviewEntryId = entryId;
+        document.getElementById('reviewGameTitle').textContent = gameName;
+        document.getElementById('reviewText').value = existingReview || '';
+        updateReviewCharCount();
+        new bootstrap.Modal(document.getElementById('reviewModal')).show();
+    }
+
+    function updateReviewCharCount() {
+        const text = document.getElementById('reviewText');
+        const count = document.getElementById('reviewCharCount');
+        count.textContent = `${text.value.length}/500`;
+    }
+
+    document.getElementById('reviewText')?.addEventListener('input', updateReviewCharCount);
+
+    async function saveReview() {
+        if (!currentReviewEntryId) return;
+        const reviewText = document.getElementById('reviewText').value.trim();
+        const game = libraryCache.find(g => g.id === currentReviewEntryId);
+        if (!game) return;
+
+        try {
+            const res = await fetch('/api/library/' + currentReviewEntryId, {
+                method: 'PUT', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: reviewText })
+            });
+            if (!res.ok) throw new Error('Review save failed');
+            await fetchLibrary();
+            showToast(`${game.name} review saved!`, 'bg-success');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
+            modal?.hide();
+            render();
+        } catch (err) {
+            console.error('[Library] Review save error:', err);
+            showToast('Failed to save review', 'bg-danger');
+        }
+    }
+
     /* ---------- change status ---------- */
     async function changeStatus(id, newStatus) {
         const game = libraryCache.find(g => g.id === id);
         if (!game) return;
         const body = { status: newStatus };
+        // Preserve existing rating, or assign default when completing
         if (newStatus === 'completed' && !game.rating) body.rating = 4;
-        if (newStatus !== 'completed') body.rating = 0;
         try {
             const res = await fetch('/api/library/' + id, {
                 method: 'PUT', credentials: 'include',

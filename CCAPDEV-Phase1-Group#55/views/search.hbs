@@ -259,6 +259,16 @@ plagiarized the work of other students and/or persons.
             <h6 class="text-muted mb-2">Developer</h6>
             <p id="gameDeveloper" class="mb-0">-</p>
           </div>
+
+          <!-- Community Reviews -->
+          <div class="mb-4">
+            <h6 class="text-muted mb-3">
+              <i class="bi bi-chat-left-quote me-2"></i>Community Reviews
+            </h6>
+            <div id="communityReviewsContainer" style="max-height: 400px; overflow-y: auto;">
+              <p class="text-muted text-center small" id="noReviewsMsg">Loading reviews...</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -451,11 +461,65 @@ plagiarized the work of other students and/or persons.
 
           if (!detailModal) detailModal = new bootstrap.Modal(document.getElementById('gameDetailModal'));
           detailModal.show();
+          
+          // Load community reviews for this game
+          loadCommunityReviews(game.id);
         }
       } catch (err) {
         console.error('Failed to fetch game details:', err);
         if (!detailModal) detailModal = new bootstrap.Modal(document.getElementById('gameDetailModal'));
         detailModal.show();
+      }
+    }
+
+    // Load community reviews for a game
+    async function loadCommunityReviews(gameId) {
+      try {
+        const container = document.getElementById('communityReviewsContainer');
+        container.innerHTML = '<p class="text-muted text-center small">Loading reviews...</p>';
+
+        const response = await fetch('/api/reviews/game/' + gameId, {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          container.innerHTML = '<p class="text-muted text-center small">No reviews yet</p>';
+          return;
+        }
+
+        const reviews = await response.json();
+
+        if (!reviews || reviews.length === 0) {
+          container.innerHTML = '<p class="text-muted text-center small">No reviews yet. Be the first to review!</p>';
+          return;
+        }
+
+        const reviewsHtml = reviews.map(review => {
+          const date = new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+          const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+          const profileImg = review.profileImage 
+            ? `<img src="${review.profileImage}" alt="${review.username}" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #2a3843; margin-right: 8px;">`
+            : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #2a3843; border: 1px solid #2a3843; margin-right: 8px; display: inline-block;"></div>`;
+
+          return `
+            <div style="padding: 12px; margin-bottom: 12px; border-left: 3px solid #febc2e; background: rgba(42, 56, 67, 0.5); border-radius: 4px;">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                ${profileImg}
+                <div>
+                  <strong style="color: #dbe7ff;">${review.username}</strong>
+                  <div style="font-size: 0.85rem; color: #a8c0e0;">${stars} · ${date}</div>
+                </div>
+              </div>
+              <p style="color: #a8c0e0; margin: 0; line-height: 1.5; word-break: break-word;">${review.notes}</p>
+            </div>
+          `;
+        }).join('');
+
+        container.innerHTML = reviewsHtml;
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+        document.getElementById('communityReviewsContainer').innerHTML = '<p class="text-muted text-center small">Failed to load reviews</p>';
       }
     }
 
@@ -649,7 +713,7 @@ plagiarized the work of other students and/or persons.
     });
 
     /* ---- Add to Library integration (server API) ---- */
-    async function addGameToServer(name, genres, year, coverUrl) {
+    async function addGameToServer(name, genres, year, coverUrl, igdbId) {
       const genresArr = genres ? genres.split(' \u2022 ').map(g => g.trim()) : [];
       const yearNum = parseInt(year) || 0;
       const releaseDate = yearNum ? new Date(yearNum, 0, 1).toISOString() : null;
@@ -658,7 +722,7 @@ plagiarized the work of other students and/or persons.
       const gameRes = await fetch('/api/games', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, coverUrl: coverUrl || '', genres: genresArr, releaseDate })
+        body: JSON.stringify({ name, coverUrl: coverUrl || '', genres: genresArr, releaseDate, igdbId: igdbId || null })
       });
       if (!gameRes.ok) throw new Error('Failed to create game');
       const { game } = await gameRes.json();
@@ -714,7 +778,7 @@ plagiarized the work of other students and/or persons.
       }
 
       try {
-        await addGameToServer(name, genres, String(year), cover);
+        await addGameToServer(name, genres, String(year), cover, currentGameDetail.id);
         document.getElementById('addFromDetailBtn').textContent = '✓ Added';
         document.getElementById('addFromDetailBtn').classList.add('btn-success', 'disabled');
         document.getElementById('addFromDetailBtn').classList.remove('btn-primary');

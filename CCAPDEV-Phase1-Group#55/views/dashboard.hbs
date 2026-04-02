@@ -423,6 +423,57 @@ plagiarized the work of other students and/or persons.
     border-color: var(--primary) !important;
     box-shadow: 0 0 20px rgba(83, 131, 232, 0.2);
   }
+
+  /* Chat System Styles */
+  .cm-bubble {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--primary);
+  }
+
+  .cm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+  }
+
+  .cm-user {
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .cm-time {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+
+  .cm-text {
+    color: var(--text);
+    font-size: 0.85rem;
+    line-height: 1.35;
+    word-wrap: break-word;
+  }
+
+  /* Chat Input Focus State */
+  #chatInput:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 10px rgba(83, 131, 232, 0.2);
+  }
+
+  /* Chat Group Select Focus State */
+  #chatGroupSelect:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 10px rgba(83, 131, 232, 0.2);
+  }
+
+  /* Modal Styles for Chat */
+  #createGroupModal, #inviteFriendsModal {
+    animation: fadeInScale 0.3s ease;
+  }
 </style>
 
 
@@ -600,7 +651,7 @@ plagiarized the work of other students and/or persons.
       </div>
     </div>
 
-    <div class="col-md-5">
+    <div class="col-md-6">
       <!-- Friend Activity Feed -->
       <div class="d-flex justify-content-between align-items-center mb-4 reveal">
         <h4><i class="bi bi-broadcast me-2" style="color:var(--accent);"></i>Friend Activity <span
@@ -615,7 +666,7 @@ plagiarized the work of other students and/or persons.
     </div>
 
     <!-- CHAT SIDEBAR -->
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card" style="position: sticky; top: 80px; height: calc(100vh - 120px); display: flex; flex-direction: column; overflow: hidden;">
         <div class="card-header d-flex align-items-center justify-content-between py-2 px-3" style="border-bottom: 1px solid var(--border);">
           <h6 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-people-fill" style="color:var(--accent);"></i>
@@ -751,30 +802,30 @@ plagiarized the work of other students and/or persons.
   // What's the Plan — backlog suggestion engine
   // ============================================================
   const discoverGames = [
-    { name: "Black Myth: Wukong", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5wex.jpg", genre: "Action RPG", minSession: 30, avgSession: 60, note: "Boss fights require focus" },
-    { name: "Red Dead Redemption 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg", genre: "Open World", minSession: 45, avgSession: 90, note: "Great for long sessions" },
-    { name: "Far Cry 5", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1nic.jpg", genre: "Action", minSession: 20, avgSession: 45, note: "Quick outpost runs" },
-    { name: "Valorant", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg", genre: "Tactical Shooter", minSession: 15, avgSession: 35, note: "One comp match ~30 min" },
-    { name: "League of Legends", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg", genre: "MOBA", minSession: 25, avgSession: 40, note: "ARAM for quick games" },
-    { name: "Hades", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2qx5.jpg", genre: "Roguelike", minSession: 15, avgSession: 25, note: "Perfect for short runs" },
-    { name: "Stardew Valley", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/xrpmydnu9rpxvxfjkiu7.jpg", genre: "Farming Sim", minSession: 15, avgSession: 30, note: "Relaxed pace, save anytime" },
-    { name: "Balatro", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co7kaq.jpg", genre: "Roguelike Deckbuilder", minSession: 10, avgSession: 20, note: "One run = one sitting" },
-    { name: "Hollow Knight", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.jpg", genre: "Metroidvania", minSession: 20, avgSession: 45, note: "Bench saves are frequent" },
-    { name: "Slay the Spire", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1iyf.jpg", genre: "Deckbuilder", minSession: 15, avgSession: 30, note: "Turn-based, pause anytime" },
-    { name: "Celeste", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co3byy.jpg", genre: "Platformer", minSession: 15, avgSession: 30, note: "Short chapters, tight controls" },
-    { name: "Persona 5 Royal", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2t97.jpg", genre: "JRPG", minSession: 45, avgSession: 90, note: "Story-heavy, plan long sessions" },
-    { name: "Elden Ring", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg", genre: "Action RPG", minSession: 30, avgSession: 60, note: "Open world exploration" },
-    { name: "Portal 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg", genre: "Puzzle", minSession: 20, avgSession: 40, note: "Clever puzzles, quick chapters" },
-    { name: "Disco Elysium", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.jpg", genre: "RPG", minSession: 30, avgSession: 60, note: "Dialogue-heavy detective RPG" },
-    { name: "The Witcher 3", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg", genre: "Action RPG", minSession: 40, avgSession: 80, note: "Incredible world-building" },
-    { name: "Cyberpunk 2077", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mdf.jpg", genre: "Action RPG", minSession: 30, avgSession: 60, note: "Futuristic open world" },
-    { name: "Minecraft", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg", genre: "Sandbox", minSession: 10, avgSession: 40, note: "Infinite possibilities" },
-    { name: "Grand Theft Auto V", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1qx8.jpg", genre: "Action", minSession: 30, avgSession: 60, note: "Los Santos awaits" },
-    { name: "God of War", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r8h.jpg", genre: "Action", minSession: 30, avgSession: 60, note: "Cinematic combat" },
-    { name: "Resident Evil 4", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5v96.jpg", genre: "Horror", minSession: 20, avgSession: 45, note: "Survival horror at its best" },
-    { name: "Dota 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1n00.jpg", genre: "MOBA", minSession: 35, avgSession: 50, note: "Intense team battles" },
-    { name: "Among Us", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2nl0.jpg", genre: "Social Deduction", minSession: 5, avgSession: 15, note: "Find the imposter" },
-    { name: "Apex Legends", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2v6i.jpg", genre: "Battle Royale", minSession: 15, avgSession: 30, note: "Fast-paced hero shooter" }
+    { name: "Black Myth: Wukong", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5wex.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 30, avgSession: 60, note: "Boss fights require focus" },
+    { name: "Red Dead Redemption 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg", genre: "Open World", genreTags: ["open world", "action"], minSession: 45, avgSession: 90, note: "Great for long sessions" },
+    { name: "Far Cry 5", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1nic.jpg", genre: "Action", genreTags: ["action"], minSession: 20, avgSession: 45, note: "Quick outpost runs" },
+    { name: "Valorant", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg", genre: "Tactical Shooter", genreTags: ["shooter", "action"], minSession: 15, avgSession: 35, note: "One comp match ~30 min" },
+    { name: "League of Legends", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg", genre: "MOBA", genreTags: ["moba", "action"], minSession: 25, avgSession: 40, note: "ARAM for quick games" },
+    { name: "Hades", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2qx5.jpg", genre: "Roguelike", genreTags: ["roguelike", "action"], minSession: 15, avgSession: 25, note: "Perfect for short runs" },
+    { name: "Stardew Valley", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/xrpmydnu9rpxvxfjkiu7.jpg", genre: "Farming Sim", genreTags: ["sim", "simulation", "farming"], minSession: 15, avgSession: 30, note: "Relaxed pace, save anytime" },
+    { name: "Balatro", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co7kaq.jpg", genre: "Roguelike Deckbuilder", genreTags: ["roguelike", "puzzle"], minSession: 10, avgSession: 20, note: "One run = one sitting" },
+    { name: "Hollow Knight", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.jpg", genre: "Metroidvania", genreTags: ["platformer", "action"], minSession: 20, avgSession: 45, note: "Bench saves are frequent" },
+    { name: "Slay the Spire", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1iyf.jpg", genre: "Deckbuilder", genreTags: ["puzzle", "roguelike"], minSession: 15, avgSession: 30, note: "Turn-based, pause anytime" },
+    { name: "Celeste", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co3byy.jpg", genre: "Platformer", genreTags: ["platformer", "action"], minSession: 15, avgSession: 30, note: "Short chapters, tight controls" },
+    { name: "Persona 5 Royal", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2t97.jpg", genre: "JRPG", genreTags: ["rpg", "jrpg"], minSession: 45, avgSession: 90, note: "Story-heavy, plan long sessions" },
+    { name: "Elden Ring", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 30, avgSession: 60, note: "Open world exploration" },
+    { name: "Portal 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg", genre: "Puzzle", genreTags: ["puzzle"], minSession: 20, avgSession: 40, note: "Clever puzzles, quick chapters" },
+    { name: "Disco Elysium", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.jpg", genre: "RPG", genreTags: ["rpg"], minSession: 30, avgSession: 60, note: "Dialogue-heavy detective RPG" },
+    { name: "The Witcher 3", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 40, avgSession: 80, note: "Incredible world-building" },
+    { name: "Cyberpunk 2077", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mdf.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 30, avgSession: 60, note: "Futuristic open world" },
+    { name: "Minecraft", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg", genre: "Sandbox", genreTags: ["sim", "simulation"], minSession: 10, avgSession: 40, note: "Infinite possibilities" },
+    { name: "Grand Theft Auto V", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1qx8.jpg", genre: "Action", genreTags: ["action"], minSession: 30, avgSession: 60, note: "Los Santos awaits" },
+    { name: "God of War", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r8h.jpg", genre: "Action", genreTags: ["action"], minSession: 30, avgSession: 60, note: "Cinematic combat" },
+    { name: "Resident Evil 4", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5v96.jpg", genre: "Horror", genreTags: ["action"], minSession: 20, avgSession: 45, note: "Survival horror at its best" },
+    { name: "Dota 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1n00.jpg", genre: "MOBA", genreTags: ["moba", "action"], minSession: 35, avgSession: 50, note: "Intense team battles" },
+    { name: "Among Us", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2nl0.jpg", genre: "Social Deduction", genreTags: ["puzzle"], minSession: 5, avgSession: 15, note: "Find the imposter" },
+    { name: "Apex Legends", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2v6i.jpg", genre: "Battle Royale", genreTags: ["shooter", "action"], minSession: 15, avgSession: 30, note: "Fast-paced hero shooter" }
   ];
 
   let dashboardLibraryCache = null;
@@ -863,8 +914,13 @@ plagiarized the work of other students and/or persons.
     // Filter by selected genres (if any selected)
     if (selectedGenres.length > 0) {
       pool = pool.filter(g => {
-        const gGenre = (g.genre || '').toLowerCase();
-        return selectedGenres.some(sg => gGenre.includes(sg));
+        // Use genreTags if available (for discover games), fallback to genre string match
+        if (g.genreTags && Array.isArray(g.genreTags)) {
+          return selectedGenres.some(sg => g.genreTags.includes(sg));
+        }
+        // Fallback for library games: split genre string and match
+        const gGenre = (g.genre || '').toLowerCase().split('•').join('').split(/\s+/);
+        return selectedGenres.some(sg => gGenre.some(g => g.includes(sg) || sg.includes(g)));
       });
       if (pool.length === 0) {
         planResult.innerHTML = `<p class="mb-0 small text-warning">No games match those genres. Try selecting different ones!</p>`;
@@ -1154,16 +1210,19 @@ plagiarized the work of other students and/or persons.
             loadCommunityScores(currentUserData);
             loadGameDropdown(currentUserData);
             loadPendingBadge();
-            // Initialize chat without blocking - fire and forget with error handling
-            try {
-              initChat(currentUserData);
-            } catch (err) {
-              console.warn('[Dashboard] Chat init error:', err.message);
-            }
             // Pre-fetch trending data once, then both sections use it
             fetchTrendingGames();
             loadTrendingGames();
             loadTrailers();
+
+            // Initialize chat AFTER everything else is done (completely non-blocking)
+            setTimeout(() => {
+              try {
+                initChat(currentUserData);
+              } catch (err) {
+                console.warn('[Dashboard] Chat init error:', err.message);
+              }
+            }, 100);
 
             return; // Success - exit function
           }
@@ -1299,21 +1358,39 @@ plagiarized the work of other students and/or persons.
     try {
       const userId = user._id || user.id;
       const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
-      if (!libRes.ok) { scoresEl.innerHTML = '<p class="text-muted small mb-0">No rated games yet.</p>'; return; }
+      if (!libRes.ok) { 
+        scoresEl.innerHTML = '<p class="text-muted small mb-0">No rated games yet.</p>'; 
+        return; 
+      }
       const entries = await libRes.json();
-      const rated = entries.filter(e => e.gameId && e.rating && e.rating > 0)
-        .sort((a, b) => b.rating - a.rating)
-        .slice(0, 5);
+      
+      // Filter games with ratings (rating > 0), include all statuses
+      const rated = entries.filter(e => {
+        return e.rating && e.rating > 0 && (e.gameId || e.gameName);
+      })
+      .map(e => ({
+        name: (e.gameId && e.gameId.name) || e.gameName || 'Unknown Game',
+        rating: e.rating
+      }))
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 5);
+      
       if (rated.length === 0) {
         scoresEl.innerHTML = '<p class="text-muted small mb-0">Rate games in your library to see scores here.</p>';
         return;
       }
+      
       let html = '';
-      rated.forEach(e => {
-        html += `<div class="d-flex justify-content-between mb-2 small"><span>${e.gameId.name}</span><span class="text-warning">★ ${e.rating}.0</span></div>`;
+      rated.forEach((game, idx) => {
+        const stars = '★'.repeat(game.rating) + '☆'.repeat(5 - game.rating);
+        html += `<div class="d-flex justify-content-between align-items-center mb-2 small" style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both;">
+          <span class="text-truncate">${game.name}</span>
+          <span class="text-warning fw-bold" style="white-space: nowrap; margin-left: 8px;">${stars}</span>
+        </div>`;
       });
       scoresEl.innerHTML = html;
     } catch (err) {
+      console.warn('[Dashboard] Community scores error:', err);
       scoresEl.innerHTML = '<p class="text-muted small mb-0">Could not load scores.</p>';
     }
   }
@@ -1341,7 +1418,6 @@ plagiarized the work of other students and/or persons.
   // CHAT FUNCTIONALITY - General & Group Chats
   // ════════════════════════════════════════════════════════════════
 
-  let currentUser = null;
   let activeGroupId = 'general';
   let allGroups = [];
   let messageRefreshInterval = null;
@@ -1499,7 +1575,6 @@ plagiarized the work of other students and/or persons.
         <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:400px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
           <h5 style="margin-bottom:16px; color:#fff;">Create Group Chat</h5>
           <input type="text" id="newGroupNameInput" class="form-control form-control-sm bg-dark text-white border-secondary mb-3" placeholder="Group name..." maxlength="50" style="color: #fff !important; border-color: var(--border) !important;">
-          <textarea id="newGroupDescInput" class="form-control form-control-sm bg-dark text-white border-secondary mb-3" placeholder="Description (optional)" maxlength="200" rows="3" style="color: #fff !important; border-color: var(--border) !important;"></textarea>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-sm btn-primary" onclick="confirmCreateGroup()" style="flex:1;">Create</button>
             <button class="btn btn-sm btn-outline-secondary" onclick="this.closest('#createGroupModal').remove()" style="flex:1;">Cancel</button>
@@ -1513,7 +1588,6 @@ plagiarized the work of other students and/or persons.
 
   async function confirmCreateGroup() {
     const nameInput = document.getElementById('newGroupNameInput');
-    const descInput = document.getElementById('newGroupDescInput');
     if (!nameInput.value.trim()) {
       alert('Group name is required');
       return;

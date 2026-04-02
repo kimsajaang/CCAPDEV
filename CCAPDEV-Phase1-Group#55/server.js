@@ -113,7 +113,17 @@ app.get('/index', (req, res) => res.redirect('/'));
 app.get('/intro', (req, res) => res.redirect('/'));
 app.get('/login', (req, res) => res.render('login', { title: 'Login', user: req.user }));
 app.get('/register', (req, res) => res.render('register', { title: 'Register', user: req.user }));
-app.get('/Dashboard', (req, res) => res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading', user: req.user }));
+app.get('/Dashboard', isLoggedIn, (req, res) => {
+  console.log('[DASHBOARD ROUTE] Rendering dashboard template');
+  res.render('dashboard', { title: 'Dashboard', bodyClass: 'loading', user: req.user }, (err, html) => {
+    if (err) {
+      console.error('[DASHBOARD RENDER ERROR]', err.message);
+      return res.render('login', { title: 'Login', user: req.user });
+    }
+    console.log('[DASHBOARD RENDER SUCCESS] Sending ' + html.length + ' bytes');
+    res.send(html);
+  });
+});
 app.get('/dashboard', (req, res) => res.redirect('/Dashboard'));
 app.get('/library', (req, res) => res.render('library', { title: 'My Library', user: req.user }));
 app.get('/profile', (req, res) => res.render('profile', { title: 'Profile', user: req.user }));
@@ -1283,7 +1293,7 @@ app.get('/api/library/:userId', async (req, res) => {
       if (seen.has(key)) {
         // Mark this duplicate hidden so it won't appear again
         entry.hidden = true;
-        entry.save().catch(() => { });
+        LibraryEntry.updateOne({ _id: entry._id }, { hidden: true }).catch(() => { });
         continue;
       }
       seen.set(key, true);
@@ -1386,6 +1396,45 @@ app.delete('/api/library/:entryId', async (req, res) => {
   } catch (err) {
     console.error('[DELETE FROM LIBRARY] Error:', err.message);
     res.status(500).json({ error: 'Failed to remove game from library' });
+  }
+});
+
+// GET /api/reviews/game/:igdbId - Get community reviews for a game by IGDB ID
+app.get('/api/reviews/game/:igdbId', async (req, res) => {
+  try {
+    const { igdbId } = req.params;
+    
+    // Find the game by IGDB ID
+    const game = await Game.findOne({ igdbId: parseInt(igdbId) });
+    
+    if (!game) {
+      return res.json([]);
+    }
+
+    // Find all library entries for this game with reviews
+    const entries = await LibraryEntry.find({
+      gameId: game._id,
+      notes: { $exists: true, $ne: '' },
+      rating: { $gt: 0 }
+    })
+    .populate('userId', 'username profileImage')
+    .sort({ createdAt: -1 })
+    .limit(20);
+
+    // Format reviews for display
+    const reviews = entries.map(entry => ({
+      _id: entry._id,
+      username: entry.userId?.username || 'Anonymous',
+      profileImage: entry.userId?.profileImage,
+      rating: entry.rating,
+      notes: entry.notes,
+      createdAt: entry.createdAt
+    }));
+
+    res.json(reviews);
+  } catch (err) {
+    console.error('[GET COMMUNITY REVIEWS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch reviews' });
   }
 });
 
