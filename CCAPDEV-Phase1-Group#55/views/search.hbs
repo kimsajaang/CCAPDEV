@@ -386,6 +386,8 @@ plagiarized the work of other students and/or persons.
     // Fetch and display game details
     async function openGameDetail(game) {
       currentGameDetail = game;
+      console.log(`[OPEN DETAIL] Game object:`, game);
+      console.log(`[OPEN DETAIL] Game ID (IGDB):`, game.id);
 
       try {
         // Fetch full game details from IGDB
@@ -463,7 +465,7 @@ plagiarized the work of other students and/or persons.
           detailModal.show();
           
           // Load community reviews for this game
-          loadCommunityReviews(game.id);
+          loadCommunityReviews(game.id, game.name);
         }
       } catch (err) {
         console.error('Failed to fetch game details:', err);
@@ -473,12 +475,16 @@ plagiarized the work of other students and/or persons.
     }
 
     // Load community reviews for a game
-    async function loadCommunityReviews(gameId) {
+    async function loadCommunityReviews(igdbId, gameName) {
       try {
         const container = document.getElementById('communityReviewsContainer');
         container.innerHTML = '<p class="text-muted text-center small">Loading reviews...</p>';
 
-        const response = await fetch('/api/reviews/game/' + gameId, {
+        const queryParams = new URLSearchParams();
+        if (igdbId) queryParams.append('igdbId', igdbId);
+        if (gameName) queryParams.append('name', gameName);
+
+        const response = await fetch('/api/reviews/game?' + queryParams.toString(), {
           method: 'GET',
           credentials: 'include'
         });
@@ -718,6 +724,8 @@ plagiarized the work of other students and/or persons.
       const yearNum = parseInt(year) || 0;
       const releaseDate = yearNum ? new Date(yearNum, 0, 1).toISOString() : null;
 
+      console.log(`[ADD GAME] Adding "${name}" with IGDB ID: ${igdbId}`);
+
       // Create Game document
       const gameRes = await fetch('/api/games', {
         method: 'POST', credentials: 'include',
@@ -726,6 +734,8 @@ plagiarized the work of other students and/or persons.
       });
       if (!gameRes.ok) throw new Error('Failed to create game');
       const { game } = await gameRes.json();
+
+      console.log(`[ADD GAME] Game created/updated:`, game);
 
       // Add to library
       const libRes = await fetch('/api/library', {

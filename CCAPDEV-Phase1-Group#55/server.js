@@ -1238,10 +1238,21 @@ app.post('/api/games/search', async (req, res) => {
 // POST /api/games - Find existing game by name or create a new one
 app.post('/api/games', async (req, res) => {
   try {
-    const { name, coverUrl, rating, genres, platforms, releaseDate, summary } = req.body;
+    const { name, coverUrl, rating, genres, platforms, releaseDate, summary, igdbId } = req.body;
+
+    console.log(`[CREATE GAME] Received: name="${name}", igdbId=${igdbId}`);
 
     if (!name) {
       return res.status(400).json({ error: 'Game name is required' });
+    }
+
+    // Check if a game with this IGDB ID already exists
+    if (igdbId) {
+      const existingGame = await Game.findOne({ igdbId });
+      console.log(`[CREATE GAME] Checking for existing game with igdbId=${igdbId}:`, existingGame ? 'FOUND' : 'NOT FOUND');
+      if (existingGame) {
+        return res.status(200).json({ message: 'Game already exists', game: existingGame });
+      }
     }
 
     // Check if a game with this name already exists (case-insensitive)
@@ -1258,13 +1269,19 @@ app.post('/api/games', async (req, res) => {
       if (genres && genres.length && !game.genres.length) { game.genres = genres; updated = true; }
       if (releaseDate && !game.releaseDate) { game.releaseDate = releaseDate; updated = true; }
       if (summary && !game.summary) { game.summary = summary; updated = true; }
+      if (igdbId && !game.igdbId) { 
+        game.igdbId = igdbId; 
+        updated = true;
+        console.log(`[CREATE GAME] Updated existing game "${name}" with igdbId=${igdbId}`);
+      }
       if (updated) await game.save();
 
       return res.status(200).json({ message: 'Game already exists', game });
     }
 
-    game = new Game({ name, coverUrl, rating, genres, platforms, releaseDate, summary });
+    game = new Game({ name, coverUrl, rating, genres, platforms, releaseDate, summary, igdbId });
     await game.save();
+    console.log(`[CREATE GAME] Created new game "${name}" with igdbId=${igdbId}`);
     res.status(201).json({ message: 'Game created', game });
   } catch (err) {
     console.error('[CREATE GAME] Error:', err.message);
@@ -1399,15 +1416,35 @@ app.delete('/api/library/:entryId', async (req, res) => {
   }
 });
 
-// GET /api/reviews/game/:igdbId - Get community reviews for a game by IGDB ID
-app.get('/api/reviews/game/:igdbId', async (req, res) => {
+// GET /api/reviews/game - Get community reviews for a game by IGDB ID or name
+app.get('/api/reviews/game', async (req, res) => {
   try {
-    const { igdbId } = req.params;
+    const { igdbId, name } = req.query;
     
-    // Find the game by IGDB ID
-    const game = await Game.findOne({ igdbId: parseInt(igdbId) });
+    console.log(`[GET REVIEWS] Looking for reviews - igdbId: ${igdbId}, name: ${name}`);
     
+    let game = null;
+
+    // Try to find the game by IGDB ID first
+    if (igdbId) {
+      const igdbIdNum = parseInt(igdbId);
+      game = await Game.findOne({ igdbId: igdbIdNum });
+      if (game) {
+        console.log(`[GET REVIEWS] Found game by IGDB ID: ${game.name}`);
+      }
+    }
+
+    // If not found by IGDB ID, try by name
+    if (!game && name) {
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      game = await Game.findOne({ name: { $regex: new RegExp('^' + escaped + '$', 'i') } });
+      if (game) {
+        console.log(`[GET REVIEWS] Found game by name: ${game.name}`);
+      }
+    }
+
     if (!game) {
+      console.log(`[GET REVIEWS] No game found for igdbId=${igdbId}, name=${name}`);
       return res.json([]);
     }
 
@@ -1420,6 +1457,8 @@ app.get('/api/reviews/game/:igdbId', async (req, res) => {
     .populate('userId', 'username profileImage')
     .sort({ createdAt: -1 })
     .limit(20);
+
+    console.log(`[GET REVIEWS] Found ${entries.length} reviews for game ${game.name}`);
 
     // Format reviews for display
     const reviews = entries.map(entry => ({
