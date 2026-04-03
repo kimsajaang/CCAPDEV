@@ -1176,7 +1176,8 @@ a:hover {
 .loader-icon-wrap i {
   font-size: 3rem;
   color: var(--primary);
-  z-index: 2;\n}
+  z-index: 2;
+}
 
 .loader-glow {
   position: absolute;

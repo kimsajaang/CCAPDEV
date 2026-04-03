@@ -857,9 +857,7 @@ plagiarized the work of other students and/or persons.
 
             showNotification('Profile Updated', 'Your profile and settings have been saved successfully!', 'success');
             setTimeout(() => window.location.href = '/profile', 1500);
-       
-            const games = loadLibrary();
-            const achievementsKey = PROFILE_STORAGE_KEY.replace('prfl_', 'ach_');
+       hievementsKey = PROFILE_STORAGE_KEY.replace('prfl_', 'ach_');
             const unlockedAchievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');
             
             // Check for curator achievement
