@@ -92,15 +92,6 @@ plagiarized the work of other students and/or persons.
           </div>
         </div>
 
-        <div class="card shadow-sm mb-4">
-          <div class="card-body">
-            <div class="fw-semibold mb-3">👥 Active Members</div>
-            <div class="d-grid gap-2" id="activeMembersList">
-              <div class="text-muted small">Loading members...</div>
-            </div>
-          </div>
-        </div>
-
         <div class="card shadow-sm">
           <div class="card-body">
             <div class="fw-semibold mb-2">📊 Community Stats</div>
@@ -375,9 +366,11 @@ plagiarized the work of other students and/or persons.
     }
 
     function score(post) {
-      const up = Array.isArray(post.upvotes) ? post.upvotes.length : (post.up || 0);
-      const down = Array.isArray(post.downvotes) ? post.downvotes.length : (post.down || 0);
-      return up - down;
+      const up = Array.isArray(post.upvotes) ? post.upvotes.length : (post.upvotes || 0);
+      const down = Array.isArray(post.downvotes) ? post.downvotes.length : (post.downvotes || 0);
+      const result = up - down;
+      console.log(`[SCORE] Post "${post.title}": up=${up}, down=${down}, score=${result}`);
+      return result;
     }
 
     // Hot score algorithm — loosely based on Reddit's formula.
@@ -414,7 +407,13 @@ plagiarized the work of other students and/or persons.
 
     // --- Main render function ---
     async function render() {
+      console.log('[RENDER] Starting render...');
       let posts = await loadPosts();
+      console.log('[RENDER] Loaded posts:', posts.length, 'posts');
+      posts.forEach((p, i) => {
+        console.log(`[RENDER] Post ${i}:`, p.title, '| upvotes:', Array.isArray(p.upvotes) ? p.upvotes.length : p.upvotes, '| downvotes:', Array.isArray(p.downvotes) ? p.downvotes.length : p.downvotes);
+      });
+      
       const mode = sortSelect.value;
       const q = searchInput.value.trim();
 
@@ -435,6 +434,15 @@ plagiarized the work of other students and/or persons.
       for (const post of posts) {
         feedEl.appendChild(postCard(post));
       }
+      
+      // Debug: Check what's actually in the DOM
+      setTimeout(() => {
+        document.querySelectorAll('[data-score]').forEach((el, idx) => {
+          console.log(`[DOM CHECK] Score display ${idx}:`, el.textContent, 'innerHTML:', el.innerHTML);
+        });
+      }, 100);
+      
+      console.log('[RENDER] Render complete');
     }
 
     // Builds one post card element with vote buttons, comments toggle, delete, share.
@@ -520,10 +528,27 @@ plagiarized the work of other students and/or persons.
         </div>
       `;
 
-      wrapper.querySelector('[data-act="up"]').addEventListener("click", () => vote(post.id, +1));
-      wrapper.querySelector('[data-act="down"]').addEventListener("click", () => vote(post.id, -1));
-      wrapper.querySelector('[data-act="toggleComments"]').addEventListener("click", () => toggleComments(wrapper));
-      wrapper.querySelector('[data-act="share"]').addEventListener("click", () => copyLink(post.id));
+      const upBtn = wrapper.querySelector('[data-act="up"]');
+      if (upBtn) {
+        console.log('[EVENTS] Attached upvote listener for post:', post.id);
+        upBtn.addEventListener("click", () => vote(post.id, +1));
+      } else {
+        console.warn('[EVENTS] Could not find upvote button for post:', post.id);
+      }
+      
+      const downBtn = wrapper.querySelector('[data-act="down"]');
+      if (downBtn) {
+        console.log('[EVENTS] Attached downvote listener for post:', post.id);
+        downBtn.addEventListener("click", () => vote(post.id, -1));
+      } else {
+        console.warn('[EVENTS] Could not find downvote button for post:', post.id);
+      }
+      
+      const toggleBtn = wrapper.querySelector('[data-act="toggleComments"]');
+      if (toggleBtn) toggleBtn.addEventListener("click", () => toggleComments(wrapper));
+      
+      const shareBtn = wrapper.querySelector('[data-act="share"]');
+      if (shareBtn) shareBtn.addEventListener("click", () => copyLink(post.id));
 
       const editBtn = wrapper.querySelector('[data-act="edit"]');
       if (editBtn) {
@@ -536,7 +561,8 @@ plagiarized the work of other students and/or persons.
       }
 
       const addBtn = wrapper.querySelector('[data-act="addComment"]');
-      addBtn.addEventListener("click", () => {
+      if (addBtn) {
+        addBtn.addEventListener("click", () => {
         const input = addBtn.parentElement.querySelector("input");
         const text = input.value.trim();
         if (!text) return;
@@ -566,7 +592,8 @@ plagiarized the work of other students and/or persons.
         
         // Post to server in background (don't wait)
         addComment(post.id, text);
-      });
+        });
+      }
 
       const commentList = wrapper.querySelector("[data-commentlist]");
       const noComments = wrapper.querySelector("[data-nocomments]");
@@ -625,18 +652,26 @@ plagiarized the work of other students and/or persons.
     }
 
     // --- Actions: vote, comment, delete, share ---
-    // No auth yet so anyone can vote unlimited times.
     async function vote(postId, dir) {
       try {
+        console.log('[VOTE] Starting vote - postId:', postId, 'direction:', dir > 0 ? 'up' : 'down');
         const res = await fetch(`/api/posts/${postId}/vote`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ direction: dir > 0 ? 'up' : 'down' })
         });
-        if (!res.ok) throw new Error('Vote failed');
+        console.log('[VOTE] Response status:', res.status);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('Vote failed:', errData.error || 'Unknown error');
+          return;
+        }
+        const data = await res.json();
+        console.log('[VOTE] Success! New vote data:', data);
         render();
       } catch (err) {
-        console.error(err);
+        console.error('Vote request error:', err);
       }
     }
 
@@ -904,50 +939,6 @@ plagiarized the work of other students and/or persons.
       document.getElementById('statTotalPosts').textContent = totalPosts;
       document.getElementById('statTotalComments').textContent = totalComments;
       document.getElementById('statActiveMembers').textContent = authors.size;
-
-      const membersList = document.getElementById('activeMembersList');
-      
-      // Load backlog members from API
-      try {
-        const membersRes = await fetch('/api/community/backlog-members');
-        if (!membersRes.ok) throw new Error('Failed to fetch members');
-        const backlogMembers = await membersRes.json();
-
-        if (backlogMembers.length === 0) {
-          membersList.innerHTML = '<div class="text-muted small">No members with backlog yet.</div>';
-          document.getElementById('statActiveMembers').textContent = '0';
-          return;
-        }
-
-        // Update active members count
-        document.getElementById('statActiveMembers').textContent = backlogMembers.length;
-
-        // Render backlog members
-        const avatarColors = ['#5383e8','#2dd4bf','#e85383','#febc2e','#a78bfa'];
-        let html = '';
-        backlogMembers.forEach((user, idx) => {
-          const name = user.displayName || 'Anonymous';
-          const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-          const color = avatarColors[idx % avatarColors.length];
-          const textColor = ['#febc2e'].includes(color) ? '#0d1217' : '#fff';
-          html += `
-            <div class="d-flex align-items-center justify-content-between gap-2">
-              <div class="d-flex align-items-center gap-2">
-                <div class="comment-avatar" style="background:${color};color:${textColor};width:28px;height:28px;font-size:0.6rem;">${initials}</div>
-                <div>
-                  <div class="small" style="font-weight: 600; color: #dbe7ff;">${escapeHtml(name)}</div>
-                  <div class="text-muted" style="font-size: 0.7rem;">${user.backlogCount} game${user.backlogCount !== 1 ? 's' : ''}</div>
-                </div>
-              </div>
-            </div>
-          `;
-        });
-        membersList.innerHTML = html;
-      } catch (err) {
-        console.error('Failed to load backlog members:', err);
-        membersList.innerHTML = '<div class="text-muted small">Unable to load members.</div>';
-        document.getElementById('statActiveMembers').textContent = '0';
-      }
     }
 
     // Deep-link handler — if URL has #post-<id>, scroll to that post and open its comments.

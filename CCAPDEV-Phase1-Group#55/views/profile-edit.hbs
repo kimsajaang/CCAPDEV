@@ -301,7 +301,8 @@ plagiarized the work of other students and/or persons.
                         <div class="field-hint">Email address cannot be changed currently. Contact support for assistance.</div>
                     </div>
 
-                    <div style="background: rgba(26, 31, 46, 0.5); padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 30px;">
+                    <!-- Password Change Section - Shown only for Backlog accounts -->
+                    <div id="passwordChangeSection" style="background: rgba(26, 31, 46, 0.5); padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 30px;">
                         <h6 class="mb-3 text-white">Change Password</h6>
                         <div class="field-group mb-3">
                             <label>Current Password</label>
@@ -320,6 +321,28 @@ plagiarized the work of other students and/or persons.
                         <button type="button" class="btn-change" id="changePasswordBtn" style="background: var(--bg-secondary); border-color: var(--primary); color: #fff;">
                             <i class="bi bi-shield-lock me-1"></i> Update Security
                         </button>
+                    </div>
+
+                    <!-- Google Login Notice - Shown only for Google accounts -->
+                    <div id="googleLoginNotice" style="background: rgba(66, 133, 244, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(66, 133, 244, 0.3); margin-bottom: 30px; display: none;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <i class="bi bi-google" style="font-size: 1.5rem; color: #4285f4;"></i>
+                            <h6 class="mb-0 text-white">Google Account</h6>
+                        </div>
+                        <p class="mb-0" style="color: #a0aec0; font-size: 0.95rem;">
+                            Your account is connected via Google Sign-In. To change your password or authentication settings, please manage your account at <strong>myaccount.google.com</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Steam Login Notice - Shown only for Steam accounts -->
+                    <div id="steamLoginNotice" style="background: rgba(74, 183, 107, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(74, 183, 107, 0.3); margin-bottom: 30px; display: none;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <i class="bi bi-steam" style="font-size: 1.5rem; color: #4ab76b;"></i>
+                            <h6 class="mb-0 text-white">Steam Account</h6>
+                        </div>
+                        <p class="mb-0" style="color: #a0aec0; font-size: 0.95rem;">
+                            Your account is connected via Steam. To change your password or authentication settings, please manage your account at <strong>steampowered.com</strong>.
+                        </p>
                     </div>
                 </div>
 
@@ -500,49 +523,83 @@ plagiarized the work of other students and/or persons.
             // favoriteGames are stored as game name strings on the server
             selectedFavoriteGames = [...profile.favoriteGames];
 
-            // Populate form with merged profile data
-            document.getElementById('inputName').value = profile.displayName;
-            document.getElementById('inputUsername').value = profile.username;
-            document.getElementById('inputBio').value = profile.bio;
-            document.getElementById('inputIdentity').value = profile.gamingIdentity || '';
-            document.getElementById('inputPlatform').value = profile.favoritePlatform || '';
-            document.getElementById('avatarPreview').src = profile.avatar;
-            document.getElementById('inputSteamId').value = profile.steamId || '';
+            // Populate form with merged profile data - safely with null checks
+            const inputName = document.getElementById('inputName');
+            if (inputName) inputName.value = profile.displayName;
+            
+            const inputUsername = document.getElementById('inputUsername');
+            if (inputUsername) inputUsername.value = profile.username;
+            
+            const inputBio = document.getElementById('inputBio');
+            if (inputBio) inputBio.value = profile.bio;
+            
+            const inputIdentity = document.getElementById('inputIdentity');
+            if (inputIdentity) inputIdentity.value = profile.gamingIdentity || '';
+            
+            const inputPlatform = document.getElementById('inputPlatform');
+            if (inputPlatform) inputPlatform.value = profile.favoritePlatform || '';
+            
+            const avatarPreview = document.getElementById('avatarPreview');
+            if (avatarPreview) avatarPreview.src = profile.avatar;
+            
+            const inputSteamId = document.getElementById('inputSteamId');
+            if (inputSteamId) inputSteamId.value = profile.steamId || '';
             
             // Update Steam connection button state
             const steamBtn = document.getElementById('steamConnectBtn');
-            if (profile.steamId) {
-              steamBtn.disabled = true;
-              steamBtn.style.background = 'rgba(16, 185, 129, 0.1)';
-              steamBtn.style.color = '#10b981';
-              steamBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Connected';
-            } else {
-              steamBtn.disabled = false;
-              steamBtn.style.background = 'rgba(91, 127, 238, 0.1)';
-              steamBtn.style.color = '#5b7fee';
-              steamBtn.innerHTML = '<i class="bi bi-link-45deg me-1"></i> Connect';
+            if (steamBtn) {
+                if (profile.steamId) {
+                  steamBtn.disabled = true;
+                  steamBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+                  steamBtn.style.color = '#10b981';
+                  steamBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Connected';
+                } else {
+                  steamBtn.disabled = false;
+                  steamBtn.style.background = 'rgba(91, 127, 238, 0.1)';
+                  steamBtn.style.color = '#5b7fee';
+                  steamBtn.innerHTML = '<i class="bi bi-link-45deg me-1"></i> Connect';
+                }
             }
             
             if (serverUser) {
-                document.getElementById('inputXboxGamertag').value = serverUser.xboxGamertag || '';
-                document.getElementById('inputPsnId').value = serverUser.psnId || '';
+                const inputXboxGamertag = document.getElementById('inputXboxGamertag');
+                if (inputXboxGamertag) inputXboxGamertag.value = serverUser.xboxGamertag || '';
+                
+                const inputPsnId = document.getElementById('inputPsnId');
+                if (inputPsnId) inputPsnId.value = serverUser.psnId || '';
             }
-            document.getElementById('editPageName').textContent = profile.displayName;
+            
+            const editPageNameEl = document.getElementById('editPageName');
+            if (editPageNameEl) {
+                editPageNameEl.textContent = profile.displayName;
+            }
 
             if (profile.wallpaper) {
-                document.getElementById('wallpaperPreview').src = profile.wallpaper;
-                document.getElementById('wallpaperPreview').style.display = 'block';
-                document.getElementById('wallpaperPreview').classList.add('has-image');
-                document.getElementById('wallpaperEmptyState').classList.add('d-none');
-                document.getElementById('wallpaperPositionControl').classList.add('visible');
-                const pos = profile.wallpaperPosition != null ? profile.wallpaperPosition : 50;
-                document.getElementById('wallpaperPositionSlider').value = pos;
-                document.getElementById('wallpaperPreview').style.objectPosition = `center ${pos}%`;
+                const wallpaperPreview = document.getElementById('wallpaperPreview');
+                if (wallpaperPreview) {
+                    wallpaperPreview.src = profile.wallpaper;
+                    wallpaperPreview.style.display = 'block';
+                    wallpaperPreview.classList.add('has-image');
+                }
+                
+                const wallpaperEmptyState = document.getElementById('wallpaperEmptyState');
+                if (wallpaperEmptyState) wallpaperEmptyState.classList.add('d-none');
+                
+                const wallpaperPositionControl = document.getElementById('wallpaperPositionControl');
+                if (wallpaperPositionControl) wallpaperPositionControl.classList.add('visible');
+                
+                const wallpaperPositionSlider = document.getElementById('wallpaperPositionSlider');
+                if (wallpaperPositionSlider) {
+                    const pos = profile.wallpaperPosition != null ? profile.wallpaperPosition : 50;
+                    wallpaperPositionSlider.value = pos;
+                    if (wallpaperPreview) wallpaperPreview.style.objectPosition = `center ${pos}%`;
+                }
             }
 
             // Populate Additional Settings
             if (serverUser) {
-                if (serverUser.email) document.getElementById('inputEmail').value = serverUser.email;
+                const inputEmail = document.getElementById('inputEmail');
+                if (inputEmail && serverUser.email) inputEmail.value = serverUser.email;
                 if (serverUser.settings) {
                     const setts = serverUser.settings;
                     if (setts.privacy) document.getElementById('privacyToggle').checked = (setts.privacy === 'public');
@@ -555,8 +612,46 @@ plagiarized the work of other students and/or persons.
                 }
             }
 
+            // Show/Hide password change based on login method
+            const passwordSection = document.getElementById('passwordChangeSection');
+            const googleNotice = document.getElementById('googleLoginNotice');
+            const steamNotice = document.getElementById('steamLoginNotice');
+            
+            // Debug: log serverUser to check data
+            console.log('[Account Security] serverUser:', serverUser);
+            console.log('[Account Security] email:', serverUser?.email);
+            console.log('[Account Security] steamId:', serverUser?.steamId);
+            console.log('[Account Security] googleId:', serverUser?.googleId);
+            
+            // Check if Steam account (by steamId or email format)
+            const isSteamAccount = serverUser && (serverUser.steamId || (serverUser.email && serverUser.email.includes('@steam.local')));
+            const isGoogleAccount = serverUser && serverUser.googleId;
+            
+            if (isSteamAccount) {
+                // User logged in via Steam
+                console.log('[Account Security] Detected: STEAM account');
+                passwordSection.style.display = 'none';
+                googleNotice.style.display = 'none';
+                steamNotice.style.display = 'block';
+            } else if (isGoogleAccount) {
+                // User logged in via Google
+                console.log('[Account Security] Detected: GOOGLE account');
+                passwordSection.style.display = 'none';
+                googleNotice.style.display = 'block';
+                steamNotice.style.display = 'none';
+            } else {
+                // User has local Backlog account
+                console.log('[Account Security] Detected: BACKLOG account');
+                passwordSection.style.display = 'block';
+                googleNotice.style.display = 'none';
+                steamNotice.style.display = 'none';
+            }
+
             // Render existing favorite games
             renderSelectedFavoriteGames();
+            
+            // Attach event listeners now that form is initialized
+            attachFormEventListeners();
         }
 
         // --- Favorite Games Search & Select ---
@@ -678,7 +773,10 @@ plagiarized the work of other students and/or persons.
         }
 
         function updateGameCount() {
-            document.getElementById('gameCount').textContent = `${selectedFavoriteGames.length}/5`;
+            const gameCountEl = document.getElementById('gameCount');
+            if (gameCountEl) {
+                gameCountEl.textContent = `${selectedFavoriteGames.length}/5`;
+            }
         }
 
         // Track if there are unsaved changes
@@ -715,220 +813,242 @@ plagiarized the work of other students and/or persons.
         `;
         document.head.appendChild(autoSaveStyle);
 
-        // Avatar upload handler
-        document.getElementById('uploadAvatarBtn').addEventListener('click', () => {
-            document.getElementById('avatarInput').click();
-        });
-
-        document.getElementById('avatarInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    showNotification('File Too Large', 'Avatar must be less than 5MB', 'error');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    document.getElementById('avatarPreview').src = event.target.result;
-                    markUnsaved();
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Add change listeners to notification/defaults toggles to mark unsaved
-        document.getElementById('privacyToggle').addEventListener('change', markUnsaved);
-        document.getElementById('inputDefaultSort').addEventListener('change', markUnsaved);
-        document.getElementById('notifFriendReq').addEventListener('change', markUnsaved);
-        document.getElementById('notifChatMsg').addEventListener('change', markUnsaved);
-        document.getElementById('notifMarketing').addEventListener('change', markUnsaved);
-
-        // Wallpaper upload handler
-        document.getElementById('wallpaperInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                if (file.size > 8 * 1024 * 1024) {
-                    showNotification('File Too Large', 'Wallpaper must be less than 8MB', 'error');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    document.getElementById('wallpaperPreview').src = event.target.result;
-                    document.getElementById('wallpaperPreview').style.display = 'block';
-                    document.getElementById('wallpaperPreview').classList.add('has-image');
-                    document.getElementById('wallpaperEmptyState').classList.add('d-none');
-                    document.getElementById('wallpaperPositionControl').classList.add('visible');
-                    document.getElementById('wallpaperPositionSlider').value = 50;
-                    document.getElementById('wallpaperPreview').style.objectPosition = 'center 50%';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Wallpaper position slider - live preview
-        document.getElementById('wallpaperPositionSlider').addEventListener('input', (e) => {
-            document.getElementById('wallpaperPreview').style.objectPosition = `center ${e.target.value}%`;
-        });
-
-        // Form submission
-        document.getElementById('profileForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const displayName = document.getElementById('inputName').value.trim();
-            if (!displayName) {
-                showNotification('Missing Information', 'Please enter a display name', 'error');
-                return;
+        // Function to attach all event listeners - call after form is initialized
+        function attachFormEventListeners() {
+            // Avatar upload handler
+            const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+            if (uploadAvatarBtn) {
+                uploadAvatarBtn.addEventListener('click', () => {
+                    document.getElementById('avatarInput').click();
+                });
             }
 
-            const username = document.getElementById('inputUsername').value.trim() || displayName.toLowerCase().replace(/\s+/g, '');
-            if (username.length < 3) {
-                showNotification('Invalid Username', 'Username must be at least 3 characters long', 'error');
-                return;
-            }
-
-            const profile = {
-                displayName: displayName,
-                username: username,
-                bio: document.getElementById('inputBio').value.trim(),
-                avatar: document.getElementById('avatarPreview').src,
-                wallpaper: document.getElementById('wallpaperPreview').src,
-                wallpaperPosition: parseInt(document.getElementById('wallpaperPositionSlider').value) || 50,
-                gamingIdentity: document.getElementById('inputIdentity').value,
-                favoritePlatform:and all settings to the server DB
-            try {
-              const authRes = await fetch('/api/auth/current', { credentials: 'include' });
-              if (authRes.ok) {
-                const me = await authRes.json();
-                const response = await fetch('/api/users/' + me._id, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    displayName: profile.displayName,
-                    username: profile.username,
-                    bio: profile.bio,
-                    avatar: profile.avatar,
-                    wallpaper: profile.wallpaper && profile.wallpaper !== window.location.href ? profile.wallpaper : '',
-                    wallpaperPosition: profile.wallpaperPosition,
-                    steamId: profile.steamId,
-                    xboxGamertag: document.getElementById('inputXboxGamertag').value.trim(),
-                    psnId: document.getElementById('inputPsnId').value.trim(),
-                    favoriteGames: selectedFavoriteGames,
-                    settings: {
-                        privacy: document.getElementById('privacyToggle').checked ? 'public' : 'private',
-                        defaultSort: document.getElementById('inputDefaultSort').value,
-                        emailNotifs: {
-                            friendRequests: document.getElementById('notifFriendReq').checked,
-                            chatMessages: document.getElementById('notifChatMsg').checked,
-                            marketing: document.getElementById('notifMarketing').checked
+            const avatarInput = document.getElementById('avatarInput');
+            if (avatarInput) {
+                avatarInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                            showNotification('File Too Large', 'Avatar must be less than 5MB', 'error');
+                            return;
                         }
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            document.getElementById('avatarPreview').src = event.target.result;
+                            markUnsaved();
+                        };
+                        reader.readAsDataURL(file);
                     }
-                  })
                 });
-
-                if (!response.ok) {
-                  const error = await response.json();
-                  throw new Error(error.error || 'Failed to save profile');
-                }
-              }
-            } catch (e) { 
-              showNotification('Save Error', e.message || 'Could not save profile to server', 'error');
-              return;
             }
 
-            // Check for achievements
-            const games = loadLibrary();
-            const achievementsKey = PROFILE_STORAGE_KEY.replace('prfl_', 'ach_');
-            const unlockedAchievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');
+            // Add change listeners to notification/defaults toggles to mark unsaved
+            const privacyToggle = document.getElementById('privacyToggle');
+            if (privacyToggle) privacyToggle.addEventListener('change', markUnsaved);
             
-            // Check for curator achievement
-            if (profile.bio && profile.gamingIdentity && profile.favoriteGames.length > 0) {
-                if (!unlockedAchievements.some(a => a.id === 'curator')) {
-                    unlockedAchievements.push({ id: 'curator', unlockedAt: new Date().toISOString() });
-                    localStorage.setItem(achievementsKey, JSON.stringify(unlockedAchievements));
-                }
-            }
-
-            hasUnsavedChanges = false;
-            const saveBtn = document.querySelector('.settings-save-btn');
-            if (saveBtn) {
-                saveBtn.classList.remove('unsaved');
-                saveBtn.textContent = '💾 Save Profile';
-            }
-
-            showNotification('Profile Updated', 'Your profile and settings have been saved successfully!', 'success');
-            setTimeout(() => window.location.href = '/profile', 1500);
-       hievementsKey = PROFILE_STORAGE_KEY.replace('prfl_', 'ach_');
-            const unlockedAchievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');
+            const inputDefaultSort = document.getElementById('inputDefaultSort');
+            if (inputDefaultSort) inputDefaultSort.addEventListener('change', markUnsaved);
             
-            // Check for curator achievement
-            if (profile.bio && profile.gamingIdentity && profile.favoriteGames.length > 0) {
-                if (!unlockedAchievements.some(a => a.id === 'curator')) {
-                    unlockedAchievements.push({ id: 'curator', unlockedAt: new Date().toISOString() });
-                    localStorage.setItem(achievementsKey, JSON.stringify(unlockedAchievements));
-                }
-            }
+            const notifFriendReq = document.getElementById('notifFriendReq');
+            if (notifFriendReq) notifFriendReq.addEventListener('change', markUnsaved);
+            
+            const notifChatMsg = document.getElementById('notifChatMsg');
+            if (notifChatMsg) notifChatMsg.addEventListener('change', markUnsaved);
+            
+            const notifMarketing = document.getElementById('notifMarketing');
+            if (notifMarketing) notifMarketing.addEventListener('change', markUnsaved);
 
-            showNotification('Profile Updated', 'Your profile has been saved successfully!', 'success');
-            setTimeout(() => window.location.href = '/profile', 1500);
-        });
-
-        // Change Password logic
-        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
-            const currentPass = document.getElementById('currentPassword').value;
-            const newPass = document.getElementById('newPassword').value;
-            const confirmPass = document.getElementById('confirmPassword').value;
-
-            if (!currentPass || !newPass || !confirmPass) {
-                showNotification('Missing Fields', 'Please fill out all password fields', 'error');
-                return;
-            }
-            if (newPass !== confirmPass) {
-                showNotification('Mismatch', 'New passwords do not match', 'error');
-                return;
-            }
-            if (newPass.length < 6) {
-                showNotification('Too Short', 'New password must be at least 6 characters', 'error');
-                return;
-            }
-
-            // Get userId to POST to
-            let userId = null;
-            try {
-                const me = await (await fetch('/api/auth/current')).json();
-                userId = me._id || me.id;
-            } catch (e) {
-                showNotification('Error', 'Session expired', 'error');
-                return;
-            }
-
-            const btn = document.getElementById('changePasswordBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon"></i> Updating...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/users/' + userId + '/security', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+            // Wallpaper upload handler
+            const wallpaperInput = document.getElementById('wallpaperInput');
+            if (wallpaperInput) {
+                wallpaperInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 8 * 1024 * 1024) {
+                            showNotification('File Too Large', 'Wallpaper must be less than 8MB', 'error');
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            document.getElementById('wallpaperPreview').src = event.target.result;
+                            document.getElementById('wallpaperPreview').style.display = 'block';
+                            document.getElementById('wallpaperPreview').classList.add('has-image');
+                            document.getElementById('wallpaperEmptyState').classList.add('d-none');
+                            document.getElementById('wallpaperPositionControl').classList.add('visible');
+                            document.getElementById('wallpaperPositionSlider').value = 50;
+                            document.getElementById('wallpaperPreview').style.objectPosition = 'center 50%';
+                        };
+                        reader.readAsDataURL(file);
+                    }
                 });
-
-                if (!res.ok) {
-                    const data = await res.json();
-                    throw new Error(data.error || 'Failed to update password');
-                }
-
-                showNotification('Security Updated', 'Password successfully changed', 'success');
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-            } catch (err) {
-                showNotification('Error', err.message, 'error');
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
             }
-        });
+
+            // Wallpaper position slider - live preview
+            const wallpaperPositionSlider = document.getElementById('wallpaperPositionSlider');
+            if (wallpaperPositionSlider) {
+                wallpaperPositionSlider.addEventListener('input', (e) => {
+                    document.getElementById('wallpaperPreview').style.objectPosition = `center ${e.target.value}%`;
+                });
+            }
+
+            // Form submission
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const displayName = document.getElementById('inputName').value.trim();
+                    if (!displayName) {
+                        showNotification('Missing Information', 'Please enter a display name', 'error');
+                        return;
+                    }
+
+                    const username = document.getElementById('inputUsername').value.trim() || displayName.toLowerCase().replace(/\s+/g, '');
+                    if (username.length < 3) {
+                        showNotification('Invalid Username', 'Username must be at least 3 characters long', 'error');
+                        return;
+                    }
+
+                    const profile = {
+                        displayName: displayName,
+                        username: username,
+                        bio: document.getElementById('inputBio').value.trim(),
+                        avatar: document.getElementById('avatarPreview').src,
+                        wallpaper: document.getElementById('wallpaperPreview').src,
+                        wallpaperPosition: parseInt(document.getElementById('wallpaperPositionSlider').value) || 50,
+                        gamingIdentity: document.getElementById('inputIdentity').value,
+                        favoritePlatform: document.getElementById('inputPlatform').value,
+                        favoriteGames: selectedFavoriteGames
+                    };
+
+                    // Save all settings to the server DB
+                    try {
+                      const authRes = await fetch('/api/auth/current', { credentials: 'include' });
+                      if (authRes.ok) {
+                        const me = await authRes.json();
+                        const response = await fetch('/api/users/' + me._id, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({
+                            displayName: profile.displayName,
+                            username: profile.username,
+                            bio: profile.bio,
+                            avatar: profile.avatar,
+                            wallpaper: profile.wallpaper && profile.wallpaper !== window.location.href ? profile.wallpaper : '',
+                            wallpaperPosition: profile.wallpaperPosition,
+                            gamingIdentity: profile.gamingIdentity,
+                            favoritePlatform: profile.favoritePlatform,
+                            steamId: document.getElementById('inputSteamId').value,
+                            xboxGamertag: document.getElementById('inputXboxGamertag').value.trim(),
+                            psnId: document.getElementById('inputPsnId').value.trim(),
+                            favoriteGames: selectedFavoriteGames,
+                            settings: {
+                                privacy: document.getElementById('privacyToggle').checked ? 'public' : 'private',
+                                defaultSort: document.getElementById('inputDefaultSort').value,
+                                emailNotifs: {
+                                    friendRequests: document.getElementById('notifFriendReq').checked,
+                                    chatMessages: document.getElementById('notifChatMsg').checked,
+                                    marketing: document.getElementById('notifMarketing').checked
+                                }
+                            }
+                          })
+                        });
+
+                        if (!response.ok) {
+                          const error = await response.json();
+                          throw new Error(error.error || 'Failed to save profile');
+                        }
+                      }
+                    } catch (e) { 
+                      showNotification('Save Error', e.message || 'Could not save profile to server', 'error');
+                      return;
+                    }
+
+                    hasUnsavedChanges = false;
+                    const saveBtn = document.querySelector('.settings-save-btn');
+                    if (saveBtn) {
+                        saveBtn.classList.remove('unsaved');
+                        saveBtn.textContent = '💾 Save Profile';
+                    }
+
+                    showNotification('Profile Updated', 'Your profile and settings have been saved successfully!', 'success');
+                    setTimeout(() => window.location.href = '/profile', 1500);
+                });
+            }
+
+            // Change Password logic
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            if (changePasswordBtn) {
+                changePasswordBtn.addEventListener('click', async () => {
+                    const currentPass = document.getElementById('currentPassword').value;
+                    const newPass = document.getElementById('newPassword').value;
+                    const confirmPass = document.getElementById('confirmPassword').value;
+
+                    if (!currentPass || !newPass || !confirmPass) {
+                        showNotification('Missing Fields', 'Please fill out all password fields', 'error');
+                        return;
+                    }
+                    if (newPass !== confirmPass) {
+                        showNotification('Mismatch', 'New passwords do not match', 'error');
+                        return;
+                    }
+                    if (newPass.length < 6) {
+                        showNotification('Too Short', 'New password must be at least 6 characters', 'error');
+                        return;
+                    }
+
+                    let userId = null;
+                    try {
+                        const me = await (await fetch('/api/auth/current', { credentials: 'include' })).json();
+                        userId = me._id || me.id;
+                    } catch (e) {
+                        showNotification('Error', 'Session expired', 'error');
+                        return;
+                    }
+
+                    const btn = document.getElementById('changePasswordBtn');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon"></i> Updating...';
+                    btn.disabled = true;
+
+                    try {
+                        const res = await fetch('/api/users/' + userId + '/security', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+                        });
+
+                        if (!res.ok) {
+                            const data = await res.json();
+                            throw new Error(data.error || 'Failed to update password');
+                        }
+
+                        showNotification('Security Updated', 'Password successfully changed', 'success');
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                    } catch (err) {
+                        showNotification('Error', err.message, 'error');
+                    } finally {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                });
+            }
+
+            // Xbox Sync
+            const xboxSyncBtn = document.getElementById('xboxSyncBtn');
+            if (xboxSyncBtn) {
+                xboxSyncBtn.addEventListener('click', syncXbox);
+            }
+
+            // PSN Sync
+            const psnSyncBtn = document.getElementById('psnSyncBtn');
+            if (psnSyncBtn) {
+                psnSyncBtn.addEventListener('click', syncPSN);
+            }
+        }
 
         // ─── Xbox / PSN Sync ───
         async function syncXbox() {

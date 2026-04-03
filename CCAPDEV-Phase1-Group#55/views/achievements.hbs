@@ -23,6 +23,32 @@
     overflow-x: hidden;
   }
 
+  .back-btn-container {
+    max-width: 1200px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(83, 131, 232, 0.1);
+    border: 1px solid rgba(83, 131, 232, 0.3);
+    border-radius: 6px;
+    color: #5383e8;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover {
+    background: rgba(83, 131, 232, 0.2);
+    border-color: rgba(83, 131, 232, 0.5);
+  }
+
   .achievements-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -235,6 +261,13 @@
     }
   }
 </style>
+
+<div class="back-btn-container">
+  <a href="/profile" class="back-btn">
+    <span>←</span>
+    <span>Back to Profile</span>
+  </a>
+</div>
 
 <div class="achievements-container">
   <!-- Header -->
