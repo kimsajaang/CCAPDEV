@@ -51,6 +51,7 @@
         </button>
     </div>
 </div>
+
 <style>
     @keyframes steamPulse {
 
@@ -197,4 +198,79 @@
             }
         } catch (e) { /* ignore */ }
     }
+
+    async function checkBHPlayingStatus() {
+        const bar = document.getElementById('bhPlayingBar');
+        const gameEl = document.getElementById('bhPlayingGame');
+        try {
+            // Get current user's library to find playing games
+            const authRes = await fetch('/api/auth/current', { credentials: 'include' });
+            if (!authRes.ok) return;
+            const user = await authRes.json();
+            if (!user) return;
+
+            const libRes = await fetch(`/api/library/${user._id}`, { credentials: 'include' });
+            if (!libRes.ok) return;
+            const library = await libRes.json();
+
+            const playingGame = library.find(g => g.status === 'playing');
+            if (playingGame && playingGame.gameId) {
+                bar.style.display = 'block';
+                gameEl.textContent = playingGame.gameId.name || 'Unknown Game';
+                // Store the entry ID for stop playing button
+                bar.dataset.entryId = playingGame._id;
+            } else {
+                bar.style.display = 'none';
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    async function stopPlayingGame(event) {
+        event.preventDefault();
+        const bar = document.getElementById('bhPlayingBar');
+        const entryId = bar.dataset.entryId;
+        if (!entryId) return;
+
+        const btn = event.target.closest('button');
+        const origContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Stopping...';
+
+        try {
+            const res = await fetch(`/api/library/${entryId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ status: 'backlog' })
+            });
+
+            if (res.ok) {
+                btn.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>Done';
+                setTimeout(() => {
+                    checkBHPlayingStatus();
+                    btn.innerHTML = origContent;
+                    btn.disabled = false;
+                }, 1500);
+            } else {
+                btn.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>Failed';
+                setTimeout(() => { btn.innerHTML = origContent; btn.disabled = false; }, 3000);
+            }
+        } catch (err) {
+            btn.innerHTML = '<i class="bi bi-wifi-off text-danger me-1"></i>Error';
+            setTimeout(() => { btn.innerHTML = origContent; btn.disabled = false; }, 3000);
+        }
+    }
+
+    // Re-check Steam status periodically (every 15 seconds) to detect game changes
+    if (sessionStorage.getItem('bh_user')) {
+        try {
+            const user = JSON.parse(sessionStorage.getItem('bh_user'));
+            if (user && user.steamId) {
+                setInterval(checkSteamStatus, 15000);
+            }
+        } catch (e) { }
+    }
+
+    // Re-check BH playing status periodically (every 15 seconds)
+    setInterval(checkBHPlayingStatus, 15000);
 </script>

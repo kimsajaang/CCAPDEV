@@ -155,20 +155,87 @@ plagiarized the work of other students and/or persons.
           </div>
 
           <div class="mb-3">
-            <label class="form-label">Add Photo (Optional)</label>
+            <label class="form-label">Add Media (Optional)</label>
             <div id="communityPhotoUploadArea" class="community-photo-upload-area">
               <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
-              <p class="mb-0 mt-2 small">Click to upload a screenshot or photo</p>
-              <input type="file" id="communityPhotoInput" accept="image/*" style="display: none;">
+              <p class="mb-0 mt-2 small">Click to upload a screenshot, photo, or video clip (max 100MB)</p>
+              <input type="file" id="communityPhotoInput" accept="image/*,video/*" style="display: none;">
             </div>
             <div id="communityPhotoPreviewContainer" style="display: none;"></div>
           </div>
         </div>
 
+        <div id="postError" style="display:none;border-radius:var(--radius-md);padding:12px 16px;margin:0 0 12px 0;"></div>
         <div class="modal-footer">
-          <div class="me-auto small text-muted" id="postError" style="display:none;"></div>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button id="createPostBtn" type="button" class="btn btn-primary">Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Post Modal -->
+  <div class="modal fade" id="editPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input id="editPostTitle" class="form-control" maxlength="120" placeholder="Example: Best 30-minute games for busy weeks"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Body</label>
+            <textarea id="editPostBody" class="form-control" rows="5" maxlength="2000" placeholder="Write your post..."></textarea>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Flair</label>
+              <select id="editPostFlair" class="form-select">
+                <option value="Discussion" selected>Discussion</option>
+                <option value="Recommendation">Recommendation</option>
+                <option value="Help">Help</option>
+                <option value="Progress">Progress</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Game (optional)</label>
+              <input id="editPostGame" class="form-control" maxlength="80" placeholder="Example: Hades, Balatro, Stardew Valley"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="savePostEditBtn" type="button" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Post Confirmation Modal -->
+  <div class="modal fade" id="deletePostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-danger">
+        <div class="modal-header bg-danger bg-opacity-10 border-danger">
+          <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Delete Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4">
+          <p class="mb-0"><strong>Are you sure?</strong></p>
+          <p class="text-muted small mb-0">This action cannot be undone. The post will be permanently deleted.</p>
+        </div>
+        <div class="modal-footer border-top">
+          <input type="hidden" id="confirmDeletePostId" />
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn"><i class="bi bi-trash3 me-2"></i>Delete Post</button>
         </div>
       </div>
     </div>
@@ -196,6 +263,7 @@ plagiarized the work of other students and/or persons.
     // Track login status globally
     let isUserLoggedIn = false;
     let currentUsername = 'Gamer';
+    let currentUserId = null;
 
     // Check authentication status and show/hide content accordingly
     async function checkAuthAndShowContent() {
@@ -208,6 +276,7 @@ plagiarized the work of other students and/or persons.
         isUserLoggedIn = response.ok;
         if (isUserLoggedIn) {
           const userData = await response.json();
+          currentUserId = userData._id;
           currentUsername = userData.displayName || userData.username || 'Gamer';
         }
         const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
@@ -378,7 +447,24 @@ plagiarized the work of other students and/or persons.
       const pAuth = post.author || { username: 'deleted', displayName: 'Deleted User' };
       const flairBadge = `<span class="badge bg-secondary">${escapeHtml(post.flair || "Discussion")}</span>`;
       const gameTag = post.game ? `<span class="badge bg-info text-dark ms-2">${escapeHtml(post.game)}</span>` : "";
-      const photoHtml = post.photo ? `<img src="${post.photo}" class="community-post-photo" alt="Post photo" loading="lazy">` : "";
+      let mediaHtml = "";
+      if (post.photo) {
+        // Check if it's a video by looking at the MIME type in the data URL
+        const isVideo = post.photo.startsWith("data:video/");
+        console.log("DEBUG: Checking post.photo - isVideo:", isVideo, "- first 50 chars:", post.photo.substring(0, 50));
+        if (isVideo) {
+          // Extract video MIME type (e.g., "data:video/mp4;base64,..." -> "video/mp4")
+          const typeMatch = post.photo.match(/data:([^;]+)/);
+          const videoType = (typeMatch && typeMatch[1]) || 'video/mp4';
+          console.log("DEBUG: Video detected with type:", videoType);
+          mediaHtml = `<video class="community-post-photo" controls style="max-width:100%;width:100%;border-radius:8px;margin-top:12px;background:#000;">
+            <source src="${post.photo}" type="${videoType}">
+            Your browser does not support the video tag.
+          </video>`;
+        } else {
+          mediaHtml = `<img src="${post.photo}" class="community-post-photo" alt="Post media" loading="lazy">`;
+        }
+      }
 
       wrapper.innerHTML = `
         <div class="card-body">
@@ -403,13 +489,17 @@ plagiarized the work of other students and/or persons.
 
               ${post.body ? `<div class="text-muted">${escapeHtml(post.body).replace(/\n/g, "<br/>")}</div>` : ""}
 
-              ${photoHtml}
+              ${mediaHtml}
 
               <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
                 <button class="btn btn-outline-primary btn-sm" data-act="toggleComments">
                   Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${(post.comments||[]).length}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
+                ${currentUserId && post.author && String(post.author._id) === String(currentUserId) ? `
+                  <button class="btn btn-outline-warning btn-sm" data-act="edit">Edit</button>
+                  <button class="btn btn-outline-danger btn-sm" data-act="delete">Delete</button>
+                ` : ""}
               </div>
 
               <div class="mt-3 d-none" data-comments>
@@ -435,16 +525,35 @@ plagiarized the work of other students and/or persons.
       wrapper.querySelector('[data-act="toggleComments"]').addEventListener("click", () => toggleComments(wrapper));
       wrapper.querySelector('[data-act="share"]').addEventListener("click", () => copyLink(post.id));
 
+      const editBtn = wrapper.querySelector('[data-act="edit"]');
+      if (editBtn) {
+        editBtn.addEventListener("click", () => openEditModal(post));
+      }
+
+      const deleteBtn = wrapper.querySelector('[data-act="delete"]');
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", () => deletePost(post.id));
+      }
+
       const addBtn = wrapper.querySelector('[data-act="addComment"]');
       addBtn.addEventListener("click", () => {
         const input = addBtn.parentElement.querySelector("input");
         const text = input.value.trim();
         if (!text) return;
-        addComment(post.id, text);
+        
+        // Show comment instantly on UI
+        const commentList = wrapper.querySelector("[data-commentlist]");
+        const commentEl = document.createElement("div");
+        commentEl.className = "comment";
+        commentEl.innerHTML = `
+          <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${currentUsername || "You"}</div>
+          <div style="font-size:13px;color:#555;">${text}</div>
+        `;
+        commentList.appendChild(commentEl);
         input.value = "";
-        render();
-        location.hash = "post-" + post.id;
-        setTimeout(() => openCommentsForHash(), 50);
+        
+        // Post to server in background (don't wait)
+        addComment(post.id, text);
       });
 
       const commentList = wrapper.querySelector("[data-commentlist]");
@@ -529,12 +638,14 @@ plagiarized the work of other students and/or persons.
         const res = await fetch(`/api/posts/${postId}/comment`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ text })
         });
         if (!res.ok) throw new Error('Comment failed');
-        render();
+        // Comment already shown optimistically, just silently confirm with server
       } catch (err) {
-        console.error(err);
+        console.error('Comment submission error:', err);
+        // In case of error, a simple alert could be added, but for now errors are silent
       }
     }
 
@@ -551,6 +662,70 @@ plagiarized the work of other students and/or persons.
       }).catch(() => {
         alert("Copy failed. You can manually copy the URL from the address bar.");
       });
+    }
+
+    // Edit modal state
+    let editingPostId = null;
+
+    function openEditModal(post) {
+      editingPostId = post.id;
+      document.getElementById("editPostTitle").value = post.title || "";
+      document.getElementById("editPostBody").value = post.body || "";
+      document.getElementById("editPostFlair").value = post.flair || "Discussion";
+      document.getElementById("editPostGame").value = post.game || "";
+      const editModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("editPostModal"));
+      editModal.show();
+    }
+
+    async function deletePost(postId) {
+      document.getElementById("confirmDeletePostId").value = postId;
+      const deleteModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("deletePostModal"));
+      deleteModal.show();
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+      const postId = document.getElementById("confirmDeletePostId").value;
+      try {
+        const res = await fetch(`/api/posts/${postId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Delete failed');
+        const deleteModal = bootstrap.Modal.getInstance(document.getElementById("deletePostModal"));
+        deleteModal.hide();
+        render();
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert("Failed to delete post");
+      }
+    });
+
+    async function savePostEdit() {
+      const title = document.getElementById("editPostTitle").value.trim();
+      const body = document.getElementById("editPostBody").value.trim();
+      const flair = document.getElementById("editPostFlair").value;
+      const game = document.getElementById("editPostGame").value.trim();
+
+      if (!title) {
+        alert("Title is required");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${editingPostId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ title, body, flair, game: game || undefined })
+        });
+        if (!res.ok) throw new Error('Update failed');
+        const editModal = bootstrap.Modal.getInstance(document.getElementById("editPostModal"));
+        editModal.hide();
+        render();
+      } catch (err) {
+        console.error('Edit error:', err);
+        alert("Failed to update post");
+      }
     }
 
     const postTitle = document.getElementById("postTitle");
@@ -592,26 +767,39 @@ plagiarized the work of other students and/or persons.
     communityPhotoInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (file) {
-        if (file.size > 5 * 1024 * 1024) {
+        if (file.size > 100 * 1024 * 1024) {
           postError.style.display = "block";
-          postError.textContent = "Photo must be less than 5MB";
+          postError.className = "alert alert-danger alert-dismissible fade show mb-0";
+          postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i><strong>File too large!</strong> Maximum file size is 100MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
           return;
         }
+        const isVideo = file.type.startsWith('video/');
         const reader = new FileReader();
         reader.onload = (event) => {
           communitySelectedPhoto = event.target.result;
           communityPhotoUploadArea.classList.add("has-photo");
           communityPhotoUploadArea.innerHTML = "";
-          const img = document.createElement("img");
-          img.src = communitySelectedPhoto;
-          img.className = "community-photo-preview-img";
-          img.alt = "Preview";
-          communityPhotoUploadArea.appendChild(img);
+          
+          if (isVideo) {
+            const video = document.createElement("video");
+            video.src = communitySelectedPhoto;
+            video.className = "community-photo-preview-img";
+            video.controls = true;
+            video.style.cssText = "max-width:100%;max-height:300px;background:#000;";
+            communityPhotoUploadArea.appendChild(video);
+          } else {
+            const img = document.createElement("img");
+            img.src = communitySelectedPhoto;
+            img.className = "community-photo-preview-img";
+            img.alt = "Preview";
+            communityPhotoUploadArea.appendChild(img);
+          }
+          
           communityPhotoUploadArea.appendChild(communityPhotoInput);
           const removeBtn = document.createElement("button");
           removeBtn.type = "button";
           removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn";
-          removeBtn.textContent = "Remove Photo";
+          removeBtn.textContent = "Remove Media";
           removeBtn.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -638,6 +826,7 @@ plagiarized the work of other students and/or persons.
 
       fetch('/api/posts', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
@@ -647,7 +836,12 @@ plagiarized the work of other students and/or persons.
           photo: communitySelectedPhoto
         })
       })
-      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => Promise.reject(err));
+        }
+        return res.json();
+      })
       .then(post => {
         postTitle.value = "";
         postBody.value = "";
@@ -657,15 +851,18 @@ plagiarized the work of other students and/or persons.
         postError.textContent = "";
         resetPhotoUpload();
         newPostModal.hide();
-        location.hash = "post-" + post._id;
+        location.hash = "post-" + post.id;
         render();
         updateSidebarStats();
       })
       .catch(err => {
+        console.error('Post creation error:', err);
         postError.style.display = "block";
-        postError.textContent = "Failed to create post. Try again.";
+        postError.textContent = "Error: " + (err.error || err.message || "Failed to create post. Try again.");
       });
     });
+
+    document.getElementById("savePostEditBtn").addEventListener("click", savePostEdit);
 
     sortSelect.addEventListener("change", render);
     searchInput.addEventListener("input", () => {

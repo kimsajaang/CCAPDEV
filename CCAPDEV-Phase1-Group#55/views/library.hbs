@@ -481,7 +481,6 @@ plagiarized the work of other students and/or persons.
                           <div class="star-rating" data-entry-id="${game.id}">
                             ${[1, 2, 3, 4, 5].map(i => `<i class="bi bi-star-fill ${i <= (game.rating || 0) ? 'active' : ''}" data-rating="${i}" style="cursor: pointer; font-size: 0.95rem; color: ${i <= (game.rating || 0) ? '#febc2e' : '#2a3843'}; transition: color 0.15s, transform 0.15s;" onmouseover="this.parentElement.querySelectorAll('i').forEach((s, idx) => s.style.color = idx < ${i} ? '#febc2e' : '#2a3843')" onmouseout="this.parentElement.querySelectorAll('i').forEach((s, idx) => s.style.color = s.classList.contains('active') ? '#febc2e' : '#2a3843')" onclick="setRating('${game.id}', ${i})"></i>`).join('')}
                           </div>
-                          ${game.rating ? `<span class="small text-warning fw-bold">${game.rating}/5</span>` : '<span class="small text-muted">Not rated</span>'}
                         </div>
                         <!-- Review button -->
                         <div class="mb-2">

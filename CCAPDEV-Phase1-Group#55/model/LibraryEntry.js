@@ -1,6 +1,20 @@
 // model/LibraryEntry.js - User's game library entries
 const mongoose = require('mongoose');
 
+const commentSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  userName: String,
+  text: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
 const libraryEntrySchema = new mongoose.Schema(
   {
     userId: {
@@ -44,6 +58,7 @@ const libraryEntrySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    comments: [commentSchema],
   },
   { timestamps: true }
 );

@@ -55,48 +55,55 @@ plagiarized the work of other students and/or persons.
     min-width: 0;
   }
 
-  .pg-chat-sidebar {
-    width: 320px;
-    flex-shrink: 0;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 120px);
-    position: sticky;
-    top: 80px;
-  }
-
   /* ── Hero Banner ── */
   .hero-banner {
     position: relative;
-    background: linear-gradient(110deg, rgba(11, 14, 20, 1) 30%, rgba(11, 14, 20, 0.7) 100%),
-      url('https://images.igdb.com/igdb/image/upload/t_original/co5wex.jpg') right center / cover no-repeat;
-    border-radius: 16px;
-    padding: 40px;
-    margin-bottom: 30px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--card-border);
+    background: linear-gradient(135deg, #1a1628 0%, #0f1419 50%, #1a1f2e 100%),
+      rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    padding: 50px;
+    margin-bottom: 40px;
+    box-shadow: 0 0 60px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.2);
     overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    pointer-events: none;
   }
 
   .hero-top {
     display: flex;
     align-items: center;
-    gap: 20px;
-    margin-bottom: 25px;
+    gap: 24px;
+    margin-bottom: 30px;
     position: relative;
     z-index: 2;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
   }
 
   .hero-avatar {
-    width: 70px;
-    height: 70px;
-    border-radius: 12px;
-    border: 2px solid var(--accent);
+    width: 90px;
+    height: 90px;
+    border-radius: 16px;
+    border: 3px solid var(--accent);
     object-fit: cover;
-    box-shadow: 0 0 20px var(--accent-glow);
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  }
+
+  .hero-top:hover .hero-avatar {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 12px 40px rgba(139, 92, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
   .hero-name {
@@ -117,123 +124,208 @@ plagiarized the work of other students and/or persons.
     font-weight: 900;
     line-height: 1.1;
     letter-spacing: -0.02em;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
     color: #fff;
     position: relative;
     z-index: 2;
+    background: linear-gradient(135deg, #fff 0%, #c9c9ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   }
 
   .hero-stats {
     display: flex;
-    gap: 25px;
-    font-size: 0.9rem;
+    gap: 30px;
+    font-size: 0.95rem;
     color: var(--text-secondary);
     align-items: center;
     flex-wrap: wrap;
     position: relative;
     z-index: 2;
+    margin-bottom: 25px;
   }
 
   .hero-stats strong {
     color: #fff;
-    font-weight: 700;
-    margin-right: 4px;
+    font-weight: 800;
+    margin-right: 6px;
+  }
+
+  .hero-stats div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: slideInUp 0.6s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .hero-meta {
     margin-left: auto;
     display: flex;
-    gap: 20px;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    padding-left: 20px;
+    gap: 24px;
+    padding-left: 24px;
+    flex-direction: row;
+  }
+
+  .hero-meta div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .hero-meta i {
+    color: var(--accent);
+    font-size: 1rem;
   }
 
   /* ── Level Progress ── */
   .lvl-progress-wrap {
     position: relative;
-    height: 10px;
+    height: 12px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
-    margin-top: 30px;
+    margin-top: 35px;
     max-width: 800px;
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    overflow: hidden;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 
   .lvl-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #6d28d9, var(--accent));
+    background: linear-gradient(90deg, #8b5cf6, #5b7fee, #6d28d9);
     border-radius: 10px;
-    box-shadow: 0 0 15px var(--accent-glow);
-    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: width 2s cubic-bezier(0.34, 1.56, 0.64, 1);
     width: 0%;
+    position: relative;
+  }
+
+  .lvl-progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progress-shimmer 2s infinite;
+  }
+
+  @keyframes progress-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 
   .lvl-star {
     position: absolute;
-    right: -18px;
-    top: -13px;
-    width: 36px;
-    height: 36px;
+    right: -20px;
+    top: -14px;
+    width: 40px;
+    height: 40px;
     background: var(--accent);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 0.9rem;
+    font-weight: 900;
+    font-size: 1rem;
     clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-    box-shadow: 0 0 20px var(--accent-glow);
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.7);
+    animation: star-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes star-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(139, 92, 246, 0.7); }
+    50% { transform: scale(1.1); box-shadow: 0 0 35px rgba(139, 92, 246, 1); }
   }
 
   /* ── Grid Sections ── */
   .sec-title {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
     color: var(--text-tertiary);
-    font-weight: 700;
-    margin-bottom: 20px;
+    font-weight: 800;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(139, 92, 246, 0.2);
   }
 
   .sec-title i {
     color: var(--accent);
+    font-size: 1.1rem;
   }
 
   .acc-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 45px;
+    animation: slideInUp 0.6s ease-out 0.1s both;
   }
 
   .acc-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 14px;
+    padding: 18px;
     display: flex;
     align-items: center;
     gap: 16px;
-    transition: all 0.3s;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .acc-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
   }
 
   .acc-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-6px);
     border-color: var(--accent);
-    background: rgba(139, 92, 246, 0.05);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 12px 35px rgba(139, 92, 246, 0.25);
+  }
+
+  .acc-card:hover::before {
+    opacity: 1;
   }
 
   .acc-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
     overflow: hidden;
-    background: var(--bg-tertiary);
+    background: linear-gradient(135deg, var(--bg-tertiary), rgba(139, 92, 246, 0.1));
     flex-shrink: 0;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
   }
 
   .acc-icon img {
@@ -256,21 +348,23 @@ plagiarized the work of other students and/or persons.
 
   /* ── Friend Request Card ── */
   .friend-request-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 14px;
+    padding: 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    transition: all 0.3s;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
   }
 
   .friend-request-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-6px);
     border-color: var(--accent);
-    background: rgba(139, 92, 246, 0.05);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 12px 35px rgba(139, 92, 246, 0.25);
   }
 
   .friend-request-info {
@@ -281,12 +375,14 @@ plagiarized the work of other students and/or persons.
   }
 
   .friend-request-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
     overflow: hidden;
     background: var(--bg-tertiary);
     flex-shrink: 0;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
   }
 
   .friend-request-avatar img {
@@ -297,14 +393,14 @@ plagiarized the work of other students and/or persons.
 
   .friend-request-details h6 {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.98rem;
     font-weight: 700;
     color: #fff;
   }
 
   .friend-request-details small {
     color: var(--text-tertiary);
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .friend-request-actions {
@@ -326,58 +422,42 @@ plagiarized the work of other students and/or persons.
     gap: 6px;
   }
 
-  .friend-request-accept {
-    background: var(--success);
-    color: #fff;
-  }
-
-  .friend-request-accept:hover {
-    background: #059669;
-    transform: translateY(-1px);
-  }
-
-  .friend-request-reject {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
-  }
-
-  .friend-request-reject:hover {
-    background: rgba(255, 99, 71, 0.15);
-    border-color: rgba(255, 99, 71, 0.3);
-  }
-
   /* ── Community Scores ── */
   .community-score-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding: 10px 12px;
-    background: rgba(139, 92, 246, 0.05);
-    border-radius: 8px;
-    border: 1px solid rgba(139, 92, 246, 0.1);
-    transition: all 0.2s;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
   }
 
   .community-score-item:hover {
-    background: rgba(139, 92, 246, 0.1);
-    transform: translateX(2px);
+    transform: translateX(4px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
   }
 
   .community-score-name {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--text-primary);
     text-truncate;
     flex: 1;
+    font-weight: 600;
   }
 
   .community-score-rating {
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: #fbbf24;
     font-weight: 700;
     white-space: nowrap;
     margin-left: 12px;
+    letter-spacing: 0.05em;
   }
 
   .split-row {
@@ -391,58 +471,85 @@ plagiarized the work of other students and/or persons.
   }
 
   .ach-item {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    padding: 16px 18px;
     display: flex;
     align-items: center;
-    margin-bottom: 12px;
-    transition: all 0.2s;
+    margin-bottom: 14px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .ach-item:hover {
+    transform: translateX(4px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
   }
 
   .ach-icon-box {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     color: var(--accent);
     margin-right: 16px;
   }
 
   .ach-name {
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: #e4e6eb;
     flex: 1;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
   }
 
   .ach-status {
     font-size: 0.75rem;
     font-weight: 700;
     color: var(--success);
+    background: rgba(16, 185, 129, 0.15);
+    padding: 4px 8px;
+    border-radius: 4px;
   }
 
   .ach-prog-val {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: var(--text-tertiary);
+    color: var(--accent);
+    background: rgba(139, 92, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 4px;
   }
 
   .act-item {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    padding: 16px 18px;
     display: flex;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+  }
+
+  .act-item:hover {
+    transform: translateX(4px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
   }
 
   .act-status {
     font-size: 0.7rem;
-    color: var(--text-tertiary);
+    color: var(--accent);
     font-weight: 800;
     text-transform: uppercase;
+    background: rgba(139, 92, 246, 0.15);
+    padding: 5px 9px;
+    border-radius: 4px;
     width: 85px;
     flex-shrink: 0;
   }
@@ -628,86 +735,96 @@ plagiarized the work of other students and/or persons.
     align-self: center;
   }
 
-  .chat-input-box {
-    padding: 20px;
-    border-top: 1px solid var(--border);
-  }
-
-  .chat-input-box input {
-    width: 100%;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 15px;
-    color: #fff;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border 0.2s;
-  }
-
-  .chat-input-box input:focus {
-    border-color: var(--accent);
-  }
-
   .empty-state {
     text-align: center;
-    padding: 40px 20px;
+    padding: 50px 20px;
     color: var(--text-tertiary);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(91, 127, 238, 0.05) 100%);
+    border: 1px dashed rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
   }
 
   /* ── Shared/Edit Buttons ── */
-  .edit-prof-btn {
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    border: 1px solid var(--border);
-  }
-
-  .edit-prof-btn:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
-
   .prof-btn {
-    padding: 8px 16px;
+    padding: 10px 18px;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.87rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: inline-flex;
     align-items: center;
     gap: 8px;
     border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
   .btn-primary {
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent), #6d28d9);
     color: #fff;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
   }
 
   .btn-primary:hover {
-    background: #7c3aed;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
   }
 
   .btn-outline {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1.5px solid rgba(139, 92, 246, 0.4);
     color: var(--text-secondary);
+    box-shadow: none;
   }
 
   .btn-outline:hover {
     border-color: var(--accent);
     color: #fff;
+    background: rgba(139, 92, 246, 0.08);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+  }
+
+  .friend-request-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+  }
+
+  .friend-request-accept {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .friend-request-accept:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  }
+
+  .friend-request-reject {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .friend-request-reject:hover {
+    background: rgba(255, 99, 71, 0.12);
+    border-color: rgba(255, 99, 71, 0.4);
+    color: #ff6347;
   }
 
   /* ── Modal ── */
@@ -739,10 +856,65 @@ plagiarized the work of other students and/or persons.
     margin-bottom: 20px;
   }
 
-  @media (max-width: 1100px) {
-    .pg-chat-sidebar {
-      display: none;
+  /* ── Global Animations ── */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
     }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .profile-dashboard {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  /* ── Loading State ── */
+  .loading-skeleton {
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 25%, rgba(139, 92, 246, 0.2) 50%, rgba(139, 92, 246, 0.1) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Edit Button ── */
+  .edit-prof-btn {
+    width: 38px;
+    height: 38px;
+    background: rgba(139, 92, 246, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-decoration: none;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+  }
+
+  .edit-prof-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+    transform: scale(1.1);
   }
 
   @media (max-width: 768px) {
@@ -752,11 +924,24 @@ plagiarized the work of other students and/or persons.
 
     .hero-bio {
       font-size: 2.2rem;
+      margin-bottom: 25px;
+    }
+
+    .hero-top {
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .hero-avatar {
+      width: 75px;
+      height: 75px;
     }
 
     .hero-stats {
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
     }
 
     .hero-meta {
@@ -764,7 +949,7 @@ plagiarized the work of other students and/or persons.
       border-left: none;
       padding-left: 0;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .xp-tooltip {
@@ -773,21 +958,26 @@ plagiarized the work of other students and/or persons.
     }
 
     .hero-banner {
-      padding: 30px 20px;
+      padding: 35px 20px;
+      margin-bottom: 30px;
     }
 
-    .hero-avatar {
-      width: 60px;
-      height: 60px;
-    }
-
-    .hero-bio {
-      font-size: 1.8rem;
-      margin-bottom: 15px;
+    .hero-banner::before {
+      display: none;
     }
 
     .acc-grid {
       grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .acc-card {
+      padding: 16px;
+    }
+
+    .sec-title {
+      font-size: 0.75rem;
+      margin-bottom: 16px;
     }
   }
 
@@ -888,8 +1078,8 @@ plagiarized the work of other students and/or persons.
         </div>
       </div>
 
-      <!-- ACCOMPLISHMENTS SECTION -->
-      <div class="sec-title"><i class="bi bi-trophy-fill"></i> Featured Accomplishments</div>
+      <!-- FEATURED GAMES SECTION -->
+      <div class="sec-title"><i class="bi bi-star-fill"></i> Featured Games</div>
       <div class="acc-grid" id="accGrid">
         <!-- Rendered via JS -->
       </div>
@@ -910,9 +1100,9 @@ plagiarized the work of other students and/or persons.
           </div>
         </div>
 
-        <!-- COMMUNITY QUALITY SCORES -->
+        <!-- USER'S GAME RATINGS -->
         <div class="split-col">
-          <div class="sec-title"><i class="bi bi-star-fill"></i> Community Quality Scores</div>
+          <div class="sec-title"><i class="bi bi-star-fill"></i> Game Ratings</div>
           <div id="communityScoresContainer">
             <div class="empty-state">No rated games yet.</div>
           </div>
@@ -936,41 +1126,9 @@ plagiarized the work of other students and/or persons.
   </div>
 </div>
 
-<!-- CREATE GROUP MODAL -->
-<div id="createGroupModal" class="custom-modal-overlay">
-  <div class="custom-modal">
-    <h5 class="modal-title">New Group Chat</h5>
-    <div class="mb-4">
-      <label style="color:var(--text-tertiary); font-size:0.8rem; margin-bottom:8px; display:block;">Group Name</label>
-      <input type="text" id="newGroupNameInput" class="form-control" placeholder="e.g. Valorant Squad"
-        style="background:var(--bg-tertiary); border:1px solid var(--border); color:#fff; padding:12px; border-radius:8px; width:100%; outline:none;"
-        onkeypress="if(event.key === 'Enter') confirmCreateGroup()">
-    </div>
-    <div class="d-flex justify-content-end gap-2">
-      <button class="btn-outline prof-btn" onclick="closeCreateGroupModal()">Cancel</button>
-      <button class="btn-primary prof-btn" onclick="confirmCreateGroup()">Create Chat</button>
-    </div>
-  </div>
-</div>
-
-<!-- INVITE MODAL -->
-<div id="inviteFriendsModal" class="custom-modal-overlay">
-  <div class="custom-modal">
-    <h5 class="modal-title">Invite Friends</h5>
-    <div id="inviteFriendsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
-      <!-- Populated via JS -->
-    </div>
-    <div class="d-flex justify-content-end">
-      <button class="btn-outline prof-btn" onclick="closeInviteModal()">Close</button>
-    </div>
-  </div>
-</div>
-
 <script>
   /* ── Constants ── */
   const AVATAR_FALLBACK = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%231a1f2e%22/%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2216%22 fill=%22%238b5cf6%22/%3E%3Cellipse cx=%2240%22 cy=%2272%22 rx=%2228%22 ry=%2220%22 fill=%22%238b5cf6%22/%3E%3C/svg%3E";
-  const GLOBAL_CHAT_KEY = 'bh_global_chat_v1';
-  let PRIVATE_CHATS_KEY = '';
 
   const ACHIEVEMENTS_DEF = [
     { id: 'first_game', name: 'First Step', icon: 'bi-controller', max: 1 },
@@ -984,10 +1142,6 @@ plagiarized the work of other students and/or persons.
   let profileUser = null;
   let isOwnProfile = true;
   let _profileStorageKey, _libraryStorageKey, _achievementsStorageKey;
-
-  let localGroupChats = [];
-  let activeGroupId = 'general';
-  window.myFriends = [];
 
   /* ── Initialization ── */
   async function initProfile() {
@@ -1012,7 +1166,6 @@ plagiarized the work of other students and/or persons.
       initializeKeys(profileUser._id);
       renderProfileView();
       await fetchStatsAndActivity();
-      await loadFriendsAndChat();
     } catch (e) { console.error("Init failed", e); }
   }
 
@@ -1020,7 +1173,6 @@ plagiarized the work of other students and/or persons.
     _profileStorageKey = `prfl_v1_${uid}`;
     _libraryStorageKey = `lib_v1_${uid}`;
     _achievementsStorageKey = `ach_v1_${uid}`;
-    PRIVATE_CHATS_KEY = `priv_chats_v1_${uid}`;
   }
 
   /* ── UI Rendering ── */
@@ -1089,8 +1241,8 @@ plagiarized the work of other students and/or persons.
     const items = [...favs, ...topPlayed].slice(0, 6);
     if (!items.length) { container.innerHTML = '<div class="empty-state">No accomplishments yet. Add games to your library!</div>'; return; }
 
-    container.innerHTML = items.map(i => `
-    <div class="acc-card">
+    container.innerHTML = items.map((i, idx) => `
+    <div class="acc-card" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">
       <div class="acc-icon"><img src="${i.cover}" alt="icon" onerror="this.src='/img/placeholder.jpg'"></div>
       <div class="acc-info"><h6>${i.name}</h6><small>Showcased Title</small></div>
     </div>
@@ -1102,7 +1254,7 @@ plagiarized the work of other students and/or persons.
     const badge = document.getElementById('achProgBadge');
 
     let earnedCount = 0;
-    const html = ACHIEVEMENTS_DEF.map(a => {
+    const html = ACHIEVEMENTS_DEF.map((a, idx) => {
       let current = 0;
       if (a.id === 'first_game' || a.id === 'collector') current = stats.total;
       if (a.id === 'completionist_badge') current = stats.completed;
@@ -1112,7 +1264,7 @@ plagiarized the work of other students and/or persons.
       if (isDone) earnedCount++;
 
       return `
-      <div class="ach-item" style="opacity: ${isDone ? 1 : 0.4}">
+      <div class="ach-item" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both; opacity: ${isDone ? 1 : 0.6}">
         <div class="ach-icon-box"><i class="bi ${a.icon}"></i></div>
         <div class="ach-name">${a.name}</div>
         ${isDone ? '<div class="ach-status">ACHIEVED</div>' : `<div class="ach-prog-val">${Math.min(current, a.max)}/${a.max}</div>`}
@@ -1131,10 +1283,10 @@ plagiarized the work of other students and/or persons.
 
     if (!sorted.length) { container.innerHTML = '<div class="empty-state">Nothing lately.</div>'; return; }
 
-    container.innerHTML = sorted.map(g => {
+    container.innerHTML = sorted.map((g, idx) => {
       const status = 'Completed';
       return `
-      <div class="act-item">
+      <div class="act-item" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">
         <div class="act-status">${status}</div>
         <div class="act-info">
           <span class="act-game-name">${g.gameId.name}</span>
@@ -1169,14 +1321,14 @@ plagiarized the work of other students and/or persons.
       titleContainer.style.display = 'flex';
       countBadge.textContent = requests.length;
 
-      container.innerHTML = requests.map(req => {
+      container.innerHTML = requests.map((req, idx) => {
         const from = req.from;
         const avatar = from.avatar || AVATAR_FALLBACK;
         const displayName = from.displayName || from.username;
         const requestId = req._id;
 
         return `
-          <div class="friend-request-card">
+          <div class="friend-request-card" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">
             <div class="friend-request-info">
               <div class="friend-request-avatar">
                 <img src="${avatar}" alt="${displayName}" onerror="this.src='${AVATAR_FALLBACK}'">
@@ -1226,199 +1378,44 @@ plagiarized the work of other students and/or persons.
     }
   }
 
-  // Load community quality scores
+  // Load user's game ratings
   function loadCommunityScores(games) {
     const container = document.getElementById('communityScoresContainer');
     
     try {
-      // Fetch community-wide aggregated scores instead of individual user ratings
-      fetch('/api/community/quality-scores', { credentials: 'include' })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch');
-          return res.json();
-        })
-        .then(communityGames => {
-          if (!communityGames || communityGames.length === 0) {
-            container.innerHTML = '<div class="empty-state">No community ratings yet.</div>';
-            return;
-          }
+      // Filter games that have ratings
+      const ratedGames = games.filter(g => g.rating && g.rating > 0 && g.gameId)
+        .sort((a, b) => b.rating - a.rating);
 
-          let html = '';
-          communityGames.forEach((game, idx) => {
-            // Generate stars based on actual average rating (not fixed decimal)
-            const avgRating = parseFloat(game.averageRating);
-            const fullStars = Math.floor(avgRating);
-            const hasHalfStar = (avgRating % 1) >= 0.5;
-            const emptyStars = 5 - Math.ceil(avgRating);
-            
-            let stars = '★'.repeat(fullStars);
-            if (hasHalfStar && fullStars < 5) stars += '½';
-            stars += '☆'.repeat(emptyStars);
+      if (!ratedGames || ratedGames.length === 0) {
+        container.innerHTML = '<div class="empty-state">No rated games yet.</div>';
+        return;
+      }
 
-            html += `<div style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
-              <div style="flex: 1; min-width: 0;">
-                <div class="text-truncate fw-500" title="${game.name}" style="word-break: break-word;">${game.name}</div>
-                <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">${game.ratingCount} ${game.ratingCount === 1 ? 'rating' : 'ratings'}</div>
-              </div>
-              <div style="font-weight: bold; white-space: nowrap; font-size: 1rem; color: #fbbf24; flex-shrink: 0;">${stars}</div>
-            </div>`;
-          });
+      let html = '';
+      ratedGames.forEach((entry, idx) => {
+        const rating = Math.floor(entry.rating);
+        const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        const gameName = entry.gameId.name || entry.gameId;
 
-          container.innerHTML = html;
-        })
-        .catch(err => {
-          console.error('[Community Scores] Error:', err);
-          container.innerHTML = '<div class="empty-state">Could not load community scores.</div>';
-        });
+        html += `<div style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+          <div style="flex: 1; min-width: 0;">
+            <div class="text-truncate fw-500" title="${gameName}" style="word-break: break-word;">${gameName}</div>
+            <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">Personal rating</div>
+          </div>
+          <div style="font-weight: bold; white-space: nowrap; font-size: 1rem; color: #fbbf24; flex-shrink: 0;">${stars}</div>
+        </div>`;
+      });
+
+      container.innerHTML = html;
     } catch (err) {
-      console.error('[Community Scores] Error:', err);
-      container.innerHTML = '<div class="empty-state">Could not load community scores.</div>';
-    }
-  }
-
-  /* ── Group Chat Features ── */
-  async function loadFriendsAndChat() {
-    const groupSelect = document.getElementById('chatGroupSelect');
-    try {
-      const res = await fetch('/api/friends');
-      if (res.ok) window.myFriends = await res.json();
-
-      // 1. Load Global General Chat
-      let globalChat = JSON.parse(localStorage.getItem(GLOBAL_CHAT_KEY));
-      if (!globalChat) {
-        globalChat = { id: 'general', name: 'General Chat', messages: [{ userId: 'system', text: 'Welcome to General Chat!' }] };
-        localStorage.setItem(GLOBAL_CHAT_KEY, JSON.stringify(globalChat));
-      }
-
-      // 2. Load Private User Chats
-      let privChats = JSON.parse(localStorage.getItem(PRIVATE_CHATS_KEY));
-      if (!privChats) {
-        privChats = [];
-        localStorage.setItem(PRIVATE_CHATS_KEY, JSON.stringify(privChats));
-      }
-
-      localGroupChats = [globalChat, ...privChats];
-      activeGroupId = 'general';
-
-      renderGroupChatOptions();
-      switchChatGroup('general');
-    } catch (e) { }
-  }
-
-  function renderGroupChatOptions() {
-    const select = document.getElementById('chatGroupSelect');
-    select.innerHTML = localGroupChats.map(c => `<option value="${c.id}" ${activeGroupId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
-  }
-
-  function switchChatGroup(id) {
-    activeGroupId = id;
-    const inviteBtn = document.getElementById('addMemberBtn');
-    if (id === 'general') {
-      inviteBtn.style.display = 'none';
-    } else {
-      inviteBtn.style.display = 'inline-block';
-    }
-    renderActiveChat();
-  }
-
-  function saveLocalChats() {
-    const globalChat = localGroupChats.find(c => c.id === 'general');
-    const privChats = localGroupChats.filter(c => c.id !== 'general');
-
-    if (globalChat) localStorage.setItem(GLOBAL_CHAT_KEY, JSON.stringify(globalChat));
-    localStorage.setItem(PRIVATE_CHATS_KEY, JSON.stringify(privChats));
-  }
-
-  function renderActiveChat() {
-    const container = document.getElementById('chatMessages');
-    const chat = localGroupChats.find(c => c.id === activeGroupId);
-    if (!chat) return;
-
-    if (!chat.messages.length) {
-      container.innerHTML = `
-      <div class="empty-state">
-        <i class="bi bi-chat-dots" style="font-size:2.5rem; display:block; margin-bottom:15px; opacity:0.1;"></i>
-        No messages yet.<br>
-        <button class="btn-primary prof-btn mt-3" onclick="openInviteModal()" style="font-size:0.75rem; padding: 6px 12px;">Invite Friends</button>
-      </div>
-    `;
-    } else {
-      container.innerHTML = chat.messages.map(m => {
-        if (m.userId === 'system') return `<div class="cm-system">${m.text}</div>`;
-        return `
-        <div class="cm-bubble">
-          <div class="cm-header"><span class="cm-user">${m.name || 'Gamer'}</span><span>${m.time || 'Just now'}</span></div>
-          <div class="cm-text">${m.text}</div>
-        </div>
-      `;
-      }).join('');
-      container.scrollTop = container.scrollHeight;
-    }
-  }
-
-  function handleChatInput(e) {
-    if (e.key === 'Enter' && e.target.value.trim()) {
-      const val = e.target.value.trim();
-      const chat = localGroupChats.find(c => c.id === activeGroupId);
-      if (chat) {
-        chat.messages.push({
-          id: Date.now(),
-          userId: currentUser._id,
-          name: currentUser.displayName || currentUser.username,
-          text: val,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        saveLocalChats();
-        renderActiveChat();
-        e.target.value = '';
-      }
+      console.error('[Game Ratings] Error:', err);
+      container.innerHTML = '<div class="empty-state">Could not load ratings.</div>';
     }
   }
 
   /* Modals */
-  function openCreateGroupModal() { document.getElementById('createGroupModal').style.display = 'flex'; document.getElementById('newGroupNameInput').focus(); }
-  function closeCreateGroupModal() { document.getElementById('createGroupModal').style.display = 'none'; }
-  function confirmCreateGroup() {
-    const input = document.getElementById('newGroupNameInput');
-    if (!input.value.trim()) return;
-    const newChat = { id: 'group_' + Date.now(), name: input.value.trim(), messages: [] };
-    localGroupChats.push(newChat);
-    saveLocalChats();
-    activeGroupId = newChat.id;
-    renderGroupChatOptions();
-    renderActiveChat();
-    closeCreateGroupModal();
-  }
-
-  function openInviteModal() {
-    const overlay = document.getElementById('inviteFriendsModal');
-    const list = document.getElementById('inviteFriendsList');
-    overlay.style.display = 'flex';
-
-    if (!window.myFriends.length) { list.innerHTML = '<div class="text-center py-4 text-muted">You have no friends to invite!</div>'; return; }
-
-    list.innerHTML = window.myFriends.map(f => `
-    <div class="d-flex align-items-center justify-content-between mb-3 p-2" style="background:rgba(255,255,255,0.02); border-radius:10px;">
-      <div class="d-flex align-items-center gap-3">
-        <img src="${f.avatar || AVATAR_FALLBACK}" style="width:34px; height:34px; border-radius:50%; object-fit:cover;">
-        <span style="font-weight:700; color:#fff; font-size:0.9rem;">${f.displayName || f.username}</span>
-      </div>
-      <button class="btn-primary prof-btn" style="font-size:0.7rem; padding: 4px 10px;" onclick="addSystemJoin('${f.displayName || f.username.replace(/'/g, "\\'")}')">Invite</button>
-    </div>
-  `).join('');
-  }
-
-  function closeInviteModal() { document.getElementById('inviteFriendsModal').style.display = 'none'; }
-
-  function addSystemJoin(name) {
-    const chat = localGroupChats.find(c => c.id === activeGroupId);
-    if (chat) {
-      chat.messages.push({ userId: 'system', text: name + ' joined the chat!' });
-      saveLocalChats();
-      renderActiveChat();
-      closeInviteModal();
-    }
-  }
+  /* (Group chat modals removed) */
 
   /* ── XP Tooltip Functions ── */
   function showXpTooltip() {
@@ -1448,8 +1445,17 @@ plagiarized the work of other students and/or persons.
   }
 
   async function sendRequest(uid) {
-    const res = await fetch('/api/friends/request/' + uid, { method: 'POST' });
-    if (res.ok) window.location.reload();
+    try {
+      const res = await fetch('/api/friends/request/' + uid, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed to send friend request');
+      }
+    } catch (e) {
+      alert('Error sending friend request');
+    }
   }
 
   /* ── Initialization Entry ── */

@@ -366,21 +366,41 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let html = '';
-            friends.forEach(f => {
+            for (const f of friends) {
                 const name = (f.displayName || f.username || 'User').replace(/</g, '&lt;');
                 const handle = ('@' + (f.username || '')).replace(/</g, '&lt;');
                 const avatar = f.avatar || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E`;
+                
+                // Fetch friend's currently playing game (Steam if connected, else Backlog)
+                let gameStatus = '';
+                try {
+                    const statusRes = await fetch('/api/users/' + f._id + '/steam-status');
+                    if (statusRes.ok) {
+                        const statusData = await statusRes.json();
+                        if (statusData.playing && statusData.gameName) {
+                            const gameName = statusData.gameName;
+                            const badgeColor = statusData.source === 'steam' ? 'success' : 'info';
+                            const badgeTextColor = statusData.source === 'steam' ? 'text-success' : 'text-info';
+                            const icon = statusData.source === 'steam' ? 'bi-steam' : 'bi-play-circle-fill';
+                            gameStatus = `<span class="badge bg-${badgeColor} bg-opacity-10 ${badgeTextColor} border border-${badgeColor} border-opacity-25 mt-1 px-2 py-1" style="font-size: 0.7rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${gameName}"><i class="bi ${icon} me-1"></i>${gameName}</span>`;
+                        }
+                    }
+                } catch (e) { /* silently ignore status fetch errors */ }
+                
                 html += `
                 <div class="card bg-dark border border-secondary border-opacity-25 user-card cursor-pointer flex-shrink-0" onclick="window.location='/profile?user=${f._id}'" style="border-radius: 10px;">
-                    <div class="card-body p-2 d-flex align-items-center">
-                        <img src="${avatar}" class="rounded-circle object-fit-cover me-2" style="width: 40px; height: 40px; border: 2px solid rgba(83,131,232,0.4);">
-                        <div style="min-width:0;">
-                            <div class="fw-bold text-truncate" style="font-size:0.85rem;">${name}</div>
-                            <div class="text-muted text-truncate" style="font-size:0.72rem;">${handle}</div>
+                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center" style="min-width:0;">
+                            <img src="${avatar}" class="rounded-circle object-fit-cover me-2 flex-shrink-0" style="width: 40px; height: 40px; border: 2px solid rgba(83,131,232,0.4);">
+                            <div style="min-width:0;">
+                                <div class="fw-bold text-truncate" style="font-size:0.85rem;">${name}</div>
+                                <div class="text-muted text-truncate" style="font-size:0.72rem;">${handle}</div>
+                                ${gameStatus}
+                            </div>
                         </div>
                     </div>
                 </div>`;
-            });
+            }
             container.innerHTML = html;
         } catch (e) {
             container.innerHTML = '<div class="text-muted small text-center py-2">Could not load friends.</div>';

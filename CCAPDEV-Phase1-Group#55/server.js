@@ -25,7 +25,7 @@ const axios = require('axios'); // Ensure axios is installed: npm install axios
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/backlog-hero';
-app.use(express.json({ limit: '20mb' })); // Allow large base64 image payloads
+app.use(express.json({ limit: '150mb' })); // Allow large base64 image and video payloads
 // --- Handlebars Template Engine ---
 app.engine('hbs', engine({
   extname: '.hbs',
@@ -53,8 +53,8 @@ app.use(session({
 
 // --- Middleware ---
 app.use(compression()); // Gzip compression to vastly reduce HTML payload sizes
-app.use(bodyParser.json({ limit: '20mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
+app.use(bodyParser.json({ limit: '150mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '150mb' }));
 
 // --- Auth Middleware ---
 const isLoggedIn = (req, res, next) => {
@@ -663,6 +663,65 @@ app.get('/api/auth/steam-status', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[STEAM STATUS] Error checking live status:', err.message);
     res.status(500).json({ error: 'Failed to check Steam status' });
+  }
+});
+
+// GET /api/users/:userId/steam-status - Get any user's currently playing game (Steam or Backlog)
+app.get('/api/users/:userId/steam-status', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.json({ playing: false, message: 'User not found' });
+    }
+
+    // If user has Steam linked, check Steam first (live status)
+    if (user.steamId) {
+      try {
+        const steamUrl = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${encodeURIComponent(user.steamId)}`;
+        const response = await fetch(steamUrl);
+        const data = await response.json();
+
+        if (data && data.response && data.response.players && data.response.players.length > 0) {
+          const player = data.response.players[0];
+
+          if (player.gameextrainfo) {
+            // User is currently playing a game on Steam
+            const coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${player.gameid}/library_600x900_2x.jpg`;
+            return res.json({
+              playing: true,
+              gameName: player.gameextrainfo,
+              gameId: player.gameid,
+              coverUrl: coverUrl,
+              source: 'steam'
+            });
+          }
+        }
+      } catch (err) {
+        // Silently fail Steam check, fall through to Backlog check
+      }
+    }
+
+    // Fallback: Check user's Backlog Hero library for any game actively marked as "playing"
+    const LibraryEntry = require('./model/LibraryEntry');
+    const activeGame = await LibraryEntry.findOne({ userId: user._id, status: 'playing' })
+      .sort({ updatedAt: -1 })
+      .populate('gameId');
+
+    if (activeGame && activeGame.gameId) {
+      return res.json({
+        playing: true,
+        gameName: activeGame.gameId.name,
+        gameId: activeGame.gameId._id,
+        coverUrl: activeGame.gameId.coverUrl || '',
+        source: 'backlog'
+      });
+    }
+
+    // Not currently playing anything
+    res.json({ playing: false });
+  } catch (err) {
+    console.error('[USER STEAM STATUS] Error:', err.message);
+    res.json({ playing: false });
   }
 });
 
@@ -1517,6 +1576,9 @@ app.put('/api/library/:entryId', async (req, res) => {
       return res.status(404).json({ error: 'Library entry not found' });
     }
 
+    // Track if rating is being changed to invalidate community scores cache
+    const ratingChanged = rating !== undefined && entry.rating !== rating;
+
     if (status) entry.status = status;
     if (rating !== undefined) entry.rating = rating;
     if (playtime !== undefined) entry.playtime = playtime;
@@ -1524,6 +1586,13 @@ app.put('/api/library/:entryId', async (req, res) => {
 
     await entry.save();
     await entry.populate('gameId');
+
+    // Clear community scores cache if rating was changed
+    if (ratingChanged) {
+      _communityScoresCache = null;
+      _communityScoresCacheTime = 0;
+      console.log('[UPDATE LIBRARY] Rating changed - cleared community scores cache');
+    }
 
     res.json({ message: 'Library entry updated', entry });
   } catch (err) {
@@ -1549,6 +1618,67 @@ app.delete('/api/library/:entryId', async (req, res) => {
   } catch (err) {
     console.error('[DELETE FROM LIBRARY] Error:', err.message);
     res.status(500).json({ error: 'Failed to remove game from library' });
+  }
+});
+
+// POST /api/reviews/comment - Add comment to a friend's review
+app.post('/api/reviews/comment', isLoggedIn, async (req, res) => {
+  try {
+    const { gameId, friendId, comment } = req.body;
+    
+    if (!gameId || !friendId || !comment) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const review = await LibraryEntry.findOne({
+      userId: friendId,
+      gameId: gameId
+    });
+
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    const user = await User.findById(req.session.userId);
+    
+    review.comments.push({
+      userId: req.session.userId,
+      userName: user.displayName || user.username,
+      text: comment,
+      createdAt: new Date()
+    });
+
+    await review.save();
+    res.json({ message: 'Comment added successfully' });
+  } catch (err) {
+    console.error('[ADD REVIEW COMMENT] Error:', err.message);
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+});
+
+// POST /api/reviews/react - Add reaction to a friend's review
+app.post('/api/reviews/react', isLoggedIn, async (req, res) => {
+  try {
+    const { gameId, friendId, reaction } = req.body;
+    
+    if (!gameId || !friendId || !reaction) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const review = await LibraryEntry.findOne({
+      userId: friendId,
+      gameId: gameId
+    });
+
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    // For now, just track that a reaction was added (could be extended to store reactions separately)
+    res.json({ message: 'Reaction added successfully' });
+  } catch (err) {
+    console.error('[ADD REVIEW REACTION] Error:', err.message);
+    res.status(500).json({ error: 'Failed to add reaction' });
   }
 });
 
@@ -2186,7 +2316,9 @@ app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
   try {
     const me = await User.findById(req.session.userId);
     const friendIds = me.friends || [];
-    if (friendIds.length === 0) return res.json([]);
+    
+    // Always include current user's posts/reviews/achievements, even if no friends
+    const queryIds = [...friendIds, req.session.userId];
 
     const feed = [];
 
@@ -2257,41 +2389,47 @@ app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
       }
     }
 
-    // ═══ FRIEND RECOMMENDATIONS ═══
-    // Get games my friends rated 5 stars
+    // ═══ FRIEND REVIEWS ═══
+    // Get games my friends rated (any rating, 1-5 stars) + my own reviews
     const myGames = await LibraryEntry.find({ userId: req.session.userId });
     const myGameIds = myGames.map(g => g.gameId.toString());
     
-    const friendFiveStars = await LibraryEntry.find({
-      userId: { $in: friendIds },
-      rating: 5,
-      gameId: { $nin: myGameIds }
+    const friendReviews = await LibraryEntry.find({
+      userId: { $in: queryIds },
+      rating: { $gte: 1, $lte: 5 }
     })
       .populate('gameId', 'name coverUrl')
       .populate('userId', '_id username displayName avatar')
-      .sort({ rating: -1 })
-      .limit(10)
+      .sort({ createdAt: -1 })
+      .limit(20)
       .lean();
 
-    for (const entry of friendFiveStars) {
+    for (const entry of friendReviews) {
+      const rating = Math.floor(entry.rating);
+      const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+      const statusLabel = rating === 5 ? 'loved' : rating >= 4 ? 'really liked' : rating >= 3 ? 'liked' : rating >= 2 ? 'was okay with' : 'didn\'t like';
+      
       feed.push({
-        type: 'recommendation',
+        type: 'review',
         friendId: entry.userId._id,
         friendName: entry.userId.displayName || entry.userId.username,
         friendAvatar: entry.userId.avatar,
         game: entry.gameId.name,
         gameId: entry.gameId._id,
         coverUrl: entry.gameId.coverUrl,
-        message: `${entry.userId.displayName || entry.userId.username} recommends`,
+        rating: rating,
+        stars: stars,
+        message: `${entry.userId.displayName || entry.userId.username} ${statusLabel}`,
+        comments: entry.comments || [],
         timestamp: entry.createdAt || new Date(),
-        icon: '💎'
+        icon: '⭐'
       });
     }
 
     // Sort by timestamp descending
     feed.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     
-    res.json(feed.slice(0, 15)); // Return top 15 items
+    res.json(feed.slice(0, 20)); // Return top 20 items
   } catch (err) {
     console.error('[FRIEND ACTIVITY] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch friend activity' });
@@ -2495,10 +2633,15 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 app.get('/api/posts', async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate('author', 'username displayName avatar')
-      .populate('comments.author', 'username displayName avatar')
+      .populate('author', '_id username displayName avatar')
+      .populate('comments.author', '_id username displayName avatar')
       .sort({ createdAt: -1 });
-    res.json(posts);
+    const postsWithId = posts.map(post => {
+      const obj = post.toObject();
+      obj.id = obj._id;
+      return obj;
+    });
+    res.json(postsWithId);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch posts' });
@@ -2509,6 +2652,8 @@ app.get('/api/posts', async (req, res) => {
 app.post('/api/posts', isLoggedIn, async (req, res) => {
   try {
     const { title, body, flair, game, photo } = req.body;
+    console.log('[CREATE POST] Received:', { title, body, flair, game, hasPhoto: !!photo, author: req.session.userId });
+    
     if (!title || title.length < 3) {
       return res.status(400).json({ error: 'Title is required and must be at least 3 characters' });
     }
@@ -2518,11 +2663,15 @@ app.post('/api/posts', isLoggedIn, async (req, res) => {
       body,
       flair,
       game,
-      photo
+      photo: photo || undefined
     });
-    await newPost.save();
+    const savedPost = await newPost.save();
+    console.log('[CREATE POST] Saved successfully:', savedPost._id);
+    
     const populated = await newPost.populate('author', 'username displayName avatar');
-    res.status(201).json(populated);
+    const obj = populated.toObject();
+    obj.id = obj._id;
+    res.status(201).json(obj);
   } catch (err) {
     console.error('[CREATE POST] Error:', err.message);
     res.status(500).json({ error: 'Failed to create post' });

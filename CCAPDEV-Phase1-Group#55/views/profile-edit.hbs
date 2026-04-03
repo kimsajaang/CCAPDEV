@@ -341,7 +341,7 @@ plagiarized the work of other students and/or persons.
                         </div>
                         <div class="d-flex align-items-center gap-3 mt-2">
                             <input type="text" class="settings-input" id="inputSteamId" placeholder="Paste 17-digit Steam ID..." style="flex: 1; min-width: 0;">
-                            <button type="button" class="btn-change" style="padding: 10px 24px; border-radius: 8px; flex-shrink: 0; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);" disabled><i class="bi bi-check-lg me-1"></i> Connected</button>
+                            <button type="button" id="steamConnectBtn" class="btn-change" style="padding: 10px 24px; border-radius: 8px; flex-shrink: 0; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);" disabled><i class="bi bi-check-lg me-1"></i> Connected</button>
                         </div>
                     </div>
 
@@ -508,6 +508,21 @@ plagiarized the work of other students and/or persons.
             document.getElementById('inputPlatform').value = profile.favoritePlatform || '';
             document.getElementById('avatarPreview').src = profile.avatar;
             document.getElementById('inputSteamId').value = profile.steamId || '';
+            
+            // Update Steam connection button state
+            const steamBtn = document.getElementById('steamConnectBtn');
+            if (profile.steamId) {
+              steamBtn.disabled = true;
+              steamBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+              steamBtn.style.color = '#10b981';
+              steamBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Connected';
+            } else {
+              steamBtn.disabled = false;
+              steamBtn.style.background = 'rgba(91, 127, 238, 0.1)';
+              steamBtn.style.color = '#5b7fee';
+              steamBtn.innerHTML = '<i class="bi bi-link-45deg me-1"></i> Connect';
+            }
+            
             if (serverUser) {
                 document.getElementById('inputXboxGamertag').value = serverUser.xboxGamertag || '';
                 document.getElementById('inputPsnId').value = serverUser.psnId || '';

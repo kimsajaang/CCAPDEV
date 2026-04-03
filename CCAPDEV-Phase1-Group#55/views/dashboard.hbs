@@ -40,14 +40,21 @@ plagiarized the work of other students and/or persons.
     border: 1px solid var(--border);
     padding: 8px;
     background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
 
   .photo-preview-img {
-    max-width: 100%;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
     max-height: 300px;
     border-radius: var(--radius-sm);
-    object-fit: cover;
-    margin-bottom: 10px;
+    object-fit: contain;
+    margin-bottom: 0;
   }
 
   .photo-remove-btn {
@@ -474,6 +481,17 @@ plagiarized the work of other students and/or persons.
   #createGroupModal, #inviteFriendsModal {
     animation: fadeInScale 0.3s ease;
   }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
 </style>
 
 
@@ -486,7 +504,7 @@ plagiarized the work of other students and/or persons.
     </div>
     <div>
       <div class="loader-text">Loading Dashboard<span class="loading-dots"></span></div>
-      <div class="loader-sub">Warming up your backlog recommendations</div>
+      <div class="loader-sub">Warming up your friend activity feed</div>
     </div>
   </div>
 </div>{{> navbar-app activePage="dashboard"}}
@@ -653,8 +671,44 @@ plagiarized the work of other students and/or persons.
       <div class="d-flex justify-content-between align-items-center mb-4 reveal">
         <h4><i class="bi bi-broadcast me-2" style="color:var(--accent);"></i>Friend Activity <span
             class="gradient-text-accent">Feed</span></h4>
-        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#postUpdateModal"><i
-            class="bi bi-plus-lg me-1"></i>Post Update</button>
+      </div>
+
+      <!-- Filters & Sorting -->
+      <div class="card bg-section border-0 shadow-sm mb-3 reveal">
+        <div class="card-body p-3">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold mb-1">Type</label>
+              <select id="activityTypeFilter" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="applyActivityFilters()">
+                <option value="all">All Activity</option>
+                <option value="review">Reviews Only</option>
+                <option value="achievement">Achievements Only</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold mb-1">Sort By</label>
+              <select id="activitySortFilter" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="applyActivityFilters()">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="highest">Highest Rated</option>
+                <option value="lowest">Lowest Rated</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-2">
+            <label class="form-label small fw-bold mb-1">Rating Filter</label>
+            <div>
+              <label class="form-check form-check-inline">
+                <input type="checkbox" id="ratingPositive" class="form-check-input" checked onchange="applyActivityFilters()">
+                <span class="form-check-label" style="font-size: 0.9rem; color: #10b981;">Positive (4-5★)</span>
+              </label>
+              <label class="form-check form-check-inline">
+                <input type="checkbox" id="ratingNegative" class="form-check-input" checked onchange="applyActivityFilters()">
+                <span class="form-check-label" style="font-size: 0.9rem; color: #ef4444;">Negative (1-2★)</span>
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="list-group shadow-sm" id="activityFeed">
@@ -764,6 +818,28 @@ plagiarized the work of other students and/or persons.
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="trendingGameModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Review Comment Modal -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-chat-dots me-2"></i>Add a Comment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="commentGameId">
+        <input type="hidden" id="commentFriendId">
+        <textarea id="commentText" class="form-control" rows="4" placeholder="Share your thoughts on this review..." maxlength="500"></textarea>
+        <small class="text-muted d-block mt-2">Max 500 characters</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitReviewComment()">Post Comment</button>
+      </div>
     </div>
   </div>
 </div>
@@ -996,8 +1072,10 @@ plagiarized the work of other students and/or persons.
         removeBtn.type = "button";
         removeBtn.className = "btn btn-sm btn-outline-danger photo-remove-btn";
         removeBtn.textContent = "Remove Photo";
+        removeBtn.style.alignSelf = "flex-end";
         removeBtn.addEventListener("click", (e) => {
           e.preventDefault();
+          e.stopPropagation();
           selectedPhoto = null;
           photoInput.value = "";
           photoUploadArea.classList.remove("has-photo");
@@ -1014,7 +1092,7 @@ plagiarized the work of other students and/or persons.
     ratingGroup.style.display = updateType.value === "review" ? "block" : "none";
   });
 
-  document.getElementById("submitUpdateBtn").addEventListener("click", () => {
+  document.getElementById("submitUpdateBtn").addEventListener("click", async () => {
     const type = updateType.value;
     const game = document.getElementById("updateGame").value;
     const comment = document.getElementById("updateComment").value.trim();
@@ -1028,75 +1106,58 @@ plagiarized the work of other students and/or persons.
     }
 
     errorEl.style.display = "none";
-    const cover = document.getElementById("updateGame").value; // Just use the game name for now
-    const stars = "★".repeat(parseInt(rating)) + "☆".repeat(5 - parseInt(rating));
-
-    let extraHTML = "";
-    if (type === "review") {
-      extraHTML = `<div class="text-warning mb-1 extra-small">${stars}</div>`;
-    } else if (type === "completed") {
-      extraHTML = `<span class="badge bg-success extra-small">COMPLETED</span>`;
-    } else if (type === "playing") {
-      extraHTML = `<span class="badge bg-info text-dark extra-small">NOW PLAYING</span>`;
-    }
-
-    const now = new Date();
-    const timeStr = now.toLocaleString(undefined, { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-
-    const newItem = document.createElement("div");
-    newItem.className = "list-group-item p-3 user-post-item";
-    newItem.style.opacity = "0";
-    newItem.style.transform = "translateY(-10px)";
-    newItem.style.transition = "opacity 0.4s ease, transform 0.4s ease";
-
-    let photoHTML = "";
-    if (selectedPhoto) {
-      photoHTML = `<img src="${selectedPhoto}" class="feed-photo" alt="Session screenshot" loading="lazy">`;
-    }
-
-    // Get user avatar or use default
-    const userAvatar = currentUser?.avatar || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E";
-
-    newItem.innerHTML = `
-            <div class="d-flex align-items-center mb-2">
-              <img src="${userAvatar}" class="rounded-circle me-2 avatar-sm" alt="User" style="width: 32px; height: 32px;">
-              <strong class="text-primary">${currentUser?.displayName || 'Gamer'}</strong>
-              <span class="text-muted ms-2 small">${typeLabels[type]}</span>
-              <span class="text-muted ms-auto extra-small">${timeStr}</span>
-            </div>
-            <div class="d-flex align-items-start gap-3 mb-1">
-              <div>
-                <h6 class="mb-1 small">${game}</h6>
-                ${extraHTML}
-              </div>
-            </div>
-            <p class="mb-2 small text-white-50">"${comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</p>
-            ${photoHTML}
-          `;
-
-    const feedList = document.querySelector(".list-group");
-    feedList.insertBefore(newItem, feedList.firstChild);
-
-    // Animate in
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        newItem.style.opacity = "1";
-        newItem.style.transform = "translateY(0)";
+    
+    // Save to backend first
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: `Logged a session${type === 'review' ? ' - Review' : type === 'completed' ? ' - Completed' : type === 'playing' ? ' - Now Playing' : ''}`,
+          body: comment,
+          game: game,
+          flair: 'Progress',
+          rating: type === 'review' ? parseInt(rating) : null
+        })
       });
-    });
 
-    // Close modal and reset form
-    const modal = bootstrap.Modal.getInstance(document.getElementById("postUpdateModal"));
-    modal.hide();
-    document.getElementById("updateComment").value = "";
-    updateType.value = "session";
-    ratingGroup.style.display = "none";
+      if (!res.ok) {
+        throw new Error('Failed to save post');
+      }
 
-    // Reset photo
-    selectedPhoto = null;
-    photoInput.value = "";
-    photoUploadArea.classList.remove("has-photo");
-    photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
+      // Close modal and reset form
+      const modal = bootstrap.Modal.getInstance(document.getElementById("postUpdateModal"));
+      modal.hide();
+      document.getElementById("updateComment").value = "";
+      updateType.value = "session";
+      ratingGroup.style.display = "none";
+
+      // Reset photo
+      selectedPhoto = null;
+      photoInput.value = "";
+      photoUploadArea.classList.remove("has-photo");
+      photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
+
+      // Reload activity feed
+      await loadActivityFeed(currentUserData);
+
+      // Show success toast
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px;
+        background: #10b981; color: white; padding: 12px 20px;
+        border-radius: 8px; z-index: 10000; animation: slideIn 0.3s ease;
+        font-weight: 600; font-size: 0.95rem;
+      `;
+      toast.textContent = 'Update posted!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    } catch (err) {
+      console.error('Error posting update:', err);
+      errorEl.textContent = "Failed to post update. Please try again.";
+      errorEl.style.display = "block";
+    }
   });
 </script>
 <!-- Floating CTA button — always visible in bottom-right corner -->
@@ -1254,10 +1315,12 @@ plagiarized the work of other students and/or persons.
   }
 
   // --- Dynamic Activity Feed (combines own + friends activity) ---
+  let allActivityFeedItems = []; // Store all feed items for filtering
+  
   async function loadActivityFeed(user) {
     const feedEl = document.getElementById('activityFeed');
     try {
-      // Fetch friend achievements and recommendations
+      // Fetch friend achievements and game reviews
       const res = await fetch('/api/friends/activity', { credentials: 'include' });
       if (!res.ok) {
         feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load friend activity.</div>';
@@ -1265,62 +1328,229 @@ plagiarized the work of other students and/or persons.
       }
 
       const feedItems = await res.json();
-      let html = '';
+      allActivityFeedItems = feedItems || []; // Store for filtering
 
       if (!feedItems || feedItems.length === 0) {
-        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No friend activity yet. Add some friends to see their achievements and recommendations!</div>';
+        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No friend activity yet. Add some friends to see their achievements and reviews!</div>';
         return;
       }
 
-      // Render each feed item based on type
-      for (const item of feedItems) {
-        if (item.type === 'achievement') {
-          // Achievement card: Friend achievement milestone
-          const iconMap = {
-            'completion': '🏁',
-            'playtime': '⏱️',
-            'rating': '⭐'
-          };
-          const icon = iconMap[item.subtype] || '🎮';
-          
-          html += `
-            <div class="list-group-item p-3 border-start border-primary border-4 reveal is-visible" style="background: rgba(83, 131, 232, 0.05);">
-              <div class="d-flex align-items-start gap-2">
-                <div style="font-size: 1.5rem; flex-shrink: 0;">${icon}</div>
-                <div style="flex: 1; min-width: 0;">
-                  <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
-                  <p class="mb-1 small" style="color: var(--text-secondary);">${item.message}</p>
-                  <div class="badge bg-primary" style="font-size: 0.75rem;">📈 ${item.count}</div>
-                </div>
-              </div>
-            </div>`;
-        } else if (item.type === 'recommendation') {
-          // Recommendation card: Friend recommends a 5-star game
-          const coverUrl = item.coverUrl ? `style="width: 50px; height: 70px; object-fit: cover; border-radius: 4px;"` : '';
-          const gameImage = item.coverUrl 
-            ? `<img src="${item.coverUrl}" alt="${item.game}" ${coverUrl}>`
-            : `<div style="width: 50px; height: 70px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-muted); text-align: center; padding: 4px;">No Cover</div>`;
-          
-          html += `
-            <div class="list-group-item p-3 border-start border-success border-4 reveal is-visible" style="background: rgba(45, 212, 191, 0.05);">
-              <div class="d-flex align-items-start gap-3">
-                <div style="flex-shrink: 0;">
-                  ${gameImage}
-                </div>
-                <div style="flex: 1; min-width: 0;">
-                  <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName} Recommends</h6>
-                  <p class="mb-2 small fw-500" style="color: var(--text-primary);">${item.game}</p>
-                  <p class="mb-0 small" style="color: var(--text-secondary);">5★ Rating • Highly Enjoyed</p>
-                </div>
-              </div>
-            </div>`;
-        }
-      }
-
-      feedEl.innerHTML = html;
+      // Render the feed with default filters
+      applyActivityFilters();
     } catch (err) {
       console.warn('[Dashboard] Friend activity error:', err);
       feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load friend activity.</div>';
+    }
+  }
+
+  function applyActivityFilters() {
+    const feedEl = document.getElementById('activityFeed');
+    const typeFilter = document.getElementById('activityTypeFilter').value;
+    const sortFilter = document.getElementById('activitySortFilter').value;
+    const positiveCbx = document.getElementById('ratingPositive').checked;
+    const negativeCbx = document.getElementById('ratingNegative').checked;
+
+    // Filter items
+    let filtered = allActivityFeedItems.filter(item => {
+      // Type filter
+      if (typeFilter === 'review' && item.type !== 'review') return false;
+      if (typeFilter === 'achievement' && item.type !== 'achievement') return false;
+
+      // Rating filter (only applies to reviews)
+      if (item.type === 'review') {
+        const isPositive = item.rating >= 4;  // 4-5 stars = positive
+        const isNegative = item.rating <= 2;  // 1-2 stars = negative (neutral 3 excluded)
+        const shouldShow = (isPositive && positiveCbx) || (isNegative && negativeCbx);
+        if (!shouldShow) return false;
+      }
+
+      return true;
+    });
+
+    // Sort items
+    if (sortFilter === 'oldest') {
+      filtered = filtered.reverse();
+    } else if (sortFilter === 'highest') {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (sortFilter === 'lowest') {
+      filtered.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+    }
+
+    // Render filtered items
+    let html = '';
+    if (filtered.length === 0) {
+      feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity matches your filters.</div>';
+      return;
+    }
+
+    for (const item of filtered) {
+      if (item.type === 'achievement') {
+        const iconMap = {
+          'completion': '🏁',
+          'playtime': '⏱️',
+          'rating': '⭐'
+        };
+        const icon = iconMap[item.subtype] || '🎮';
+        
+        html += `
+          <div class="list-group-item p-3 border-start border-primary border-4 reveal is-visible" style="background: rgba(83, 131, 232, 0.05);">
+            <div class="d-flex align-items-start gap-2">
+              <div style="font-size: 1.5rem; flex-shrink: 0;">${icon}</div>
+              <div style="flex: 1; min-width: 0;">
+                <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
+                <p class="mb-1 small" style="color: var(--text-secondary);">${item.message}</p>
+                <div class="badge bg-primary" style="font-size: 0.75rem;">📈 ${item.count}</div>
+              </div>
+            </div>
+          </div>`;
+      } else if (item.type === 'post') {
+        html += `
+          <div class="list-group-item p-3 border-start border-warning border-4 reveal is-visible" style="background: rgba(251, 191, 36, 0.03);">
+            <div class="d-flex align-items-start gap-3">
+              <div style="flex-shrink: 0; font-size: 1.5rem;">📝</div>
+              <div style="flex: 1; min-width: 0;">
+                <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
+                <p class="mb-1 small fw-500" style="color: var(--text-primary);">${item.title || 'Logged a session'}</p>
+                ${item.game ? `<p class="mb-2 small" style="color: var(--text-secondary);">🎮 ${item.game}</p>` : ''}
+                ${item.body ? `<p class="mb-0 small" style="color: var(--text-secondary);">"${item.body}"</p>` : ''}
+              </div>
+            </div>
+          </div>`;
+      } else if (item.type === 'review') {
+        const coverUrl = item.coverUrl ? `style="width: 50px; height: 70px; object-fit: cover; border-radius: 4px;"` : '';
+        const gameImage = item.coverUrl 
+          ? `<img src="${item.coverUrl}" alt="${item.game}" ${coverUrl}>`
+          : `<div style="width: 50px; height: 70px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-muted); text-align: center; padding: 4px;">No Cover</div>`;
+        
+        const ratingColor = item.rating >= 4 ? '#fbbf24' : item.rating >= 3 ? '#60a5fa' : '#ef4444';
+        const gameDataStr = JSON.stringify({ gameId: item.gameId, friendId: item.friendId, gameName: item.game, coverUrl: item.coverUrl, friendName: item.friendName, rating: item.rating, stars: item.stars, message: item.message }).replace(/"/g, '&quot;');
+        
+        // Build comments section if they exist
+        let commentsHtml = '';
+        if (item.comments && item.comments.length > 0) {
+          commentsHtml = `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+              <small style="color: var(--text-muted); display: block; margin-bottom: 8px;"><i class="bi bi-chat-dots me-1"></i>Comments:</small>`;
+          item.comments.forEach(comment => {
+            commentsHtml += `
+              <div style="background: rgba(83, 131, 232, 0.05); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;">
+                <p class="mb-1 small" style="color: var(--accent); font-weight: 600;">${comment.userName}</p>
+                <p class="mb-0 small" style="color: var(--text-secondary);">"${comment.text}"</p>
+              </div>`;
+          });
+          commentsHtml += `</div>`;
+        }
+        
+        html += `
+          <div class="list-group-item p-3 border-start border-4 reveal is-visible" style="border-color: ${ratingColor}; background: rgba(251, 191, 36, 0.03); transition: all 0.2s ease;">
+            <div class="d-flex align-items-start gap-3">
+              <div style="flex-shrink: 0; cursor: pointer;" onclick="viewFriendReview('${gameDataStr}')">
+                ${gameImage}
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
+                <p class="mb-2 small fw-500 cursor-pointer" style="color: var(--text-primary);" onclick="viewFriendReview('${gameDataStr}')">${item.game}</p>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span style="font-size: 0.9rem; color: ${ratingColor};">${item.stars}</span>
+                  <span class="small" style="color: var(--text-secondary);">${item.message}</span>
+                </div>
+                ${commentsHtml}
+                <small style="color: var(--text-muted); cursor: pointer; margin-top: 8px; display: inline-block;" onclick="viewFriendReview('${gameDataStr}')">Click to view full review</small>
+              </div>
+            </div>
+          </div>`;
+      }
+    }
+
+    feedEl.innerHTML = html;
+  }
+
+  // Reaction system
+  async function addReaction(gameId, friendId, reaction) {
+    try {
+      const res = await fetch(`/api/reviews/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ gameId, friendId, reaction })
+      });
+      if (res.ok) {
+        // Show brief feedback
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed; bottom: 20px; right: 20px;
+          background: var(--primary); color: white; padding: 12px 20px;
+          border-radius: 8px; z-index: 10000; animation: slideIn 0.3s ease;
+          font-weight: 600; font-size: 0.95rem;
+        `;
+        toast.textContent = `Added reaction ${reaction}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+      } else {
+        alert('Failed to add reaction');
+      }
+    } catch (err) {
+      console.error('Error adding reaction:', err);
+    }
+  }
+
+  // Keep old function for backwards compatibility
+  async function likeReview(gameId, friendId) {
+    return addReaction(gameId, friendId, '👍');
+  }
+
+  function addReviewComment(gameId, friendId) {
+    // Store the IDs in data attributes for the modal
+    document.getElementById('commentGameId').value = gameId;
+    document.getElementById('commentFriendId').value = friendId;
+    document.getElementById('commentText').value = '';
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+    modal.show();
+  }
+
+  async function submitReviewComment() {
+    const gameId = document.getElementById('commentGameId').value;
+    const friendId = document.getElementById('commentFriendId').value;
+    const comment = document.getElementById('commentText').value.trim();
+
+    if (!comment) {
+      alert('Please enter a comment');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/reviews/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ gameId, friendId, comment })
+      });
+      if (res.ok) {
+        // Close the modal
+        bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
+        
+        // Reload the activity feed
+        await loadActivityFeed(currentUserData);
+        
+        // Show success
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed; bottom: 20px; right: 20px;
+          background: #10b981; color: white; padding: 12px 20px;
+          border-radius: 8px; z-index: 10000; animation: slideIn 0.3s ease;
+          font-weight: 600; font-size: 0.95rem;
+        `;
+        toast.textContent = 'Comment added!';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+      } else {
+        alert('Failed to add comment');
+      }
+    } catch (err) {
+      console.error('Error adding comment:', err);
+      alert('Error adding comment');
     }
   }
 
@@ -1573,7 +1803,7 @@ plagiarized the work of other students and/or persons.
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: nameInput.value.trim(), description: descInput.value.trim() })
+        body: JSON.stringify({ name: nameInput.value.trim() })
       });
       if (res.ok) {
         const group = await res.json();
@@ -2032,6 +2262,18 @@ plagiarized the work of other students and/or persons.
   window.addEventListener('scroll', () => {
     if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
   }, { passive: true });
+
+  // --- View Friend Review ---
+  async function viewFriendReview(gameDataStr) {
+    try {
+      const gameData = JSON.parse(gameDataStr);
+      // Redirect to search page with the game name, just like clicking a game in the library
+      localStorage.setItem('bh_search_query', gameData.gameName);
+      window.location.href = 'search';
+    } catch (err) {
+      console.error('Error viewing friend review:', err);
+    }
+  }
 </script>
 
 <!-- Top 50 Games Modal -->
