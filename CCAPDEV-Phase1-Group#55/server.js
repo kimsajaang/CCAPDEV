@@ -1540,6 +1540,45 @@ app.get('/api/library/:userId/status/:status', async (req, res) => {
   }
 });
 
+// GET /api/community/backlog-members - Get all users with backlog games
+app.get('/api/community/backlog-members', async (req, res) => {
+  try {
+    // Find all unique users who have at least one backlog game
+    const userIds = await LibraryEntry.distinct('userId', { status: 'backlog', hidden: { $ne: true } });
+    
+    if (!userIds.length) {
+      return res.json([]);
+    }
+
+    // Fetch user profiles - get displayName, avatar, and count of backlog games
+    const users = await Promise.all(userIds.map(async (uid) => {
+      const user = await User.findById(uid).lean();
+      const backlogCount = await LibraryEntry.countDocuments({ userId: uid, status: 'backlog', hidden: { $ne: true } });
+      
+      if (!user) return null;
+      
+      return {
+        _id: user._id,
+        id: user._id,
+        displayName: user.displayName || 'Anonymous',
+        avatar: user.avatar,
+        backlogCount,
+        gamerTag: user.gamerTag
+      };
+    }));
+
+    // Filter out nulls and sort by most recently active (or by backlog count descending)
+    const filtered = users.filter(u => u !== null)
+      .sort((a, b) => b.backlogCount - a.backlogCount)
+      .slice(0, 10);  // Top 10 users
+
+    res.json(filtered);
+  } catch (err) {
+    console.error('[GET BACKLOG MEMBERS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch backlog members' });
+  }
+});
+
 // POST /api/library - Add game to library
 app.post('/api/library', async (req, res) => {
   try {

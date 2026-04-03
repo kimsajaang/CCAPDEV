@@ -507,7 +507,7 @@ plagiarized the work of other students and/or persons.
                   <div class="comment-input-wrap d-flex align-items-center gap-2 mb-3">
                     <div class="comment-avatar" style="background:#5383e8;">${getInitials(currentUsername)}</div>
                     <input class="form-control flex-grow-1" maxlength="300" placeholder="Write a comment..."/>
-                    <button class="btn btn-primary" data-act="addComment">Post</button>
+                    <button class="btn btn-primary" data-act="addComment" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">→</button>
                   </div>
 
                   <div class="d-grid gap-2" data-commentlist></div>
@@ -541,13 +541,25 @@ plagiarized the work of other students and/or persons.
         const text = input.value.trim();
         if (!text) return;
         
-        // Show comment instantly on UI
+        // Show comment instantly with proper styling
         const commentList = wrapper.querySelector("[data-commentlist]");
         const commentEl = document.createElement("div");
-        commentEl.className = "comment";
+        commentEl.className = "comment-item";
+        const initials = getInitials(currentUsername || "You");
+        const color = getAuthorColor(currentUsername || "Gamer");
+        const textColor = ["#febc2e"].includes(color) ? "#0d1217" : "#fff";
+        
         commentEl.innerHTML = `
-          <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${currentUsername || "You"}</div>
-          <div style="font-size:13px;color:#555;">${text}</div>
+          <div class="d-flex gap-2">
+            <div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="comment-author" style="color:${color};">${escapeHtml(currentUsername || "You")}</span>
+                <span class="comment-time">now</span>
+              </div>
+              <div class="comment-text">${escapeHtml(text).replace(/\n/g, "<br/>")}</div>
+            </div>
+          </div>
         `;
         commentList.appendChild(commentEl);
         input.value = "";
@@ -894,30 +906,48 @@ plagiarized the work of other students and/or persons.
       document.getElementById('statActiveMembers').textContent = authors.size;
 
       const membersList = document.getElementById('activeMembersList');
-      if (authors.size === 0) {
-        membersList.innerHTML = '<div class="text-muted small">No members yet.</div>';
-        return;
-      }
       
-      // Get unique members with their data
-      const membersMap = new Map();
-      posts.forEach(p => {
-        if (p.author) membersMap.set(p.author.username, p.author);
-        (p.comments || []).forEach(c => { if (c.author) membersMap.set(c.author.username, c.author); });
-      });
+      // Load backlog members from API
+      try {
+        const membersRes = await fetch('/api/community/backlog-members');
+        if (!membersRes.ok) throw new Error('Failed to fetch members');
+        const backlogMembers = await membersRes.json();
 
-      const avatarColors = ['#5383e8','#2dd4bf','#e85383','#febc2e','#a78bfa'];
-      let html = '';
-      let i = 0;
-      membersMap.forEach((user, username) => {
-        const name = user.displayName || user.username;
-        const initials = getInitials(name);
-        const color = avatarColors[i % avatarColors.length];
-        const textColor = ['#febc2e'].includes(color) ? '#0d1217' : '#fff';
-        html += `<div class="d-flex align-items-center gap-2"><div class="comment-avatar" style="background:${color};color:${textColor};width:28px;height:28px;font-size:0.6rem;">${initials}</div><span class="small"><strong>${escapeHtml(name)}</strong></span></div>`;
-        i++;
-      });
-      membersList.innerHTML = html;
+        if (backlogMembers.length === 0) {
+          membersList.innerHTML = '<div class="text-muted small">No members with backlog yet.</div>';
+          document.getElementById('statActiveMembers').textContent = '0';
+          return;
+        }
+
+        // Update active members count
+        document.getElementById('statActiveMembers').textContent = backlogMembers.length;
+
+        // Render backlog members
+        const avatarColors = ['#5383e8','#2dd4bf','#e85383','#febc2e','#a78bfa'];
+        let html = '';
+        backlogMembers.forEach((user, idx) => {
+          const name = user.displayName || 'Anonymous';
+          const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          const color = avatarColors[idx % avatarColors.length];
+          const textColor = ['#febc2e'].includes(color) ? '#0d1217' : '#fff';
+          html += `
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <div class="comment-avatar" style="background:${color};color:${textColor};width:28px;height:28px;font-size:0.6rem;">${initials}</div>
+                <div>
+                  <div class="small" style="font-weight: 600; color: #dbe7ff;">${escapeHtml(name)}</div>
+                  <div class="text-muted" style="font-size: 0.7rem;">${user.backlogCount} game${user.backlogCount !== 1 ? 's' : ''}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        membersList.innerHTML = html;
+      } catch (err) {
+        console.error('Failed to load backlog members:', err);
+        membersList.innerHTML = '<div class="text-muted small">Unable to load members.</div>';
+        document.getElementById('statActiveMembers').textContent = '0';
+      }
     }
 
     // Deep-link handler — if URL has #post-<id>, scroll to that post and open its comments.

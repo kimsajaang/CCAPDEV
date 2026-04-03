@@ -488,6 +488,19 @@ plagiarized the work of other students and/or persons.
                             <i class="bi bi-chat-left-text me-1"></i>${game.notes ? 'Edit Review' : 'Write Review'}
                           </button>
                         </div>
+                        <!-- Session Timer Controls -->
+                        <div class="mb-2 d-flex gap-2">
+                          <button class="btn btn-sm btn-outline-success flex-grow-1 start-session-btn" data-entry-id="${game.id}" onclick="startSession('${game.id}', event)" style="font-size: 0.8rem;">
+                            <i class="bi bi-play-fill me-1"></i>Play
+                          </button>
+                          <button class="btn btn-sm btn-outline-danger flex-grow-1 stop-session-btn" data-entry-id="${game.id}" onclick="stopSession('${game.id}', event)" style="font-size: 0.8rem; display: none;">
+                            <i class="bi bi-stop-fill me-1"></i>Stop
+                          </button>
+                        </div>
+                        <!-- Session Timer Display -->
+                        <div class="text-center mb-2 session-display" data-entry-id="${game.id}" style="font-size: 0.75rem; color: #a8c0e0; display: none;">
+                          <small><i class="bi bi-hourglass-split" style="color: #2dd4bf;"></i> <span class="session-time">0:00:00</span></small>
+                        </div>
                         <div class="mt-auto">
                             <select class="form-select form-select-sm status-select lib-status-select" data-entry-id="${game.id}">
                                 <option value="backlog" ${game.status === 'backlog' ? 'selected' : ''}>Backlog</option>
@@ -608,6 +621,8 @@ plagiarized the work of other students and/or persons.
             checkAchievements();
             showToast(`${game.name} moved to ${statusLabel[newStatus]}`, 'bg-primary');
             render();
+            // Update profile XP in real-time if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] Status update error:', err);
             showToast('Failed to update status', 'bg-danger');
@@ -660,6 +675,8 @@ plagiarized the work of other students and/or persons.
             removeModal().hide();
             showToast(`${name} removed`, 'bg-danger');
             render();
+            // Update profile XP in real-time if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] Remove error:', err);
             showToast('Failed to remove game', 'bg-danger');
@@ -779,6 +796,8 @@ plagiarized the work of other students and/or persons.
             bootstrap.Modal.getInstance(document.getElementById('addGameModal')).hide();
             showToast(`${name} added to ${statusLabel[status]}!`, 'bg-success');
             render();
+            // Update profile XP in real-time if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] Add game error:', err);
             showToast('Failed to add game', 'bg-danger');
@@ -844,6 +863,8 @@ plagiarized the work of other students and/or persons.
         
         showToast(`${name} added to Backlog!`, 'bg-success');
         render();
+        // Update profile XP in real-time if profile page is open
+        if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] IGDB add error:', err);
             showToast('Failed to add game', 'bg-danger');
@@ -876,6 +897,91 @@ plagiarized the work of other students and/or persons.
         } catch (err) {
             console.error('Auth check failed:', err);
             window.location = 'index';
+        }
+    }
+
+    /* ---------- session timer for playtime tracking ---------- */
+    const sessionStorage = {};  // { entryId: { startTime, intervalId } }
+
+    function startSession(entryId, event) {
+        if (event) event.preventDefault();
+        
+        if (sessionStorage[entryId]) {
+            showToast('Session already running for this game', 'bg-warning');
+            return;
+        }
+
+        // Swap button visibility
+        document.querySelector(`[data-entry-id="${entryId}"].start-session-btn`).style.display = 'none';
+        document.querySelector(`[data-entry-id="${entryId}"].stop-session-btn`).style.display = 'block';
+        const display = document.querySelector(`[data-entry-id="${entryId}"].session-display`);
+        display.style.display = 'block';
+
+        const startTime = Date.now();
+        sessionStorage[entryId] = { startTime };
+
+        // Update timer every second
+        const intervalId = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const hours = Math.floor(elapsed / 3600);
+            const minutes = Math.floor((elapsed % 3600) / 60);
+            const seconds = elapsed % 60;
+            const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            display.querySelector('.session-time').textContent = timeStr;
+        }, 1000);
+
+        sessionStorage[entryId].intervalId = intervalId;
+        showToast('Playing started!', 'bg-primary');
+    }
+
+    async function stopSession(entryId, event) {
+        if (event) event.preventDefault();
+        
+        const session = sessionStorage[entryId];
+        if (!session) {
+            showToast('No active session', 'bg-warning');
+            return;
+        }
+
+        // Stop timer
+        clearInterval(session.intervalId);
+        const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
+        const elapsedHours = elapsed / 3600;  // Convert to decimal hours
+
+        // Swap button visibility
+        document.querySelector(`[data-entry-id="${entryId}"].start-session-btn`).style.display = 'block';
+        document.querySelector(`[data-entry-id="${entryId}"].stop-session-btn`).style.display = 'none';
+        const display = document.querySelector(`[data-entry-id="${entryId}"].session-display`);
+        display.style.display = 'none';
+
+        delete sessionStorage[entryId];
+
+        // Get current game playtime
+        const game = libraryCache.find(g => g.id === entryId);
+        if (!game) return;
+
+        const newPlaytime = (game.playtime || 0) + elapsedHours;
+
+        try {
+            const res = await fetch('/api/library/' + entryId, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playtime: newPlaytime })
+            });
+            if (!res.ok) throw new Error('Playtime update failed');
+
+            await fetchLibrary();
+            render();
+
+            const hoursLogged = elapsedHours.toFixed(2);
+            showToast(`${hoursLogged}h logged! Total: ${newPlaytime.toFixed(2)}h`, 'bg-success');
+
+            // Trigger XP refresh if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
+        } catch (err) {
+            console.error('[Library] Failed to save playtime:', err);
+            showToast('Failed to save playtime', 'bg-danger');
         }
     }
 
