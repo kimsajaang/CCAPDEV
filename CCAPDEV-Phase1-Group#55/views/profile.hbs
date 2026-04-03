@@ -66,6 +66,7 @@ plagiarized the work of other students and/or persons.
     box-shadow: 0 0 60px rgba(83, 131, 232, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(83, 131, 232, 0.2);
     backdrop-filter: blur(10px);
+    overflow: visible;
     z-index: 10;
   }
 
@@ -465,10 +466,38 @@ plagiarized the work of other students and/or persons.
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
+    margin-bottom: 45px;
   }
 
   .split-col {
     min-width: 0;
+  }
+
+  .split-col #achievementsContainer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar-track {
+    background: rgba(83, 131, 232, 0.05);
+    border-radius: 10px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar-thumb {
+    background: rgba(83, 131, 232, 0.3);
+    border-radius: 10px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar-thumb:hover {
+    background: rgba(83, 131, 232, 0.5);
   }
 
   .ach-item {
@@ -478,6 +507,7 @@ plagiarized the work of other students and/or persons.
     padding: 16px 18px;
     display: flex;
     align-items: center;
+    gap: 16px;
     margin-bottom: 14px;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     backdrop-filter: blur(10px);
@@ -485,7 +515,7 @@ plagiarized the work of other students and/or persons.
   }
 
   .ach-item:hover {
-    transform: translateX(4px);
+    transform: translateX(6px);
     border-color: var(--accent);
     background: linear-gradient(135deg, rgba(83, 131, 232, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
     box-shadow: 0 8px 20px rgba(83, 131, 232, 0.2);
@@ -494,7 +524,8 @@ plagiarized the work of other students and/or persons.
   .ach-icon-box {
     font-size: 1.3rem;
     color: var(--accent);
-    margin-right: 16px;
+    margin-right: 4px;
+    flex-shrink: 0;
   }
 
   .ach-name {
@@ -504,6 +535,7 @@ plagiarized the work of other students and/or persons.
     flex: 1;
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    min-width: 0;
   }
 
   .ach-status {
@@ -1109,8 +1141,11 @@ plagiarized the work of other students and/or persons.
       <div class="split-row">
         <!-- ACHIEVEMENTS -->
         <div class="split-col">
-          <div class="sec-title"><i class="bi bi-stars"></i> Achievements <span class="ms-auto" id="achProgBadge"
+          <div class="sec-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><i class="bi bi-stars"></i> Achievements <span class="ms-auto" id="achProgBadge"
               style="color:var(--accent); font-weight:800; font-size:0.7rem;">0/0</span></div>
+          <a href="/achievements" style="display: inline-block; margin-bottom: 16px; font-size: 0.85rem; color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(83, 131, 232, 0.5); padding-bottom: 4px; transition: all 0.2s;">
+            <i class="bi bi-arrow-right" style="margin-right: 4px;"></i>View All Achievements
+          </a>
           <div id="achievementsContainer">
             <div class="empty-state">No achievements earned yet.</div>
           </div>
@@ -1147,10 +1182,34 @@ plagiarized the work of other students and/or persons.
   const AVATAR_FALLBACK = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%231a1f2e%22/%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2216%22 fill=%22%235383e8%22/%3E%3Cellipse cx=%2240%22 cy=%2272%22 rx=%2228%22 ry=%2220%22 fill=%22%235383e8%22/%3E%3C/svg%3E";
 
   const ACHIEVEMENTS_DEF = [
-    { id: 'first_game', name: 'First Step', icon: 'bi-controller', max: 1 },
-    { id: 'collector', name: 'Collector', icon: 'bi-collection-fill', max: 10 },
-    { id: 'completionist_badge', name: 'Completionist', icon: 'bi-trophy-fill', max: 5 },
-    { id: 'devoted', name: 'Devoted', icon: 'bi-moon-stars-fill', max: 100 }
+    // Bronze Tier
+    { id: 'first_game', name: 'First Step', icon: 'bi-controller', max: 1, tier: 'Bronze' },
+    { id: 'collector', name: 'Collector', icon: 'bi-collection-fill', max: 10, tier: 'Bronze' },
+    { id: 'weekend_warrior', name: 'Weekend Warrior', icon: 'bi-hourglass-split', max: 10, tier: 'Bronze' },
+    { id: 'social_butterfly', name: 'Social Butterfly', icon: 'bi-people-fill', max: 5, tier: 'Bronze' },
+    { id: 'critic', name: 'Critic', icon: 'bi-star-fill', max: 5, tier: 'Bronze' },
+    
+    // Silver Tier
+    { id: 'completionist_badge', name: 'Completionist', icon: 'bi-trophy-fill', max: 5, tier: 'Silver' },
+    { id: 'devoted', name: 'Devoted', icon: 'bi-moon-stars-fill', max: 100, tier: 'Silver' },
+    { id: 'game_connoisseur', name: 'Game Connoisseur', icon: 'bi-gem', max: 30, tier: 'Silver' },
+    { id: 'influencer', name: 'Influencer', icon: 'bi-megaphone-fill', max: 20, tier: 'Silver' },
+    { id: 'network_master', name: 'Network Master', icon: 'bi-diagram-3-fill', max: 20, tier: 'Silver' },
+    
+    // Gold Tier
+    { id: 'gaming_legend', name: 'Gaming Legend', icon: 'bi-crown', max: 15, tier: 'Gold' },
+    { id: 'marathon_runner', name: 'Marathon Runner', icon: 'bi-fire', max: 300, tier: 'Gold' },
+    { id: 'master_collector', name: 'Master Collector', icon: 'bi-collection', max: 60, tier: 'Gold' },
+    { id: 'critical_acclaim', name: 'Critical Acclaim', icon: 'bi-bar-chart-fill', max: 50, tier: 'Gold' },
+    { id: 'community_leader', name: 'Community Leader', icon: 'bi-globe', max: 50, tier: 'Gold' },
+    
+    // Diamond Tier
+    { id: 'gaming_god', name: 'Gaming God', icon: 'bi-lightning-fill', max: 30, tier: 'Diamond' },
+    { id: 'time_master', name: 'Time Master', icon: 'bi-clock-fill', max: 500, tier: 'Diamond' },
+    { id: 'legendary_collection', name: 'Legendary Collection', icon: 'bi-star', max: 100, tier: 'Diamond' },
+    { id: 'gaming_prodigy', name: 'Gaming Prodigy', icon: 'bi-brain', max: 100, tier: 'Diamond' },
+    { id: 'apex_network', name: 'Apex Network', icon: 'bi-bezier2', max: 100, tier: 'Diamond' },
+    { id: 'ultimate_gamer', name: 'Ultimate Gamer', icon: 'bi-hearts', max: 1, tier: 'Diamond' }
   ];
 
   /* ── State ── */
@@ -1301,10 +1360,18 @@ plagiarized the work of other students and/or persons.
     let earnedCount = 0;
     const html = ACHIEVEMENTS_DEF.map((a, idx) => {
       let current = 0;
-      if (a.id === 'first_game' || a.id === 'collector') current = stats.total;
-      if (a.id === 'completionist_badge') current = stats.completed;
-      if (a.id === 'devoted') current = stats.totalHours;
-
+      
+      // Map achievement IDs to stat logic
+      if (a.id === 'first_game' || a.id === 'collector' || a.id === 'game_connoisseur' || a.id === 'master_collector' || a.id === 'legendary_collection') {
+        current = stats.total;
+      }
+      if (a.id === 'completionist_badge' || a.id === 'gaming_legend' || a.id === 'gaming_god') {
+        current = stats.completed;
+      }
+      if (a.id === 'devoted' || a.id === 'weekend_warrior' || a.id === 'marathon_runner' || a.id === 'time_master') {
+        current = stats.totalHours;
+      }
+      
       const isDone = current >= a.max || unlockedIds.includes(a.id);
       if (isDone) earnedCount++;
 
@@ -1312,7 +1379,10 @@ plagiarized the work of other students and/or persons.
       <div class="ach-item" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both; opacity: ${isDone ? 1 : 0.6}">
         <div class="ach-icon-box"><i class="bi ${a.icon}"></i></div>
         <div class="ach-name">${a.name}</div>
-        ${isDone ? '<div class="ach-status">ACHIEVED</div>' : `<div class="ach-prog-val">${Math.min(current, a.max)}/${a.max}</div>`}
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 0.75rem; color: var(--text-tertiary); background: rgba(83, 131, 232, 0.1); padding: 3px 8px; border-radius: 3px;">${a.tier}</span>
+          ${isDone ? '<div class="ach-status">ACHIEVED</div>' : `<div class="ach-prog-val">${Math.min(current, a.max)}/${a.max}</div>`}
+        </div>
       </div>
     `;
     }).join('');

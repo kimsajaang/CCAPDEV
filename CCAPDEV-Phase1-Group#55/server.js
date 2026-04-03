@@ -128,6 +128,7 @@ app.get('/dashboard', (req, res) => res.redirect('/Dashboard'));
 app.get('/library', (req, res) => res.render('library', { title: 'My Library', user: req.user }));
 app.get('/profile', (req, res) => res.render('profile', { title: 'Profile', user: req.user }));
 app.get('/profile-edit', (req, res) => res.render('profile-edit', { title: 'Edit Profile', user: req.user }));
+app.get('/achievements', (req, res) => res.render('achievements', { title: 'Achievements', user: req.user }));
 app.get('/search', (req, res) => res.render('search', { title: 'Search Games', user: req.user }));
 app.get('/stats', (req, res) => res.render('stats', { title: 'Community', user: req.user }));
 app.get('/friends', (req, res) => res.render('friends', { title: 'Find Friends', user: req.user }));

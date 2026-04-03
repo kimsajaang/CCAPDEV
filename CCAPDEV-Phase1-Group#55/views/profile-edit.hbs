@@ -669,6 +669,8 @@ plagiarized the work of other students and/or persons.
         // Tab switching function
         function switchTab(targetId, liElement) {
             if (liElement.classList.contains('disabled')) return;
+            // Show unsaved changes warning if applicable
+            checkUnsavedChanges();
             document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
             liElement.classList.add('active');
             document.querySelectorAll('.settings-section').forEach(sec => sec.classList.remove('active'));
@@ -678,6 +680,40 @@ plagiarized the work of other students and/or persons.
         function updateGameCount() {
             document.getElementById('gameCount').textContent = `${selectedFavoriteGames.length}/5`;
         }
+
+        // Track if there are unsaved changes
+        let hasUnsavedChanges = false;
+
+        function markUnsaved() {
+            hasUnsavedChanges = true;
+            const saveBtn = document.querySelector('.settings-save-btn');
+            if (saveBtn && !saveBtn.classList.contains('unsaved')) {
+                saveBtn.classList.add('unsaved');
+                saveBtn.textContent = '💾 Save Profile (unsaved changes)';
+            }
+        }
+
+        function checkUnsavedChanges() {
+            if (hasUnsavedChanges) {
+                const proceed = confirm('You have unsaved changes in this tab. Are you sure you want to leave?');
+                if (!proceed) return false;
+            }
+            return true;
+        }
+
+        // Add auto-save style
+        const autoSaveStyle = document.createElement('style');
+        autoSaveStyle.textContent = `
+            .settings-save-btn.unsaved { 
+                background: #c27803 !important; 
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+        `;
+        document.head.appendChild(autoSaveStyle);
 
         // Avatar upload handler
         document.getElementById('uploadAvatarBtn').addEventListener('click', () => {
@@ -694,10 +730,18 @@ plagiarized the work of other students and/or persons.
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     document.getElementById('avatarPreview').src = event.target.result;
+                    markUnsaved();
                 };
                 reader.readAsDataURL(file);
             }
         });
+
+        // Add change listeners to notification/defaults toggles to mark unsaved
+        document.getElementById('privacyToggle').addEventListener('change', markUnsaved);
+        document.getElementById('inputDefaultSort').addEventListener('change', markUnsaved);
+        document.getElementById('notifFriendReq').addEventListener('change', markUnsaved);
+        document.getElementById('notifChatMsg').addEventListener('change', markUnsaved);
+        document.getElementById('notifMarketing').addEventListener('change', markUnsaved);
 
         // Wallpaper upload handler
         document.getElementById('wallpaperInput').addEventListener('change', (e) => {
@@ -749,20 +793,12 @@ plagiarized the work of other students and/or persons.
                 wallpaper: document.getElementById('wallpaperPreview').src,
                 wallpaperPosition: parseInt(document.getElementById('wallpaperPositionSlider').value) || 50,
                 gamingIdentity: document.getElementById('inputIdentity').value,
-                favoritePlatform: document.getElementById('inputPlatform').value,
-                favoriteGames: selectedFavoriteGames,
-                steamId: document.getElementById('inputSteamId').value.trim(),
-                joinDate: loadProfile().joinDate
-            };
-
-            saveProfile(profile);
-
-            // Also save steamId to the server DB
+                favoritePlatform:and all settings to the server DB
             try {
               const authRes = await fetch('/api/auth/current', { credentials: 'include' });
               if (authRes.ok) {
                 const me = await authRes.json();
-                await fetch('/api/users/' + me._id, {
+                const response = await fetch('/api/users/' + me._id, {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   credentials: 'include',
@@ -774,6 +810,8 @@ plagiarized the work of other students and/or persons.
                     wallpaper: profile.wallpaper && profile.wallpaper !== window.location.href ? profile.wallpaper : '',
                     wallpaperPosition: profile.wallpaperPosition,
                     steamId: profile.steamId,
+                    xboxGamertag: document.getElementById('inputXboxGamertag').value.trim(),
+                    psnId: document.getElementById('inputPsnId').value.trim(),
                     favoriteGames: selectedFavoriteGames,
                     settings: {
                         privacy: document.getElementById('privacyToggle').checked ? 'public' : 'private',
@@ -786,10 +824,40 @@ plagiarized the work of other students and/or persons.
                     }
                   })
                 });
+
+                if (!response.ok) {
+                  const error = await response.json();
+                  throw new Error(error.error || 'Failed to save profile');
+                }
               }
-            } catch (e) { console.warn('Could not sync profile to server:', e); }
+            } catch (e) { 
+              showNotification('Save Error', e.message || 'Could not save profile to server', 'error');
+              return;
+            }
 
             // Check for achievements
+            const games = loadLibrary();
+            const achievementsKey = PROFILE_STORAGE_KEY.replace('prfl_', 'ach_');
+            const unlockedAchievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');
+            
+            // Check for curator achievement
+            if (profile.bio && profile.gamingIdentity && profile.favoriteGames.length > 0) {
+                if (!unlockedAchievements.some(a => a.id === 'curator')) {
+                    unlockedAchievements.push({ id: 'curator', unlockedAt: new Date().toISOString() });
+                    localStorage.setItem(achievementsKey, JSON.stringify(unlockedAchievements));
+                }
+            }
+
+            hasUnsavedChanges = false;
+            const saveBtn = document.querySelector('.settings-save-btn');
+            if (saveBtn) {
+                saveBtn.classList.remove('unsaved');
+                saveBtn.textContent = '💾 Save Profile';
+            }
+
+            showNotification('Profile Updated', 'Your profile and settings have been saved successfully!', 'success');
+            setTimeout(() => window.location.href = '/profile', 1500);
+       
             const games = loadLibrary();
             const achievementsKey = PROFILE_STORAGE_KEY.replace('prfl_', 'ach_');
             const unlockedAchievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');

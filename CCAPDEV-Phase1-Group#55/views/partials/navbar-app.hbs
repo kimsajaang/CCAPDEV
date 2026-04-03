@@ -44,11 +44,18 @@
             <i class="bi bi-steam" style="color:#4ab76b;"></i>
             <span id="steamStatusText" style="color:#a8d8b0;">Steam Connected</span>
             <span id="steamLiveGame" class="fw-bold" style="color:#4ab76b;"></span>
+            <span id="steamLoginIndicator" style="color:#a8d8b0; margin-left: 8px; padding-left: 8px; border-left: 1px solid rgba(168,216,176,0.2);">Logged in via Steam</span>
         </div>
-        <button id="navbarSteamSyncBtn" onclick="syncSteam(event)" class="btn btn-sm py-0 px-2"
-            style="color:#a8d8b0; font-size: 0.75rem; border: 1px solid rgba(168,216,176,0.2); background: rgba(255,255,255,0.03); border-radius: 4px; transition: all 0.2s;">
-            <i class="bi bi-arrow-repeat me-1"></i>Sync Library
-        </button>
+        <div class="d-flex gap-2">
+            <button id="navbarSteamEditBtn" onclick="editOnSteam(event)" class="btn btn-sm py-0 px-2"
+                style="color:#a8d8b0; font-size: 0.75rem; border: 1px solid rgba(168,216,176,0.2); background: rgba(255,255,255,0.03); border-radius: 4px; transition: all 0.2s;">
+                <i class="bi bi-pencil me-1"></i>Edit on Steam
+            </button>
+            <button id="navbarSteamSyncBtn" onclick="syncSteam(event)" class="btn btn-sm py-0 px-2"
+                style="color:#a8d8b0; font-size: 0.75rem; border: 1px solid rgba(168,216,176,0.2); background: rgba(255,255,255,0.03); border-radius: 4px; transition: all 0.2s;">
+                <i class="bi bi-arrow-repeat me-1"></i>Sync Library
+            </button>
+        </div>
     </div>
 </div>
 
@@ -98,7 +105,7 @@
 
     function applyUser(user) {
         if (user) {
-            document.getElementById('nav-back').classList.add('d-none');
+            document.getElementById('nav-back').classList.remove('d-none');
             document.getElementById('nav-dashboard').classList.remove('d-none');
             document.getElementById('nav-library').classList.remove('d-none');
             document.getElementById('nav-profile').classList.remove('d-none');
@@ -123,7 +130,6 @@
             document.getElementById('nav-dashboard').classList.add('d-none');
             document.getElementById('nav-library').classList.add('d-none');
             document.getElementById('nav-profile').classList.add('d-none');
-            document.getElementById('nav-friends')?.classList.add('d-none');
             document.getElementById('nav-notifications')?.classList.add('d-none');
             document.getElementById('nav-logout').classList.add('d-none');
             document.getElementById('nav-login').classList.remove('d-none');
@@ -174,6 +180,21 @@
         } catch (err) {
             btn.innerHTML = '<i class="bi bi-wifi-off text-danger me-1"></i>Error';
             setTimeout(() => { btn.innerHTML = origContent; btn.disabled = false; }, 3000);
+        }
+    }
+
+    async function editOnSteam(e) {
+        e.preventDefault();
+        try {
+            const res = await fetch('/api/auth/current', { credentials: 'include' });
+            const user = res.ok ? await res.json() : null;
+            if (user && user.steamId) {
+                window.open(`https://steamcommunity.com/profiles/${user.steamId}`, '_blank');
+            } else {
+                alert('Steam ID not found');
+            }
+        } catch (err) {
+            console.error('Error opening Steam profile:', err);
         }
     }
 
