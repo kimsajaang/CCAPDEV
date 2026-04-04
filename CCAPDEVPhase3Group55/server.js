@@ -48,7 +48,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: new MongoStore({
-    url: MONGO_URI,
+    mongoUrl: MONGO_URI,
     collectionName: 'sessions',
     ttl: 7 * 24 * 60 * 60, // 7 days in seconds
   }),
