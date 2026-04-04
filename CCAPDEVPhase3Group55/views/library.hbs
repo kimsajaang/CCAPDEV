@@ -266,7 +266,7 @@ plagiarized the work of other students and/or persons.
         if (authOk) {
           ACHIEVEMENTS_STORAGE_KEY = `ach_v1_${currentUserId}`;
           await fetchLibrary();
-          render();
+          render(true);  // First load: show staggered animations
           checkAchievements();
         }
       }
@@ -389,7 +389,8 @@ plagiarized the work of other students and/or persons.
     }
 
     /* ---------- render grid ---------- */
-    function render() {
+    let isInitialRender = true;
+    function render(isFirstLoad = false) {
         const games = loadLibrary();
         
         // Filter by status
@@ -491,8 +492,11 @@ plagiarized the work of other students and/or persons.
                    </div>`
                 : `<div class="cover-placeholder" style="aspect-ratio:3/4; display:flex; align-items:center; justify-content:center; background:#1c252e;"><i class="bi bi-controller" style="font-size: 3rem; color: var(--primary);"></i></div>`;
 
+            // Only apply staggered animation delay on initial load; skip for pagination
+            const animDelay = isFirstLoad ? `animation-delay:${i * 0.06}s` : 'animation-delay:0s';
+            
             html += `
-            <div class="col game-card-anim" style="animation-delay:${i * 0.06}s" data-id="${game.id}">
+            <div class="col game-card-anim" style="${animDelay}" data-id="${game.id}">
                 <div class="card h-100 position-relative">
                     <button class="remove-btn lib-remove-btn" data-entry-id="${game.id}" onclick="removeGame('${game.id}')" title="Remove from library">&times;</button>
                     <span class="badge ${statusBg[game.status]} status-badge">${statusLabel[game.status]}</span>
@@ -538,11 +542,15 @@ plagiarized the work of other students and/or persons.
         });
 
         // "Add Game" card at the end
-        html += addGameCard();
+        html += addGameCard(isFirstLoad);
         grid.innerHTML = html;
+        
+        // Only animate staggered on initial load; subsequent renders skip animation for speed
+        isInitialRender = false;
     }
 
-    function addGameCard() {
+    function addGameCard(isFirstLoad = false) {
+        // No animation delay for the add button since it's always added last
         return `
         <div class="col game-card-anim" style="animation-delay:0s">
             <div class="add-game-btn h-100" onclick="window.location.href='search'">
