@@ -14,9 +14,10 @@ plagiarized the work of other students and/or persons.
     /* Page-specific: community / stats page */
     .community-photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease); background: rgba(83, 131, 232, 0.05); }
     .community-photo-upload-area:hover { border-color: var(--primary); background: rgba(83, 131, 232, 0.1); }
-    .community-photo-upload-area.has-photo { border: 1px solid var(--border); padding: 8px; background: transparent; }
-    .community-photo-preview-img { max-width: 100%; max-height: 300px; border-radius: var(--radius-sm); object-fit: cover; margin-bottom: 10px; }
-    .community-photo-remove-btn { font-size: 0.8rem; padding: 4px 8px; }
+    .community-photo-upload-area.has-photo { border: 1px solid var(--border); padding: 12px; background: rgba(13, 18, 23, 0.5); cursor: default; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .community-photo-preview-img { max-width: 100%; max-height: 300px; border-radius: var(--radius-sm); object-fit: cover; }
+    .community-photo-remove-btn { font-size: 0.78rem; padding: 6px 16px; border-radius: 6px; opacity: 0.8; transition: opacity 0.2s ease; }
+    .community-photo-remove-btn:hover { opacity: 1; }
     .community-post-photo { width: 100%; max-height: 400px; border-radius: var(--radius-sm); object-fit: cover; margin: 12px 0; border: 1px solid var(--border); }
     .comment-panel { background-color: var(--bg-input); border-color: var(--border); border-radius: var(--radius-md); }
     .comment-item { background: var(--bg-base); border: 1px solid #1e2a34; border-radius: var(--radius-sm); padding: 12px 14px; transition: border-color var(--duration) var(--ease); }
@@ -256,7 +257,7 @@ plagiarized the work of other students and/or persons.
     let currentUsername = 'Gamer';
     let currentUserId = null;
 
-    // Check authentication status and show/hide content accordingly
+    // Single auth check - combines auth detection and community preview logic in one call
     async function checkAuthAndShowContent() {
       try {
         const response = await fetch('/api/auth/current', {
@@ -269,7 +270,13 @@ plagiarized the work of other students and/or persons.
           const userData = await response.json();
           currentUserId = userData._id;
           currentUsername = userData.displayName || userData.username || 'Gamer';
+        } else {
+          // Not logged in - show community preview with login prompt
+          window.limitCommunityPreview = true;
+          const loginPrompt = document.getElementById('communityLoginPrompt');
+          if (loginPrompt) loginPrompt.style.display = '';
         }
+
         const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
         const previewSections = document.querySelectorAll('[data-preview-only="true"]');
 
@@ -282,36 +289,13 @@ plagiarized the work of other students and/or persons.
         }
       } catch (err) {
         console.error('Auth check failed:', err);
-        isUserLoggedIn = false;
-        document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = '');
+        // Don't change login state on network errors - keep whatever state we had
+        // This prevents brief network issues from logging the user out
       }
     }
 
-    // Check auth for community page
-    async function checkCommunityAuth() {
-      try {
-        const res = await fetch('/api/auth/current', { credentials: 'include' });
-        const isLoggedIn = res.ok;
-        if (!isLoggedIn) {
-          // Limit posts to 3 and show login prompt
-          window.limitCommunityPreview = true;
-          document.getElementById('communityLoginPrompt').style.display = '';
-        }
-      } catch (err) {
-        window.limitCommunityPreview = true;
-        document.getElementById('communityLoginPrompt').style.display = '';
-      }
-    }
-
-    // Check auth on page load
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', checkAuthAndShowContent);
-      checkCommunityAuth();
-    } else {
-      checkAuthAndShowContent();
-      checkCommunityAuth();
-    }
+    // Check auth on page load (single call instead of two)
+    checkAuthAndShowContent();
 
     // Handle New Post button clicks - redirect to login if not logged in
     document.querySelectorAll('#newPostTopBtn, #newPostEmptyBtn').forEach(btn => {
@@ -824,51 +808,90 @@ plagiarized the work of other students and/or persons.
       if (!communitySelectedPhoto) communityPhotoInput.click();
     });
 
-    communityPhotoInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        if (file.size > 100 * 1024 * 1024) {
-          postError.style.display = "block";
-          postError.className = "alert alert-danger alert-dismissible fade show mb-0";
-          postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i><strong>File too large!</strong> Maximum file size is 100MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-          return;
-        }
-        const isVideo = file.type.startsWith('video/');
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          communitySelectedPhoto = event.target.result;
-          communityPhotoUploadArea.classList.add("has-photo");
-          communityPhotoUploadArea.innerHTML = "";
-          
-          if (isVideo) {
-            const video = document.createElement("video");
-            video.src = communitySelectedPhoto;
-            video.className = "community-photo-preview-img";
-            video.controls = true;
-            video.style.cssText = "max-width:100%;max-height:300px;background:#000;";
-            communityPhotoUploadArea.appendChild(video);
-          } else {
-            const img = document.createElement("img");
-            img.src = communitySelectedPhoto;
-            img.className = "community-photo-preview-img";
-            img.alt = "Preview";
-            communityPhotoUploadArea.appendChild(img);
-          }
-          
-          communityPhotoUploadArea.appendChild(communityPhotoInput);
-          const removeBtn = document.createElement("button");
-          removeBtn.type = "button";
-          removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn";
-          removeBtn.textContent = "Remove Media";
-          removeBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            resetPhotoUpload();
-          });
-          communityPhotoUploadArea.appendChild(removeBtn);
-          postError.style.display = "none";
+    // Helper: compress an image file to fit within maxWidth and quality constraints
+    function compressImage(file, maxWidth = 1200, quality = 0.8) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const scale = Math.min(1, maxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
         };
+        img.src = url;
+      });
+    }
+
+    // Helper: show the media preview with a nice Remove button below
+    function showMediaPreview(dataUrl, isVideo) {
+      communitySelectedPhoto = dataUrl;
+      communityPhotoUploadArea.classList.add("has-photo");
+      communityPhotoUploadArea.innerHTML = "";
+      
+      if (isVideo) {
+        const video = document.createElement("video");
+        video.src = dataUrl;
+        video.className = "community-photo-preview-img";
+        video.controls = true;
+        video.style.cssText = "max-width:100%;max-height:300px;background:#000;border-radius:8px;";
+        communityPhotoUploadArea.appendChild(video);
+      } else {
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.className = "community-photo-preview-img";
+        img.alt = "Preview";
+        communityPhotoUploadArea.appendChild(img);
+      }
+      
+      communityPhotoUploadArea.appendChild(communityPhotoInput);
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn";
+      removeBtn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Remove Media';
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        resetPhotoUpload();
+      });
+      communityPhotoUploadArea.appendChild(removeBtn);
+      postError.style.display = "none";
+    }
+
+    communityPhotoInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? 10 * 1024 * 1024 : 10 * 1024 * 1024; // 10MB for both after compression
+
+      if (isVideo && file.size > maxSize) {
+        postError.style.display = "block";
+        postError.className = "alert alert-danger alert-dismissible fade show mb-0";
+        postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i><strong>Video too large!</strong> Maximum video size is 10MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Try a shorter clip or compress it first.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        return;
+      }
+
+      if (isVideo) {
+        // Read video as-is (already size-checked above)
+        const reader = new FileReader();
+        reader.onload = (event) => showMediaPreview(event.target.result, true);
         reader.readAsDataURL(file);
+      } else {
+        // Compress image client-side to reduce payload
+        try {
+          const compressed = await compressImage(file, 1200, 0.8);
+          showMediaPreview(compressed, false);
+        } catch (err) {
+          // Fallback: read original file
+          const reader = new FileReader();
+          reader.onload = (event) => showMediaPreview(event.target.result, false);
+          reader.readAsDataURL(file);
+        }
       }
     });
 
@@ -884,21 +907,37 @@ plagiarized the work of other students and/or persons.
         return;
       }
 
+      // Check payload size before sending — Render free tier & MongoDB have limits
+      const postPayload = {
+        title,
+        body,
+        flair,
+        game,
+        photo: communitySelectedPhoto
+      };
+      const payloadStr = JSON.stringify(postPayload);
+      const payloadSizeMB = payloadStr.length / (1024 * 1024);
+      
+      if (payloadSizeMB > 15) {
+        postError.style.display = "block";
+        postError.className = "alert alert-danger alert-dismissible fade show mb-0";
+        postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i><strong>Media too large for upload!</strong> Total post size is ${payloadSizeMB.toFixed(1)}MB (max ~15MB). Try a smaller image or shorter video clip.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        return;
+      }
+
+      // Disable button while posting
+      createPostBtn.disabled = true;
+      createPostBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Posting...';
+
       fetch('/api/posts', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          body,
-          flair,
-          game,
-          photo: communitySelectedPhoto
-        })
+        body: payloadStr
       })
       .then(res => {
         if (!res.ok) {
-          return res.json().then(err => Promise.reject(err));
+          return res.json().then(err => Promise.reject(err)).catch(() => Promise.reject({ error: `Server error (${res.status}). The media may be too large.` }));
         }
         return res.json();
       })
@@ -918,7 +957,16 @@ plagiarized the work of other students and/or persons.
       .catch(err => {
         console.error('Post creation error:', err);
         postError.style.display = "block";
-        postError.textContent = "Error: " + (err.error || err.message || "Failed to create post. Try again.");
+        postError.className = "alert alert-danger alert-dismissible fade show mb-0";
+        let errMsg = err.error || err.message || 'Failed to create post.';
+        if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
+          errMsg = 'Upload failed — the media file is too large for the server. Try removing the media or using a smaller file.';
+        }
+        postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i>${errMsg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+      })
+      .finally(() => {
+        createPostBtn.disabled = false;
+        createPostBtn.innerHTML = 'Post';
       });
     });
 

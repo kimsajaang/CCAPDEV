@@ -635,6 +635,17 @@ app.get('/api/auth/current', disableAuthCaching, isLoggedIn, async (req, res) =>
 
     console.log('[GET CURRENT USER] SUCCESS - Retrieved:', user.displayName);
     const pendingRequests = (user.friendRequests || []).filter(r => r.status === 'pending').length;
+
+    // Determine auth provider for client-side detection
+    let authProvider = 'local';
+    if (user.steamId && user.steamId.length > 0) {
+      authProvider = 'steam';
+    } else if (user.email && user.email.endsWith('@steam.local')) {
+      authProvider = 'steam';
+    } else if (user.googleId && user.googleId.length > 0) {
+      authProvider = 'google';
+    }
+
     res.json({
       _id: user._id,
       username: user.username,
@@ -644,6 +655,7 @@ app.get('/api/auth/current', disableAuthCaching, isLoggedIn, async (req, res) =>
       avatar: user.avatar,
       favoriteGames: user.favoriteGames,
       steamId: user.steamId || '',
+      googleId: user.googleId || '',
       xboxGamertag: user.xboxGamertag || '',
       psnId: user.psnId || '',
       wallpaper: user.wallpaper || '',
@@ -651,6 +663,7 @@ app.get('/api/auth/current', disableAuthCaching, isLoggedIn, async (req, res) =>
       wallpaperPositionX: user.wallpaperPositionX != null ? user.wallpaperPositionX : 50,
       friendsCount: (user.friends || []).length,
       pendingRequests,
+      authProvider,
       settings: user.settings,
       createdAt: user.createdAt,
     });
@@ -2736,10 +2749,19 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 // GET /api/posts - Get all community posts
 app.get('/api/posts', async (req, res) => {
   try {
-    const posts = await Post.find()
+    // Timeout after 5 seconds to prevent hanging requests
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Posts fetch timeout')), 5000)
+    );
+
+    const fetchPromise = Post.find()
       .populate('author', '_id username displayName avatar')
       .populate('comments.author', '_id username displayName avatar')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .exec();
+
+    const posts = await Promise.race([fetchPromise, timeoutPromise]);
+    
     const postsWithId = posts.map(post => {
       const obj = post.toObject();
       obj.id = obj._id;

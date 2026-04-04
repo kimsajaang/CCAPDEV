@@ -630,21 +630,20 @@ plagiarized the work of other students and/or persons.
             
             // Debug: log serverUser to check data
             console.log('[Account Security] serverUser:', serverUser);
-            console.log('[Account Security] email:', serverUser?.email);
+            console.log('[Account Security] authProvider:', serverUser?.authProvider);
             console.log('[Account Security] steamId:', serverUser?.steamId);
             console.log('[Account Security] googleId:', serverUser?.googleId);
             
-            // Check if Steam account (by steamId or email format)
-            const isSteamAccount = serverUser && (serverUser.steamId || (serverUser.email && serverUser.email.includes('@steam.local')));
-            const isGoogleAccount = serverUser && serverUser.googleId;
+            // Use server-computed authProvider for reliable detection
+            const authProvider = serverUser?.authProvider || 'local';
             
-            if (isSteamAccount) {
+            if (authProvider === 'steam') {
                 // User logged in via Steam
                 console.log('[Account Security] Detected: STEAM account');
                 passwordSection.style.display = 'none';
                 googleNotice.style.display = 'none';
                 steamNotice.style.display = 'block';
-            } else if (isGoogleAccount) {
+            } else if (authProvider === 'google') {
                 // User logged in via Google
                 console.log('[Account Security] Detected: GOOGLE account');
                 passwordSection.style.display = 'none';
