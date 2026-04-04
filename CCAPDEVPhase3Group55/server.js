@@ -2749,28 +2749,50 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 // GET /api/posts - Get all community posts
 app.get('/api/posts', async (req, res) => {
   try {
-    // Timeout after 5 seconds to prevent hanging requests
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Posts fetch timeout')), 5000)
-    );
-
-    const fetchPromise = Post.find()
+    const posts = await Post.find()
       .populate('author', '_id username displayName avatar')
       .populate('comments.author', '_id username displayName avatar')
       .sort({ createdAt: -1 })
-      .exec();
+      .limit(50)
+      .lean();
 
-    const posts = await Promise.race([fetchPromise, timeoutPromise]);
-    
     const postsWithId = posts.map(post => {
-      const obj = post.toObject();
-      obj.id = obj._id;
-      return obj;
+      post.id = post._id;
+      return post;
     });
     res.json(postsWithId);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch posts' });
+  }
+});
+
+// GET /api/posts/stats - Lightweight community stats (no full post data needed)
+app.get('/api/posts/stats', async (req, res) => {
+  try {
+    const stats = await Post.aggregate([
+      {
+        $facet: {
+          postCount: [{ $count: 'count' }],
+          commentCount: [{ $project: { count: { $size: { $ifNull: ['$comments', []] } } } }, { $group: { _id: null, total: { $sum: '$count' } } }],
+          authors: [{ $group: { _id: '$author' } }],
+          commentAuthors: [{ $unwind: '$comments' }, { $group: { _id: '$comments.author' } }]
+        }
+      }
+    ]);
+
+    const result = stats[0] || {};
+    const totalPosts = result.postCount?.[0]?.count || 0;
+    const totalComments = result.commentCount?.[0]?.total || 0;
+    const authorIds = new Set([
+      ...(result.authors || []).map(a => String(a._id)),
+      ...(result.commentAuthors || []).map(a => String(a._id))
+    ]);
+
+    res.json({ totalPosts, totalComments, activeMembers: authorIds.size });
+  } catch (err) {
+    console.error('[POST STATS] Error:', err.message);
+    res.json({ totalPosts: 0, totalComments: 0, activeMembers: 0 });
   }
 });
 

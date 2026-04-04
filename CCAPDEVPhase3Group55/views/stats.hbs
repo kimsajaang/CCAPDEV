@@ -320,13 +320,18 @@ plagiarized the work of other students and/or persons.
     const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
 
     // --- Data layer: backend API calls ---
-    async function loadPosts() {
+    async function loadPosts(retries = 1) {
       try {
-        const res = await fetch('/api/posts');
-        if (!res.ok) throw new Error('Fetch failed');
+        const res = await fetch('/api/posts', { credentials: 'include' });
+        if (!res.ok) throw new Error('Fetch failed: ' + res.status);
         return await res.json();
       } catch (e) {
         console.error('Failed to load posts:', e);
+        if (retries > 0) {
+          console.log('[loadPosts] Retrying in 2s...');
+          await new Promise(r => setTimeout(r, 2000));
+          return loadPosts(retries - 1);
+        }
         return [];
       }
     }
@@ -985,21 +990,21 @@ plagiarized the work of other students and/or persons.
 
     seedDefaultPosts();
 
-    // Update sidebar stats dynamically from post data
+    // Update sidebar stats using lightweight stats endpoint
     async function updateSidebarStats() {
-      const posts = await loadPosts();
-      const totalPosts = posts.length;
-      const totalComments = posts.reduce((sum, p) => sum + (p.comments || []).length, 0);
-      
-      const authors = new Set();
-      posts.forEach(p => {
-        if (p.author) authors.add(p.author.username);
-        (p.comments || []).forEach(c => { if (c.author) authors.add(c.author.username); });
-      });
-
-      document.getElementById('statTotalPosts').textContent = totalPosts;
-      document.getElementById('statTotalComments').textContent = totalComments;
-      document.getElementById('statActiveMembers').textContent = authors.size;
+      try {
+        const res = await fetch('/api/posts/stats', { credentials: 'include' });
+        if (!res.ok) throw new Error('Stats fetch failed');
+        const stats = await res.json();
+        document.getElementById('statTotalPosts').textContent = stats.totalPosts || 0;
+        document.getElementById('statTotalComments').textContent = stats.totalComments || 0;
+        document.getElementById('statActiveMembers').textContent = stats.activeMembers || 0;
+      } catch (e) {
+        console.error('Failed to load stats:', e);
+        // Fallback: compute from already-loaded feed posts
+        const feedCards = document.querySelectorAll('[data-post-id]');
+        document.getElementById('statTotalPosts').textContent = feedCards.length;
+      }
     }
 
     // Deep-link handler — if URL has #post-<id>, scroll to that post and open its comments.
