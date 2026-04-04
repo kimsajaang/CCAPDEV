@@ -319,6 +319,30 @@ const initializeServer = async () => {
     await connectDB();
     dbConnected = true;
     console.log('MongoDB connected successfully');
+    
+    // One-time migration: backfill hasPhoto and commentCount for existing posts
+    try {
+      const postsToMigrate = await Post.find({
+        $or: [
+          { hasPhoto: { $exists: false } },
+          { commentCount: { $exists: false } }
+        ]
+      });
+      if (postsToMigrate.length > 0) {
+        console.log(`[MIGRATION] Backfilling hasPhoto/commentCount for ${postsToMigrate.length} posts...`);
+        for (const post of postsToMigrate) {
+          await Post.updateOne({ _id: post._id }, {
+            $set: {
+              hasPhoto: !!post.photo,
+              commentCount: post.comments ? post.comments.length : 0
+            }
+          });
+        }
+        console.log('[MIGRATION] Done.');
+      }
+    } catch (migErr) {
+      console.error('[MIGRATION] Error (non-fatal):', migErr.message);
+    }
   } catch (err) {
     console.error('MongoDB connection failed:', err.message);
   }
@@ -2746,48 +2770,31 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 
 // ─── COMMUNITY / POST ROUTES ───
 
-// GET /api/posts - Get all community posts (optimized: NO photos, limited comments)
+// GET /api/posts - Get all community posts (FAST: no photos, no comments)
 app.get('/api/posts', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 0;
     const limit = 30;
     const skip = page * limit;
     
-    // Step 1: Get IDs of posts that have photos (lightweight query)
-    const postsWithPhotos = new Set(
-      (await Post.find({ photo: { $ne: null, $ne: '' } })
-        .select('_id')
-        .skip(skip)
-        .limit(limit)
-        .lean()
-      ).map(p => p._id.toString())
-    );
-    
-    // Step 2: Fetch posts WITHOUT photo data
+    // Single fast query: exclude photo blobs AND comments array
+    // Uses denormalized hasPhoto & commentCount fields instead
     const posts = await Post.find()
-      .select('-photo') // EXCLUDE photo blobs to save bandwidth
+      .select('-photo -comments')
       .populate('author', '_id username displayName avatar')
-      .populate('comments.author', '_id username displayName avatar')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    // Limit comments to first 3 per post & mark photo presence
-    const optimized = posts.map(post => {
-      const commentCount = post.comments ? post.comments.length : 0;
-      if (post.comments && post.comments.length > 3) {
-        post.comments = post.comments.slice(0, 3);
-        post._hasMoreComments = true;
-      }
-      post._totalComments = commentCount;
+    posts.forEach(post => {
       post.id = post._id;
-      post._hasPhoto = postsWithPhotos.has(post._id.toString()); // ✅ Correct check
-      return post;
+      // Ensure denormalized fields have fallbacks for old posts
+      if (typeof post.hasPhoto === 'undefined') post.hasPhoto = false;
+      if (typeof post.commentCount === 'undefined') post.commentCount = 0;
     });
     
-    console.log(`[GET POSTS] Returning ${optimized.length} posts from page ${page}`);
-    res.json(optimized);
+    res.json(posts);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch posts' });

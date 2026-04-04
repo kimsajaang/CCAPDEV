@@ -50,6 +50,14 @@ const postSchema = new mongoose.Schema({
     type: String, // Base64 or URL
     default: null
   },
+  hasPhoto: {
+    type: Boolean,
+    default: false
+  },
+  commentCount: {
+    type: Number,
+    default: 0
+  },
   upvotes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -64,6 +72,13 @@ const postSchema = new mongoose.Schema({
     default: Date.now
   }
 }, { timestamps: true });
+
+// Auto-set hasPhoto and commentCount before saving
+postSchema.pre('save', function(next) {
+  this.hasPhoto = !!this.photo;
+  this.commentCount = this.comments ? this.comments.length : 0;
+  next();
+});
 
 // Virtual to get total score
 postSchema.virtual('score').get(function() {

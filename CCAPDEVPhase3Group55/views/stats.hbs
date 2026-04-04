@@ -565,7 +565,7 @@ plagiarized the work of other students and/or persons.
       
       // Placeholder for photo (lazy loaded later)
       let mediaHtml = "";
-      if (post._hasPhoto) {
+      if (post.hasPhoto) {
         mediaHtml = `<img class="community-post-photo" data-photo-id="${post.id}" style="display:none;width:100%;max-height:400px;border-radius:8px;margin:12px 0;border:1px solid var(--border);" alt="Post media" loading="lazy">`;
       }
 
@@ -595,8 +595,8 @@ plagiarized the work of other students and/or persons.
               ${mediaHtml}
 
               <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
-                <button class="btn btn-outline-primary btn-sm" data-act="toggleComments" data-total-comments="${post._totalComments || (post.comments ? post.comments.length : 0)}">
-                  Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${post._totalComments || (post.comments||[]).length}</span>
+                <button class="btn btn-outline-primary btn-sm" data-act="toggleComments" data-total-comments="${post.commentCount || 0}">
+                  Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${post.commentCount || 0}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
                 ${currentUserId && post.author && String(post.author._id) === String(currentUserId) ? `
@@ -1175,6 +1175,9 @@ plagiarized the work of other students and/or persons.
     render().then(() => {
       updateSidebarStats();
       setTimeout(() => openCommentsForHash(), 150);
+      // Hide loader now that data is rendered
+      const loader = document.getElementById('page-loader');
+      if (loader) loader.classList.add('hidden');
     });
 
     // Logout function
@@ -1225,20 +1228,6 @@ plagiarized the work of other students and/or persons.
       if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
     }, { passive: true });
 
-    // Hide loader when page fully loads (with minimum 1.5s animation)
-    const loaderStartTime = Date.now();
-    window.addEventListener('load', () => {
-      const loader = document.getElementById('page-loader');
-      if (loader) {
-        const elapsed = Date.now() - loaderStartTime;
-        const minDelay = 1500;
-        const remainingDelay = Math.max(0, minDelay - elapsed);
-        console.log(`[LOAD TIMING] Page loaded in: ${elapsed}ms (animation: ${Math.min(elapsed, 1500)}ms, showing for: ${minDelay}ms total)`);
-        setTimeout(() => {
-          console.log('[LOAD TIMING] Hiding loader');
-          loader.classList.add('hidden');
-        }, remainingDelay);
-      }
-    });
+    // Loader is now hidden by render().then() above — no need for a separate timer
     }); // End of window load
   </script>
