@@ -307,7 +307,13 @@ plagiarized the work of other students and/or persons.
           // Fetch server library for "already added" checks
           try {
             const libRes = await fetch('/api/library/' + searchUserId, { credentials: 'include' });
-            if (libRes.ok) searchUserLibrary = await libRes.json();
+            if (libRes.ok) {
+              searchUserLibrary = await libRes.json();
+              console.log('[SEARCH] Library entries loaded:', searchUserLibrary);
+              if (searchUserLibrary.length > 0) {
+                console.log('[SEARCH] Sample entry:', searchUserLibrary[0]);
+              }
+            }
           } catch (e) { /* ignore */ }
         }
       } catch (err) {
@@ -645,7 +651,14 @@ plagiarized the work of other students and/or persons.
           ? Math.round(game.rating) + '/100'
           : '';
 
-        const alreadyAdded = searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === game.name.toLowerCase());
+        const alreadyAdded = searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
+        
+        // Debug logging for duplicate-named games
+        if (game.name.toLowerCase().includes('cairn')) {
+          console.log(`[SEARCH] Checking "${game.name}" (ID: ${game.id})`);
+          console.log('[SEARCH] Library igdbIds:', searchUserLibrary.map(e => e.gameId?.igdbId).filter(Boolean));
+          console.log(`[SEARCH] Match found: ${alreadyAdded}`);
+        }
 
         return `
             <div class="col">
@@ -783,7 +796,7 @@ plagiarized the work of other students and/or persons.
         ? 'https:' + currentGameDetail.cover.url.replace('t_thumb', 't_cover_big_2x')
         : '';
 
-      if (searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === name.toLowerCase())) {
+      if (searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(currentGameDetail.id))) {
         searchToast(`"${name}" is already in your library!`, 'bg-warning');
         return;
       }
@@ -816,7 +829,8 @@ plagiarized the work of other students and/or persons.
         }
 
         const name = btn.dataset.name;
-        if (searchUserLibrary.some(e => e.gameId && e.gameId.name && e.gameId.name.toLowerCase() === name.toLowerCase())) {
+        const gameId = btn.dataset.igdbid;
+        if (searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(gameId))) {
           searchToast(`"${name}" is already in your library!`, 'bg-warning');
           return;
         }

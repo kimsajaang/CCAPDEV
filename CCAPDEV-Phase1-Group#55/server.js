@@ -1526,7 +1526,7 @@ app.get('/api/library/:userId', async (req, res) => {
   try {
     // Optimization: limit to 500, use lean() for massive speedup, and only project needed fields
     const entries = await LibraryEntry.find({ userId: req.params.userId, hidden: { $ne: true } })
-      .populate('gameId', 'name coverUrl genres')
+      .populate('gameId', 'name coverUrl genres igdbId')
       .sort({ addedAt: -1 })
       .limit(500)
       .lean();
@@ -1563,7 +1563,7 @@ app.get('/api/library/:userId/status/:status', async (req, res) => {
     }
 
     const entries = await LibraryEntry.find({ userId, status, hidden: { $ne: true } })
-      .populate('gameId', 'name coverUrl genres')
+      .populate('gameId', 'name coverUrl genres igdbId')
       .sort({ addedAt: -1 })
       .limit(200)
       .lean();
