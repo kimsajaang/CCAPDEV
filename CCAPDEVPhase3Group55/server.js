@@ -1622,9 +1622,13 @@ app.post('/api/library', async (req, res) => {
 
     const entry = new LibraryEntry({ userId, gameId, status });
     await entry.save();
-    await entry.populate('gameId');
+    
+    // Fetch game data in parallel (don't use populate, just lean select)
+    const game = await Game.findById(gameId).lean();
 
-    res.status(201).json({ message: 'Game added to library', entry });
+    const response = entry.toObject();
+    response.gameId = game;
+    res.status(201).json({ message: 'Game added to library', entry: response });
   } catch (err) {
     console.error('[ADD TO LIBRARY] Error:', err.message);
     res.status(500).json({ error: 'Failed to add game to library' });
@@ -1650,7 +1654,9 @@ app.put('/api/library/:entryId', async (req, res) => {
     if (notes !== undefined) entry.notes = notes;
 
     await entry.save();
-    await entry.populate('gameId');
+    
+    // Fetch game data in parallel (don't use populate, just lean select)
+    const game = await Game.findById(entry.gameId).lean();
 
     // Clear community scores cache if rating was changed
     if (ratingChanged) {
@@ -1659,7 +1665,9 @@ app.put('/api/library/:entryId', async (req, res) => {
       console.log('[UPDATE LIBRARY] Rating changed - cleared community scores cache');
     }
 
-    res.json({ message: 'Library entry updated', entry });
+    const response = entry.toObject();
+    response.gameId = game;
+    res.json({ message: 'Library entry updated', entry: response });
   } catch (err) {
     console.error('[UPDATE LIBRARY] Error:', err.message);
     res.status(500).json({ error: 'Failed to update library entry' });
@@ -2729,15 +2737,31 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 app.get('/api/posts', async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate('author', '_id username displayName avatar')
-      .populate('comments.author', '_id username displayName avatar')
+      .lean()
       .sort({ createdAt: -1 });
-    const postsWithId = posts.map(post => {
-      const obj = post.toObject();
-      obj.id = obj._id;
-      return obj;
+    
+    // Fetch author IDs and comment author IDs once (batch query)
+    const authorIds = [...new Set(posts.map(p => p.author))];
+    const commentAuthorIds = [...new Set(posts.flatMap(p => p.comments.map(c => c.author)))];
+    const allUserIds = [...new Set([...authorIds, ...commentAuthorIds])];
+    
+    const users = await User.find({ _id: { $in: allUserIds } })
+      .select('_id username displayName avatar')
+      .lean();
+    const userMap = new Map(users.map(u => [u._id.toString(), u]));
+    
+    // Replace user IDs with user objects
+    const postsWithUsers = posts.map(post => {
+      post.author = userMap.get(post.author.toString());
+      post.comments = post.comments.map(comment => ({
+        ...comment,
+        author: userMap.get(comment.author.toString())
+      }));
+      post.id = post._id;
+      return post;
     });
-    res.json(postsWithId);
+    
+    res.json(postsWithUsers);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch posts' });
@@ -2861,8 +2885,13 @@ app.put('/api/posts/:id', isLoggedIn, async (req, res) => {
     if (!post.photo) post.photo = undefined;
 
     await post.save();
-    const populated = await post.populate('author', 'username displayName avatar');
-    res.json(populated);
+    
+    // Fetch author data with lean() instead of populate
+    const author = await User.findById(post.author).select('_id username displayName avatar').lean();
+    const response = post.toObject();
+    response.author = author;
+    response.id = response._id;
+    res.json(response);
   } catch (err) {
     console.error('[EDIT POST] Error:', err.message);
     res.status(500).json({ error: 'Failed to edit post' });
