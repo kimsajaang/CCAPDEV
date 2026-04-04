@@ -1310,9 +1310,15 @@ plagiarized the work of other students and/or persons.
     } catch (e) { console.error('Error refreshing XP:', e); }
   };
 
+  // Refresh achievements (can be called from other pages after rating/friend changes)
+  window.refreshProfileAchievements = async function() {
+    if (!profileUser) return;
+    await fetchStatsAndActivity();
+  };
+
   async function fetchStatsAndActivity() {
     const uid = profileUser._id;
-    let stats = { total: 0, completed: 0, totalHours: 0, games: [] };
+    let stats = { total: 0, completed: 0, totalHours: 0, games: [], ratedCount: 0, friendCount: 0 };
 
     try {
       const res = await fetch('/api/library/' + uid);
@@ -1322,8 +1328,41 @@ plagiarized the work of other students and/or persons.
         stats.total = entries.length;
         stats.completed = entries.filter(e => e.status === 'completed').length;
         stats.totalHours = entries.reduce((s, e) => s + (e.playtime || 0), 0);
+        stats.ratedCount = entries.filter(e => e.rating && e.rating > 0).length;
+        
+        // Debug logging
+        console.log('[Profile] Total entries:', entries.length);
+        console.log('[Profile] Completed:', stats.completed);
+        console.log('[Profile] Rated count:', stats.ratedCount);
+        if (entries.length > 0) {
+          console.log('[Profile] Sample entry:', entries[0]);
+          console.log('[Profile] All ratings:', entries.map(e => ({ gameId: e.gameId, rating: e.rating })));
+        }
       }
-    } catch (e) { }
+    } catch (e) { console.error('[Profile] Library fetch error:', e); }
+
+    // Refetch user data to get latest friend count
+    try {
+      let userRes;
+      if (isOwnProfile) {
+        // For own profile, use current auth
+        userRes = await fetch('/api/auth/current', { credentials: 'include' });
+      } else {
+        // For other users, fetch their public profile
+        userRes = await fetch('/api/users/' + uid);
+      }
+      
+      if (userRes.ok) {
+        const freshUser = await userRes.json();
+        // API returns friendsCount, not friends array
+        stats.friendCount = freshUser.friendsCount || 0;
+        console.log('[Profile] API response for', uid, ':', freshUser);
+        console.log('[Profile] Friend count extracted:', stats.friendCount);
+      }
+    } catch (e) { 
+      console.error('[Profile] User fetch error:', e);
+      stats.friendCount = 0;
+    }
 
     // Local Achievements
     const unlockedIds = JSON.parse(localStorage.getItem(_achievementsStorageKey) || '[]');
@@ -1374,6 +1413,16 @@ plagiarized the work of other students and/or persons.
       }
       if (a.id === 'devoted' || a.id === 'weekend_warrior' || a.id === 'marathon_runner' || a.id === 'time_master') {
         current = stats.totalHours;
+      }
+      
+      // Rating-based achievements
+      if (a.id === 'critic' || a.id === 'influencer' || a.id === 'critical_acclaim' || a.id === 'gaming_prodigy') {
+        current = stats.ratedCount;
+      }
+      
+      // Friend-based achievements
+      if (a.id === 'social_butterfly' || a.id === 'network_master' || a.id === 'community_leader' || a.id === 'apex_network') {
+        current = stats.friendCount;
       }
       
       const isDone = current >= a.max || unlockedIds.includes(a.id);
@@ -1479,6 +1528,7 @@ plagiarized the work of other students and/or persons.
       const res = await fetch('/api/friends/accept/' + requestId, { method: 'POST', credentials: 'include' });
       if (res.ok) {
         loadFriendRequests(); // Refresh the list
+        await fetchStatsAndActivity(); // Update achievements
       }
     } catch (err) {
       console.error('[Accept Friend] Error:', err);
@@ -1491,6 +1541,7 @@ plagiarized the work of other students and/or persons.
       const res = await fetch('/api/friends/reject/' + requestId, { method: 'POST', credentials: 'include' });
       if (res.ok) {
         loadFriendRequests(); // Refresh the list
+        await fetchStatsAndActivity(); // Update achievements
       }
     } catch (err) {
       console.error('[Reject Friend] Error:', err);
