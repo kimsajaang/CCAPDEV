@@ -2753,8 +2753,19 @@ app.get('/api/posts', async (req, res) => {
     const limit = 30;
     const skip = page * limit;
     
+    // Step 1: Get IDs of posts that have photos (lightweight query)
+    const postsWithPhotos = new Set(
+      (await Post.find({ photo: { $ne: null, $ne: '' } })
+        .select('_id')
+        .skip(skip)
+        .limit(limit)
+        .lean()
+      ).map(p => p._id.toString())
+    );
+    
+    // Step 2: Fetch posts WITHOUT photo data
     const posts = await Post.find()
-      .select('-photo') // EXCLUDE photos to save bandwidth
+      .select('-photo') // EXCLUDE photo blobs to save bandwidth
       .populate('author', '_id username displayName avatar')
       .populate('comments.author', '_id username displayName avatar')
       .sort({ createdAt: -1 })
@@ -2762,16 +2773,16 @@ app.get('/api/posts', async (req, res) => {
       .limit(limit)
       .lean();
 
-    // Limit comments to first 3 per post
+    // Limit comments to first 3 per post & mark photo presence
     const optimized = posts.map(post => {
       const commentCount = post.comments ? post.comments.length : 0;
       if (post.comments && post.comments.length > 3) {
         post.comments = post.comments.slice(0, 3);
         post._hasMoreComments = true;
-        post._totalComments = commentCount;
       }
+      post._totalComments = commentCount;
       post.id = post._id;
-      post._hasPhoto = !!post.photo;
+      post._hasPhoto = postsWithPhotos.has(post._id.toString()); // ✅ Correct check
       return post;
     });
     
@@ -2783,33 +2794,8 @@ app.get('/api/posts', async (req, res) => {
   }
 });
 
-// GET /api/posts/:id/photo - Lazy load photo for a specific post
-app.get('/api/posts/:id/photo', async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id).select('photo').lean();
-    if (!post || !post.photo) {
-      return res.status(404).json({ error: 'Photo not found' });
-    }
-    res.json({ photo: post.photo });
-  } catch (err) {
-    console.error('[GET POST PHOTO] Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch photo' });
-  }
-});
-
-// GET /api/posts/:id/comments - Lazy load all comments for a post
-app.get('/api/posts/:id/comments', async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id).select('comments').populate('comments.author', '_id username displayName avatar').lean();
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
-    res.json({ comments: post.comments || [] });
-  } catch (err) {
-    console.error('[GET POST COMMENTS] Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch comments' });
-  }
-});
+// ⚠️ IMPORTANT: /api/posts/stats MUST be before /api/posts/:id routes
+// Otherwise Express matches "stats" as an :id parameter
 
 // Cache for posts stats
 let postsCacheStats = null;
@@ -2849,6 +2835,34 @@ app.get('/api/posts/stats', async (req, res) => {
   } catch (err) {
     console.error('[POST STATS] Error:', err.message);
     res.json({ totalPosts: 0, totalComments: 0, activeMembers: 0 });
+  }
+});
+
+// GET /api/posts/:id/photo - Lazy load photo for a specific post
+app.get('/api/posts/:id/photo', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).select('photo').lean();
+    if (!post || !post.photo) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+    res.json({ photo: post.photo });
+  } catch (err) {
+    console.error('[GET POST PHOTO] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch photo' });
+  }
+});
+
+// GET /api/posts/:id/comments - Lazy load all comments for a post
+app.get('/api/posts/:id/comments', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).select('comments').populate('comments.author', '_id username displayName avatar').lean();
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json({ comments: post.comments || [] });
+  } catch (err) {
+    console.error('[GET POST COMMENTS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch comments' });
   }
 });
 
