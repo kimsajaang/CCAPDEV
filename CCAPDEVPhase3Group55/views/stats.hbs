@@ -35,19 +35,6 @@ plagiarized the work of other students and/or persons.
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.97) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
   </style>{{> navbar-app activePage="stats"}}
 
-  <!-- Loading Screen for Community -->
-  <div id="page-loader" class="loader" aria-label="Loading">
-    <div class="loader-card">
-      <div class="loader-icon-wrap">
-        <i class="bi bi-people"></i>
-        <div class="loader-glow"></div>
-      </div>
-      <div>
-        <div class="loader-text">Community<span class="loading-dots"></span></div>
-        <div class="loader-sub">Loading posts and discussions</div>
-      </div>
-    </div>
-  </div>
 
   <div class="container my-5">
 
@@ -1175,9 +1162,6 @@ plagiarized the work of other students and/or persons.
     render().then(() => {
       updateSidebarStats();
       setTimeout(() => openCommentsForHash(), 150);
-      // Hide loader now that data is rendered
-      const loader = document.getElementById('page-loader');
-      if (loader) loader.classList.add('hidden');
     });
 
     // Logout function
