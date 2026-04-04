@@ -50,9 +50,9 @@ app.use(session({
   store: new MongoStore({
     mongoUrl: MONGO_URI,
     collectionName: 'sessions',
-    ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+    ttl: 30 * 24 * 60 * 60, // 30 days in seconds
   }),
-  cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' } // 7 days
+  cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000, sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' } // 30 days
 }));
 
 // --- Middleware ---
