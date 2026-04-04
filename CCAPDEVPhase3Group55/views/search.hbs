@@ -938,11 +938,19 @@ plagiarized the work of other students and/or persons.
       btn.disabled = false;
     });
 
-    // Hide loader when page fully loads
+    // Hide loader when page fully loads (with minimum 1.5s animation)
+    const loaderStartTime = Date.now();
     window.addEventListener('load', () => {
       const loader = document.getElementById('page-loader');
       if (loader) {
-        loader.classList.add('hidden');
+        const elapsed = Date.now() - loaderStartTime;
+        const minDelay = 1500;
+        const remainingDelay = Math.max(0, minDelay - elapsed);
+        console.log(`[LOAD TIMING] Page loaded in: ${elapsed}ms (animation: ${Math.min(elapsed, 1500)}ms, showing for: ${minDelay}ms total)`);
+        setTimeout(() => {
+          console.log('[LOAD TIMING] Hiding loader');
+          loader.classList.add('hidden');
+        }, remainingDelay);
       }
     });
   </script>

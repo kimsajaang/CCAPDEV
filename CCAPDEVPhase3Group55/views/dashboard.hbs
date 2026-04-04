@@ -850,12 +850,19 @@ plagiarized the work of other students and/or persons.
      2) Scroll reveal — uses IntersectionObserver to fade in cards as they enter viewport
      The threshold 0.12 means the animation triggers when 12% of the card is visible -->
 <script>
+  // Track when animation starts to show actual load timing
+  const animationStartTime = Date.now();
+  
   window.addEventListener("load", () => {
+    const actualLoadTime = Date.now() - animationStartTime;
+    console.log(`[LOAD TIMING] Page content loaded in: ${actualLoadTime}ms (animation running: ${Math.min(actualLoadTime, 1500)}ms)`);
+    
     const loader = document.getElementById("page-loader");
     setTimeout(() => {
+      console.log(`[LOAD TIMING] Hiding loader after 1500ms total`);
       loader.classList.add("hidden");
       document.body.classList.remove("loading");
-    }, 1200);
+    }, 1500);
   });
   const revealItems = document.querySelectorAll(".reveal");
   const observer = new IntersectionObserver(
@@ -1337,12 +1344,10 @@ plagiarized the work of other students and/or persons.
   }
 
   // Hide loader after DOM is ready to avoid hanging on slow images/iframes
+  // Minimum 1.5s loading animation to give users time to see the loader
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('[LOAD TIMING] DOM Ready - content is visible and interactive');
     initDashboard();
-    setTimeout(() => {
-      const loader = document.getElementById('page-loader');
-      if (loader) loader.classList.add('hidden');
-    }, 600);
   });
 
   // Smart home navigation - if logged in go to dashboard, else go to index
