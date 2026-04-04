@@ -57,6 +57,20 @@ plagiarized the work of other students and/or persons.
 
 {{> navbar-app activePage="library"}}
 
+    <!-- Loading Screen for My Library -->
+    <div id="page-loader" class="loader" aria-label="Loading">
+      <div class="loader-card">
+        <div class="loader-icon-wrap">
+          <i class="bi bi-collection"></i>
+          <div class="loader-glow"></div>
+        </div>
+        <div>
+          <div class="loader-text">My Library<span class="loading-dots"></span></div>
+          <div class="loader-sub">Loading your game collection</div>
+        </div>
+      </div>
+    </div>
+
     <div class="container my-5">
         <!-- Header: title + filter tabs + search -->
         <div class="library-header">
@@ -1018,5 +1032,13 @@ plagiarized the work of other students and/or persons.
             document.body.classList.add('page-exit');
             setTimeout(() => window.location = dest, 300);
         }
+    });
+
+    // Hide loader when page fully loads
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('page-loader');
+      if (loader) {
+        loader.classList.add('hidden');
+      }
     });
     </script>

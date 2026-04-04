@@ -13,6 +13,20 @@ plagiarized the work of other students and/or persons.
 <!-- Profile Page - Gaming Dashboard -->
 {{> navbar-app activePage="profile"}}
 
+<!-- Loading Screen for Profile -->
+<div id="page-loader" class="loader" aria-label="Loading">
+  <div class="loader-card">
+    <div class="loader-icon-wrap">
+      <i class="bi bi-person"></i>
+      <div class="loader-glow"></div>
+    </div>
+    <div>
+      <div class="loader-text">Profile<span class="loading-dots"></span></div>
+      <div class="loader-sub">Loading your profile</div>
+    </div>
+  </div>
+</div>
+
 <style>
   :root {
     --bg-deep: #0b0e14;
@@ -1256,20 +1270,7 @@ plagiarized the work of other students and/or persons.
     const params = new URLSearchParams(window.location.search);
     const targetId = params.get('user');
 
-    // Show loading state
     const dashboard = document.querySelector('.profile-dashboard');
-    const originalContent = dashboard.innerHTML;
-    dashboard.innerHTML = `
-      <div class="profile-loading">
-        <div class="avatar-skeleton skeleton-loader"></div>
-        <div class="skeleton-loader" style="height: 24px; width: 60%;"></div>
-        <div class="skeleton-loader" style="height: 16px; width: 40%;"></div>
-        <div class="skeleton-loader" style="height: 200px;"></div>
-        <div class="skeleton-loader" style="height: 16px; width: 100%;"></div>
-        <div class="skeleton-loader" style="height: 16px; width: 80%;"></div>
-      </div>
-    `;
-    dashboard.style.opacity = '0.7';
 
     try {
       const authRes = await fetch('/api/auth/current', { credentials: 'include' });
@@ -1282,7 +1283,6 @@ plagiarized the work of other students and/or persons.
         if (uRes.ok) profileUser = await uRes.json();
         else { 
           dashboard.innerHTML = '<h4 class="text-center mt-5">User not found</h4>';
-          dashboard.style.opacity = '1';
           return; 
         }
       } else {
@@ -1291,13 +1291,15 @@ plagiarized the work of other students and/or persons.
       }
 
       initializeKeys(profileUser._id);
-      dashboard.style.opacity = '1';
+      const loader = document.getElementById('page-loader');
+      if (loader) loader.classList.add('hidden');
       renderProfileView();
       await fetchStatsAndActivity();
     } catch (e) { 
       console.error("Init failed", e);
+      const loader = document.getElementById('page-loader');
+      if (loader) loader.classList.add('hidden');
       dashboard.innerHTML = '<h4 class="text-center mt-5">Error loading profile. Please refresh the page.</h4>';
-      dashboard.style.opacity = '1';
     }
   }
 
@@ -1760,6 +1762,14 @@ plagiarized the work of other students and/or persons.
   document.querySelectorAll('a[href]').forEach(link => {
     if (link.hostname === window.location.hostname && !link.hash && !link.getAttribute('href').startsWith('#')) {
       link.addEventListener('click', () => { document.body.classList.add('page-exit'); });
+    }
+  });
+
+  // Hide loader when page fully loads (safety timeout)
+  window.addEventListener('load', () => {
+    const loader = document.getElementById('page-loader');
+    if (loader && !loader.classList.contains('hidden')) {
+      loader.classList.add('hidden');
     }
   });
 </script>

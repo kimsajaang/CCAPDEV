@@ -2746,36 +2746,84 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 
 // ─── COMMUNITY / POST ROUTES ───
 
-// GET /api/posts - Get all community posts
+// GET /api/posts - Get all community posts (optimized: NO photos, limited comments)
 app.get('/api/posts', async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 0;
+    const limit = 30;
+    const skip = page * limit;
+    
     const posts = await Post.find()
+      .select('-photo') // EXCLUDE photos to save bandwidth
       .populate('author', '_id username displayName avatar')
       .populate('comments.author', '_id username displayName avatar')
       .sort({ createdAt: -1 })
-      .limit(50)
+      .skip(skip)
+      .limit(limit)
       .lean();
 
-    const postsWithId = posts.map(post => {
-      post.id = post._id;
-      // Log posts with photos for debugging
-      if (post.photo) {
-        const photoSize = post.photo.length;
-        console.log(`[GET POSTS] Post ${post._id} has photo: ${(photoSize / 1024 / 1024).toFixed(2)}MB`);
+    // Limit comments to first 3 per post
+    const optimized = posts.map(post => {
+      const commentCount = post.comments ? post.comments.length : 0;
+      if (post.comments && post.comments.length > 3) {
+        post.comments = post.comments.slice(0, 3);
+        post._hasMoreComments = true;
+        post._totalComments = commentCount;
       }
+      post.id = post._id;
+      post._hasPhoto = !!post.photo;
       return post;
     });
-    console.log(`[GET POSTS] Returning ${postsWithId.length} posts, ${postsWithId.filter(p => p.photo).length} with photos`);
-    res.json(postsWithId);
+    
+    console.log(`[GET POSTS] Returning ${optimized.length} posts from page ${page}`);
+    res.json(optimized);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch posts' });
   }
 });
 
-// GET /api/posts/stats - Lightweight community stats (no full post data needed)
+// GET /api/posts/:id/photo - Lazy load photo for a specific post
+app.get('/api/posts/:id/photo', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).select('photo').lean();
+    if (!post || !post.photo) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+    res.json({ photo: post.photo });
+  } catch (err) {
+    console.error('[GET POST PHOTO] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch photo' });
+  }
+});
+
+// GET /api/posts/:id/comments - Lazy load all comments for a post
+app.get('/api/posts/:id/comments', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).select('comments').populate('comments.author', '_id username displayName avatar').lean();
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json({ comments: post.comments || [] });
+  } catch (err) {
+    console.error('[GET POST COMMENTS] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch comments' });
+  }
+});
+
+// Cache for posts stats
+let postsCacheStats = null;
+let statsCacheTime = 0;
+const STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// GET /api/posts/stats - Cached community stats
 app.get('/api/posts/stats', async (req, res) => {
   try {
+    const now = Date.now();
+    if (postsCacheStats && (now - statsCacheTime) < STATS_CACHE_TTL) {
+      return res.json(postsCacheStats);
+    }
+
     const stats = await Post.aggregate([
       {
         $facet: {
@@ -2795,7 +2843,9 @@ app.get('/api/posts/stats', async (req, res) => {
       ...(result.commentAuthors || []).map(a => String(a._id))
     ]);
 
-    res.json({ totalPosts, totalComments, activeMembers: authorIds.size });
+    postsCacheStats = { totalPosts, totalComments, activeMembers: authorIds.size };
+    statsCacheTime = now;
+    res.json(postsCacheStats);
   } catch (err) {
     console.error('[POST STATS] Error:', err.message);
     res.json({ totalPosts: 0, totalComments: 0, activeMembers: 0 });

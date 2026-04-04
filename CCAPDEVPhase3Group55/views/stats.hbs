@@ -35,6 +35,20 @@ plagiarized the work of other students and/or persons.
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.97) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
   </style>{{> navbar-app activePage="stats"}}
 
+  <!-- Loading Screen for Community -->
+  <div id="page-loader" class="loader" aria-label="Loading">
+    <div class="loader-card">
+      <div class="loader-icon-wrap">
+        <i class="bi bi-people"></i>
+        <div class="loader-glow"></div>
+      </div>
+      <div>
+        <div class="loader-text">Community<span class="loading-dots"></span></div>
+        <div class="loader-sub">Loading posts and discussions</div>
+      </div>
+    </div>
+  </div>
+
   <div class="container my-5">
 
     <!-- Community header with sort dropdown, search bar, and new post button.
@@ -348,11 +362,31 @@ plagiarized the work of other students and/or persons.
     const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
 
     // --- Data layer: backend API calls ---
+    // --- CACHE & LAZY LOAD OPTIMIZATIONS ---
+    let cachedPosts = null;
+    let currentPage = 0;
+    let isLoadingMore = false;
+    let allPostsLoaded = false;
+    const photoCache = new Map();
+    const commentCache = new Map();
+
     async function loadPosts(retries = 1) {
       try {
-        const res = await fetch('/api/posts', { credentials: 'include' });
+        const page = currentPage;
+        const res = await fetch(`/api/posts?page=${page}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Fetch failed: ' + res.status);
-        return await res.json();
+        const newPosts = await res.json();
+        
+        if (newPosts.length < 30) allPostsLoaded = true;
+        
+        if (page === 0) {
+          cachedPosts = newPosts;
+        } else {
+          cachedPosts = [...(cachedPosts || []), ...newPosts];
+        }
+        
+        console.log(`[loadPosts] Loaded page ${page}: ${newPosts.length} posts`);
+        return newPosts;
       } catch (e) {
         console.error('Failed to load posts:', e);
         if (retries > 0) {
@@ -422,23 +456,22 @@ plagiarized the work of other students and/or persons.
     const sortSelect = document.getElementById("sortSelect");
     const searchInput = document.getElementById("searchInput");
 
-    // --- Main render function ---
+    // --- OPTIMIZED RENDER WITH CACHING ---
     async function render() {
       console.log('[RENDER] Starting render...');
-      let posts = await loadPosts();
-      console.log('[RENDER] Loaded posts:', posts.length, 'posts');
-      posts.forEach((p, i) => {
-        console.log(`[RENDER] Post ${i}:`, p.title, '| upvotes:', Array.isArray(p.upvotes) ? p.upvotes.length : p.upvotes, '| downvotes:', Array.isArray(p.downvotes) ? p.downvotes.length : p.downvotes);
-      });
+      
+      // Use cached posts if available, otherwise load fresh
+      let posts = cachedPosts || (await loadPosts());
+      if (!posts) posts = [];
       
       const mode = sortSelect.value;
       const q = searchInput.value.trim();
 
+      // Apply filtering & sorting
       posts = sortPosts(posts, mode).filter(p => matchesSearch(p, q));
 
       feedEl.innerHTML = "";
       if (posts.length === 0) {
-        // Only show empty state if user is logged in
         if (isUserLoggedIn) {
           emptyEl.classList.remove("d-none");
         } else {
@@ -448,22 +481,79 @@ plagiarized the work of other students and/or persons.
       }
       emptyEl.classList.add("d-none");
 
+      // Only render posts (don't load photos yet)
       for (const post of posts) {
         feedEl.appendChild(postCard(post));
       }
       
-      // Debug: Check what's actually in the DOM
-      setTimeout(() => {
-        document.querySelectorAll('[data-score]').forEach((el, idx) => {
-          console.log(`[DOM CHECK] Score display ${idx}:`, el.textContent, 'innerHTML:', el.innerHTML);
-        });
-      }, 100);
+      console.log('[RENDER] Render complete - ' + posts.length + ' posts');
       
-      console.log('[RENDER] Render complete');
+      // Setup lazy loading for visible photos
+      if ('IntersectionObserver' in window) {
+        setupPhotoLazyLoading();
+      }
     }
 
-    // Builds one post card element with vote buttons, comments toggle, delete, share.
-    // This function is large because each card has a lot of interactive parts.
+    // Lazy load photos as they become visible
+    function setupPhotoLazyLoading() {
+      const photoPlaceholders = document.querySelectorAll('[data-photo-id]');
+      const observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const postId = entry.target.dataset.photoId;
+            loadAndShowPhoto(postId, entry.target);
+            observer.unobserve(entry.target);
+          }
+        }
+      }, { rootMargin: '100px' });
+
+      photoPlaceholders.forEach(el => observer.observe(el));
+    }
+
+    // Load photo when visible
+    async function loadAndShowPhoto(postId, placeholder) {
+      if (photoCache.has(postId)) {
+        const photoUrl = photoCache.get(postId);
+        showPhotoInContainer(placeholder, photoUrl);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/photo`);
+        if (!res.ok) return;
+        const data = await res.json();
+        photoCache.set(postId, data.photo);
+        showPhotoInContainer(placeholder, data.photo);
+      } catch (err) {
+        console.warn('[Photo lazy load] Error for post ' + postId, err);
+      }
+    }
+
+    function showPhotoInContainer(container, photoUrl) {
+      const parent = container.parentElement;
+      const isVideo = photoUrl.startsWith('data:video/');
+      
+      if (isVideo) {
+        const typeMatch = photoUrl.match(/data:([^;]+)/);
+        const videoType = (typeMatch && typeMatch[1]) || 'video/mp4';
+        parent.innerHTML = `<video class="community-post-photo" controls style="max-width:100%;width:100%;border-radius:8px;margin-top:12px;background:#000;"><source src="${photoUrl}" type="${videoType}">Your browser does not support video.</video>`;
+      } else {
+        container.src = photoUrl;
+        container.style.display = 'block';
+      }
+    }
+
+    // Debounced render for search/sort
+    let renderTimeout;
+    function debouncedRender() {
+      clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        currentPage = 0;
+        render();
+      }, 200);
+    }
+
+    // Builds one post card with lazy-loaded photos and comments
     function postCard(post) {
       const wrapper = document.createElement("div");
       wrapper.className = "card shadow-sm";
@@ -472,23 +562,11 @@ plagiarized the work of other students and/or persons.
       const pAuth = post.author || { username: 'deleted', displayName: 'Deleted User' };
       const flairBadge = `<span class="badge bg-secondary">${escapeHtml(post.flair || "Discussion")}</span>`;
       const gameTag = post.game ? `<span class="badge bg-info text-dark ms-2">${escapeHtml(post.game)}</span>` : "";
+      
+      // Placeholder for photo (lazy loaded later)
       let mediaHtml = "";
-      if (post.photo) {
-        // Check if it's a video by looking at the MIME type in the data URL
-        const isVideo = post.photo.startsWith("data:video/");
-        console.log("DEBUG: Checking post.photo - isVideo:", isVideo, "- first 50 chars:", post.photo.substring(0, 50));
-        if (isVideo) {
-          // Extract video MIME type (e.g., "data:video/mp4;base64,..." -> "video/mp4")
-          const typeMatch = post.photo.match(/data:([^;]+)/);
-          const videoType = (typeMatch && typeMatch[1]) || 'video/mp4';
-          console.log("DEBUG: Video detected with type:", videoType);
-          mediaHtml = `<video class="community-post-photo" controls style="max-width:100%;width:100%;border-radius:8px;margin-top:12px;background:#000;">
-            <source src="${post.photo}" type="${videoType}">
-            Your browser does not support the video tag.
-          </video>`;
-        } else {
-          mediaHtml = `<img src="${post.photo}" class="community-post-photo" alt="Post media" loading="lazy">`;
-        }
+      if (post._hasPhoto) {
+        mediaHtml = `<img class="community-post-photo" data-photo-id="${post.id}" style="display:none;width:100%;max-height:400px;border-radius:8px;margin:12px 0;border:1px solid var(--border);" alt="Post media" loading="lazy">`;
       }
 
       wrapper.innerHTML = `
@@ -517,8 +595,8 @@ plagiarized the work of other students and/or persons.
               ${mediaHtml}
 
               <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
-                <button class="btn btn-outline-primary btn-sm" data-act="toggleComments">
-                  Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${(post.comments||[]).length}</span>
+                <button class="btn btn-outline-primary btn-sm" data-act="toggleComments" data-total-comments="${post._totalComments || (post.comments ? post.comments.length : 0)}">
+                  Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${post._totalComments || (post.comments||[]).length}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
                 ${currentUserId && post.author && String(post.author._id) === String(currentUserId) ? `
@@ -527,7 +605,7 @@ plagiarized the work of other students and/or persons.
                 ` : ""}
               </div>
 
-              <div class="mt-3 d-none" data-comments>
+              <div class="mt-3 d-none" data-comments data-post-id="${post.id}" data-comments-loaded="false">
                 <div class="comment-panel p-3">
                   <div class="comment-input-wrap d-flex align-items-center gap-2 mb-3">
                     <div class="comment-avatar" style="background:#5383e8;">${getInitials(currentUsername)}</div>
@@ -627,15 +705,8 @@ plagiarized the work of other students and/or persons.
 
       const commentList = wrapper.querySelector("[data-commentlist]");
       const noComments = wrapper.querySelector("[data-nocomments]");
-      const comments = post.comments || [];
-      if (comments.length === 0) {
-        noComments.style.display = "block";
-      } else {
-        noComments.style.display = "none";
-        for (const c of comments.slice().sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))) {
-          commentList.appendChild(commentRow(post.id, c));
-        }
-      }
+      // Comments are lazy loaded when the toggle button is clicked (see loadCommentsForPost)
+      // So we don't render them here — just show the empty state placeholder
 
       return wrapper;
     }
@@ -705,9 +776,61 @@ plagiarized the work of other students and/or persons.
       }
     }
 
-    function toggleComments(cardEl) {
+    async function toggleComments(cardEl) {
       const commentsWrap = cardEl.querySelector("[data-comments]");
-      commentsWrap.classList.toggle("d-none");
+      const postId = commentsWrap.dataset.postId;
+      const isVisible = !commentsWrap.classList.contains("d-none");
+
+      // If hiding, just toggle
+      if (isVisible) {
+        commentsWrap.classList.add("d-none");
+        return;
+      }
+
+      // If showing and not yet loaded, load comments
+      if (commentsWrap.dataset.commentsLoaded === "false") {
+        await loadCommentsForPost(postId, cardEl);
+        commentsWrap.dataset.commentsLoaded = "true";
+      }
+      
+      commentsWrap.classList.remove("d-none");
+    }
+
+    // Load comments for a specific post from server
+    async function loadCommentsForPost(postId, cardEl) {
+      if (commentCache.has(postId)) {
+        const comments = commentCache.get(postId);
+        renderComments(cardEl, comments, postId);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/comments`);
+        if (!res.ok) throw new Error('Failed to load comments');
+        const data = await res.json();
+        const comments = data.comments || [];
+        commentCache.set(postId, comments);
+        renderComments(cardEl, comments, postId);
+      } catch (err) {
+        console.warn('[Comments lazy load] Error for post ' + postId, err);
+      }
+    }
+
+    // Render comments into the card
+    function renderComments(cardEl, comments, postId) {
+      const commentList = cardEl.querySelector("[data-commentlist]");
+      const noComments = cardEl.querySelector("[data-nocomments]");
+      
+      commentList.innerHTML = ""; // Clear placeholder
+      
+      if (comments.length === 0) {
+        noComments.style.display = "block";
+      } else {
+        noComments.style.display = "none";
+        for (const c of comments.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))) {
+          commentList.appendChild(commentRow(postId, c));
+        }
+      }
     }
 
     async function addComment(postId, text) {
@@ -1101,5 +1224,13 @@ plagiarized the work of other students and/or persons.
     window.addEventListener('scroll', () => {
       if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
     }, { passive: true });
+
+    // Hide loader when page fully loads
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('page-loader');
+      if (loader) {
+        loader.classList.add('hidden');
+      }
+    });
     }); // End of window load
   </script>

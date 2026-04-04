@@ -161,9 +161,67 @@ plagiarized the work of other students and/or persons.
       font-size: 0.85rem;
       margin-bottom: 1rem;
     }
+
+    /* Skeleton Loading Animation - Search Games */
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+
+    .skeleton-loader {
+      background: linear-gradient(90deg, #1a1f2e 25%, #242d3d 50%, #1a1f2e 75%);
+      background-size: 1000px 100%;
+      animation: shimmer 2s infinite;
+      border-radius: 8px;
+    }
+
+    .search-loading {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      padding: 20px;
+      opacity: 0.6;
+    }
+
+    .search-loading .skeleton-card {
+      height: 280px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .search-loading .skeleton-cover {
+      height: 200px;
+      margin-bottom: 12px;
+    }
+
+    .search-loading .skeleton-title {
+      height: 16px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+
+    .search-loading .skeleton-text {
+      height: 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
   </style>
 
 {{> navbar-app activePage="search"}}
+
+<!-- Loading Screen for Search Games -->
+<div id="page-loader" class="loader" aria-label="Loading">
+  <div class="loader-card">
+    <div class="loader-icon-wrap">
+      <i class="bi bi-search"></i>
+      <div class="loader-glow"></div>
+    </div>
+    <div>
+      <div class="loader-text">Search Games<span class="loading-dots"></span></div>
+      <div class="loader-sub">Searching the game database</div>
+    </div>
+  </div>
+</div>
 
 <!-- Search bar section — centered large input with search button.
          Uses input-group-lg so it feels prominent.
@@ -878,5 +936,13 @@ plagiarized the work of other students and/or persons.
       btn.classList.remove('btn-success', 'disabled');
       btn.classList.add('btn-primary');
       btn.disabled = false;
+    });
+
+    // Hide loader when page fully loads
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('page-loader');
+      if (loader) {
+        loader.classList.add('hidden');
+      }
     });
   </script>
