@@ -6,7 +6,7 @@ const express = require('express');
 const { engine } = require('express-handlebars');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const MongoStore = require('connect-mongo').default;
+const MongoStore = require('connect-mongo');
 const compression = require('compression');
 const fetch = require('node-fetch');
 const passport = require('passport');
@@ -25,6 +25,7 @@ const axios = require('axios'); // Ensure axios is installed: npm install axios
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/backlog-hero';
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 app.use(express.json({ limit: '150mb' })); // Allow large base64 image and video payloads
 // --- Handlebars Template Engine ---
 app.engine('hbs', engine({
@@ -38,6 +39,9 @@ app.set('view engine', 'hbs');
 app.set('views', __dirname + '/views');
 app.set('view cache', true); // Compile templates once instead of on every request
 
+// --- Trust proxy (required for Render / Heroku / any reverse proxy) ---
+app.set('trust proxy', 1);
+
 // --- Session Configuration (MongoDB-backed for persistence across restarts) ---
 app.use(session({
   secret: 'backlog-hero-secret-key-change-in-prod',
@@ -48,7 +52,7 @@ app.use(session({
     collectionName: 'sessions',
     ttl: 7 * 24 * 60 * 60, // 7 days in seconds
   }),
-  cookie: { secure: false, httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 days
+  cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' } // 7 days
 }));
 
 // --- Middleware ---
@@ -184,7 +188,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: `http://localhost:${PORT}/auth/google/callback`,
+    callbackURL: `${BASE_URL}/auth/google/callback`,
     passReqToCallback: true  // Allow access to req object
   },
     async (req, accessToken, refreshToken, profile, done) => {
@@ -255,8 +259,8 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 }
 
 passport.use(new SteamStrategy({
-  returnURL: `http://localhost:${PORT}/auth/steam/callback`,
-  realm: `http://localhost:${PORT}/`,
+  returnURL: `${BASE_URL}/auth/steam/callback`,
+  realm: `${BASE_URL}/`,
   apiKey: STEAM_API_KEY,
   passReqToCallback: true
 },
