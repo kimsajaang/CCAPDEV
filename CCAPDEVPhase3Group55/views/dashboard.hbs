@@ -1885,6 +1885,8 @@ plagiarized the work of other students and/or persons.
   }
 
   async function openInviteModal() {
+    console.log('[INVITE] Opening invite modal, activeGroupId:', activeGroupId, 'allGroups:', allGroups);
+    
     // Validate group exists first
     if (!activeGroupId || activeGroupId === 'general') {
       alert('Cannot invite members to general channel');
@@ -1892,13 +1894,21 @@ plagiarized the work of other students and/or persons.
     }
 
     const currentGroup = allGroups.find(g => g._id === activeGroupId);
+    console.log('[INVITE] Current group:', currentGroup, 'currentUser:', currentUser);
+    
     if (!currentGroup) {
       alert('Group not found. Please refresh and try again.');
       return;
     }
 
     // Check if user is owner
-    if (currentGroup.owner?._id !== currentUserData._id) {
+    const ownerId = String(currentGroup.owner?._id || currentGroup.owner);
+    const userId = String(currentUser?._id || '');
+    const isOwner = ownerId === userId;
+    console.log('[INVITE] ownerId:', ownerId, 'userId:', userId, 'isOwner:', isOwner);
+    
+    if (!isOwner) {
+      console.error('[INVITE] User is not the group owner. Cannot add members.');
       alert('Only the group owner can invite members');
       return;
     }
@@ -1911,6 +1921,7 @@ plagiarized the work of other students and/or persons.
         throw new Error('Failed to load friends list');
       }
       friends = await res.json();
+      console.log('[INVITE] Loaded friends:', friends);
     } catch (err) {
       console.error('[Chat] Failed to load friends:', err);
       alert('Could not load friends list. Please try again.');
@@ -1919,7 +1930,9 @@ plagiarized the work of other students and/or persons.
 
     // Filter out members already in group
     const existingMemberIds = currentGroup.members?.map(m => m._id || m) || [];
+    console.log('[INVITE] existingMemberIds:', existingMemberIds);
     const availableFriends = friends.filter(f => !existingMemberIds.includes(f._id));
+    console.log('[INVITE] availableFriends:', availableFriends);
 
     const modal = `
       <div id="inviteFriendsModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
@@ -1959,6 +1972,8 @@ plagiarized the work of other students and/or persons.
     if (!btn) btn = event?.target;
     if (!btn) return;
 
+    console.log('[ADD_MEMBER] Adding friend to group, friendId:', friendId, 'activeGroupId:', activeGroupId);
+
     btn.disabled = true;
     const originalText = btn.textContent;
     btn.textContent = 'Adding...';
@@ -1971,7 +1986,10 @@ plagiarized the work of other students and/or persons.
         body: JSON.stringify({ userId: friendId })
       });
 
+      console.log('[ADD_MEMBER] Response status:', res.status);
+
       if (res.ok) {
+        console.log('[ADD_MEMBER] Successfully added member');
         btn.textContent = '✓ Added';
         btn.style.background = '#10b981';
         await loadChatGroups();
@@ -1982,6 +2000,7 @@ plagiarized the work of other students and/or persons.
       } else {
         const errData = await res.json().catch(() => ({}));
         const errorMsg = errData.error || `Failed to add friend (${res.status})`;
+        console.error('[ADD_MEMBER] Error:', errorMsg, errData);
         
         if (res.status === 403) {
           alert('Only the group owner can add members');
@@ -1998,6 +2017,9 @@ plagiarized the work of other students and/or persons.
       console.error('[Chat] Failed to add friend:', err);
       alert('Error connecting to server. Please check your connection and try again.');
       btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
       btn.disabled = false;
     }
   }

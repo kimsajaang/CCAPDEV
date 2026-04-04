@@ -203,6 +203,16 @@ plagiarized the work of other students and/or persons.
               <input id="editPostGame" class="form-control" maxlength="80" placeholder="Example: Hades, Balatro, Stardew Valley"/>
             </div>
           </div>
+
+          <div class="mb-3">
+            <label class="form-label">Media (Optional)</label>
+            <div id="editPhotoUploadArea" class="community-photo-upload-area">
+              <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
+              <p class="mb-0 mt-2 small">Click to upload or replace media</p>
+              <input type="file" id="editPhotoInput" accept="image/*,video/*" style="display: none;">
+            </div>
+            <div id="editPhotoPreviewContainer" style="display: none;"></div>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -475,14 +485,11 @@ plagiarized the work of other students and/or persons.
       
       console.log('[RENDER] Render complete - ' + posts.length + ' posts');
       
-      // Setup lazy loading for visible photos
+    // Setup lazy loading for visible photos
       if ('IntersectionObserver' in window) {
         setupPhotoLazyLoading();
       }
-    }
 
-    // Lazy load photos as they become visible
-    function setupPhotoLazyLoading() {
       const photoPlaceholders = document.querySelectorAll('[data-photo-id]');
       const observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
@@ -556,6 +563,9 @@ plagiarized the work of other students and/or persons.
         mediaHtml = `<img class="community-post-photo" data-photo-id="${post.id}" style="display:none;width:100%;max-height:400px;border-radius:8px;margin:12px 0;border:1px solid var(--border);" alt="Post media" loading="lazy">`;
       }
 
+      // Check if current user is the post author
+      const isAuthor = currentUserId && post.author && String(post.author._id) === String(currentUserId);
+
       wrapper.innerHTML = `
         <div class="card-body">
           <div class="d-flex gap-3">
@@ -586,10 +596,10 @@ plagiarized the work of other students and/or persons.
                   Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${post.commentCount || 0}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
-                ${currentUserId && post.author && String(post.author._id) === String(currentUserId) ? `
+                ${isAuthor ? `
                   <button class="btn btn-outline-warning btn-sm" data-act="edit">Edit</button>
                   <button class="btn btn-outline-danger btn-sm" data-act="delete">Delete</button>
-                ` : ""}
+                ` : ''}
               </div>
 
               <div class="mt-3 d-none" data-comments data-post-id="${post.id}" data-comments-loaded="false">
@@ -634,12 +644,16 @@ plagiarized the work of other students and/or persons.
 
       const editBtn = wrapper.querySelector('[data-act="edit"]');
       if (editBtn) {
+        console.log('[EVENTS] Attached edit listener for post:', post.id, 'Author:', post.author?._id, 'Current user:', currentUserId);
         editBtn.addEventListener("click", () => openEditModal(post));
       }
 
       const deleteBtn = wrapper.querySelector('[data-act="delete"]');
       if (deleteBtn) {
+        console.log('[EVENTS] Attached delete listener for post:', post.id, 'Author:', post.author?._id, 'Current user:', currentUserId);
         deleteBtn.addEventListener("click", () => deletePost(post.id));
+      } else {
+        console.log('[EVENTS] No delete button found for post:', post.id, '(user is not author. Author:', post.author?._id, 'Current user:', currentUserId, ')');
       }
 
       const addBtn = wrapper.querySelector('[data-act="addComment"]');
@@ -854,17 +868,36 @@ plagiarized the work of other students and/or persons.
     // Edit modal state
     let editingPostId = null;
 
+    let editingPostId = null;
+    let editSelectedPhoto = null;
+
     function openEditModal(post) {
       editingPostId = post.id;
+      editSelectedPhoto = post.hasPhoto ? post.id : null;  // Store photo ID if post has one
+      
       document.getElementById("editPostTitle").value = post.title || "";
       document.getElementById("editPostBody").value = post.body || "";
       document.getElementById("editPostFlair").value = post.flair || "Discussion";
       document.getElementById("editPostGame").value = post.game || "";
+      
+      // Reset photo UI
+      document.getElementById("editPhotoPreviewContainer").style.display = "none";
+      document.getElementById("editPhotoUploadArea").style.display = "block";
+      document.getElementById("editPhotoInput").value = "";
+      
+      // If post has photo, show option to replace/remove
+      if (post.hasPhoto) {
+        editSelectedPhoto = post.id;
+        // Show that there's an existing photo
+        console.log('[EDIT] Post has existing photo, user can replace or remove it');
+      }
+      
       const editModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("editPostModal"));
       editModal.show();
     }
 
     async function deletePost(postId) {
+      console.log('[DELETE] Opening delete confirmation for post:', postId);
       document.getElementById("confirmDeletePostId").value = postId;
       const deleteModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("deletePostModal"));
       deleteModal.show();
@@ -872,18 +905,35 @@ plagiarized the work of other students and/or persons.
 
     document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
       const postId = document.getElementById("confirmDeletePostId").value;
+      console.log('[DELETE] User confirmed deletion of post:', postId);
+      
+      if (!postId) {
+        console.error('[DELETE] No post ID provided');
+        alert("Error: No post selected for deletion");
+        return;
+      }
+
       try {
         const res = await fetch(`/api/posts/${postId}`, {
           method: 'DELETE',
           credentials: 'include'
         });
-        if (!res.ok) throw new Error('Delete failed');
+        
+        console.log('[DELETE] Server response:', res.status, res.statusText);
+        
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('[DELETE] Server error:', errData);
+          throw new Error(errData.error || `Delete failed with status ${res.status}`);
+        }
+        
+        console.log('[DELETE] Post deleted successfully');
         const deleteModal = bootstrap.Modal.getInstance(document.getElementById("deletePostModal"));
         deleteModal.hide();
         render();
       } catch (err) {
-        console.error('Delete error:', err);
-        alert("Failed to delete post");
+        console.error('[DELETE] Error:', err.message);
+        alert("Failed to delete post: " + err.message);
       }
     });
 
@@ -899,11 +949,19 @@ plagiarized the work of other students and/or persons.
       }
 
       try {
+        const updateData = { 
+          title, 
+          body, 
+          flair, 
+          game: game || undefined,
+          photo: editSelectedPhoto || undefined  // null to remove photo, or new data URL to replace
+        };
+        
         const res = await fetch(`/api/posts/${editingPostId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ title, body, flair, game: game || undefined })
+          body: JSON.stringify(updateData)
         });
         if (!res.ok) throw new Error('Update failed');
         const editModal = bootstrap.Modal.getInstance(document.getElementById("editPostModal"));
@@ -1005,6 +1063,79 @@ plagiarized the work of other students and/or persons.
       postError.style.display = "none";
     }
 
+    // Edit photo handling functions
+    function showEditMediaPreview(dataUrl, isVideo) {
+      editSelectedPhoto = dataUrl;
+      const uploadArea = document.getElementById("editPhotoUploadArea");
+      const previewContainer = document.getElementById("editPhotoPreviewContainer");
+      
+      uploadArea.style.display = "none";
+      previewContainer.style.display = "block";
+      previewContainer.innerHTML = "";
+      
+      if (isVideo) {
+        const video = document.createElement("video");
+        video.src = dataUrl;
+        video.className = "community-photo-preview-img";
+        video.controls = true;
+        video.style.cssText = "max-width:100%;max-height:300px;background:#000;border-radius:8px;";
+        previewContainer.appendChild(video);
+      } else {
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.className = "community-photo-preview-img";
+        img.alt = "Preview";
+        previewContainer.appendChild(img);
+      }
+      
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn mt-2";
+      removeBtn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Remove Media';
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editSelectedPhoto = null;
+        document.getElementById("editPhotoPreviewContainer").style.display = "none";
+        document.getElementById("editPhotoUploadArea").style.display = "block";
+        document.getElementById("editPhotoInput").value = "";
+      });
+      previewContainer.appendChild(removeBtn);
+    }
+
+    const editPhotoInput = document.getElementById("editPhotoInput");
+    const editPhotoUploadArea = document.getElementById("editPhotoUploadArea");
+    
+    editPhotoUploadArea.addEventListener("click", () => editPhotoInput.click());
+    
+    editPhotoInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = 10 * 1024 * 1024; // 10MB
+
+      if (isVideo && file.size > maxSize) {
+        alert(`Video too large! Maximum is ${maxSize / (1024 * 1024).toFixed(0)}MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+        return;
+      }
+
+      if (isVideo) {
+        const reader = new FileReader();
+        reader.onload = (event) => showEditMediaPreview(event.target.result, true);
+        reader.readAsDataURL(file);
+      } else {
+        try {
+          const compressed = await compressImage(file, 1200, 0.8);
+          showEditMediaPreview(compressed, false);
+        } catch (err) {
+          const reader = new FileReader();
+          reader.onload = (event) => showEditMediaPreview(event.target.result, false);
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+
     communityPhotoInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -1095,7 +1226,19 @@ plagiarized the work of other students and/or persons.
         newPostModal.hide();
         location.hash = "post-" + post.id;
         render();
-        updateSidebarStats();
+        
+        // Immediately load photo for newly created post (don't wait for lazy loading)
+        setTimeout(() => {
+          const newPostCard = document.querySelector(`[data-post-id="${post.id}"]`);
+          if (newPostCard) {
+            const photoPlaceholder = newPostCard.querySelector('[data-photo-id]');
+            if (photoPlaceholder) {
+              console.log('[NEW POST] Loading photo immediately for new post:', post.id);
+              loadAndShowPhoto(post.id, photoPlaceholder);
+            }
+          }
+          updateSidebarStats();
+        }, 100);
       })
       .catch(err => {
         console.error('Post creation error:', err);
