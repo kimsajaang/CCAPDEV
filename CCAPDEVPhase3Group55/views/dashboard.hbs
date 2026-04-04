@@ -1098,6 +1098,7 @@ plagiarized the work of other students and/or persons.
     const comment = document.getElementById("updateComment").value.trim();
     const rating = document.getElementById("updateRating").value;
     const errorEl = document.getElementById("updateError");
+    const submitBtn = document.getElementById("submitUpdateBtn");
 
     if (!comment) {
       errorEl.textContent = "Please write a comment.";
@@ -1106,21 +1107,36 @@ plagiarized the work of other students and/or persons.
     }
 
     errorEl.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
+    
+    // Warn if photo is very large
+    if (selectedPhoto && selectedPhoto.length > 10 * 1024 * 1024) {
+      console.warn('Warning: Photo is very large (' + (selectedPhoto.length / 1024 / 1024).toFixed(2) + 'MB) - upload may take a while');
+    }
     
     // Save to backend first
     try {
+      const controller = new AbortController();
+      const uploadTimeout = selectedPhoto ? 60000 : 15000; // 60s for photos, 15s for text
+      const timeoutId = setTimeout(() => controller.abort(), uploadTimeout);
+      
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        signal: controller.signal,
         body: JSON.stringify({
           title: `Logged a session${type === 'review' ? ' - Review' : type === 'completed' ? ' - Completed' : type === 'playing' ? ' - Now Playing' : ''}`,
           body: comment,
           game: game,
           flair: 'Progress',
-          rating: type === 'review' ? parseInt(rating) : null
+          rating: type === 'review' ? parseInt(rating) : null,
+          photo: selectedPhoto || null
         })
       });
+      
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
         throw new Error('Failed to save post');
@@ -1153,10 +1169,18 @@ plagiarized the work of other students and/or persons.
       toast.textContent = 'Update posted!';
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 2000);
+      
+      // Restore button state
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Post Update';
     } catch (err) {
       console.error('Error posting update:', err);
       errorEl.textContent = "Failed to post update. Please try again.";
       errorEl.style.display = "block";
+      
+      // Restore button state on error
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Post Update';
     }
   });
 </script>
@@ -1819,6 +1843,15 @@ plagiarized the work of other students and/or persons.
       return;
     }
 
+    if (nameInput.value.trim().length > 50) {
+      alert('Group name must be 50 characters or less');
+      return;
+    }
+
+    const submitBtn = document.querySelector('#createGroupModal .btn-primary');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+
     try {
       const res = await fetch('/api/chat/group', {
         method: 'POST',
@@ -1828,53 +1861,103 @@ plagiarized the work of other students and/or persons.
       });
       if (res.ok) {
         const group = await res.json();
-        document.getElementById('createGroupModal').remove();
+        const modal = document.getElementById('createGroupModal');
+        if (modal) modal.remove();
         await loadChatGroups();
         await switchToChat(group._id);
       } else {
-        alert('Failed to create group');
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || 'Failed to create group');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Group';
       }
     } catch (err) {
       console.error('[Chat] Failed to create group:', err);
-      alert('Error creating group');
+      alert('Error creating group. Please check your connection.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Group';
     }
   }
 
   async function openInviteModal() {
+    // Validate group exists first
+    if (!activeGroupId || activeGroupId === 'general') {
+      alert('Cannot invite members to general channel');
+      return;
+    }
+
+    const currentGroup = allGroups.find(g => g._id === activeGroupId);
+    if (!currentGroup) {
+      alert('Group not found. Please refresh and try again.');
+      return;
+    }
+
+    // Check if user is owner
+    if (currentGroup.owner?._id !== currentUserData._id) {
+      alert('Only the group owner can invite members');
+      return;
+    }
+
     // Get friends
     let friends = [];
     try {
       const res = await fetch('/api/friends', { credentials: 'include' });
-      if (res.ok) friends = await res.json();
+      if (!res.ok) {
+        throw new Error('Failed to load friends list');
+      }
+      friends = await res.json();
     } catch (err) {
       console.error('[Chat] Failed to load friends:', err);
+      alert('Could not load friends list. Please try again.');
+      return;
     }
+
+    // Filter out members already in group
+    const existingMemberIds = currentGroup.members?.map(m => m._id || m) || [];
+    const availableFriends = friends.filter(f => !existingMemberIds.includes(f._id));
 
     const modal = `
       <div id="inviteFriendsModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
         <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.5); max-height:80vh; overflow-y:auto;">
-          <h5 style="margin-bottom:16px; color:#fff;">Invite Friends to ${allGroups.find(g => g._id === activeGroupId)?.name}</h5>
+          <h5 style="margin-bottom:16px; color:#fff;">Invite Friends to ${escapeHtml(currentGroup.name)}</h5>
           <div id="inviteFriendsList">
-            ${friends.length === 0 ? `<div class="text-center py-4 text-muted">You have no friends to invite!</div>` : 
-              friends.map(f => `
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            ${availableFriends.length === 0 ? `<div class="text-center py-4 text-muted">${friends.length === 0 ? 'You have no friends to invite!' : 'All friends are already in this group!'}</div>` : 
+              availableFriends.map(f => `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:12px; background:rgba(255,255,255,0.02); border-radius:8px;" class="friend-invite-item" data-friend-id="${f._id}">
                   <div style="display:flex; align-items:center; gap:12px;">
                     <img src="${f.avatar || 'https://ui-avatars.com/api/?name=User'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
-                    <span style="font-weight:600; color:#fff;">${f.displayName || f.username}</span>
+                    <span style="font-weight:600; color:#fff;">${escapeHtml(f.displayName || f.username)}</span>
                   </div>
-                  <button class="btn btn-sm btn-primary" onclick="addFriendToGroup('${f._id}', '${f.displayName || f.username}')" style="font-size:0.75rem;">Add</button>
+                  <button class="btn btn-sm btn-primary add-friend-btn" style="font-size:0.75rem;">Add</button>
                 </div>
               `).join('')
             }
           </div>
-          <button class="btn btn-sm btn-outline-secondary mt-3" onclick="this.closest('#inviteFriendsModal').remove()" style="width:100%;">Close</button>
+          <button class="btn btn-sm btn-outline-secondary mt-3" onclick="this.closest('#inviteFriendsModal')?.remove()" style="width:100%;">Close</button>
         </div>
       </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modal);
+
+    // Attach event listeners to the Add buttons
+    document.querySelectorAll('#inviteFriendsModal .add-friend-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const item = e.target.closest('.friend-invite-item');
+        const friendId = item.dataset.friendId;
+        const friendName = item.querySelector('span').textContent;
+        await addFriendToGroup(friendId, friendName, btn);
+      });
+    });
   }
 
-  async function addFriendToGroup(friendId, friendName) {
+  async function addFriendToGroup(friendId, friendName, btn) {
+    if (!btn) btn = event?.target;
+    if (!btn) return;
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Adding...';
+
     try {
       const res = await fetch(`/api/chat/group/${activeGroupId}/member`, {
         method: 'POST',
@@ -1882,20 +1965,35 @@ plagiarized the work of other students and/or persons.
         credentials: 'include',
         body: JSON.stringify({ userId: friendId })
       });
+
       if (res.ok) {
-        // Show success message
-        const btn = event.target;
         btn.textContent = '✓ Added';
-        btn.disabled = true;
+        btn.style.background = '#10b981';
+        await loadChatGroups();
         setTimeout(() => {
-          document.getElementById('inviteFriendsModal').remove();
+          const modal = document.getElementById('inviteFriendsModal');
+          if (modal) modal.remove();
         }, 1000);
       } else {
-        alert('Failed to add friend');
+        const errData = await res.json().catch(() => ({}));
+        const errorMsg = errData.error || `Failed to add friend (${res.status})`;
+        
+        if (res.status === 403) {
+          alert('Only the group owner can add members');
+        } else if (res.status === 409) {
+          alert(errorMsg); // Already a member
+        } else {
+          alert(errorMsg);
+        }
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
       }
     } catch (err) {
       console.error('[Chat] Failed to add friend:', err);
-      alert('Error adding friend');
+      alert('Error connecting to server. Please check your connection and try again.');
+      btn.textContent = originalText;
+      btn.disabled = false;
     }
   }
 

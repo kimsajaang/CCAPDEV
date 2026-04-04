@@ -1056,6 +1056,39 @@ plagiarized the work of other students and/or persons.
       top: -10px;
     }
   }
+
+  /* Skeleton Loading Animation */
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  .skeleton-loader {
+    background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 8px;
+  }
+
+  .profile-loading {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    opacity: 0.6;
+  }
+
+  .profile-loading .skeleton-loader {
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .profile-loading .avatar-skeleton {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 16px;
+  }
 </style>
 
 <div class="profile-dashboard">
@@ -1223,6 +1256,21 @@ plagiarized the work of other students and/or persons.
     const params = new URLSearchParams(window.location.search);
     const targetId = params.get('user');
 
+    // Show loading state
+    const dashboard = document.querySelector('.profile-dashboard');
+    const originalContent = dashboard.innerHTML;
+    dashboard.innerHTML = `
+      <div class="profile-loading">
+        <div class="avatar-skeleton skeleton-loader"></div>
+        <div class="skeleton-loader" style="height: 24px; width: 60%;"></div>
+        <div class="skeleton-loader" style="height: 16px; width: 40%;"></div>
+        <div class="skeleton-loader" style="height: 200px;"></div>
+        <div class="skeleton-loader" style="height: 16px; width: 100%;"></div>
+        <div class="skeleton-loader" style="height: 16px; width: 80%;"></div>
+      </div>
+    `;
+    dashboard.style.opacity = '0.7';
+
     try {
       const authRes = await fetch('/api/auth/current', { credentials: 'include' });
       if (!authRes.ok) { window.location.href = '/login'; return; }
@@ -1232,16 +1280,25 @@ plagiarized the work of other students and/or persons.
         isOwnProfile = false;
         const uRes = await fetch('/api/users/' + targetId);
         if (uRes.ok) profileUser = await uRes.json();
-        else { document.querySelector('.profile-dashboard').innerHTML = '<h4 class="text-center mt-5">User not found</h4>'; return; }
+        else { 
+          dashboard.innerHTML = '<h4 class="text-center mt-5">User not found</h4>';
+          dashboard.style.opacity = '1';
+          return; 
+        }
       } else {
         isOwnProfile = true;
         profileUser = currentUser;
       }
 
       initializeKeys(profileUser._id);
+      dashboard.style.opacity = '1';
       renderProfileView();
       await fetchStatsAndActivity();
-    } catch (e) { console.error("Init failed", e); }
+    } catch (e) { 
+      console.error("Init failed", e);
+      dashboard.innerHTML = '<h4 class="text-center mt-5">Error loading profile. Please refresh the page.</h4>';
+      dashboard.style.opacity = '1';
+    }
   }
 
   function initializeKeys(uid) {

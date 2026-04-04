@@ -31,9 +31,82 @@
             flex-shrink: 0; 
             margin-top: auto; 
         }
+
+        /* Page Transition Loading Overlay */
+        @keyframes fadeInLoader {
+          0% { opacity: 0; }
+          50% { opacity: 0.8; }
+          100% { opacity: 0.8; }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        #pageLoadingOverlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(11,14,20,0.9) 0%, rgba(26,31,46,0.85) 100%);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 99999;
+          animation: fadeInLoader 0.3s ease;
+          backdrop-filter: blur(4px);
+        }
+
+        #pageLoadingOverlay.active {
+          display: flex;
+        }
+
+        .loading-spinner {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .spinner-ring {
+          width: 60px;
+          height: 60px;
+          border: 4px solid rgba(83, 131, 232, 0.2);
+          border-top: 4px solid #5383e8;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+          color: #e4e6eb;
+          font-size: 1rem;
+          font-weight: 500;
+          letter-spacing: 1px;
+        }
+
+        .loading-dots {
+          display: inline-block;
+          animation: dots 1.4s infinite;
+        }
+
+        @keyframes dots {
+          0%, 20% { content: '.'; }
+          40% { content: '..'; }
+          60%, 100% { content: '...'; }
+        }
     </style>
 </head>
 <body class="{{#if bodyClass}}{{bodyClass}}{{/if}}">
+    <!-- Page Loading Overlay -->
+    <div id="pageLoadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="loading-text">Loading<span class="loading-dots">.</span></div>
+        </div>
+    </div>
+
     <canvas id="plexus-canvas"></canvas>
 
     <main class="site-content">
@@ -44,5 +117,55 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script defer src="/plexus-bg.js?v=3"></script>
+
+    <script>
+        // Show loading overlay when navigating via navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('pageLoadingOverlay');
+            if (!overlay) return;
+
+            // Intercept navbar link clicks
+            const navLinks = document.querySelectorAll('.navbar a.nav-link[href*="/"]');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Don't show loader for external links or hash links
+                    const href = this.getAttribute('href');
+                    if (!href || href.startsWith('#') || href.startsWith('http') || href.includes('smartHomeClick')) {
+                        return;
+                    }
+
+                    // Show loading overlay
+                    overlay.classList.add('active');
+
+                    // Auto-hide after page naviagtes (safety timeout)
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                    }, 3000);
+                });
+            });
+
+            // Also intercept brand/logo clicks that navigate
+            const brand = document.querySelector('.navbar-brand[onclick*="smartHomeClick"]');
+            if (brand) {
+                brand.addEventListener('click', function(e) {
+                    overlay.classList.add('active');
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                    }, 3000);
+                });
+            }
+
+            // Hide loader when page fully loads (on page focus or nav completion)
+            window.addEventListener('load', function() {
+                overlay.classList.remove('active');
+            });
+
+            // Also remove on popstate (back button)
+            window.addEventListener('popstate', function() {
+                overlay.classList.remove('active');
+            });
+        });
+    </script>
 </body>
 </html>
