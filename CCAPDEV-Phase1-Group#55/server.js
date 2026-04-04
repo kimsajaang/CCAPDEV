@@ -416,14 +416,26 @@ async function getIgdbGameCount() {
 // ======================== API ROUTES ========================
 
 // GET /api/steam/friends - Fetch Steam friends and their statuses
-app.get('/api/steam/friends', async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-  if (!req.user.steamId) return res.status(400).json({ error: 'Steam not linked' });
+app.get('/api/steam/friends', isLoggedIn, async (req, res) => {
   try {
-    const friendUrl = `https://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=${STEAM_API_KEY}&steamid=${req.user.steamId}&relationship=friend`;
+    const user = await User.findById(req.session.userId);
+    if (!user || !user.steamId) return res.status(400).json({ error: 'Steam not linked' });
+
+    if (!STEAM_API_KEY) {
+      console.error('[STEAM FRIENDS API] STEAM_API_KEY is not configured');
+      return res.status(500).json({ error: 'Steam API key not configured on server' });
+    }
+
+    const friendUrl = `https://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=${STEAM_API_KEY}&steamid=${user.steamId}&relationship=friend`;
+    console.log('[STEAM FRIENDS API] Fetching friends for Steam ID:', user.steamId);
+    
     const friendRes = await fetch(friendUrl);
-    if (!friendRes.ok) return res.status(404).json({ error: 'Could not fetch friends list' });
     const friendData = await friendRes.json();
+    
+    if (!friendRes.ok) {
+      console.error('[STEAM FRIENDS API] Steam API returned status', friendRes.status, '- Response:', friendData);
+      return res.status(404).json({ error: 'Could not fetch friends list. Profile may be private or Steam API key is invalid.' });
+    }
     if (!friendData.friendslist || !friendData.friendslist.friends) return res.json([]);
 
     // Sort friends by friend_since and take up to 100
