@@ -25,13 +25,13 @@
 <script>
     function smartHomeClick(e) {
         e.preventDefault();
-        fetch('/api/auth/current', { credentials: 'include' })
+        fetch('/api/auth/current', { credentials: 'include', cache: 'no-store' })
             .then(r => { window.location.href = r.ok ? '/Dashboard' : '/'; })
             .catch(() => { window.location.href = '/'; });
     }
 
     // Show/hide nav items based on authentication
-    fetch('/api/auth/current', { credentials: 'include' })
+    fetch('/api/auth/current', { credentials: 'include', cache: 'no-store' })
         .then(r => r.ok ? r.json() : null)
         .then(user => {
             if (user) {

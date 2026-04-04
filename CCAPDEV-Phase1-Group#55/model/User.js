@@ -59,6 +59,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 50,
     },
+    wallpaperPositionX: {
+      type: Number,
+      default: 50,
+    },
     favoriteGames: {
       type: [mongoose.Schema.Types.Mixed], // array of game objects { id, name, cover }
       default: [],
@@ -117,5 +121,12 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// Add indexes for performance
+userSchema.index({ username: 1 }, { unique: true });
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ steamId: 1 });
+userSchema.index({ googleId: 1 });
+userSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('User', userSchema);

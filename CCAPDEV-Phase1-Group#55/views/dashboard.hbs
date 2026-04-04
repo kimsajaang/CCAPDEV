@@ -1190,18 +1190,12 @@ plagiarized the work of other students and/or persons.
 
       while (retries > 0) {
         try {
-          // Use AbortController for proper timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-
           const userRes = await fetch('/api/auth/current', {
             method: 'GET',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            signal: controller.signal
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' }
           });
-
-          clearTimeout(timeoutId);
 
           console.log('[Dashboard] Auth response:', userRes.status);
 
@@ -1227,8 +1221,29 @@ plagiarized the work of other students and/or persons.
             if (currentUserData.steamId) {
               const syncBtn = document.getElementById('steamSyncBtn');
               if (syncBtn) syncBtn.style.display = '';
+            }
 
-              // Check if currently playing a game on Steam without blocking
+            // Check if playing a local game session first
+            let localPlaying = false;
+            try {
+              const localSessionStr = localStorage.getItem('bh_active_session_game');
+              if (localSessionStr) {
+                const localData = JSON.parse(localSessionStr);
+                if (localData && localData.name) {
+                  localPlaying = true;
+                  const gameNameEl = document.getElementById('steamLiveGameNameCard');
+                  const coverEl = document.getElementById('steamLiveGameCover');
+                  const statusEl = document.getElementById('steamLiveCard');
+                  
+                  if (gameNameEl) gameNameEl.textContent = localData.name;
+                  if (coverEl && localData.cover) coverEl.src = localData.cover;
+                  if (statusEl) statusEl.style.display = 'block';
+                }
+              }
+            } catch (err) {}
+
+            // If not playing locally, check Steam status if they have a Steam ID 
+            if (!localPlaying && currentUserData.steamId) {
               fetch('/api/auth/steam-status', { credentials: 'include' })
                 .then(res => res.json())
                 .then(steamData => {
@@ -1245,24 +1260,30 @@ plagiarized the work of other students and/or persons.
                 .catch(steamErr => console.warn('[Dashboard] Could not fetch live Steam status:', steamErr));
             }
 
-            // Load dynamic content — fire all in parallel, no need to await
+            // Load critical content immediately
             loadActivityFeed(currentUserData);
-            loadCommunityScores(currentUserData);
             loadGameDropdown(currentUserData);
             loadPendingBadge();
             // Pre-fetch trending data once, then both sections use it
             fetchTrendingGames();
             loadTrendingGames();
-            loadTrailers();
 
-            // Initialize chat AFTER everything else is done (completely non-blocking)
-            setTimeout(() => {
-              try {
+            // Defer non-critical content (community scores, trailers, chat) to load after page is interactive
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                  loadCommunityScores(currentUserData);
+                  loadTrailers();
+                  initChat(currentUserData);
+                }, 500);
+              });
+            } else {
+              setTimeout(() => {
+                loadCommunityScores(currentUserData);
+                loadTrailers();
                 initChat(currentUserData);
-              } catch (err) {
-                console.warn('[Dashboard] Chat init error:', err.message);
-              }
-            }, 100);
+              }, 500);
+            }
 
             return; // Success - exit function
           }
@@ -1304,7 +1325,7 @@ plagiarized the work of other students and/or persons.
   async function smartHomeClick(e) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/current', { credentials: 'include' });
+      const res = await fetch('/api/auth/current', { credentials: 'include', cache: 'no-store' });
       const dest = res.ok ? 'dashboard' : '/';
       document.body.classList.add('page-exit');
       setTimeout(() => window.location = dest, 300);

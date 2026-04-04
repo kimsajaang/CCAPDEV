@@ -455,9 +455,19 @@ plagiarized the work of other students and/or persons.
             return;
         }
 
+        let activeSessionId = null;
+        try {
+            const activeStr = localStorage.getItem('bh_active_session_game');
+            if (activeStr) {
+                const s = JSON.parse(activeStr);
+                activeSessionId = String(s.id);
+            }
+        } catch(e) {}
+
         let html = '';
         filtered.forEach((game, i) => {
             const displayName = game.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const isActiveSession = activeSessionId === String(game.id);
             const coverHtml = game.cover
                 ? `<div class="card-img-top-wrap position-relative" style="aspect-ratio:3/4; overflow:hidden;">
                      <img src="${game.cover}" class="card-img-top game-cover" alt="${displayName}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
@@ -490,15 +500,15 @@ plagiarized the work of other students and/or persons.
                         </div>
                         <!-- Session Timer Controls -->
                         <div class="mb-2 d-flex gap-2">
-                          <button class="btn btn-sm btn-outline-success flex-grow-1 start-session-btn" data-entry-id="${game.id}" onclick="startSession('${game.id}', event)" style="font-size: 0.8rem;">
+                          <button class="btn btn-sm btn-outline-success flex-grow-1 start-session-btn" data-entry-id="${game.id}" onclick="startSession('${game.id}', event)" style="font-size: 0.8rem; display: ${isActiveSession ? 'none' : 'block'};">
                             <i class="bi bi-play-fill me-1"></i>Play
                           </button>
-                          <button class="btn btn-sm btn-outline-danger flex-grow-1 stop-session-btn" data-entry-id="${game.id}" onclick="stopSession('${game.id}', event)" style="font-size: 0.8rem; display: none;">
+                          <button class="btn btn-sm btn-outline-danger flex-grow-1 stop-session-btn" data-entry-id="${game.id}" onclick="stopSession('${game.id}', event)" style="font-size: 0.8rem; display: ${isActiveSession ? 'block' : 'none'};">
                             <i class="bi bi-stop-fill me-1"></i>Stop
                           </button>
                         </div>
                         <!-- Session Timer Display -->
-                        <div class="text-center mb-2 session-display" data-entry-id="${game.id}" style="font-size: 0.75rem; color: #a8c0e0; display: none;">
+                        <div class="text-center mb-2 session-display" data-entry-id="${game.id}" style="font-size: 0.75rem; color: #a8c0e0; display: ${isActiveSession ? 'block' : 'none'};">
                           <small><i class="bi bi-hourglass-split" style="color: #2dd4bf;"></i> <span class="session-time">0:00:00</span></small>
                         </div>
                         <div class="mt-auto">
@@ -901,60 +911,73 @@ plagiarized the work of other students and/or persons.
     }
 
     /* ---------- session timer for playtime tracking ---------- */
-    const sessionStorage = {};  // { entryId: { startTime, intervalId } }
+    // Global interval to automatically update timers for any active localStorage sessions
+    setInterval(() => {
+        const activeLocalStr = localStorage.getItem('bh_active_session_game');
+        if (!activeLocalStr) return;
+        try {
+            const session = JSON.parse(activeLocalStr);
+            const display = document.querySelector(`[data-entry-id="${session.id}"].session-display`);
+            if (display && display.style.display !== 'none') {
+                const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
+                const hours = Math.floor(elapsed / 3600);
+                const minutes = Math.floor((elapsed % 3600) / 60);
+                const seconds = elapsed % 60;
+                const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                display.querySelector('.session-time').textContent = timeStr;
+            }
+        } catch(e) {}
+    }, 1000);
 
     function startSession(entryId, event) {
         if (event) event.preventDefault();
         
-        if (sessionStorage[entryId]) {
-            showToast('Session already running for this game', 'bg-warning');
+        const existingSession = localStorage.getItem('bh_active_session_game');
+        if (existingSession) {
+            showToast('A session is already running for a game', 'bg-warning');
             return;
         }
 
-        // Swap button visibility
-        document.querySelector(`[data-entry-id="${entryId}"].start-session-btn`).style.display = 'none';
-        document.querySelector(`[data-entry-id="${entryId}"].stop-session-btn`).style.display = 'block';
-        const display = document.querySelector(`[data-entry-id="${entryId}"].session-display`);
-        display.style.display = 'block';
-
-        const startTime = Date.now();
-        sessionStorage[entryId] = { startTime };
-
-        // Update timer every second
-        const intervalId = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const hours = Math.floor(elapsed / 3600);
-            const minutes = Math.floor((elapsed % 3600) / 60);
-            const seconds = elapsed % 60;
-            const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            display.querySelector('.session-time').textContent = timeStr;
-        }, 1000);
-
-        sessionStorage[entryId].intervalId = intervalId;
-        showToast('Playing started!', 'bg-primary');
+        const game = libraryCache.find(g => String(g.id) === String(entryId));
+        if (game) {
+            localStorage.setItem('bh_active_session_game', JSON.stringify({
+                id: entryId,
+                name: game.name,
+                cover: game.cover,
+                startTime: Date.now()
+            }));
+            
+            // Re-render to update the display buttons immediately
+            render();
+            showToast('Playing started!', 'bg-primary');
+        }
     }
 
     async function stopSession(entryId, event) {
         if (event) event.preventDefault();
         
-        const session = sessionStorage[entryId];
-        if (!session) {
+        const activeVar = localStorage.getItem('bh_active_session_game');
+        if (!activeVar) {
             showToast('No active session', 'bg-warning');
             return;
         }
+        
+        const session = JSON.parse(activeVar);
+        if (String(session.id) !== String(entryId)) {
+            showToast('This session is not currently active here!', 'bg-warning');
+            return;
+        }
 
-        // Stop timer
-        clearInterval(session.intervalId);
         const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
         const elapsedHours = elapsed / 3600;  // Convert to decimal hours
 
-        // Swap button visibility
-        document.querySelector(`[data-entry-id="${entryId}"].start-session-btn`).style.display = 'block';
-        document.querySelector(`[data-entry-id="${entryId}"].stop-session-btn`).style.display = 'none';
-        const display = document.querySelector(`[data-entry-id="${entryId}"].session-display`);
-        display.style.display = 'none';
+        // Clear active session entirely
+        localStorage.removeItem('bh_active_session_game');
+        
+        // Re-render immediately to restore the original button state locally
+        render();
 
-        delete sessionStorage[entryId];
+        // render() has already updated the DOM
 
         // Get current game playtime
         const game = libraryCache.find(g => g.id === entryId);

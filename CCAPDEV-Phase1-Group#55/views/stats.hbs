@@ -561,8 +561,9 @@ plagiarized the work of other students and/or persons.
       }
 
       const addBtn = wrapper.querySelector('[data-act="addComment"]');
-      if (addBtn) {
-        addBtn.addEventListener("click", () => {
+      const commentInput = addBtn ? addBtn.parentElement.querySelector("input") : null;
+
+      function submitComment() {
         const input = addBtn.parentElement.querySelector("input");
         const text = input.value.trim();
         if (!text) return;
@@ -592,6 +593,18 @@ plagiarized the work of other students and/or persons.
         
         // Post to server in background (don't wait)
         addComment(post.id, text);
+      }
+
+      if (addBtn) {
+        addBtn.addEventListener("click", submitComment);
+      }
+
+      if (commentInput) {
+        commentInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitComment();
+          }
         });
       }
 

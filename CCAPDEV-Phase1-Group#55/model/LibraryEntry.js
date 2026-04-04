@@ -66,4 +66,13 @@ const libraryEntrySchema = new mongoose.Schema(
 // Ensure a user can only add a game once
 libraryEntrySchema.index({ userId: 1, gameId: 1 }, { unique: true });
 
+// Optimize queries by userId - VERY common filter
+libraryEntrySchema.index({ userId: 1, hidden: 1, status: 1 });
+
+// Optimize rating/community score queries
+libraryEntrySchema.index({ rating: 1, hidden: 1 });
+
+// Optimize activity feed queries
+libraryEntrySchema.index({ userId: 1, addedAt: -1 });
+
 module.exports = mongoose.model('LibraryEntry', libraryEntrySchema);

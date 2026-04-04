@@ -165,19 +165,26 @@ plagiarized the work of other students and/or persons.
                     </div>
 
                     <div class="field-group">
-                        <label>Profile Cover</label>
-                        <div class="wallpaper-preview-container wallpaper-upload-controls" onclick="document.getElementById('wallpaperInput').click()">
-                            <img id="wallpaperPreview" class="wallpaper-preview" style="display: none;">
-                            <div id="wallpaperEmptyState" class="wallpaper-empty">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="mb-0">Profile Cover</label>
+                            <span class="field-hint mb-0 mt-0" id="dragHint" style="display:none; color: var(--primary);"><i class="bi bi-arrows-expand"></i> Drag image to reposition</span>
+                        </div>
+                        <div class="wallpaper-preview-container wallpaper-upload-controls" id="wallpaperPreviewContainer">
+                            <img id="wallpaperPreview" class="wallpaper-preview" style="display: none; cursor: grab;" draggable="false">
+                            <div id="wallpaperEmptyState" class="wallpaper-empty" onclick="document.getElementById('wallpaperInput').click()" style="cursor: pointer; width: 100%; height: 100%;">
                                 <i class="bi bi-image fs-4"></i> Upload a wide image
                             </div>
-                            <div class="wallpaper-overlay"><button type="button" class="btn-change">Change Cover</button></div>
+                            <div class="wallpaper-overlay" id="wallpaperOverlay" style="pointer-events: none;">
+                                <button type="button" class="btn-change" onclick="document.getElementById('wallpaperInput').click()" style="pointer-events: auto; z-index: 10;">Change Cover</button>
+                            </div>
                         </div>
                         <input type="file" id="wallpaperInput" accept="image/*" class="d-none">
                         
                         <div class="wallpaper-position-control mt-2" id="wallpaperPositionControl" style="display:none; align-items:center; gap:12px;">
-                            <label class="mb-0 text-muted small">Position</label>
+                            <label class="mb-0 text-muted small">Y:</label>
                             <input type="range" id="wallpaperPositionSlider" class="form-range" style="flex:1;" min="0" max="100" value="50">
+                            <label class="mb-0 text-muted small">X:</label>
+                            <input type="range" id="wallpaperPositionXSlider" class="form-range" style="flex:1;" min="0" max="100" value="50">
                         </div>
                     </div>
 
@@ -514,6 +521,8 @@ plagiarized the work of other students and/or persons.
                 bio: (serverUser && serverUser.bio && serverUser.bio !== 'No bio yet') ? serverUser.bio : localProfile.bio,
                 avatar: (serverUser && serverUser.avatar) || localProfile.avatar,
                 wallpaper: (serverUser && serverUser.wallpaper) || localProfile.wallpaper || '',
+                wallpaperPosition: (serverUser && serverUser.wallpaperPosition != null) ? serverUser.wallpaperPosition : (localProfile.wallpaperPosition != null ? localProfile.wallpaperPosition : 50),
+                wallpaperPositionX: (serverUser && serverUser.wallpaperPositionX != null) ? serverUser.wallpaperPositionX : (localProfile.wallpaperPositionX != null ? localProfile.wallpaperPositionX : 50),
                 steamId: (serverUser && serverUser.steamId) || localProfile.steamId || '',
                 favoriteGames: (serverUser && serverUser.favoriteGames && serverUser.favoriteGames.length > 0)
                     ? serverUser.favoriteGames
@@ -588,11 +597,17 @@ plagiarized the work of other students and/or persons.
                 const wallpaperPositionControl = document.getElementById('wallpaperPositionControl');
                 if (wallpaperPositionControl) wallpaperPositionControl.classList.add('visible');
                 
+                const dragHint = document.getElementById('dragHint');
+                if (dragHint) dragHint.style.display = 'inline-block';
+                
                 const wallpaperPositionSlider = document.getElementById('wallpaperPositionSlider');
+                const wallpaperPositionXSlider = document.getElementById('wallpaperPositionXSlider');
                 if (wallpaperPositionSlider) {
                     const pos = profile.wallpaperPosition != null ? profile.wallpaperPosition : 50;
+                    const posX = profile.wallpaperPositionX != null ? profile.wallpaperPositionX : 50;
                     wallpaperPositionSlider.value = pos;
-                    if (wallpaperPreview) wallpaperPreview.style.objectPosition = `center ${pos}%`;
+                    if (wallpaperPositionXSlider) wallpaperPositionXSlider.value = posX;
+                    if (wallpaperPreview) wallpaperPreview.style.objectPosition = `${posX}% ${pos}%`;
                 }
             }
 
@@ -875,19 +890,81 @@ plagiarized the work of other students and/or persons.
                             document.getElementById('wallpaperPreview').classList.add('has-image');
                             document.getElementById('wallpaperEmptyState').classList.add('d-none');
                             document.getElementById('wallpaperPositionControl').classList.add('visible');
+                            const dragHint = document.getElementById('dragHint');
+                            if (dragHint) dragHint.style.display = 'inline-block';
                             document.getElementById('wallpaperPositionSlider').value = 50;
-                            document.getElementById('wallpaperPreview').style.objectPosition = 'center 50%';
+                            const xSlide = document.getElementById('wallpaperPositionXSlider');
+                            if (xSlide) xSlide.value = 50;
+                            document.getElementById('wallpaperPreview').style.objectPosition = '50% 50%';
                         };
                         reader.readAsDataURL(file);
                     }
                 });
             }
 
-            // Wallpaper position slider - live preview
+            // Wallpaper position slider and drag functionality - live preview
             const wallpaperPositionSlider = document.getElementById('wallpaperPositionSlider');
-            if (wallpaperPositionSlider) {
-                wallpaperPositionSlider.addEventListener('input', (e) => {
-                    document.getElementById('wallpaperPreview').style.objectPosition = `center ${e.target.value}%`;
+            const wallpaperPositionXSlider = document.getElementById('wallpaperPositionXSlider');
+            const wallpaperPreview = document.getElementById('wallpaperPreview');
+            const previewContainer = document.getElementById('wallpaperPreviewContainer');
+            if (wallpaperPositionSlider && wallpaperPreview && previewContainer) {
+                const updateObjectPosition = () => {
+                    const x = wallpaperPositionXSlider ? wallpaperPositionXSlider.value : 50;
+                    const y = wallpaperPositionSlider.value;
+                    wallpaperPreview.style.objectPosition = `${x}% ${y}%`;
+                };
+                wallpaperPositionSlider.addEventListener('input', updateObjectPosition);
+                if (wallpaperPositionXSlider) wallpaperPositionXSlider.addEventListener('input', updateObjectPosition);
+
+                let isDraggingWallpaper = false;
+                let startY = 0;
+                let startX = 0;
+                let initialPos = 50;
+                let initialPosX = 50;
+
+                wallpaperPreview.addEventListener('mousedown', (e) => {
+                    isDraggingWallpaper = true;
+                    startY = e.clientY;
+                    startX = e.clientX;
+                    initialPos = parseInt(wallpaperPositionSlider.value) || 50;
+                    initialPosX = wallpaperPositionXSlider ? (parseInt(wallpaperPositionXSlider.value) || 50) : 50;
+                    wallpaperPreview.style.cursor = 'grabbing';
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDraggingWallpaper) return;
+                    e.preventDefault();
+                    const deltaY = e.clientY - startY; // positive if mouse moved down
+                    const deltaX = e.clientX - startX; // positive if mouse moved right
+                    
+                    const containerHeight = previewContainer.offsetHeight;
+                    const containerWidth = previewContainer.offsetWidth;
+                    
+                    // Moving mouse UP (negative deltaY) moves image position DOWN (closer to 100%)
+                    const dragPercentageY = (deltaY / containerHeight) * 100;
+                    // Moving mouse LEFT (negative deltaX) should view right part of image (closer to 100%)
+                    const dragPercentageX = (deltaX / containerWidth) * 100;
+                    
+                    let newPositionY = initialPos - dragPercentageY;
+                    let newPositionX = initialPosX - dragPercentageX;
+                    
+                    if (newPositionY < 0) newPositionY = 0;
+                    if (newPositionY > 100) newPositionY = 100;
+                    
+                    if (newPositionX < 0) newPositionX = 0;
+                    if (newPositionX > 100) newPositionX = 100;
+
+                    wallpaperPositionSlider.value = newPositionY;
+                    if (wallpaperPositionXSlider) wallpaperPositionXSlider.value = newPositionX;
+                    wallpaperPreview.style.objectPosition = `${newPositionX}% ${newPositionY}%`;
+                });
+
+                window.addEventListener('mouseup', () => {
+                    if (isDraggingWallpaper) {
+                        isDraggingWallpaper = false;
+                        wallpaperPreview.style.cursor = 'grab';
+                        markUnsaved(); // Mark the form as unsaved when dragging is complete
+                    }
                 });
             }
 
@@ -936,6 +1013,7 @@ plagiarized the work of other students and/or persons.
                             avatar: profile.avatar,
                             wallpaper: profile.wallpaper && profile.wallpaper !== window.location.href ? profile.wallpaper : '',
                             wallpaperPosition: profile.wallpaperPosition,
+                            wallpaperPositionX: profile.wallpaperPositionX,
                             gamingIdentity: profile.gamingIdentity,
                             favoritePlatform: profile.favoritePlatform,
                             steamId: document.getElementById('inputSteamId').value,

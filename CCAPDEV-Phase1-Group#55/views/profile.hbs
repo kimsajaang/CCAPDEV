@@ -1257,7 +1257,12 @@ plagiarized the work of other students and/or persons.
     document.getElementById('profileHandle').textContent = `@${p.username}`;
     document.getElementById('profileAvatar').src = p.avatar || AVATAR_FALLBACK;
 
-    if (p.wallpaper) document.getElementById('heroBanner').style.backgroundImage = `linear-gradient(110deg, rgba(11,14,20,1) 30%, rgba(11,14,20,0.65) 100%), url('${p.wallpaper}')`;
+    if (p.wallpaper) {
+      document.getElementById('heroBanner').style.backgroundImage = `linear-gradient(110deg, rgba(11,14,20,1) 30%, rgba(11,14,20,0.65) 100%), url('${p.wallpaper}')`;
+      document.getElementById('heroBanner').style.backgroundSize = 'cover';
+      const pos = p.wallpaperPosition != null ? p.wallpaperPosition : 50;
+      document.getElementById('heroBanner').style.backgroundPosition = `center ${pos}%`;
+    }
 
     const bio = (p.bio && p.bio !== 'No bio yet') ? p.bio : (isOwnProfile ? "" : "Player has not set a bio yet.");
     document.getElementById('userBio').textContent = bio;
@@ -1339,11 +1344,10 @@ plagiarized the work of other students and/or persons.
 
   function renderAccGid(user, games) {
     const container = document.getElementById('accGrid');
-    const favs = (user.favoriteGames || []).map(g => ({ name: g.name || g, cover: g.coverUrl || '' }));
-    const topPlayed = games.filter(g => g.gameId && g.gameId.coverUrl).sort((a, b) => b.playtime - a.playtime).slice(0, 3).map(g => ({ name: g.gameId.name, cover: g.gameId.coverUrl }));
+    const favs = (user.favoriteGames || []).map(g => ({ name: g.name || g, cover: g.cover || g.coverUrl || '' }));
 
-    const items = [...favs, ...topPlayed].slice(0, 6);
-    if (!items.length) { container.innerHTML = '<div class="empty-state">No accomplishments yet. Add games to your library!</div>'; return; }
+    const items = favs.slice(0, 5);
+    if (!items.length) { container.innerHTML = '<div class="empty-state">No featured games yet. Edit your profile to feature your favorite games!</div>'; return; }
 
     container.innerHTML = items.map((i, idx) => `
     <div class="acc-card" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">

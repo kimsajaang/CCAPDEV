@@ -665,6 +665,7 @@ plagiarized the work of other students and/or persons.
                           data-genre="${genres}"
                           data-year="${year}"
                           data-cover="${coverUrl}"
+                          data-igdbid="${game.id}"
                           ${alreadyAdded ? 'disabled' : ''}>${alreadyAdded ? '✓ Already in Library' : '+ Add to Library'}</button>
                 </div>
               </div>
@@ -820,7 +821,7 @@ plagiarized the work of other students and/or persons.
           return;
         }
         try {
-          await addGameToServer(name, btn.dataset.genre || '', btn.dataset.year || '0', btn.dataset.cover || '');
+          await addGameToServer(name, btn.dataset.genre || '', btn.dataset.year || '0', btn.dataset.cover || '', btn.dataset.igdbid || null);
           btn.textContent = '✓ Added';
           btn.classList.remove('btn-outline-primary');
           btn.classList.add('btn-success', 'disabled');

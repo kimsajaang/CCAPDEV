@@ -56,8 +56,16 @@ app.use(compression()); // Gzip compression to vastly reduce HTML payload sizes
 app.use(bodyParser.json({ limit: '150mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '150mb' }));
 
+const disableAuthCaching = (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+};
+
 // --- Auth Middleware ---
 const isLoggedIn = (req, res, next) => {
+  console.log('[AUTH CHECK]', req.method, req.path, '| Session ID:', req.sessionID, '| Session UserId:', req.session?.userId || 'MISSING');
   if (req.session && req.session.userId) {
     next();
   } else {
@@ -187,6 +195,21 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
           console.log('[GOOGLE AUTH] Existing user found:', user.displayName, '| Google ID:', profile.id);
           return done(null, user);
         }
+
+        // If user is already logged in, LINK the Google account to that user
+        if (req.session && req.session.userId) {
+          let currentUser = await User.findById(req.session.userId);
+          if (currentUser) {
+            currentUser.googleId = profile.id;
+            // Also grab email if they don't have one
+            const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+            if (email && !currentUser.email) currentUser.email = email;
+            
+            await currentUser.save();
+            console.log('[GOOGLE AUTH] Linked Google ID', profile.id, 'to existing logged-in user:', currentUser.displayName);
+            return done(null, currentUser);
+          }
+        }
         
         // Try to find by email (to link accounts)
         const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
@@ -221,6 +244,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
           googleId: profile.id,
         });
         await user.save();
+        user.isNewAccount = true;
         console.log('[GOOGLE AUTH] Created new user:', user.displayName, '| Google ID:', profile.id);
         return done(null, user);
       } catch (err) {
@@ -233,11 +257,23 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 passport.use(new SteamStrategy({
   returnURL: `http://localhost:${PORT}/auth/steam/callback`,
   realm: `http://localhost:${PORT}/`,
-  apiKey: STEAM_API_KEY
+  apiKey: STEAM_API_KEY,
+  passReqToCallback: true
 },
-  async (identifier, profile, done) => {
+  async (req, identifier, profile, done) => {
     try {
       const steamId = profile.id;
+      
+      // If user is already logged in, LINK the Steam account to that user
+      if (req.session && req.session.userId) {
+        let currentUser = await User.findById(req.session.userId);
+        if (currentUser) {
+          currentUser.steamId = steamId;
+          await currentUser.save();
+          console.log('[STEAM AUTH] Linked Steam ID', steamId, 'to existing logged-in user:', currentUser.displayName);
+          return done(null, currentUser);
+        }
+      }
       // Try to find user by Steam ID
       let user = await User.findOne({ steamId });
       if (user) {
@@ -258,6 +294,7 @@ passport.use(new SteamStrategy({
         steamId: steamId,
       });
       await user.save();
+      user.isNewAccount = true;
       console.log('[STEAM AUTH] Created new user:', user.displayName, '| Steam ID:', steamId);
       return done(null, user);
     } catch (err) {
@@ -546,14 +583,15 @@ app.post('/api/users/login', async (req, res) => {
     // Set session
     req.session.userId = user._id.toString();
     req.session.username = user.username;
-    console.log('[LOGIN] Session set for user:', user.displayName, '| Session ID:', req.sessionID);
+    console.log('[LOGIN] Session BEFORE save:', { sessionID: req.sessionID, userId: req.session.userId, username: req.session.username });
 
     // Save session before responding
     req.session.save((err) => {
       if (err) {
-        console.error('[LOGIN] Session save failed:', err.message);
+        console.error('[LOGIN] Session save FAILED:', err.message);
         return res.status(500).json({ error: 'Session save failed' });
       }
+      console.log('[LOGIN] Session AFTER save:', { sessionID: req.sessionID, userId: req.session.userId });
 
       res.json({
         message: 'Login successful',
@@ -570,16 +608,16 @@ app.post('/api/users/login', async (req, res) => {
 });
 
 // GET /api/auth/current - Get current logged-in user
-app.get('/api/auth/current', isLoggedIn, async (req, res) => {
+app.get('/api/auth/current', disableAuthCaching, isLoggedIn, async (req, res) => {
   try {
-    console.log('[GET CURRENT USER] Session userId:', req.session.userId);
+    console.log('[GET CURRENT USER] Fetching user for session:', req.session.userId);
     const user = await User.findById(req.session.userId);
     if (!user) {
-      console.error('[GET CURRENT USER] User not found in DB');
+      console.error('[GET CURRENT USER] User NOT found in DB for session userId:', req.session.userId);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log('[GET CURRENT USER] Retrieved user:', user.displayName);
+    console.log('[GET CURRENT USER] SUCCESS - Retrieved:', user.displayName);
     const pendingRequests = (user.friendRequests || []).filter(r => r.status === 'pending').length;
     res.json({
       _id: user._id,
@@ -594,6 +632,7 @@ app.get('/api/auth/current', isLoggedIn, async (req, res) => {
       psnId: user.psnId || '',
       wallpaper: user.wallpaper || '',
       wallpaperPosition: user.wallpaperPosition != null ? user.wallpaperPosition : 50,
+      wallpaperPositionX: user.wallpaperPositionX != null ? user.wallpaperPositionX : 50,
       friendsCount: (user.friends || []).length,
       pendingRequests,
       settings: user.settings,
@@ -606,7 +645,7 @@ app.get('/api/auth/current', isLoggedIn, async (req, res) => {
 });
 
 // POST /api/auth/logout - User logout
-app.post('/api/auth/logout', (req, res) => {
+app.post('/api/auth/logout', disableAuthCaching, (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: 'Logout failed' });
@@ -901,38 +940,37 @@ app.get('/auth/steam/callback', (req, res, next) => {
       return res.redirect('/login');
     }
 
-    // User authenticated successfully - establish session
-    req.logIn(user, (err) => {
-      if (err) {
-        console.error('[STEAM AUTH] Login error:', err);
-        return res.redirect('/login');
-      }
+    // User authenticated successfully - establish session directly
+    // NOTE: We skip req.logIn() because Passport's session.regenerate() destroys
+    // the current session in MongoDB, causing the user to be logged out.
+    // Our app uses req.session.userId for auth, not Passport's req.user.
+    req.session.userId = user._id.toString();
+    req.session.username = user.username;
+    console.log('[STEAM AUTH] Login successful. User:', user.displayName);
 
-      // Set session userId so existing auth middleware works
-      req.session.userId = user._id.toString();
-      console.log('[STEAM AUTH] Login successful. User:', user.displayName);
-
-      // Auto-import Steam games into library
-      let hadActivity = false;
-      try {
-        importSteamGames(user).then(result => {
-          hadActivity = result.hadActivity;
-          console.log('[STEAM AUTH] Import result:', result);
-        }).catch(err => {
-          console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
-        });
-      } catch (err) {
+    // Auto-import Steam games into library
+    try {
+      importSteamGames(user).then(result => {
+        console.log('[STEAM AUTH] Import result:', result);
+      }).catch(err => {
         console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
-      }
+      });
+    } catch (err) {
+      console.error('[STEAM AUTH] Import failed (non-blocking):', err.message);
+    }
 
-      // Auto-sync Steam friends
-      try { 
-        syncSteamFriends(user).catch(e => console.warn('[STEAM AUTH] Friends sync failed:', e.message));
-      } catch (e) { 
-        console.warn('[STEAM AUTH] Friends sync failed:', e.message); 
-      }
+    // Auto-sync Steam friends
+    try { 
+      syncSteamFriends(user).catch(e => console.warn('[STEAM AUTH] Friends sync failed:', e.message));
+    } catch (e) { 
+      console.warn('[STEAM AUTH] Friends sync failed:', e.message); 
+    }
 
-      res.redirect('/Dashboard');
+    const redirectTarget = user.isNewAccount ? '/profile-edit' : '/Dashboard';
+
+    req.session.save((saveErr) => {
+      if (saveErr) console.error('[STEAM AUTH] Session save error:', saveErr);
+      res.redirect(redirectTarget);
     });
   })(req, res, next);
 });
@@ -970,17 +1008,16 @@ app.get('/auth/google/callback', (req, res, next) => {
       return res.redirect(`/auth/login-error?provider=google&reason=${reason}`);
     }
 
-    // User authenticated successfully
-    req.logIn(user, (err) => {
-      if (err) {
-        console.error('[GOOGLE AUTH] Login error:', err);
-        return res.redirect('/login');
-      }
-
-      // Set session userId
-      req.session.userId = user._id.toString();
-      console.log('[GOOGLE AUTH] Login successful. User:', user.displayName);
-      res.redirect('/Dashboard');
+    // User authenticated successfully - set session directly (skip req.logIn)
+    req.session.userId = user._id.toString();
+    req.session.username = user.username;
+    console.log('[GOOGLE AUTH] Login successful. User:', user.displayName);
+    
+    const redirectTarget = user.isNewAccount ? '/profile-edit' : '/Dashboard';
+    
+    req.session.save((saveErr) => {
+      if (saveErr) console.error('[GOOGLE AUTH] Session save error:', saveErr);
+      res.redirect(redirectTarget);
     });
   })(req, res, next);
 });
@@ -1157,31 +1194,23 @@ app.post('/api/integrations/psn/sync', isLoggedIn, async (req, res) => {
 app.get('/api/auth/stats', isLoggedIn, async (req, res) => {
   try {
     const userId = req.session.userId;
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).lean();
 
-    // For Steam users: auto-sync playtime
-    // Throttle to once every 5 minutes to prevent lag on every page load
-    let hadGamingActivity = false;
+    // For Steam users: auto-sync playtime (throttle to 5 minutes per user)
     if (user && user.steamId) {
       const lastSync = steamSyncCooldown.get(userId);
       const shouldSync = !lastSync || (Date.now() - lastSync) > STEAM_SYNC_INTERVAL_MS;
       if (shouldSync) {
         steamSyncCooldown.set(userId, Date.now());
-        try {
-          const result = await importSteamGames(user);
-          hadGamingActivity = result.hadActivity;
-          // Also sync friends silently in background
-          syncSteamFriends(user).catch(() => { });
-        } catch (err) {
-          console.warn('[STATS] Steam auto-sync failed (non-blocking):', err.message);
-        }
+        // Run in background without awaiting
+        importSteamGames(user).catch(() => { });
+        syncSteamFriends(user).catch(() => { });
       }
     }
 
-
-
+    // Use lean() for faster read-only queries
     const [entries, postsCount] = await Promise.all([
-      LibraryEntry.find({ userId, hidden: { $ne: true } }),
+      LibraryEntry.find({ userId, hidden: { $ne: true } }).lean(),
       Post.countDocuments({ author: userId })
     ]);
 
@@ -1226,6 +1255,7 @@ app.get('/api/users/:userId', isLoggedIn, async (req, res) => {
       psnId: user.psnId || '',
       wallpaper: user.wallpaper || '',
       wallpaperPosition: user.wallpaperPosition != null ? user.wallpaperPosition : 50,
+      wallpaperPositionX: user.wallpaperPositionX != null ? user.wallpaperPositionX : 50,
       friendsCount: (user.friends || []).length,
       settings: user.settings,
       createdAt: user.createdAt,
@@ -1244,7 +1274,7 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden. You can only edit your own profile.' });
     }
 
-    const { displayName, username, bio, avatar, favoriteGames, steamId, xboxGamertag, psnId, wallpaper, wallpaperPosition, settings } = req.body;
+    const { displayName, username, bio, avatar, favoriteGames, steamId, xboxGamertag, psnId, wallpaper, wallpaperPosition, wallpaperPositionX, settings } = req.body;
     const user = await User.findById(req.params.userId);
 
     if (!user) {
@@ -1257,6 +1287,7 @@ app.put('/api/users/:userId', isLoggedIn, async (req, res) => {
     if (avatar) user.avatar = avatar;
     if (wallpaper !== undefined) user.wallpaper = wallpaper;
     if (wallpaperPosition !== undefined) user.wallpaperPosition = wallpaperPosition;
+    if (wallpaperPositionX !== undefined) user.wallpaperPositionX = wallpaperPositionX;
     if (favoriteGames) user.favoriteGames = favoriteGames;
     if (steamId !== undefined) user.steamId = steamId;
     if (xboxGamertag !== undefined) user.xboxGamertag = xboxGamertag;
@@ -1475,9 +1506,12 @@ app.post('/api/games', async (req, res) => {
       return res.status(200).json({ message: 'Game already exists', game });
     }
 
-    game = new Game({ name, coverUrl, rating, genres, platforms, releaseDate, summary, igdbId });
+    const gameData = { name, coverUrl, rating, genres, platforms, releaseDate, summary };
+    if (igdbId) gameData.igdbId = igdbId;
+
+    game = new Game(gameData);
     await game.save();
-    console.log(`[CREATE GAME] Created new game "${name}" with igdbId=${igdbId}`);
+    console.log(`[CREATE GAME] Created new game "${name}" with igdbId=${igdbId || 'none'}`);
     res.status(201).json({ message: 'Game created', game });
   } catch (err) {
     console.error('[CREATE GAME] Error:', err.message);
@@ -1928,24 +1962,20 @@ const COMMUNITY_SCORES_TTL = 5 * 60 * 1000;
 
 app.get('/api/community/quality-scores', async (req, res) => {
   try {
-    // Check cache
+    // Check cache (15 minutes)
     if (_communityScoresCache && Date.now() - _communityScoresCacheTime < COMMUNITY_SCORES_TTL) {
       return res.json(_communityScoresCache);
     }
 
-    // Exclude test/seed users from community scores
-    const testUsernames = ['gaminglead', 'speedrunner99', 'casualplayer', 'indiegames'];
-    const testUsers = await User.find({ username: { $in: testUsernames } }).select('_id');
-    const testUserIds = testUsers.map(u => u._id.toString());
-
-    // Aggregate ratings from all users EXCEPT test users
+    // Aggregate ratings from all users
     const entries = await LibraryEntry.find({
       rating: { $gt: 0 },
-      hidden: { $ne: true },
-      userId: { $nin: testUsers.map(u => u._id) } // Exclude test users
+      hidden: { $ne: true }
     })
+      .select('rating gameId userId')
       .populate('gameId', 'name coverUrl _id')
-      .lean();
+      .lean()
+      .limit(10000); // Cap at 10k entries for perf
 
     // Group by game and calculate averages
     const gameScoresMap = new Map();
@@ -2354,78 +2384,86 @@ app.get('/api/friends/status/:userId', isLoggedIn, async (req, res) => {
 // GET /api/friends/activity - Get friends' recent activity (for dashboard feed)
 app.get('/api/friends/activity', isLoggedIn, async (req, res) => {
   try {
-    const me = await User.findById(req.session.userId);
+    const me = await User.findById(req.session.userId).lean();
     const friendIds = me.friends || [];
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100); // Limit to max 100 items
     
-    // Always include current user's posts/reviews/achievements, even if no friends
+    // Get all friend libraries in ONE query (not N queries)
     const queryIds = [...friendIds, req.session.userId];
+    const allLibraries = await LibraryEntry.find({ userId: { $in: queryIds }, hidden: { $ne: true } })
+      .lean()
+      .sort({ addedAt: -1 })
+      .limit(limit * 3); // Get some extra to account for filtering
 
     const feed = [];
+    const userMap = new Map();
 
-    // ═══ FRIEND ACHIEVEMENTS ═══
-    for (const friendId of friendIds) {
-      const friendLibrary = await LibraryEntry.find({ userId: friendId });
-      const completedGames = friendLibrary.filter(e => e.status === 'completed').length;
-      const totalHours = friendLibrary.reduce((sum, e) => sum + (e.hoursPlayed || 0), 0);
-      const fiveStarGames = friendLibrary.filter(e => e.rating === 5).length;
+    // Pre-fetch all users we need (batch instead of individual queries)
+    const uniqueUserIds = [...new Set(queryIds)];
+    const users = await User.find({ _id: { $in: uniqueUserIds } }).lean();
+    users.forEach(u => userMap.set(u._id.toString(), u));
+
+    // ═══ ACHIEVEMENTS ═══
+    for (const userId of queryIds) {
+      const userLibrary = allLibraries.filter(e => e.userId.toString() === userId.toString()).sort((a, b) => b.addedAt - a.addedAt).slice(0, 20);
+      if (userLibrary.length === 0) continue;
       
-      const friend = await User.findById(friendId);
+      const completedLibrary = userLibrary.filter(e => e.status === 'completed').sort((a, b) => {
+        const dateA = a.completedAt || a.updatedAt || a.addedAt;
+        const dateB = b.completedAt || b.updatedAt || b.addedAt;
+        return dateA - dateB;
+      });
+      const totalGames = userLibrary.length;
+      const completedGames = completedLibrary.length;
+      const totalHours = userLibrary.reduce((sum, e) => sum + (e.playtime || 0), 0);
+      const fiveStarGamesArr = userLibrary.filter(e => e.rating === 5).sort((a,b) => (b.updatedAt || new Date()) - (a.updatedAt || new Date()));
+      const fiveStarGames = fiveStarGamesArr.length;
       
-      // Completion milestones
-      if (completedGames === 5 || completedGames === 10 || completedGames === 20) {
+      const u = userMap.get(userId.toString());
+      if (!u) continue;
+
+      const emitAch = (name, subtype, icon, count, timestamp) => {
         feed.push({
           type: 'achievement',
-          subtype: 'completion',
-          friendId,
-          friendName: friend.displayName || friend.username,
-          friendAvatar: friend.avatar,
-          message: `Completed ${completedGames} games!`,
-          count: completedGames,
-          timestamp: new Date(),
-          icon: '🏁'
+          subtype: subtype,
+          friendId: userId,
+          friendName: u.displayName || u.username,
+          friendAvatar: u.avatar,
+          message: `Unlocked the "${name}" achievement!`,
+          count: count,
+          timestamp: timestamp || new Date(),
+          icon: icon
         });
+      };
+
+      // Total Games Milestones
+      const lastAdded = userLibrary[userLibrary.length - 1].addedAt || new Date();
+      if (totalGames === 1) emitAch('First Step', 'rating', '🎮', 1, lastAdded);
+      else if (totalGames === 10) emitAch('Collector', 'rating', '📚', 10, lastAdded);
+      else if (totalGames === 30) emitAch('Game Connoisseur', 'rating', '💎', 30, lastAdded);
+      else if (totalGames === 60) emitAch('Master Collector', 'rating', '👑', 60, lastAdded);
+      else if (totalGames === 100) emitAch('Legendary Collection', 'rating', '🌟', 100, lastAdded);
+
+      // Completion milestones
+      if (completedGames > 0) {
+        const lastC = completedLibrary[completedLibrary.length - 1];
+        const lastCompleted = lastC.completedAt || lastC.updatedAt || new Date();
+        if (completedGames === 5) emitAch('Completionist', 'completion', '🏆', 5, lastCompleted);
+        else if (completedGames === 15) emitAch('Gaming Legend', 'completion', '👑', 15, lastCompleted);
+        else if (completedGames === 30) emitAch('Gaming God', 'completion', '⚡', 30, lastCompleted);
       }
 
       // Playtime milestones
-      if (totalHours >= 100 && totalHours < 150) {
-        feed.push({
-          type: 'achievement',
-          subtype: 'playtime',
-          friendId,
-          friendName: friend.displayName || friend.username,
-          friendAvatar: friend.avatar,
-          message: `Reached 100+ hours!`,
-          count: Math.floor(totalHours),
-          timestamp: new Date(),
-          icon: '⏱️'
-        });
-      } else if (totalHours >= 500 && totalHours < 550) {
-        feed.push({
-          type: 'achievement',
-          subtype: 'playtime',
-          friendId,
-          friendName: friend.displayName || friend.username,
-          friendAvatar: friend.avatar,
-          message: `Reached 500+ hours!`,
-          count: Math.floor(totalHours),
-          timestamp: new Date(),
-          icon: '⏱️'
-        });
-      }
+      if (totalHours >= 10 && totalHours < 15) emitAch('Weekend Warrior', 'playtime', '⏳', Math.floor(totalHours), new Date());
+      else if (totalHours >= 100 && totalHours < 120) emitAch('Devoted', 'playtime', '🌙', Math.floor(totalHours), new Date());
+      else if (totalHours >= 300 && totalHours < 330) emitAch('Marathon Runner', 'playtime', '🔥', Math.floor(totalHours), new Date());
+      else if (totalHours >= 500 && totalHours < 550) emitAch('Time Master', 'playtime', '⏱️', Math.floor(totalHours), new Date());
 
       // 5-star achievements
-      if (fiveStarGames === 3 || fiveStarGames === 10) {
-        feed.push({
-          type: 'achievement',
-          subtype: 'rating',
-          friendId,
-          friendName: friend.displayName || friend.username,
-          friendAvatar: friend.avatar,
-          message: `Found ${fiveStarGames} masterpieces!`,
-          count: fiveStarGames,
-          timestamp: new Date(),
-          icon: '⭐'
-        });
+      if (fiveStarGames > 0) {
+         const lastRated = fiveStarGamesArr[0].updatedAt || new Date();
+         if (fiveStarGames === 3) emitAch('Critic', 'rating', '⭐', 3, lastRated);
+         else if (fiveStarGames === 5) emitAch('Critical Acclaim', 'rating', '📊', 5, lastRated);
       }
     }
 
