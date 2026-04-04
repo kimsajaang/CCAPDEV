@@ -47,8 +47,8 @@ app.use(session({
   secret: 'backlog-hero-secret-key-change-in-prod',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: MONGO_URI,
+  store: new MongoStore({
+    url: MONGO_URI,
     collectionName: 'sessions',
     ttl: 7 * 24 * 60 * 60, // 7 days in seconds
   }),
