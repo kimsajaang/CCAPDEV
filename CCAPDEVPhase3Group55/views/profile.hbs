@@ -1207,8 +1207,8 @@ plagiarized the work of other students and/or persons.
     { id: 'gaming_god', name: 'Gaming God', icon: 'bi-lightning-fill', max: 30, tier: 'Diamond' },
     { id: 'time_master', name: 'Time Master', icon: 'bi-clock-fill', max: 500, tier: 'Diamond' },
     { id: 'legendary_collection', name: 'Legendary Collection', icon: 'bi-star', max: 100, tier: 'Diamond' },
-    { id: 'gaming_prodigy', name: 'Gaming Prodigy', icon: 'bi-brain', max: 100, tier: 'Diamond' },
-    { id: 'apex_network', name: 'Apex Network', icon: 'bi-bezier2', max: 100, tier: 'Diamond' },
+    { id: 'gaming_prodigy', name: 'Gaming Prodigy', icon: 'bi-lightbulb-fill', max: 100, tier: 'Diamond' },
+    { id: 'apex_network', name: 'Apex Network', icon: 'bi-diagram-2-fill', max: 100, tier: 'Diamond' },
     { id: 'ultimate_gamer', name: 'Ultimate Gamer', icon: 'bi-hearts', max: 1, tier: 'Diamond' }
   ];
 
@@ -1255,7 +1255,9 @@ plagiarized the work of other students and/or persons.
     const p = profileUser;
     document.getElementById('profileDisplayName').textContent = p.displayName || p.username;
     document.getElementById('profileHandle').textContent = `@${p.username}`;
-    document.getElementById('profileAvatar').src = p.avatar || AVATAR_FALLBACK;
+    // Fix avatar: only use if it's a non-empty string
+    const avatarSrc = (p.avatar && typeof p.avatar === 'string' && p.avatar.trim()) ? p.avatar : AVATAR_FALLBACK;
+    document.getElementById('profileAvatar').src = avatarSrc;
 
     if (p.wallpaper) {
       document.getElementById('heroBanner').style.backgroundImage = `linear-gradient(110deg, rgba(11,14,20,1) 30%, rgba(11,14,20,0.65) 100%), url('${p.wallpaper}')`;
@@ -1499,7 +1501,7 @@ plagiarized the work of other students and/or persons.
           <div class="friend-request-card" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">
             <div class="friend-request-info">
               <div class="friend-request-avatar">
-                <img src="${avatar}" alt="${displayName}" onerror="this.src='${AVATAR_FALLBACK}'">
+                <img src="${avatar && typeof avatar === 'string' && avatar.trim() ? avatar : AVATAR_FALLBACK}" alt="${displayName}" onerror="this.src='${AVATAR_FALLBACK}'">>
               </div>
               <div class="friend-request-details">
                 <h6>${displayName}</h6>
@@ -1659,7 +1661,43 @@ plagiarized the work of other students and/or persons.
   }
 
   /* ── Initialization Entry ── */
-  document.addEventListener('DOMContentLoaded', initProfile);
+  document.addEventListener('DOMContentLoaded', function() {
+    initProfile();
+    
+    // Add share button click handler
+    const shareBtn = document.getElementById('shareProfileBtn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function() {
+        const profileUrl = `${window.location.origin}/profile?user=${profileUser._id}`;
+        
+        // Try modern Web Share API first
+        if (navigator.share) {
+          navigator.share({
+            title: `${profileUser.displayName}'s Profile`,
+            text: `Check out ${profileUser.displayName}'s gaming profile on Backlog Hero!`,
+            url: profileUrl
+          }).catch(err => {
+            if (err.name !== 'AbortError') {
+              console.error('Share failed:', err);
+              fallbackShare(profileUrl);
+            }
+          });
+        } else {
+          // Fallback: copy to clipboard and show alert
+          fallbackShare(profileUrl);
+        }
+      });
+    }
+    
+    function fallbackShare(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Profile link copied to clipboard!\n' + url);
+      }).catch(() => {
+        // Last resort: show prompt
+        prompt('Copy this profile link:', url);
+      });
+    }
+  });
 
   // Nav Exit Transition
   document.querySelectorAll('a[href]').forEach(link => {

@@ -258,23 +258,34 @@ plagiarized the work of other students and/or persons.
     let currentUserId = null;
 
     // Single auth check - combines auth detection and community preview logic in one call
-    async function checkAuthAndShowContent() {
+    async function checkAuthAndShowContent(retries = 1) {
       try {
         const response = await fetch('/api/auth/current', {
           method: 'GET',
           credentials: 'include'
         });
 
-        isUserLoggedIn = response.ok;
-        if (isUserLoggedIn) {
+        if (response.ok) {
+          isUserLoggedIn = true;
           const userData = await response.json();
           currentUserId = userData._id;
           currentUsername = userData.displayName || userData.username || 'Gamer';
-        } else {
-          // Not logged in - show community preview with login prompt
+        } else if (response.status === 401 || response.status === 403) {
+          // Definitely not logged in
+          isUserLoggedIn = false;
           window.limitCommunityPreview = true;
           const loginPrompt = document.getElementById('communityLoginPrompt');
           if (loginPrompt) loginPrompt.style.display = '';
+        } else {
+          // Server error (500, etc.) — don't mark as logged out, retry
+          console.warn('[Auth] Server error:', response.status, '- retrying...');
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            return checkAuthAndShowContent(retries - 1);
+          }
+          // After retry still failing — assume logged in to avoid false logouts
+          console.warn('[Auth] Server errors persisted, keeping current auth state');
+          return;
         }
 
         const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
@@ -289,24 +300,41 @@ plagiarized the work of other students and/or persons.
         }
       } catch (err) {
         console.error('Auth check failed:', err);
-        // Don't change login state on network errors - keep whatever state we had
-        // This prevents brief network issues from logging the user out
+        // Network error — retry once
+        if (retries > 0) {
+          await new Promise(r => setTimeout(r, 2000));
+          return checkAuthAndShowContent(retries - 1);
+        }
+        // Don't change login state on persistent network errors
       }
     }
 
     // Check auth on page load (single call instead of two)
     checkAuthAndShowContent();
 
-    // Handle New Post button clicks - redirect to login if not logged in
+    // Handle New Post button clicks - verify auth before opening modal
     document.querySelectorAll('#newPostTopBtn, #newPostEmptyBtn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         if (!isUserLoggedIn) {
           e.preventDefault();
           e.stopPropagation();
-          // Close modal if it was about to open
-          const modal = bootstrap.Modal.getInstance(document.getElementById('newPostModal'));
-          if (modal) modal.hide();
-          // Redirect to login
+          // Double-check auth before redirecting (in case initial check failed due to cold start)
+          try {
+            const res = await fetch('/api/auth/current', { credentials: 'include' });
+            if (res.ok) {
+              isUserLoggedIn = true;
+              const userData = await res.json();
+              currentUserId = userData._id;
+              currentUsername = userData.displayName || userData.username || 'Gamer';
+              // Show protected elements and open modal
+              document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = '');
+              document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = 'none');
+              const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('newPostModal'));
+              modal.show();
+              return;
+            }
+          } catch (_) {}
+          // Truly not logged in
           window.location.href = '/login';
         }
       });

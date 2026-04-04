@@ -2758,8 +2758,14 @@ app.get('/api/posts', async (req, res) => {
 
     const postsWithId = posts.map(post => {
       post.id = post._id;
+      // Log posts with photos for debugging
+      if (post.photo) {
+        const photoSize = post.photo.length;
+        console.log(`[GET POSTS] Post ${post._id} has photo: ${(photoSize / 1024 / 1024).toFixed(2)}MB`);
+      }
       return post;
     });
+    console.log(`[GET POSTS] Returning ${postsWithId.length} posts, ${postsWithId.filter(p => p.photo).length} with photos`);
     res.json(postsWithId);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
@@ -2800,11 +2806,18 @@ app.get('/api/posts/stats', async (req, res) => {
 app.post('/api/posts', isLoggedIn, async (req, res) => {
   try {
     const { title, body, flair, game, photo } = req.body;
-    console.log('[CREATE POST] Received:', { title, body, flair, game, hasPhoto: !!photo, author: req.session.userId });
+    const photoSize = photo ? photo.length : 0;
+    console.log('[CREATE POST] Received:', { title, flair, game, hasPhoto: !!photo, photoSize: `${(photoSize / 1024 / 1024).toFixed(2)}MB`, author: req.session.userId });
     
     if (!title || title.length < 3) {
       return res.status(400).json({ error: 'Title is required and must be at least 3 characters' });
     }
+    
+    // Validate photo size (warn if over 10MB)
+    if (photoSize > 10 * 1024 * 1024) {
+      console.warn(`[CREATE POST] WARNING: Photo is ${(photoSize / 1024 / 1024).toFixed(2)}MB - may cause issues`);
+    }
+    
     const newPost = new Post({
       author: req.session.userId,
       title,
@@ -2814,7 +2827,8 @@ app.post('/api/posts', isLoggedIn, async (req, res) => {
       photo: photo || undefined
     });
     const savedPost = await newPost.save();
-    console.log('[CREATE POST] Saved successfully:', savedPost._id);
+    const savedPhotoSize = savedPost.photo ? savedPost.photo.length : 0;
+    console.log('[CREATE POST] Saved successfully:', { postId: savedPost._id, photoSize: `${(savedPhotoSize / 1024 / 1024).toFixed(2)}MB` });
     
     // Respond immediately with basic post data (avoid extra populate query)
     const user = await User.findById(req.session.userId).select('username displayName avatar').lean();
