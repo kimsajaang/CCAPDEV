@@ -1448,35 +1448,10 @@ app.get('/api/games/db/:gameId', async (req, res) => {
   }
 });
 
-// POST /api/games/search - Search IGDB for games
-app.post('/api/games/search', async (req, res) => {
-  try {
-    const { query, limit } = req.body;
-    if (!query) return res.status(400).json({ error: 'Query is required' });
-
-    const maxResults = limit || 10;
-    const token = await getAccessToken();
-    const escaped = query.replace(/"/g, '\\"');
-    
-    console.log(`[IGDB SEARCH] Querying: "${query}"`);
-    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
-      method: 'POST',
-      headers: {
-        'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'text/plain'
-      },
-      body: `search "${escaped}"; fields name,cover.url,rating,genres.name,first_release_date,summary; limit ${maxResults};`
-    });
-
-    const data = await igdbRes.json();
-    console.log(`[IGDB SEARCH RESPONSE] ${data ? data.length : 0} results`);
-    res.json(data);
-  } catch (err) {
-    console.error('[IGDB SEARCH] Error:', err.message);
-    res.status(500).json({ error: 'Search failed' });
-  }
-});
+// Search result cache (LRU-style, max 100 queries)
+const searchCache = new Map();
+const MAX_SEARCH_CACHE = 100;
+const SEARCH_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 // POST /api/games - Find existing game by name or create a new one
 app.post('/api/games', async (req, res) => {
@@ -1834,16 +1809,29 @@ app.get('/api/reviews/game', async (req, res) => {
 
 // ─── IGDB API ROUTES (EXISTING) ───
 
-// POST /api/games/search - Search games by name (IGDB)
+// POST /api/games/search - Search games by name (IGDB) with caching + timeout
 app.post('/api/games/search', async (req, res) => {
   try {
     const { query, limit: rawLimit = 20 } = req.body;
     if (!query) return res.status(400).json({ error: 'Query is required' });
     const limit = Math.min(Math.max(1, parseInt(rawLimit) || 20), 50);
+    const cacheKey = `${query}:${limit}`;
+
+    // Check cache first
+    const cached = searchCache.get(cacheKey);
+    if (cached && Date.now() - cached.time < SEARCH_CACHE_TTL) {
+      console.log('[IGDB SEARCH CACHE HIT]', cacheKey);
+      return res.json(cached.data);
+    }
 
     let data = [];
     try {
       const token = await getAccessToken();
+      
+      // IGDB fetch with 3-second timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
       const igdbRes = await fetch('https://api.igdb.com/v4/games', {
         method: 'POST',
         headers: {
@@ -1851,11 +1839,25 @@ app.post('/api/games/search', async (req, res) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'text/plain'
         },
-        body: `search "${query}"; fields name,cover.url,first_release_date,genres.name,rating,summary; limit ${limit};`
+        body: `search "${query}"; fields name,cover.url,first_release_date,genres.name,rating,summary; limit ${limit};`,
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       data = await igdbRes.json();
-      console.log('[IGDB SEARCH RESPONSE]', data.length, 'results');
+      console.log('[IGDB SEARCH RESPONSE]', data.length, 'results for', query);
+      
+      // Store in cache (prune if over capacity)
+      if (searchCache.size >= MAX_SEARCH_CACHE) {
+        const firstKey = searchCache.keys().next().value;
+        searchCache.delete(firstKey);
+      }
+      searchCache.set(cacheKey, { data, time: Date.now() });
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.warn('[IGDB SEARCH] Timeout for query:', query);
+        return res.status(408).json({ error: 'Search timed out. Try being more specific.' });
+      }
       console.error('[IGDB SEARCH] Error:', err.message);
     }
     res.json(data);
