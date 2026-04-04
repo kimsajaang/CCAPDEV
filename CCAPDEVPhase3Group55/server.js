@@ -2762,8 +2762,10 @@ app.post('/api/posts', isLoggedIn, async (req, res) => {
     const savedPost = await newPost.save();
     console.log('[CREATE POST] Saved successfully:', savedPost._id);
     
-    const populated = await newPost.populate('author', 'username displayName avatar');
-    const obj = populated.toObject();
+    // Respond immediately with basic post data (avoid extra populate query)
+    const user = await User.findById(req.session.userId).select('username displayName avatar').lean();
+    const obj = savedPost.toObject();
+    obj.author = user;
     obj.id = obj._id;
     res.status(201).json(obj);
   } catch (err) {
@@ -2812,6 +2814,7 @@ app.post('/api/posts/:id/comment', isLoggedIn, async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
+    const user = await User.findById(req.session.userId).select('username displayName avatar').lean();
     const newComment = {
       author: req.session.userId,
       text,
@@ -2820,11 +2823,10 @@ app.post('/api/posts/:id/comment', isLoggedIn, async (req, res) => {
     post.comments.push(newComment);
     await post.save();
 
-    // Re-populate to get author info
-    const updatedPost = await Post.findById(req.params.id)
-      .populate('comments.author', 'username displayName avatar');
-
-    res.json(updatedPost.comments[updatedPost.comments.length - 1]);
+    // Return comment with author info immediately (avoid re-fetch)
+    const response = newComment;
+    response.author = user;
+    res.json(response);
   } catch (err) {
     console.error('[COMMENT POST] Error:', err.message);
     res.status(500).json({ error: 'Commenting failed' });
