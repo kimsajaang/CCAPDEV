@@ -2737,31 +2737,15 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 app.get('/api/posts', async (req, res) => {
   try {
     const posts = await Post.find()
-      .lean()
+      .populate('author', '_id username displayName avatar')
+      .populate('comments.author', '_id username displayName avatar')
       .sort({ createdAt: -1 });
-    
-    // Fetch author IDs and comment author IDs once (batch query)
-    const authorIds = [...new Set(posts.map(p => p.author))];
-    const commentAuthorIds = [...new Set(posts.flatMap(p => p.comments.map(c => c.author)))];
-    const allUserIds = [...new Set([...authorIds, ...commentAuthorIds])];
-    
-    const users = await User.find({ _id: { $in: allUserIds } })
-      .select('_id username displayName avatar')
-      .lean();
-    const userMap = new Map(users.map(u => [u._id.toString(), u]));
-    
-    // Replace user IDs with user objects
-    const postsWithUsers = posts.map(post => {
-      post.author = userMap.get(post.author.toString());
-      post.comments = post.comments.map(comment => ({
-        ...comment,
-        author: userMap.get(comment.author.toString())
-      }));
-      post.id = post._id;
-      return post;
+    const postsWithId = posts.map(post => {
+      const obj = post.toObject();
+      obj.id = obj._id;
+      return obj;
     });
-    
-    res.json(postsWithUsers);
+    res.json(postsWithId);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch posts' });
