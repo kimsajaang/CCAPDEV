@@ -2842,6 +2842,16 @@ app.get('/api/posts', async (req, res) => {
     const result = posts.map(post => {
       const upCount = Array.isArray(post.upvotes) ? post.upvotes.length : 0;
       const downCount = Array.isArray(post.downvotes) ? post.downvotes.length : 0;
+      
+      let userVote = null;
+      if (req.session.userId) {
+        if (Array.isArray(post.upvotes) && post.upvotes.some(id => String(id) === req.session.userId)) {
+          userVote = 'up';
+        } else if (Array.isArray(post.downvotes) && post.downvotes.some(id => String(id) === req.session.userId)) {
+          userVote = 'down';
+        }
+      }
+
       return {
         id: post._id,
         _id: post._id,
@@ -2859,6 +2869,7 @@ app.get('/api/posts', async (req, res) => {
         commentCount: post.commentCount || 0,
         upvoteCount: upCount,
         downvoteCount: downCount,
+        userVote: userVote,
         createdAt: post.createdAt
       };
     });

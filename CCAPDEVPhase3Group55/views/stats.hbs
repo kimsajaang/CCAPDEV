@@ -614,9 +614,9 @@ plagiarized the work of other students and/or persons.
         <div class="card-body">
           <div class="d-flex gap-3">
             <div class="text-center" style="width:72px;">
-              <button class="btn btn-outline-success btn-sm w-100 mb-1" data-act="up" ${!isUserLoggedIn ? 'title="Login to vote"' : ''}>▲</button>
+              <button class="btn btn-outline-success btn-sm w-100 mb-1 ${post.userVote === 'up' ? 'active' : ''}" data-act="up" ${!isUserLoggedIn ? 'title="Login to vote"' : ''}>▲</button>
               <div class="fw-bold" data-score>${score(post)}</div>
-              <button class="btn btn-outline-danger btn-sm w-100 mt-1" data-act="down" ${!isUserLoggedIn ? 'title="Login to vote"' : ''}>▼</button>
+              <button class="btn btn-outline-danger btn-sm w-100 mt-1 ${post.userVote === 'down' ? 'active' : ''}" data-act="down" ${!isUserLoggedIn ? 'title="Login to vote"' : ''}>▼</button>
             </div>
 
             <div class="flex-grow-1">
