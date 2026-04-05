@@ -705,7 +705,7 @@ plagiarized the work of other students and/or persons.
             }
             let html = '';
             games.forEach(game => {
-                const coverUrl = game.cover && game.cover.url ? game.cover.url.replace('t_thumb', 't_cover_big') : 'https://via.placeholder.com/90x120?text=No+Cover';
+                const coverUrl = game.cover && game.cover.url ? game.cover.url.replace('t_thumb', 't_cover_big') : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2290%22 height=%22120%22%3E%3Crect fill=%22%231c252e%22 width=%2290%22 height=%22120%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2210%22%3ENo Cover%3C/text%3E%3C/svg%3E';
                 const safeName = game.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                 html += `
                 <div class="d-flex align-items-center p-2 border-bottom border-secondary cursor-pointer hover-bg-light" style="cursor: pointer;" onclick="addFavoriteGame('${game.id}', '${safeName}', '${coverUrl}')">
@@ -758,7 +758,7 @@ plagiarized the work of other students and/or persons.
                 if (i < selectedFavoriteGames.length) {
                     const game = selectedFavoriteGames[i];
                     const name = typeof game === 'object' ? game.name : game;
-                    const coverUrl = typeof game === 'object' && game.cover ? game.cover : 'https://via.placeholder.com/130x180?text=No+Cover';
+                    const coverUrl = typeof game === 'object' && game.cover ? game.cover : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22130%22 height=%22180%22%3E%3Crect fill=%22%231c252e%22 width=%22130%22 height=%22180%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2212%22%3ENo Cover%3C/text%3E%3C/svg%3E';
                     const safeName = name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                     html += `
                     <div class="fav-game-slot" title="${safeName}">
@@ -1109,6 +1109,8 @@ plagiarized the work of other students and/or persons.
                         btn.disabled = false;
                     }
                 });
+            }
+
             // Steam Sync
             const steamSyncBtn = document.getElementById('steamSyncBtn');
             if (steamSyncBtn) {

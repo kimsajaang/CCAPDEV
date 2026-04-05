@@ -374,7 +374,7 @@ plagiarized the work of other students and/or persons.
         if (!res.ok) throw new Error('Fetch failed: ' + res.status);
         const newPosts = await res.json();
         
-        if (newPosts.length < 30) allPostsLoaded = true;
+        if (newPosts.length < 20) allPostsLoaded = true;
         
         if (page === 0) {
           cachedPosts = newPosts;
@@ -414,11 +414,14 @@ plagiarized the work of other students and/or persons.
     }
 
     function score(post) {
-      const up = Array.isArray(post.upvotes) ? post.upvotes.length : (post.upvotes || 0);
-      const down = Array.isArray(post.downvotes) ? post.downvotes.length : (post.downvotes || 0);
-      const result = up - down;
-      console.log(`[SCORE] Post "${post.title}": up=${up}, down=${down}, score=${result}`);
-      return result;
+      // Support both optimized (upvoteCount/downvoteCount numbers) and legacy (upvotes/downvotes arrays)
+      const up = typeof post.upvoteCount === 'number' ? post.upvoteCount
+               : Array.isArray(post.upvotes) ? post.upvotes.length
+               : (post.upvotes || 0);
+      const down = typeof post.downvoteCount === 'number' ? post.downvoteCount
+                 : Array.isArray(post.downvotes) ? post.downvotes.length
+                 : (post.downvotes || 0);
+      return up - down;
     }
 
     // Hot score algorithm — loosely based on Reddit's formula.
@@ -756,28 +759,21 @@ plagiarized the work of other students and/or persons.
     // --- Actions: vote, comment, delete, share ---
     async function vote(postId, dir) {
       try {
-        console.log('[VOTE] Starting vote - postId:', postId, 'direction:', dir > 0 ? 'up' : 'down');
         const res = await fetch(`/api/posts/${postId}/vote`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ direction: dir > 0 ? 'up' : 'down' })
         });
-        console.log('[VOTE] Response status:', res.status);
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          console.error('Vote failed:', errData.error || 'Unknown error');
-          return;
-        }
+        if (!res.ok) return;
         const data = await res.json();
-        console.log('[VOTE] Success! New vote data:', data);
         
-        // Update local cache
+        // Update local cache with counts
         if (cachedPosts) {
           const p = cachedPosts.find(x => x.id === postId || x._id === postId);
           if (p) {
-            p.upvotes = new Array(data.upvotes);
-            p.downvotes = new Array(data.downvotes);
+            p.upvoteCount = data.upvotes;
+            p.downvoteCount = data.downvotes;
           }
         }
         
@@ -876,8 +872,6 @@ plagiarized the work of other students and/or persons.
     }
 
     // Edit modal state
-    let editingPostId = null;
-
     let editingPostId = null;
     let editSelectedPhoto = null;
 
@@ -1043,7 +1037,7 @@ plagiarized the work of other students and/or persons.
     });
 
     // Helper: compress an image file to fit within maxWidth and quality constraints
-    function compressImage(file, maxWidth = 1200, quality = 0.8) {
+    function compressImage(file, maxWidth = 800, quality = 0.65) {
       return new Promise((resolve) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
@@ -1365,8 +1359,8 @@ plagiarized the work of other students and/or persons.
       card.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    render().then(() => {
-      updateSidebarStats();
+    // Fire posts + stats in parallel for fastest initial load
+    Promise.all([render(), updateSidebarStats()]).then(() => {
       setTimeout(() => openCommentsForHash(), 150);
     });
 

@@ -2781,31 +2781,45 @@ app.delete('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
 
 // ─── COMMUNITY / POST ROUTES ───
 
-// GET /api/posts - Get all community posts (FAST: no photos, no comments)
+// GET /api/posts - Get all community posts (FAST: no photos, no comments, no vote arrays)
 app.get('/api/posts', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 0;
-    const limit = 30;
+    const limit = 20;
     const skip = page * limit;
     
-    // Single fast query: exclude photo blobs AND comments array
-    // Uses denormalized hasPhoto & commentCount fields instead
+    // Single fast query: exclude photo blobs, comments array, and full vote arrays
     const posts = await Post.find()
       .select('-photo -comments')
-      .populate('author', '_id username displayName avatar')
+      .populate('author', '_id username displayName')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    posts.forEach(post => {
-      post.id = post._id;
-      // Ensure denormalized fields have fallbacks for old posts
-      if (typeof post.hasPhoto === 'undefined') post.hasPhoto = false;
-      if (typeof post.commentCount === 'undefined') post.commentCount = 0;
+    // Transform: send vote counts instead of full ObjectId arrays to shrink payload
+    const result = posts.map(post => {
+      const upCount = Array.isArray(post.upvotes) ? post.upvotes.length : 0;
+      const downCount = Array.isArray(post.downvotes) ? post.downvotes.length : 0;
+      return {
+        id: post._id,
+        _id: post._id,
+        author: post.author,
+        title: post.title,
+        body: post.body,
+        flair: post.flair,
+        game: post.game,
+        hasPhoto: post.hasPhoto || false,
+        commentCount: post.commentCount || 0,
+        upvoteCount: upCount,
+        downvoteCount: downCount,
+        createdAt: post.createdAt
+      };
     });
     
-    res.json(posts);
+    // Short cache so back-navigation doesn't re-fetch
+    res.set('Cache-Control', 'public, max-age=10');
+    res.json(result);
   } catch (err) {
     console.error('[GET POSTS] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch posts' });
@@ -2820,35 +2834,29 @@ let postsCacheStats = null;
 let statsCacheTime = 0;
 const STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// GET /api/posts/stats - Cached community stats
+// GET /api/posts/stats - Cached community stats (lightweight — uses denormalized commentCount)
 app.get('/api/posts/stats', async (req, res) => {
   try {
     const now = Date.now();
     if (postsCacheStats && (now - statsCacheTime) < STATS_CACHE_TTL) {
+      res.set('Cache-Control', 'public, max-age=60');
       return res.json(postsCacheStats);
     }
 
-    const stats = await Post.aggregate([
-      {
-        $facet: {
-          postCount: [{ $count: 'count' }],
-          commentCount: [{ $project: { count: { $size: { $ifNull: ['$comments', []] } } } }, { $group: { _id: null, total: { $sum: '$count' } } }],
-          authors: [{ $group: { _id: '$author' } }],
-          commentAuthors: [{ $unwind: '$comments' }, { $group: { _id: '$comments.author' } }]
-        }
-      }
+    // Fast aggregation: avoid $unwind on comments (expensive on large datasets)
+    const [postCount, commentStats, authorCount] = await Promise.all([
+      Post.countDocuments(),
+      Post.aggregate([{ $group: { _id: null, total: { $sum: { $ifNull: ['$commentCount', 0] } } } }]),
+      Post.distinct('author')
     ]);
 
-    const result = stats[0] || {};
-    const totalPosts = result.postCount?.[0]?.count || 0;
-    const totalComments = result.commentCount?.[0]?.total || 0;
-    const authorIds = new Set([
-      ...(result.authors || []).map(a => String(a._id)),
-      ...(result.commentAuthors || []).map(a => String(a._id))
-    ]);
-
-    postsCacheStats = { totalPosts, totalComments, activeMembers: authorIds.size };
+    postsCacheStats = {
+      totalPosts: postCount,
+      totalComments: commentStats[0]?.total || 0,
+      activeMembers: authorCount.length
+    };
     statsCacheTime = now;
+    res.set('Cache-Control', 'public, max-age=60');
     res.json(postsCacheStats);
   } catch (err) {
     console.error('[POST STATS] Error:', err.message);
