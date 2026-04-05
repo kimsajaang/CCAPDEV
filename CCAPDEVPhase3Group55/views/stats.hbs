@@ -488,10 +488,8 @@ plagiarized the work of other students and/or persons.
       
       console.log('[RENDER] Render complete - ' + posts.length + ' posts');
       
-    // Setup lazy loading for visible photos
-      if ('IntersectionObserver' in window) {
-        setupPhotoLazyLoading();
-      }
+      // Setup lazy loading for visible photos
+      if (!('IntersectionObserver' in window)) return;
 
       const photoPlaceholders = document.querySelectorAll('[data-photo-id]');
       const observer = new IntersectionObserver((entries) => {
@@ -533,7 +531,12 @@ plagiarized the work of other students and/or persons.
       if (isVideo) {
         const typeMatch = photoUrl.match(/data:([^;]+)/);
         const videoType = (typeMatch && typeMatch[1]) || 'video/mp4';
-        parent.innerHTML = `<video class="community-post-photo" controls style="max-width:100%;width:100%;border-radius:8px;margin-top:12px;background:#000;"><source src="${photoUrl}" type="${videoType}">Your browser does not support video.</video>`;
+        const videoEl = document.createElement('video');
+        videoEl.className = 'community-post-photo';
+        videoEl.controls = true;
+        videoEl.style.cssText = 'max-width:100%;width:100%;border-radius:8px;margin:12px 0;border:1px solid var(--border);';
+        videoEl.innerHTML = `<source src="${photoUrl}" type="${videoType}">Your browser does not support video.`;
+        container.replaceWith(videoEl);
       } else {
         container.src = photoUrl;
         container.style.display = 'block';

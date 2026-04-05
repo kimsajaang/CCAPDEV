@@ -644,11 +644,6 @@ plagiarized the work of other students and/or persons.
         if (!res.ok) throw new Error('Server error');
         let games = await res.json();
 
-        // Remove games already in the user's library
-        games = games.filter(game => {
-          return !searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
-        });
-
         // Sort by relevance — exact matches first
         const queryLower = query.trim().toLowerCase();
         games.sort((a, b) => {

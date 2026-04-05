@@ -727,6 +727,7 @@ plagiarized the work of other students and/or persons.
           </h6>
           <div class="d-flex gap-1">
             <button class="btn btn-sm btn-link p-1" id="addMemberBtn" onclick="openInviteModal()" style="color:var(--text-muted); display:none;" title="Invite Members"><i class="bi bi-person-plus-fill"></i></button>
+            <button class="btn btn-sm btn-link p-1" id="groupSettingsBtn" onclick="openGroupSettingsModal()" style="color:var(--text-muted); display:none;" title="Group Settings"><i class="bi bi-gear-fill"></i></button>
             <button class="btn btn-sm btn-link p-1" onclick="openCreateGroupModal()" style="color:var(--accent);" title="Create Group"><i class="bi bi-plus-circle-fill"></i></button>
           </div>
         </div>
@@ -1738,7 +1739,7 @@ plagiarized the work of other students and/or persons.
     // General chat + user's groups
     const options = [
       { id: 'general', name: '🌍 General Chat' },
-      ...allGroups.map(g => ({ id: g._id, name: `👥 ${g.name}` }))
+      ...allGroups.map(g => ({ id: g._id, name: `${g.icon ? g.icon : '👥'} ${g.name}` }))
     ];
     select.innerHTML = options.map(opt => 
       `<option value="${opt.id}" ${activeGroupId === opt.id ? 'selected' : ''}>${opt.name}</option>`
@@ -1748,12 +1749,15 @@ plagiarized the work of other students and/or persons.
   async function switchToChat(groupId) {
     activeGroupId = groupId;
     
-    // Show/hide the "Add Member" button
+    // Show/hide the "Add Member" and "Group Settings" buttons
     const addMemberBtn = document.getElementById('addMemberBtn');
+    const groupSettingsBtn = document.getElementById('groupSettingsBtn');
     if (groupId === 'general') {
       addMemberBtn.style.display = 'none';
+      groupSettingsBtn.style.display = 'none';
     } else {
       addMemberBtn.style.display = 'inline-block';
+      groupSettingsBtn.style.display = 'inline-block';
     }
 
     renderChatGroupSelect();
@@ -1906,15 +1910,19 @@ plagiarized the work of other students and/or persons.
       return;
     }
 
-    // Check if user is owner
+    // Check if user is owner or member
     const ownerId = String(currentGroup.owner?._id || currentGroup.owner);
     const userId = String(currentUser?._id || '');
     const isOwner = ownerId === userId;
-    console.log('[INVITE] ownerId:', ownerId, 'userId:', userId, 'isOwner:', isOwner);
+    const isMember = currentGroup.members?.some(m => String(m._id || m) === userId);
     
-    if (!isOwner) {
-      console.error('[INVITE] User is not the group owner. Cannot add members.');
-      alert('Only the group owner can invite members');
+    if (currentGroup.isPrivate && !isOwner) {
+      console.warn('[INVITE] Group is private and user is not owner.');
+      alert('This is a private group. Only the owner can invite new members.');
+      return;
+    }
+    if (!isOwner && !isMember) {
+      alert('You must be a member of the group to invite others.');
       return;
     }
 
@@ -2023,6 +2031,108 @@ plagiarized the work of other students and/or persons.
       alert('Error connecting to server. Please check your connection and try again.');
       btn.textContent = originalText;
       btn.disabled = false;
+    }
+  }
+
+  async function openGroupSettingsModal() {
+    if (!activeGroupId || activeGroupId === 'general') return;
+    const currentGroup = allGroups.find(g => g._id === activeGroupId);
+    if (!currentGroup) return;
+
+    const ownerId = String(currentGroup.owner?._id || currentGroup.owner);
+    const userId = String(currentUser?._id || '');
+    if (ownerId !== userId) {
+      alert("Only the group owner can modify settings.");
+      return;
+    }
+
+    const membersHtml = (currentGroup.members || []).map(m => {
+      const isOwner = String(m._id || m) === ownerId;
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:4px;">
+          <span style="color:#fff;">${escapeHtml(m.displayName || m.username)} ${isOwner ? '<span class="badge bg-secondary ms-1">Owner</span>' : ''}</span>
+          ${!isOwner ? `<button class="btn btn-sm btn-danger py-0" onclick="removeMemberFromGroup('${m._id || m}')">Remove</button>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const modal = `
+      <div id="groupSettingsModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.5); max-height:80vh; overflow-y:auto;">
+          <h5 style="margin-bottom:16px; color:#fff;">Group Settings</h5>
+          
+          <div class="mb-3">
+            <label class="form-label text-white small">Group Name</label>
+            <input type="text" id="editGroupName" class="form-control bg-dark text-white border-secondary" value="${escapeHtml(currentGroup.name)}" maxlength="50">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label text-white small">Group Icon / Emoji (optional)</label>
+            <input type="text" id="editGroupIcon" class="form-control bg-dark text-white border-secondary" value="${escapeHtml(currentGroup.icon || '')}" placeholder="e.g. 🎮 or ⚔️">
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="editGroupPrivate" ${currentGroup.isPrivate ? 'checked' : ''}>
+            <label class="form-check-label text-white small" for="editGroupPrivate">Private Group (Only owner can invite)</label>
+          </div>
+
+          <button class="btn btn-primary w-100 mb-4" onclick="updateGroupSettings()">Save Settings</button>
+
+          <h6 class="text-white mb-2">Manage Members</h6>
+          <div style="max-height:150px; overflow-y:auto; display:flex; flex-direction:column;">
+            ${membersHtml.length ? membersHtml : '<div class="text-muted small">No other members</div>'}
+          </div>
+
+          <button class="btn btn-sm btn-outline-secondary mt-4 w-100" onclick="this.closest('#groupSettingsModal').remove()">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+  }
+
+  async function updateGroupSettings() {
+    const name = document.getElementById('editGroupName').value.trim();
+    const icon = document.getElementById('editGroupIcon').value.trim();
+    const isPrivate = document.getElementById('editGroupPrivate').checked;
+
+    if (!name) return alert('Group name is required');
+
+    try {
+      const res = await fetch('/api/chat/group/' + activeGroupId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, icon, isPrivate })
+      });
+      if (res.ok) {
+        document.getElementById('groupSettingsModal').remove();
+        await loadChatGroups();
+      } else {
+        const err = await res.json().catch(()=>({}));
+        alert(err.error || 'Failed to update settings');
+      }
+    } catch (e) {
+      alert('Error connecting to server. Please check your connection.');
+    }
+  }
+
+  async function removeMemberFromGroup(userId) {
+    if (!confirm("Are you sure you want to remove this member?")) return;
+    try {
+      const res = await fetch('/api/chat/group/' + activeGroupId + '/member/' + userId, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        document.getElementById('groupSettingsModal').remove();
+        await loadChatGroups();
+        openGroupSettingsModal(); // Reopen to refresh list
+      } else {
+        const err = await res.json().catch(()=>({}));
+        alert(err.error || 'Failed to remove member');
+      }
+    } catch (e) {
+      alert('Error removing member.');
     }
   }
 

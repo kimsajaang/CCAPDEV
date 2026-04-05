@@ -2711,8 +2711,14 @@ app.post('/api/chat/group/:groupId/member', isLoggedIn, async (req, res) => {
     if (!group) {
       return res.status(404).json({ error: 'Group not found' });
     }
-    if (group.owner.toString() !== req.session.userId) {
-      return res.status(403).json({ error: 'Only group owner can add members' });
+    const isOwner = group.owner.toString() === req.session.userId;
+    const isMember = group.members.some(id => id.toString() === req.session.userId);
+
+    if (group.isPrivate && !isOwner) {
+      return res.status(403).json({ error: 'This is a private group; only the group owner can add members' });
+    }
+    if (!group.isPrivate && !isOwner && !isMember) {
+      return res.status(403).json({ error: 'You must be a member of the group to add others' });
     }
 
     if (!group.members.includes(userId)) {
@@ -2727,6 +2733,38 @@ app.post('/api/chat/group/:groupId/member', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[ADD MEMBER] Error:', err.message);
     res.status(500).json({ error: 'Failed to add member' });
+  }
+});
+
+// PUT /api/chat/group/:groupId - Update group chat settings
+app.put('/api/chat/group/:groupId', isLoggedIn, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { name, icon, isPrivate } = req.body;
+
+    const group = await GroupChat.findById(groupId);
+    if (!group) return res.status(404).json({ error: 'Group not found' });
+    
+    // Only owner can update settings
+    if (group.owner.toString() !== req.session.userId) {
+      return res.status(403).json({ error: 'Only the group owner can update settings' });
+    }
+
+    if (name) group.name = name.trim();
+    if (icon !== undefined) group.icon = icon;
+    if (isPrivate !== undefined) group.isPrivate = !!isPrivate;
+
+    await group.save();
+    
+    // Return populated updated group
+    const updatedGroup = await GroupChat.findById(groupId)
+      .populate('members', '_id username displayName avatar')
+      .populate('owner', '_id username displayName avatar');
+      
+    res.json(updatedGroup);
+  } catch (err) {
+    console.error('[UPDATE GROUP] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update group settings' });
   }
 });
 
