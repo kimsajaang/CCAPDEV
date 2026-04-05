@@ -2974,21 +2974,25 @@ app.post('/api/posts', isLoggedIn, async (req, res) => {
 app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
   try {
     const { direction } = req.body; // 'up' or 'down'
-    const post = await Post.findById(req.params.id);
+    const postId = req.params.id;
+    const userId = req.session.userId;
+
+    // Atomic update: remove user from both arrays first, then add to the correct one
+    // This avoids loading the entire post (including huge photo blobs) into memory
+    // and bypasses the pre-save hook so hasPhoto is never accidentally reset
+    await Post.updateOne({ _id: postId }, {
+      $pull: { upvotes: userId, downvotes: userId }
+    });
+
+    const addField = direction === 'up' ? 'upvotes' : 'downvotes';
+    await Post.updateOne({ _id: postId }, {
+      $addToSet: { [addField]: userId }
+    });
+
+    // Fetch only the vote counts (NOT the photo blob)
+    const post = await Post.findById(postId).select('upvotes downvotes').lean();
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    const userId = req.session.userId;
-    // Remove existing votes from this user
-    post.upvotes = post.upvotes.filter(id => id.toString() !== userId.toString());
-    post.downvotes = post.downvotes.filter(id => id.toString() !== userId.toString());
-
-    if (direction === 'up') {
-      post.upvotes.push(userId);
-    } else if (direction === 'down') {
-      post.downvotes.push(userId);
-    }
-
-    await post.save();
     res.json({
       upvotes: post.upvotes.length,
       downvotes: post.downvotes.length,

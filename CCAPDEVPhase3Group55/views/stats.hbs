@@ -576,9 +576,9 @@ plagiarized the work of other students and/or persons.
         <div class="card-body">
           <div class="d-flex gap-3">
             <div class="text-center" style="width:72px;">
-              <button class="btn btn-outline-success btn-sm w-100 mb-1" data-act="up">▲</button>
+              <button class="btn btn-outline-success btn-sm w-100 mb-1" data-act="up" ${!isUserLoggedIn ? 'title="Login to vote"' : ''}>▲</button>
               <div class="fw-bold" data-score>${score(post)}</div>
-              <button class="btn btn-outline-danger btn-sm w-100 mt-1" data-act="down">▼</button>
+              <button class="btn btn-outline-danger btn-sm w-100 mt-1" data-act="down" ${!isUserLoggedIn ? 'title="Login to vote"' : ''}>▼</button>
             </div>
 
             <div class="flex-grow-1">
@@ -610,11 +610,17 @@ plagiarized the work of other students and/or persons.
 
               <div class="mt-3 d-none" data-comments data-post-id="${post.id}" data-comments-loaded="false">
                 <div class="comment-panel p-3">
+                  ${isUserLoggedIn ? `
                   <div class="comment-input-wrap d-flex align-items-center gap-2 mb-3">
                     <div class="comment-avatar" style="background:#5383e8;">${getInitials(currentUsername)}</div>
                     <input class="form-control flex-grow-1" maxlength="300" placeholder="Write a comment..."/>
                     <button class="btn btn-primary" data-act="addComment" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">→</button>
                   </div>
+                  ` : `
+                  <div class="text-center mb-3">
+                    <a href="/login" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-in-right me-1"></i>Login to comment</a>
+                  </div>
+                  `}
 
                   <div class="d-grid gap-2" data-commentlist></div>
                   <div class="text-muted small mt-2 text-center" data-nocomments style="display:none;">No comments yet. Be the first to reply.</div>
@@ -628,22 +634,25 @@ plagiarized the work of other students and/or persons.
 
       const upBtn = wrapper.querySelector('[data-act="up"]');
       if (upBtn) {
-        console.log('[EVENTS] Attached upvote listener for post:', post.id);
-        upBtn.addEventListener("click", () => vote(post.id, +1));
-      } else {
-        console.warn('[EVENTS] Could not find upvote button for post:', post.id);
+        upBtn.addEventListener("click", () => {
+          if (!isUserLoggedIn) { window.location.href = '/login'; return; }
+          vote(post.id, +1);
+        });
       }
       
       const downBtn = wrapper.querySelector('[data-act="down"]');
       if (downBtn) {
-        console.log('[EVENTS] Attached downvote listener for post:', post.id);
-        downBtn.addEventListener("click", () => vote(post.id, -1));
-      } else {
-        console.warn('[EVENTS] Could not find downvote button for post:', post.id);
+        downBtn.addEventListener("click", () => {
+          if (!isUserLoggedIn) { window.location.href = '/login'; return; }
+          vote(post.id, -1);
+        });
       }
       
       const toggleBtn = wrapper.querySelector('[data-act="toggleComments"]');
-      if (toggleBtn) toggleBtn.addEventListener("click", () => toggleComments(wrapper));
+      if (toggleBtn) toggleBtn.addEventListener("click", () => {
+        if (!isUserLoggedIn) { window.location.href = '/login'; return; }
+        toggleComments(wrapper);
+      });
       
       const shareBtn = wrapper.querySelector('[data-act="share"]');
       if (shareBtn) shareBtn.addEventListener("click", () => copyLink(post.id));
