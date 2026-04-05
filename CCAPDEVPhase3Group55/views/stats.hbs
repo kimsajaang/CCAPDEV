@@ -839,8 +839,8 @@ plagiarized the work of other students and/or persons.
           // Update active vote button styling
           const upBtn = cardEl.querySelector('[data-act="up"]');
           const downBtn = cardEl.querySelector('[data-act="down"]');
-          if (upBtn) upBtn.classList.toggle('active', data.upvotes > 0 && dir > 0 && data.score > 0);
-          if (downBtn) downBtn.classList.toggle('active', data.downvotes > 0 && dir < 0 && data.score < 0);
+          if (upBtn) upBtn.classList.toggle('active', data.userVote === 'up');
+          if (downBtn) downBtn.classList.toggle('active', data.userVote === 'down');
         } else {
           // Fallback: full re-render if card not found
           render();

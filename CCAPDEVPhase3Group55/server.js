@@ -3001,19 +3001,27 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
     const hasDownvoted = currentPost.downvotes?.some(id => String(id) === String(userId));
 
     // Toggle: if clicking same direction again, just remove the vote
-    const isRemoving = (direction === 'up' && hasUpvoted) || (direction === 'down' && hasDownvoted);
+    const isSameDirection = (direction === 'up' && hasUpvoted) || (direction === 'down' && hasDownvoted);
+    const isOppositeDirection = (direction === 'up' && hasDownvoted) || (direction === 'down' && hasUpvoted);
 
-    // Remove user from both arrays first
+    // Remove user from both arrays first to reset their vote
     await Post.updateOne({ _id: postId }, {
       $pull: { upvotes: userId, downvotes: userId }
     });
 
-    // Only add to the target array if not toggling off
-    if (!isRemoving) {
+    let userVote = null;
+
+    // "It skips 2 votes, it has to be incrementing": 
+    // They don't want Reddit style jumping from -1 to 1.
+    // So if they click the opposite vote, it will ONLY cancel their previous vote (leaving it at 0).
+    // They will have to click it again to genuinely cast the opposite vote.
+    // If they just clicked a new direction, add it.
+    if (!isSameDirection && !isOppositeDirection) {
       const addField = direction === 'up' ? 'upvotes' : 'downvotes';
       await Post.updateOne({ _id: postId }, {
         $addToSet: { [addField]: userId }
       });
+      userVote = direction;
     }
 
     // Fetch the updated vote counts
@@ -3022,7 +3030,8 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
     res.json({
       upvotes: post.upvotes.length,
       downvotes: post.downvotes.length,
-      score: post.upvotes.length - post.downvotes.length
+      score: post.upvotes.length - post.downvotes.length,
+      userVote: userVote
     });
   } catch (err) {
     console.error('[VOTE POST] Error:', err.message);
