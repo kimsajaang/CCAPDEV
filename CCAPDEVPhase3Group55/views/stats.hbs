@@ -314,11 +314,15 @@ plagiarized the work of other students and/or persons.
       }
     }
 
-    // Check auth on page load (single call instead of two)
-    // Add small delay to ensure cookies are ready
-    setTimeout(() => {
-      checkAuthAndShowContent();
-    }, 100);
+    // Check auth immediately (no delay) - this will hide the preview banner if logged in
+    checkAuthAndShowContent().then(() => {
+      console.log('[Auth] Check complete, isUserLoggedIn =', isUserLoggedIn);
+      // Force banner visibility based on login status
+      const previewBanner = document.querySelector('[data-preview-only="true"]');
+      if (previewBanner) {
+        previewBanner.style.display = isUserLoggedIn ? 'none' : '';
+      }
+    });
 
     // Handle New Post button clicks - verify auth before opening modal
     document.querySelectorAll('#newPostTopBtn, #newPostEmptyBtn').forEach(btn => {
@@ -1380,10 +1384,14 @@ plagiarized the work of other students and/or persons.
     // Wait for auth check, then fire posts + stats in parallel for fastest initial load
     (async () => {
       // Wait for auth to be checked before rendering posts
-      while (!authCheckComplete) {
+      let waitCount = 0;
+      while (!authCheckComplete && waitCount < 100) {
         await new Promise(r => setTimeout(r, 50));
+        waitCount++;
       }
-      // Now render with correct authStatus
+      console.log('[RENDER] Auth complete after', waitCount * 50, 'ms. isUserLoggedIn =', isUserLoggedIn);
+      
+      // Render with correct auth status
       await Promise.all([render(), updateSidebarStats()]);
       setTimeout(() => openCommentsForHash(), 150);
     })();
