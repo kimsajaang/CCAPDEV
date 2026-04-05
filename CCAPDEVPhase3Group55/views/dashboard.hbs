@@ -1254,13 +1254,14 @@ plagiarized the work of other students and/or persons.
               if (syncBtn) syncBtn.style.display = '';
             }
 
-            // Check if playing a local game session first
+            // Check if playing a local game session first (verify it belongs to this user)
             let localPlaying = false;
             try {
               const localSessionStr = localStorage.getItem('bh_active_session_game');
               if (localSessionStr) {
                 const localData = JSON.parse(localSessionStr);
-                if (localData && localData.name) {
+                const currentId = currentUserData._id || currentUserData.id;
+                if (localData && localData.name && localData.userId === currentId) {
                   localPlaying = true;
                   const gameNameEl = document.getElementById('steamLiveGameNameCard');
                   const coverEl = document.getElementById('steamLiveGameCover');
@@ -1269,9 +1270,13 @@ plagiarized the work of other students and/or persons.
                   if (gameNameEl) gameNameEl.textContent = localData.name;
                   if (coverEl && localData.cover) coverEl.src = localData.cover;
                   if (statusEl) statusEl.style.display = 'block';
+                } else if (localData && localData.userId && localData.userId !== currentId) {
+                  // Stale session from a different user — clean it up
+                  localStorage.removeItem('bh_active_session_game');
                 }
               }
             } catch (err) {}
+
 
             // If not playing locally, check Steam status if they have a Steam ID 
             if (!localPlaying && currentUserData.steamId) {
@@ -2017,9 +2022,6 @@ plagiarized the work of other students and/or persons.
       console.error('[Chat] Failed to add friend:', err);
       alert('Error connecting to server. Please check your connection and try again.');
       btn.textContent = originalText;
-      btn.disabled = false;
-    }
-  }
       btn.disabled = false;
     }
   }

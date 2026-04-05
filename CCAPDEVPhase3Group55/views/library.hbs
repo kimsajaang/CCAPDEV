@@ -964,6 +964,7 @@ plagiarized the work of other students and/or persons.
         if (game) {
             localStorage.setItem('bh_active_session_game', JSON.stringify({
                 id: entryId,
+                userId: currentUserId,
                 name: game.name,
                 cover: game.cover,
                 startTime: Date.now()

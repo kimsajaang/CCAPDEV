@@ -133,6 +133,9 @@
         } catch (err) {
             console.error('Logout failed:', err);
         }
+        // Clear cached user data to prevent stale Steam status on next login
+        sessionStorage.removeItem('bh_user');
+        localStorage.removeItem('bh_active_session_game');
         window.location.href = '/login';
     }
 
