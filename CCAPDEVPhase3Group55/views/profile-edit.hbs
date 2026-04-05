@@ -366,9 +366,13 @@ plagiarized the work of other students and/or persons.
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3 mt-2">
-                            <input type="text" class="settings-input" id="inputSteamId" placeholder="Paste 17-digit Steam ID..." style="flex: 1; min-width: 0;">
-                            <button type="button" id="steamConnectBtn" class="btn-change" style="padding: 10px 24px; border-radius: 8px; flex-shrink: 0; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);" disabled><i class="bi bi-check-lg me-1"></i> Connected</button>
+                            <a href="/auth/steam" id="steamConnectAuthBtn" class="btn-change text-center" style="padding: 10px 24px; border-radius: 8px; flex: 1; background: rgba(91, 127, 238, 0.1); color: #5b7fee; border: 1px solid rgba(91, 127, 238, 0.2); text-decoration: none;">
+                                <i class="bi bi-steam me-1"></i> Link Steam
+                            </a>
+                            <button type="button" id="steamSyncBtn" class="btn-change" style="display: none; padding: 10px 24px; border-radius: 8px; flex: 1;"><i class="bi bi-arrow-repeat me-1"></i> Sync Library</button>
                         </div>
+                        <div id="steamSyncResult" class="mt-2 small" style="display: none;"></div>
+                        <input type="hidden" id="inputSteamId">
                     </div>
 
                     <!-- PlayStation Integration -->
@@ -384,8 +388,8 @@ plagiarized the work of other students and/or persons.
                         </div>
                         <div class="d-flex align-items-center gap-3 mt-2">
                             <input type="text" class="settings-input" id="inputPsnId" placeholder="Your PSN ID (e.g. YourPSNHandle)" style="flex: 1; min-width: 0;">
-                            <button type="button" id="psnSyncBtn" onclick="syncPSN()" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(0,67,156,0.2); border-color: #00439c; color: #60a5fa;">
-                                <i class="bi bi-arrow-repeat me-1"></i> Sync Library
+                            <button type="button" id="psnSyncBtn" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(0,67,156,0.2); border-color: #00439c; color: #60a5fa;">
+                                <i class="bi bi-link-45deg me-1"></i> Link PlayStation
                             </button>
                         </div>
                         <div id="psnSyncResult" class="field-hint mt-0" style="display:none;"></div>
@@ -404,8 +408,8 @@ plagiarized the work of other students and/or persons.
                         </div>
                         <div class="d-flex align-items-center gap-3 mt-2">
                             <input type="text" class="settings-input" id="inputXboxGamertag" placeholder="Your Gamertag (e.g. MajorNelson)" style="flex: 1; min-width: 0;">
-                            <button type="button" id="xboxSyncBtn" onclick="syncXbox()" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(16,124,16,0.2); border-color: #107c10; color: #4ade80;">
-                                <i class="bi bi-arrow-repeat me-1"></i> Sync Library
+                            <button type="button" id="xboxSyncBtn" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(16,124,16,0.2); border-color: #107c10; color: #4ade80;">
+                                <i class="bi bi-link-45deg me-1"></i> Link Xbox
                             </button>
                         </div>
                         <div id="xboxSyncResult" class="field-hint mt-0" style="display:none;"></div>
@@ -551,18 +555,15 @@ plagiarized the work of other students and/or persons.
             if (inputSteamId) inputSteamId.value = profile.steamId || '';
             
             // Update Steam connection button state
-            const steamBtn = document.getElementById('steamConnectBtn');
-            if (steamBtn) {
+            const steamAuthBtn = document.getElementById('steamConnectAuthBtn');
+            const steamBtn = document.getElementById('steamSyncBtn');
+            if (steamBtn && steamAuthBtn) {
                 if (profile.steamId) {
-                  steamBtn.disabled = true;
-                  steamBtn.style.background = 'rgba(16, 185, 129, 0.1)';
-                  steamBtn.style.color = '#10b981';
-                  steamBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Connected';
+                  steamBtn.style.display = 'block';
+                  steamAuthBtn.style.display = 'none';
                 } else {
-                  steamBtn.disabled = false;
-                  steamBtn.style.background = 'rgba(91, 127, 238, 0.1)';
-                  steamBtn.style.color = '#5b7fee';
-                  steamBtn.innerHTML = '<i class="bi bi-link-45deg me-1"></i> Connect';
+                  steamBtn.style.display = 'none';
+                  steamAuthBtn.style.display = 'block';
                 }
             }
             
@@ -1108,6 +1109,10 @@ plagiarized the work of other students and/or persons.
                         btn.disabled = false;
                     }
                 });
+            // Steam Sync
+            const steamSyncBtn = document.getElementById('steamSyncBtn');
+            if (steamSyncBtn) {
+                steamSyncBtn.addEventListener('click', syncSteam);
             }
 
             // Xbox Sync
@@ -1120,6 +1125,36 @@ plagiarized the work of other students and/or persons.
             const psnSyncBtn = document.getElementById('psnSyncBtn');
             if (psnSyncBtn) {
                 psnSyncBtn.addEventListener('click', syncPSN);
+            }
+        }
+
+        // ─── Steam Sync ───
+        async function syncSteam() {
+            const btn = document.getElementById('steamSyncBtn');
+            const result = document.getElementById('steamSyncResult');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon me-1"></i> Syncing...';
+            result.style.display = 'none';
+            try {
+                const res = await fetch('/api/steam/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Sync failed');
+                result.innerHTML = `✅ ${data.message}`;
+                result.style.color = '#4ade80';
+                showNotification('Steam Synced!', `Imported ${data.imported} games from Steam`, 'success');
+                result.style.display = 'block';
+            } catch (err) {
+                result.innerHTML = '❌ ' + err.message;
+                result.style.color = '#f87171';
+                result.style.display = 'block';
+                showNotification('Steam Sync Failed', err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Sync Library';
             }
         }
 

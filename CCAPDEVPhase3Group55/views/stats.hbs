@@ -771,6 +771,16 @@ plagiarized the work of other students and/or persons.
         }
         const data = await res.json();
         console.log('[VOTE] Success! New vote data:', data);
+        
+        // Update local cache
+        if (cachedPosts) {
+          const p = cachedPosts.find(x => x.id === postId || x._id === postId);
+          if (p) {
+            p.upvotes = new Array(data.upvotes);
+            p.downvotes = new Array(data.downvotes);
+          }
+        }
+        
         render();
       } catch (err) {
         console.error('Vote request error:', err);
@@ -930,6 +940,11 @@ plagiarized the work of other students and/or persons.
         console.log('[DELETE] Post deleted successfully');
         const deleteModal = bootstrap.Modal.getInstance(document.getElementById("deletePostModal"));
         deleteModal.hide();
+        
+        if (cachedPosts) {
+          cachedPosts = cachedPosts.filter(p => p.id !== postId && p._id !== postId);
+        }
+        
         render();
       } catch (err) {
         console.error('[DELETE] Error:', err.message);
@@ -964,6 +979,24 @@ plagiarized the work of other students and/or persons.
           body: JSON.stringify(updateData)
         });
         if (!res.ok) throw new Error('Update failed');
+        
+        if (cachedPosts) {
+          const p = cachedPosts.find(x => x.id === editingPostId || x._id === editingPostId);
+          if (p) {
+            p.title = title;
+            p.body = body;
+            p.flair = flair;
+            p.game = game;
+            if (editSelectedPhoto === null) {
+              p.photo = null;
+              p.hasPhoto = false;
+            } else if (editSelectedPhoto !== p.id) { // not just the id, actually new data Url
+              p.photo = editSelectedPhoto;
+              p.hasPhoto = true;
+            }
+          }
+        }
+        
         const editModal = bootstrap.Modal.getInstance(document.getElementById("editPostModal"));
         editModal.hide();
         render();
@@ -1240,6 +1273,14 @@ plagiarized the work of other students and/or persons.
         resetPhotoUpload();
         newPostModal.hide();
         location.hash = "post-" + post.id;
+        
+        // Update local cache to reflect changes instantly without manual refresh
+        if (cachedPosts) {
+          cachedPosts.unshift(post);
+        } else {
+          cachedPosts = [post];
+        }
+        
         render();
         
         // Immediately load photo for newly created post (don't wait for lazy loading)

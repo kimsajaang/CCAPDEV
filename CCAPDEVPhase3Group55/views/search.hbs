@@ -644,6 +644,11 @@ plagiarized the work of other students and/or persons.
         if (!res.ok) throw new Error('Server error');
         let games = await res.json();
 
+        // Remove games already in the user's library
+        games = games.filter(game => {
+          return !searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
+        });
+
         // Sort by relevance — exact matches first
         const queryLower = query.trim().toLowerCase();
         games.sort((a, b) => {
@@ -765,7 +770,12 @@ plagiarized the work of other students and/or persons.
       try {
         const res = await fetch('/api/games/trending');
         if (!res.ok) throw new Error('Server error');
-        const games = await res.json();
+        let games = await res.json();
+        
+        // Remove games already in the user's library to avoid showing "Already in Library" cards
+        games = games.filter(game => {
+          return !searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
+        });
         
         if (games.length === 0) {
           resultsGrid.innerHTML = '<div class="col-12 text-center py-5"><p class="text-muted">No trending games found.</p></div>';
@@ -893,11 +903,63 @@ plagiarized the work of other students and/or persons.
           return;
         }
         try {
+          // Add to Library logic
           await addGameToServer(name, btn.dataset.genre || '', btn.dataset.year || '0', btn.dataset.cover || '', btn.dataset.igdbid || null);
-          btn.textContent = '✓ Added';
-          btn.classList.remove('btn-outline-primary');
-          btn.classList.add('btn-success', 'disabled');
           searchToast(`${name} added to Backlog!`, 'bg-success');
+          
+          const colElement = btn.closest('.col');
+          if (colElement) {
+            // Show placeholder in place of the added game
+            colElement.innerHTML = `
+              <div class="card h-100 shadow-sm disabled" aria-hidden="true">
+                 <div class="card-img-top placeholder-glow d-flex align-items-center justify-content-center bg-secondary" style="aspect-ratio: 3/4">
+                   <span class="spinner-border text-light" role="status"></span>
+                 </div>
+                 <div class="card-body">
+                   <h6 class="card-title placeholder-glow"><span class="placeholder col-8"></span></h6>
+                   <p class="card-text small placeholder-glow"><span class="placeholder col-6"></span> <span class="placeholder col-4"></span></p>
+                   <button class="btn btn-sm btn-outline-primary disabled placeholder w-100" aria-disabled="true"></button>
+                 </div>
+              </div>
+            `;
+            
+            try {
+              // Fetch trending games to pick a random replacement
+              const res = await fetch('/api/games/trending');
+              if (res.ok) {
+                const trendingGames = await res.json();
+                
+                // Get all game IDs currently visible on the page
+                const visibleIgdbIds = Array.from(document.querySelectorAll('.add-lib-btn'))
+                  .map(b => String(b.dataset.igdbid))
+                  .filter(id => id && id !== "undefined");
+                  
+                // Find a game that isn't in library and isn't already visible
+                const availableGames = trendingGames.filter(game => {
+                  const inLibrary = searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
+                  const isVisible = visibleIgdbIds.includes(String(game.id));
+                  return !inLibrary && !isVisible;
+                });
+                
+                if (availableGames.length > 0) {
+                  // Pick a random game
+                  const randomGame = availableGames[Math.floor(Math.random() * availableGames.length)];
+                  
+                  // Need to create the HTML. renderGameGrid returns a string wrapped in <div class="col">
+                  const renderedColHtml = renderGameGrid([randomGame]);
+                  colElement.outerHTML = renderedColHtml;
+                } else {
+                  // If we run out of unique recommendations, just remove the card entirely
+                  colElement.remove();
+                }
+              } else {
+                colElement.remove();
+              }
+            } catch (err) {
+              console.error('Failed to load replacement game:', err);
+              colElement.remove();
+            }
+          }
         } catch (err) {
           console.error('[Search] Add error:', err);
           searchToast('Failed to add game', 'bg-danger');

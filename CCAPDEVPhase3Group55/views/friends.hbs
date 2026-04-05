@@ -379,10 +379,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         const statusData = await statusRes.json();
                         if (statusData.playing && statusData.gameName) {
                             const gameName = statusData.gameName;
-                            const badgeColor = statusData.source === 'steam' ? 'success' : 'info';
-                            const badgeTextColor = statusData.source === 'steam' ? 'text-success' : 'text-info';
-                            const icon = statusData.source === 'steam' ? 'bi-steam' : 'bi-play-circle-fill';
-                            gameStatus = `<span class="badge bg-${badgeColor} bg-opacity-10 ${badgeTextColor} border border-${badgeColor} border-opacity-25 mt-1 px-2 py-1" style="font-size: 0.7rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${gameName}"><i class="bi ${icon} me-1"></i>${gameName}</span>`;
+                            // Set robust colors and borders to ensure the badge remains readable
+                            let bg, textCol, border, icon;
+                            if (statusData.source === 'steam') {
+                                bg = 'rgba(34, 197, 94, 0.1)';
+                                textCol = '#4ade80'; // Lighter green for dark canvas
+                                border = 'rgba(34, 197, 94, 0.25)';
+                                icon = 'bi-steam';
+                            } else {
+                                bg = 'rgba(83, 131, 232, 0.1)';
+                                textCol = '#5383e8'; // Backlog Hero primary blue
+                                border = 'rgba(83, 131, 232, 0.25)';
+                                icon = 'bi-play-circle-fill';
+                            }
+                            gameStatus = `<span class="badge mt-1 px-2 py-1" style="background-color: ${bg}; color: ${textCol}; border: 1px solid ${border}; font-size: 0.7rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${gameName}"><i class="bi ${icon} me-1"></i>${gameName}</span>`;
                         }
                     }
                 } catch (e) { /* silently ignore status fetch errors */ }
