@@ -2983,24 +2983,25 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
   try {
     const { direction } = req.body; // 'up' or 'down'
     const postId = req.params.id;
-    const userId = req.session.userId;
+    const mongoose = require('mongoose');
+    const userId = new mongoose.Types.ObjectId(req.session.userId);
 
-    // Fetch only the vote counts to check state
+    // Fetch current vote state
     const currentPost = await Post.findById(postId).select('upvotes downvotes').lean();
     if (!currentPost) return res.status(404).json({ error: 'Post not found' });
 
     const hasUpvoted = currentPost.upvotes?.some(id => String(id) === String(userId));
     const hasDownvoted = currentPost.downvotes?.some(id => String(id) === String(userId));
 
+    // Toggle: if clicking same direction again, just remove the vote
     const isRemoving = (direction === 'up' && hasUpvoted) || (direction === 'down' && hasDownvoted);
 
-    // Atomic update: remove user from both arrays first, then add to the correct one if not removing
-    // This avoids loading the entire post (including huge photo blobs) into memory
-    // and bypasses the pre-save hook so hasPhoto is never accidentally reset
+    // Remove user from both arrays first
     await Post.updateOne({ _id: postId }, {
       $pull: { upvotes: userId, downvotes: userId }
     });
 
+    // Only add to the target array if not toggling off
     if (!isRemoving) {
       const addField = direction === 'up' ? 'upvotes' : 'downvotes';
       await Post.updateOne({ _id: postId }, {
@@ -3008,7 +3009,7 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
       });
     }
 
-    // Fetch the NEW vote counts
+    // Fetch the updated vote counts
     const post = await Post.findById(postId).select('upvotes downvotes').lean();
 
     res.json({
