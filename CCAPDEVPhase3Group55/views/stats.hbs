@@ -630,15 +630,8 @@ plagiarized the work of other students and/or persons.
               ${mediaHtml}
 
               <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
-                <button class="btn btn-outline-success btn-sm ${post.userVote === 'up' ? 'active' : ''}" data-act="up" ${!isUserLoggedIn ? 'title="Login to respond"' : ''}>
-                  <i class="bi bi-hand-thumbs-up${post.userVote === 'up' ? '-fill' : ''}"></i> <span data-upcount>${post.upvoteCount !== undefined ? post.upvoteCount : (Array.isArray(post.upvotes) ? post.upvotes.length : 0)}</span>
-                </button>
-                <button class="btn btn-outline-danger btn-sm ${post.userVote === 'down' ? 'active' : ''}" data-act="down" ${!isUserLoggedIn ? 'title="Login to respond"' : ''}>
-                  <i class="bi bi-hand-thumbs-down${post.userVote === 'down' ? '-fill' : ''}"></i> <span data-downcount>${post.downvoteCount !== undefined ? post.downvoteCount : (Array.isArray(post.downvotes) ? post.downvotes.length : 0)}</span>
-                </button>
-
                 <button class="btn btn-outline-primary btn-sm" data-act="toggleComments" data-total-comments="${post.commentCount || 0}">
-                  <i class="bi bi-chat-left-text"></i> Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${post.commentCount || 0}</span>
+                  Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${post.commentCount || 0}</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
                 ${isAuthor ? `
@@ -835,24 +828,13 @@ plagiarized the work of other students and/or persons.
         // In-place DOM update — don't re-render the whole feed (preserves videos/photos)
         const cardEl = document.querySelector(`[data-post-id="${postId}"]`);
         if (cardEl) {
-          const upCountEl = cardEl.querySelector('[data-upcount]');
-          const downCountEl = cardEl.querySelector('[data-downcount]');
-          if (upCountEl) upCountEl.textContent = data.upvotes;
-          if (downCountEl) downCountEl.textContent = data.downvotes;
-          
+          const scoreEl = cardEl.querySelector('[data-score]');
+          if (scoreEl) scoreEl.textContent = data.score;
           // Update active vote button styling
           const upBtn = cardEl.querySelector('[data-act="up"]');
           const downBtn = cardEl.querySelector('[data-act="down"]');
-          if (upBtn) {
-            upBtn.classList.toggle('active', data.userVote === 'up');
-            const icon = upBtn.querySelector('i');
-            if (icon) icon.className = \`bi bi-hand-thumbs-up\${data.userVote === 'up' ? '-fill' : ''}\`;
-          }
-          if (downBtn) {
-            downBtn.classList.toggle('active', data.userVote === 'down');
-            const icon = downBtn.querySelector('i');
-            if (icon) icon.className = \`bi bi-hand-thumbs-down\${data.userVote === 'down' ? '-fill' : ''}\`;
-          }
+          if (upBtn) upBtn.classList.toggle('active', data.userVote === 'up');
+          if (downBtn) downBtn.classList.toggle('active', data.userVote === 'down');
         } else {
           // Fallback: full re-render if card not found
           render();
