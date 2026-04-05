@@ -2978,8 +2978,15 @@ app.post('/api/posts', isLoggedIn, async (req, res) => {
   }
 });
 
+const votingLocks = new Set();
 // POST /api/posts/:id/vote - Upvote/Downvote a post
 app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
+  const lockKey = `${req.session.userId}-${req.params.id}`;
+  if (votingLocks.has(lockKey)) {
+    return res.status(429).json({ error: 'Voting in progress' });
+  }
+  votingLocks.add(lockKey);
+
   try {
     const { direction } = req.body; // 'up' or 'down'
     const postId = req.params.id;
@@ -3020,6 +3027,8 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('[VOTE POST] Error:', err.message);
     res.status(500).json({ error: 'Voting failed' });
+  } finally {
+    votingLocks.delete(lockKey);
   }
 });
 
