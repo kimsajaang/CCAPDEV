@@ -1843,7 +1843,7 @@ app.get('/api/reviews/game', async (req, res) => {
       gameId: game._id,
       notes: { $exists: true, $ne: '' }
     })
-    .populate('userId', 'username profileImage')
+    .populate('userId', 'username avatar')
     .sort({ createdAt: -1 })
     .limit(20);
 
@@ -1853,7 +1853,7 @@ app.get('/api/reviews/game', async (req, res) => {
     const reviews = entries.map(entry => ({
       _id: entry._id,
       username: entry.userId?.username || 'Anonymous',
-      profileImage: entry.userId?.profileImage,
+      profileImage: entry.userId?.avatar,
       rating: entry.rating,
       notes: entry.notes,
       createdAt: entry.createdAt
@@ -2832,7 +2832,7 @@ app.get('/api/posts', async (req, res) => {
     // Single fast query: exclude photo blobs, comments array, and full vote arrays
     const posts = await Post.find()
       .select('-photo -comments')
-      .populate('author', '_id username displayName')
+      .populate('author', '_id username displayName avatar')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -2845,7 +2845,12 @@ app.get('/api/posts', async (req, res) => {
       return {
         id: post._id,
         _id: post._id,
-        author: post.author,
+        author: {
+          _id: post.author?._id,
+          username: post.author?.username,
+          displayName: post.author?.displayName,
+          avatar: post.author?.avatar
+        },
         title: post.title,
         body: post.body,
         flair: post.flair,

@@ -286,6 +286,7 @@ plagiarized the work of other students and/or persons.
     let isUserLoggedIn = false;
     let currentUsername = 'Gamer';
     let currentUserId = null;
+    let currentUserAvatar = null;
     let authCheckComplete = false;
 
     // Single auth check - combines auth detection and community preview logic in one call
@@ -301,6 +302,7 @@ plagiarized the work of other students and/or persons.
           const userData = await response.json();
           currentUserId = userData._id;
           currentUsername = userData.displayName || userData.username || 'Gamer';
+          currentUserAvatar = userData.avatar;
           console.log('[Auth] SUCCESS - User logged in:', currentUsername);
         } else if (response.status === 401 || response.status === 403) {
           // Definitely not logged in
@@ -371,6 +373,7 @@ plagiarized the work of other students and/or persons.
               const userData = await res.json();
               currentUserId = userData._id;
               currentUsername = userData.displayName || userData.username || 'Gamer';
+              currentUserAvatar = userData.avatar;
               // Show protected elements and open modal
               document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = '');
               document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = 'none');
@@ -621,7 +624,7 @@ plagiarized the work of other students and/or persons.
                 ${flairBadge}
                 ${gameTag}
                 <span class="text-muted small d-flex align-items-center gap-1">
-                  <span class="comment-avatar" style="background:${getAuthorColor(pAuth.username)};color:${['#febc2e'].includes(getAuthorColor(pAuth.username)) ? '#0d1217' : '#fff'};width:22px;height:22px;font-size:0.55rem;">${getInitials(pAuth.displayName || pAuth.username)}</span>
+                  ${pAuth.avatar ? `<img src="${pAuth.avatar}" class="comment-avatar" style="object-fit: cover; width:22px; height:22px; font-size:0.55rem;" alt="${escapeHtml(pAuth.displayName || pAuth.username)}">` : `<span class="comment-avatar" style="background:${getAuthorColor(pAuth.username)};color:${['#febc2e'].includes(getAuthorColor(pAuth.username)) ? '#0d1217' : '#fff'};width:22px;height:22px;font-size:0.55rem;">${getInitials(pAuth.displayName || pAuth.username)}</span>`}
                   <strong class="text-white">${escapeHtml(pAuth.displayName || pAuth.username)}</strong> · ${fmtTime(post.createdAt)}
                 </span>
               </div>
@@ -647,7 +650,7 @@ plagiarized the work of other students and/or persons.
                 <div class="comment-panel p-3">
                   ${isUserLoggedIn ? `
                   <div class="comment-input-wrap d-flex align-items-center gap-2 mb-3">
-                    <div class="comment-avatar" style="background:#5383e8;">${getInitials(currentUsername)}</div>
+                    ${currentUserAvatar ? `<img src="${currentUserAvatar}" class="comment-avatar" style="object-fit: cover;" alt="${escapeHtml(currentUsername)}">` : `<div class="comment-avatar" style="background:#5383e8;">${getInitials(currentUsername)}</div>`}
                     <input class="form-control flex-grow-1" maxlength="300" placeholder="Write a comment..."/>
                     <button class="btn btn-primary" data-act="addComment" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">→</button>
                   </div>
@@ -724,7 +727,7 @@ plagiarized the work of other students and/or persons.
         
         commentEl.innerHTML = `
           <div class="d-flex gap-2">
-            <div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>
+            ${currentUserAvatar ? `<img src="${currentUserAvatar}" class="comment-avatar" style="object-fit: cover;" alt="${escapeHtml(currentUsername || 'You')}">` : `<div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>`}
             <div class="flex-grow-1">
               <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="comment-author" style="color:${color};">${escapeHtml(currentUsername || "You")}</span>
@@ -789,7 +792,7 @@ plagiarized the work of other students and/or persons.
       const textColor = ["#febc2e"].includes(color) ? "#0d1217" : "#fff";
       row.innerHTML = `
         <div class="d-flex gap-2">
-          <div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>
+          ${comment.author.avatar ? `<img src="${comment.author.avatar}" class="comment-avatar" style="object-fit: cover;" alt="${escapeHtml(authorName)}">` : `<div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>`}
           <div class="flex-grow-1">
             <div class="d-flex align-items-center gap-2 mb-1">
               <span class="comment-author" style="color:${color};">${escapeHtml(authorName)}</span>
