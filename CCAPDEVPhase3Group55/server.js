@@ -52,7 +52,12 @@ app.use(session({
     collectionName: 'sessions',
     ttl: 30 * 24 * 60 * 60, // 30 days in seconds
   }),
-  cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000, sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' } // 30 days
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', 
+    httpOnly: true, 
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: 'lax' // Always use 'lax' - works for same-origin requests and simple navigations
+  }
 }));
 
 // --- Middleware ---
@@ -69,7 +74,12 @@ const disableAuthCaching = (req, res, next) => {
 
 // --- Auth Middleware ---
 const isLoggedIn = (req, res, next) => {
-  console.log('[AUTH CHECK]', req.method, req.path, '| Session ID:', req.sessionID, '| Session UserId:', req.session?.userId || 'MISSING');
+  const sessionUserId = req.session?.userId;
+  const hasSession = !!req.session;
+  const hasSessionId = !!req.sessionID;
+  
+  console.log('[AUTH CHECK]', req.method, req.path, '| Has Session:', hasSession, '| Session ID:', req.sessionID, '| User ID:', sessionUserId || 'MISSING', '| Cookies:', req.headers.cookie ? 'Yes' : 'No');
+  
   if (req.session && req.session.userId) {
     next();
   } else {
@@ -77,6 +87,7 @@ const isLoggedIn = (req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api/')) {
       return res.redirect('/login');
     }
+    console.log('[AUTH REJECTED]', req.method, req.path, '| Session:', hasSession ? 'exists but no userId' : 'missing');
     res.status(401).json({ error: 'Unauthorized. Please log in.' });
   }
 };

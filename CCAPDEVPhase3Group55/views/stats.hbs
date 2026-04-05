@@ -1203,19 +1203,34 @@ plagiarized the work of other students and/or persons.
       createPostBtn.disabled = true;
       createPostBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Posting...';
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+      console.log('[COMMUNITY POST] Sending request:', { title, flair, game, hasPhoto: !!communitySelectedPhoto });
+
       fetch('/api/posts', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: payloadStr
+        body: payloadStr,
+        signal: controller.signal
       })
       .then(res => {
+        clearTimeout(timeoutId);
+        console.log('[COMMUNITY POST] Response received:', res.status, res.statusText);
         if (!res.ok) {
-          return res.json().then(err => Promise.reject(err)).catch(() => Promise.reject({ error: `Server error (${res.status}). The media may be too large.` }));
+          return res.json().then(err => {
+            console.error('[COMMUNITY POST] Server error response:', err);
+            return Promise.reject(err || { error: `Server error (${res.status})` });
+          }).catch(parseErr => {
+            console.error('[COMMUNITY POST] Could not parse error response:', parseErr);
+            return Promise.reject({ error: `Server error (${res.status}). Check console for details.` });
+          });
         }
         return res.json();
       })
       .then(post => {
+        console.log('[COMMUNITY POST] Post created successfully:', post.id);
         postTitle.value = "";
         postBody.value = "";
         postGame.value = "";
@@ -1241,12 +1256,19 @@ plagiarized the work of other students and/or persons.
         }, 100);
       })
       .catch(err => {
-        console.error('Post creation error:', err);
+        clearTimeout(timeoutId);
+        console.error('[COMMUNITY POST] Error:', err);
         postError.style.display = "block";
         postError.className = "alert alert-danger alert-dismissible fade show mb-0";
         let errMsg = err.error || err.message || 'Failed to create post.';
-        if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
-          errMsg = 'Upload failed — the media file is too large for the server. Try removing the media or using a smaller file.';
+        
+        // Check for specific error types
+        if (err.name === 'AbortError') {
+          errMsg = 'Request timeout (30s) — the server did not respond. Check if the server is running.';
+        } else if (errMsg.includes('Unauthorized')) {
+          errMsg = 'Not logged in. Please log in again.';
+        } else if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
+          errMsg = 'Network error. Check if the server is running.';
         }
         postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i>${errMsg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
       })
