@@ -274,10 +274,12 @@ plagiarized the work of other students and/or persons.
           const userData = await response.json();
           currentUserId = userData._id;
           currentUsername = userData.displayName || userData.username || 'Gamer';
+          console.log('[Auth] SUCCESS - User logged in:', currentUsername);
         } else if (response.status === 401 || response.status === 403) {
           // Definitely not logged in
           isUserLoggedIn = false;
           window.limitCommunityPreview = true;
+          console.log('[Auth] User not logged in (401/403)');
         } else {
           console.warn('[Auth] Server error:', response.status, '- retrying...');
           if (retries > 0) {
@@ -313,7 +315,10 @@ plagiarized the work of other students and/or persons.
     }
 
     // Check auth on page load (single call instead of two)
-    checkAuthAndShowContent();
+    // Add small delay to ensure cookies are ready
+    setTimeout(() => {
+      checkAuthAndShowContent();
+    }, 100);
 
     // Handle New Post button clicks - verify auth before opening modal
     document.querySelectorAll('#newPostTopBtn, #newPostEmptyBtn').forEach(btn => {
