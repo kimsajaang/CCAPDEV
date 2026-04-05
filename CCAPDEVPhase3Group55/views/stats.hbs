@@ -259,6 +259,7 @@ plagiarized the work of other students and/or persons.
     let isUserLoggedIn = false;
     let currentUsername = 'Gamer';
     let currentUserId = null;
+    let authCheckComplete = false;
 
     // Single auth check - combines auth detection and community preview logic in one call
     async function checkAuthAndShowContent(retries = 1) {
@@ -306,6 +307,8 @@ plagiarized the work of other students and/or persons.
           return checkAuthAndShowContent(retries - 1);
         }
         // Don't change login state on persistent network errors
+      } finally {
+        authCheckComplete = true;
       }
     }
 
@@ -1369,10 +1372,16 @@ plagiarized the work of other students and/or persons.
       card.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    // Fire posts + stats in parallel for fastest initial load
-    Promise.all([render(), updateSidebarStats()]).then(() => {
+    // Wait for auth check, then fire posts + stats in parallel for fastest initial load
+    (async () => {
+      // Wait for auth to be checked before rendering posts
+      while (!authCheckComplete) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      // Now render with correct authStatus
+      await Promise.all([render(), updateSidebarStats()]);
       setTimeout(() => openCommentsForHash(), 150);
-    });
+    })();
 
     // Logout function
     async function logout(event) {

@@ -6,6 +6,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                <li class="nav-item" id="nav-home-public"><a class="nav-link" href="/">Home</a></li>
                 <li class="nav-item d-none" id="nav-dashboard"><a class="nav-link" href="/dashboard">Dashboard</a></li>
                 <li class="nav-item"><a class="nav-link" href="/search">Search Games</a></li>
                 <li class="nav-item"><a class="nav-link" href="/stats">Community</a></li>
@@ -96,6 +97,7 @@
 
     function applyUser(user) {
         if (user) {
+            document.getElementById('nav-home-public')?.classList.add('d-none');
             document.getElementById('nav-dashboard').classList.remove('d-none');
             document.getElementById('nav-library').classList.remove('d-none');
             document.getElementById('nav-profile').classList.remove('d-none');
@@ -116,6 +118,7 @@
                 checkSteamStatus();
             }
         } else {
+            document.getElementById('nav-home-public')?.classList.remove('d-none');
             document.getElementById('nav-dashboard').classList.add('d-none');
             document.getElementById('nav-library').classList.add('d-none');
             document.getElementById('nav-profile').classList.add('d-none');
