@@ -780,7 +780,15 @@ plagiarized the work of other students and/or persons.
           }
         }
         
-        render();
+        // In-place DOM update — don't re-render the whole feed (preserves videos/photos)
+        const cardEl = document.querySelector(`[data-post-id="${postId}"]`);
+        if (cardEl) {
+          const scoreEl = cardEl.querySelector('[data-score]');
+          if (scoreEl) scoreEl.textContent = data.score;
+        } else {
+          // Fallback: full re-render if card not found
+          render();
+        }
       } catch (err) {
         console.error('Vote request error:', err);
       }
