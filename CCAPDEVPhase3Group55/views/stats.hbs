@@ -60,8 +60,9 @@ plagiarized the work of other students and/or persons.
         </button>
       </div>
 
-      <div class="alert alert-info alert-sm mb-0" data-preview-only="true" style="display: none; font-size: 0.9rem;">
-        <a href="/login" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> to create posts and engage with the community!
+      <div class="alert alert-info py-2 px-3 mb-0 w-100 d-flex align-items-center flex-wrap gap-2" data-preview-only="true" style="display: none;">
+        <span><strong>Preview only:</strong> <a href="/login" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> or <a href="/register" class="alert-link" style="color: #5383e8; text-decoration: underline;">Sign up</a> to create posts and engage with the community!</span>
+        <a href="/" class="btn btn-outline-primary btn-sm ms-auto py-1 px-3 d-flex align-items-center"><i class="bi bi-arrow-left me-2"></i>Back to Home</a>
       </div>
     </div>
 
@@ -244,15 +245,6 @@ plagiarized the work of other students and/or persons.
     </div>
   </div>
 
-  <!-- Login prompt for community preview -->
-  <div class="container my-5" id="communityLoginPrompt" style="display:none;">
-    <div class="alert alert-info text-center">
-      <strong>Preview only:</strong> Log in or sign up to unlock full community features and post updates.<br>
-      <a href="/login" class="btn btn-primary btn-sm mt-2">Login</a>
-      <a href="/register" class="btn btn-outline-primary btn-sm mt-2">Sign Up</a>
-      <a href="/" class="btn btn-link btn-sm mt-2">Back to Home</a>
-    </div>
-  </div>
 
   <script>
     // ============================================================
@@ -285,10 +277,7 @@ plagiarized the work of other students and/or persons.
           // Definitely not logged in
           isUserLoggedIn = false;
           window.limitCommunityPreview = true;
-          const loginPrompt = document.getElementById('communityLoginPrompt');
-          if (loginPrompt) loginPrompt.style.display = '';
         } else {
-          // Server error (500, etc.) — don't mark as logged out, retry
           console.warn('[Auth] Server error:', response.status, '- retrying...');
           if (retries > 0) {
             await new Promise(r => setTimeout(r, 2000));
@@ -539,7 +528,8 @@ plagiarized the work of other students and/or persons.
         container.replaceWith(videoEl);
       } else {
         container.src = photoUrl;
-        container.style.display = 'block';
+        container.style.opacity = '1';
+        container.style.border = '1px solid var(--border)';
       }
     }
 
@@ -566,7 +556,7 @@ plagiarized the work of other students and/or persons.
       // Placeholder for photo (lazy loaded later)
       let mediaHtml = "";
       if (post.hasPhoto) {
-        mediaHtml = `<img class="community-post-photo" data-photo-id="${post.id}" style="display:none;width:100%;max-height:400px;border-radius:8px;margin:12px 0;border:1px solid var(--border);" alt="Post media" loading="lazy">`;
+        mediaHtml = `<img class="community-post-photo" data-photo-id="${post.id}" style="display:block;width:100%;min-height:50px;max-height:400px;border-radius:8px;margin:12px 0;opacity:0;transition:opacity 0.3s ease;" alt="" loading="lazy">`;
       }
 
       // Check if current user is the post author
