@@ -60,7 +60,7 @@ plagiarized the work of other students and/or persons.
         </button>
       </div>
 
-      <div id="preview-banner" class="alert alert-info py-2 px-3 mb-0 w-100 d-flex align-items-center flex-wrap gap-2" data-preview-only="true" style="display: none;">
+      <div id="preview-banner" class="alert alert-info py-2 px-3 mb-0 w-100 d-flex align-items-center flex-wrap gap-2" style="display: {{#if isLoggedIn}}none{{else}}{{/if}};">
         <span><strong>Preview only:</strong> <a href="/login" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> or <a href="/register" class="alert-link" style="color: #5383e8; text-decoration: underline;">Sign up</a> to create posts and engage with the community!</span>
         <a href="/" class="btn btn-outline-primary btn-sm ms-auto py-1 px-3 d-flex align-items-center"><i class="bi bi-arrow-left me-2"></i>Back to Home</a>
       </div>
@@ -247,6 +247,33 @@ plagiarized the work of other students and/or persons.
 
 
   <script>
+    // IMMEDIATE AUTH CHECK - runs synchronously before anything else
+    // This controls the preview banner and runs FIRST
+    let bannerHidden = false;
+    
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/current', { credentials: 'include' });
+        const banner = document.getElementById('preview-banner');
+        
+        if (res.ok) {
+          // User IS logged in
+          if (banner) banner.style.display = 'none';
+          bannerHidden = true;
+          console.log('[Immediate Auth] LOGGED IN - banner hidden');
+        } else {
+          // User is NOT logged in (401/403)
+          if (banner) banner.style.display = '';
+          console.log('[Immediate Auth] NOT logged in - banner shown');
+        }
+      } catch (e) {
+        // Network error - hide banner to not block user
+        const banner = document.getElementById('preview-banner');
+        if (banner) banner.style.display = 'none';
+        console.error('[Immediate Auth] Error:', e.message);
+      }
+    })();
+
     // ============================================================
     // Every is stored in MongoDB via backend API
     // ============================================================
@@ -293,16 +320,15 @@ plagiarized the work of other students and/or persons.
 
         const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
         const previewSections = document.querySelectorAll('[data-preview-only="true"]');
-        const previewBanner = document.getElementById('preview-banner');
 
         if (isUserLoggedIn) {
           protectedSections.forEach(el => el.style.display = '');
           previewSections.forEach(el => el.style.display = 'none');
-          if (previewBanner) previewBanner.style.display = 'none';
+          // Banner was already hidden by immediate check, don't override
         } else {
           protectedSections.forEach(el => el.style.display = 'none');
           previewSections.forEach(el => el.style.display = '');
-          if (previewBanner) previewBanner.style.display = '';
+          // Banner is controlled by immediate check only
         }
       } catch (err) {
         console.error('Auth check failed:', err);

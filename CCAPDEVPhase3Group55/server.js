@@ -153,7 +153,10 @@ app.get('/profile', (req, res) => res.render('profile', { title: 'Profile', user
 app.get('/profile-edit', (req, res) => res.render('profile-edit', { title: 'Edit Profile', user: req.user }));
 app.get('/achievements', (req, res) => res.render('achievements', { title: 'Achievements', user: req.user }));
 app.get('/search', (req, res) => res.render('search', { title: 'Search Games', user: req.user }));
-app.get('/stats', (req, res) => res.render('stats', { title: 'Community', user: req.user }));
+app.get('/stats', (req, res) => {
+  const isLoggedIn = !!(req.session && req.session.userId);
+  res.render('stats', { title: 'Community', user: req.user, isLoggedIn });
+});
 app.get('/friends', (req, res) => res.render('friends', { title: 'Find Friends', user: req.user }));
 app.get('/about', (req, res) => res.render('about', { title: 'About', user: req.user }));
 app.get('/feedback', isLoggedIn, (req, res) => res.render('feedback', { title: 'Feedback', user: req.user }));
