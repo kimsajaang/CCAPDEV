@@ -60,7 +60,7 @@ plagiarized the work of other students and/or persons.
         </button>
       </div>
 
-      <div id="preview-banner" class="alert alert-info py-2 px-3 mb-0 w-100 d-flex align-items-center flex-wrap gap-2" style="display: {{#if isLoggedIn}}none{{else}}{{/if}};">
+      <div id="preview-banner" class="alert alert-info py-2 px-3 mb-0 w-100 d-flex align-items-center flex-wrap gap-2" style="display: {{#if isLoggedIn}}none !important{{else}}flex !important{{/if}};">
         <span><strong>Preview only:</strong> <a href="/login" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> or <a href="/register" class="alert-link" style="color: #5383e8; text-decoration: underline;">Sign up</a> to create posts and engage with the community!</span>
         <a href="/" class="btn btn-outline-primary btn-sm ms-auto py-1 px-3 d-flex align-items-center"><i class="bi bi-arrow-left me-2"></i>Back to Home</a>
       </div>
@@ -258,18 +258,18 @@ plagiarized the work of other students and/or persons.
         
         if (res.ok) {
           // User IS logged in
-          if (banner) banner.style.display = 'none';
+          if (banner) banner.style.setProperty('display', 'none', 'important');
           bannerHidden = true;
           console.log('[Immediate Auth] LOGGED IN - banner hidden');
         } else {
           // User is NOT logged in (401/403)
-          if (banner) banner.style.display = '';
+          if (banner) banner.style.setProperty('display', 'flex', 'important');
           console.log('[Immediate Auth] NOT logged in - banner shown');
         }
       } catch (e) {
         // Network error - hide banner to not block user
         const banner = document.getElementById('preview-banner');
-        if (banner) banner.style.display = 'none';
+        if (banner) banner.style.setProperty('display', 'none', 'important');
         console.error('[Immediate Auth] Error:', e.message);
       }
     })();
@@ -349,7 +349,11 @@ plagiarized the work of other students and/or persons.
       // Explicitly hide banner for logged-in users
       const previewBanner = document.getElementById('preview-banner');
       if (previewBanner) {
-        previewBanner.style.display = isUserLoggedIn ? 'none' : '';
+        if (isUserLoggedIn) {
+          previewBanner.style.setProperty('display', 'none', 'important');
+        } else {
+          previewBanner.style.setProperty('display', 'flex', 'important');
+        }
       }
     });
 
