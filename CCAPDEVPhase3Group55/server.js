@@ -3172,8 +3172,3 @@ app.post('/api/steam/sync', isLoggedIn, async (req, res) => {
     res.status(500).json({ error: 'Steam sync failed. Please try again.' });
   }
 });
-
-// ─── START SERVER ───
-app.listen(PORT, () => {
-  console.log(`[SERVER] Express app listening on port ${PORT}`);
-});
