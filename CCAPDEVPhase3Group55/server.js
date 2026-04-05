@@ -3008,12 +3008,19 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
     const currentPost = await Post.findById(postId).select('upvotes downvotes').lean();
     if (!currentPost) return res.status(404).json({ error: 'Post not found' });
 
+    console.log(`[VOTE DEBUG] ${direction} on post ${postId} by user ${userId}`);
+    console.log(`[VOTE DEBUG] Before: up=${currentPost.upvotes?.length} down=${currentPost.downvotes?.length}`);
+
     const hasUpvoted = currentPost.upvotes?.some(id => String(id) === String(userId));
     const hasDownvoted = currentPost.downvotes?.some(id => String(id) === String(userId));
+    
+    console.log(`[VOTE DEBUG] hasUp: ${hasUpvoted}, hasDown: ${hasDownvoted}`);
 
     // Toggle: if clicking same direction again, just remove the vote
     const isSameDirection = (direction === 'up' && hasUpvoted) || (direction === 'down' && hasDownvoted);
     const isOppositeDirection = (direction === 'up' && hasDownvoted) || (direction === 'down' && hasUpvoted);
+
+    console.log(`[VOTE DEBUG] isSame: ${isSameDirection}, isOpposite: ${isOppositeDirection}`);
 
     // Remove user from both arrays first to reset their vote
     await Post.updateOne({ _id: postId }, {
@@ -3022,21 +3029,20 @@ app.post('/api/posts/:id/vote', isLoggedIn, async (req, res) => {
 
     let userVote = null;
 
-    // "It skips 2 votes, it has to be incrementing": 
-    // They don't want Reddit style jumping from -1 to 1.
-    // So if they click the opposite vote, it will ONLY cancel their previous vote (leaving it at 0).
-    // They will have to click it again to genuinely cast the opposite vote.
-    // If they just clicked a new direction, add it.
     if (!isSameDirection && !isOppositeDirection) {
+      console.log(`[VOTE DEBUG] Adding vote to ${direction}`);
       const addField = direction === 'up' ? 'upvotes' : 'downvotes';
       await Post.updateOne({ _id: postId }, {
         $addToSet: { [addField]: userId }
       });
       userVote = direction;
+    } else {
+      console.log(`[VOTE DEBUG] Skipping add. Resetting to neutral.`);
     }
 
     // Fetch the updated vote counts
     const post = await Post.findById(postId).select('upvotes downvotes').lean();
+    console.log(`[VOTE DEBUG] After: up=${post.upvotes?.length} down=${post.downvotes?.length}`);
 
     res.json({
       upvotes: post.upvotes.length,
