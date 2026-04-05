@@ -807,7 +807,11 @@ plagiarized the work of other students and/or persons.
     }
 
     // --- Actions: vote, comment, delete, share ---
+    const votingInFlight = new Set(); // Prevent double-click race conditions
     async function vote(postId, dir) {
+      // Lock: skip if a vote request is already in progress for this post
+      if (votingInFlight.has(postId)) return;
+      votingInFlight.add(postId);
       try {
         const res = await fetch(`/api/posts/${postId}/vote`, {
           method: 'POST',
@@ -832,12 +836,19 @@ plagiarized the work of other students and/or persons.
         if (cardEl) {
           const scoreEl = cardEl.querySelector('[data-score]');
           if (scoreEl) scoreEl.textContent = data.score;
+          // Update active vote button styling
+          const upBtn = cardEl.querySelector('[data-act="up"]');
+          const downBtn = cardEl.querySelector('[data-act="down"]');
+          if (upBtn) upBtn.classList.toggle('active', data.upvotes > 0 && dir > 0 && data.score > 0);
+          if (downBtn) downBtn.classList.toggle('active', data.downvotes > 0 && dir < 0 && data.score < 0);
         } else {
           // Fallback: full re-render if card not found
           render();
         }
       } catch (err) {
         console.error('Vote request error:', err);
+      } finally {
+        votingInFlight.delete(postId);
       }
     }
 
