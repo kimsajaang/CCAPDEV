@@ -329,8 +329,8 @@ All pages are accessible from the main navbar:
 
 ##  License
 
-CCAPDEV Machine Project - Phase 2
+CCAPDEV Machine Project - Phase 3
 
 ---
 
-**Last Updated**: February 2026
+**Last Updated**: April 2026

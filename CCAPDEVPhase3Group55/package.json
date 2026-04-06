@@ -1,7 +1,7 @@
 {
   "name": "backlog-hero",
   "version": "2.0.0",
-  "description": "CCAPDEV Phase 2 - Backlog Hero game tracker with MongoDB backend",
+  "description": "CCAPDEV Phase 3 - Backlog Hero game tracker with MongoDB backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -11,6 +11,129 @@ plagiarized the work of other students and/or persons.
       <Fortea, Seanne Clarence - <12410969> -<S22>
 ****************************************************************************** -->
 <style>
+  /* ─── Steam Atmosphere Color Override (matches About page) ─── */
+  :root {
+    --primary:        #66c0f4;
+    --primary-hover:  #4fa3d4;
+    --primary-glow:   rgba(102, 192, 244, 0.35);
+    --primary-subtle: rgba(102, 192, 244, 0.08);
+    --accent:         #2dd4bf;
+    --accent-glow:    rgba(45, 212, 191, 0.2);
+
+    --bg-base:        #0b0e13;
+    --bg-card:        rgba(22, 32, 45, 0.85);
+    --bg-card-hover:  rgba(30, 42, 58, 0.9);
+    --bg-input:       #0f1923;
+    --bg-elevated:    rgba(22, 32, 45, 0.92);
+    --bg-glass:       rgba(22, 32, 45, 0.6);
+
+    --border:         rgba(255, 255, 255, 0.08);
+    --border-hover:   rgba(255, 255, 255, 0.15);
+
+    --text:           #c6d4df;
+    --text-secondary: #acb2b8;
+    --text-muted:     #556772;
+    --text-faint:     #3d4f5f;
+
+    --gradient-primary: linear-gradient(135deg, #66c0f4, #4b9cd3);
+    --gradient-accent:  linear-gradient(135deg, #2dd4bf, #66c0f4);
+    --gradient-card:    linear-gradient(145deg, rgba(22, 32, 45, 0.95), rgba(11, 14, 19, 0.98));
+
+    --shadow-sm:   0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md:   0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-lg:   0 16px 48px rgba(0, 0, 0, 0.5);
+    --shadow-xl:   0 24px 64px rgba(0, 0, 0, 0.55);
+    --shadow-glow: 0 0 30px rgba(102, 192, 244, 0.25);
+  }
+
+  body {
+    background-color: #0b0e13;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(30, 45, 60, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(20, 30, 40, 0.3) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Steam-blue navbar tint */
+  .navbar {
+    background: rgba(27, 40, 56, 0.97) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Card hover glow uses steam accent */
+  .card:hover {
+    border-color: rgba(102, 192, 244, 0.3) !important;
+    box-shadow: var(--shadow-md), 0 0 40px rgba(102, 192, 244, 0.06);
+  }
+
+  /* Hero mesh overlay in steam colors */
+  .hero::before {
+    background:
+      radial-gradient(circle at 0% 0%, rgba(102, 192, 244, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(45, 212, 191, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(102, 192, 244, 0.04) 0%, transparent 50%);
+  }
+
+  /* List-group hover in steam blue */
+  .list-group-item:hover {
+    border-color: rgba(102, 192, 244, 0.2) !important;
+    box-shadow: -4px 0 20px rgba(102, 192, 244, 0.06);
+  }
+
+  /* Buttons: steam blue glow */
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    box-shadow: 0 4px 16px rgba(102, 192, 244, 0.3);
+  }
+  .btn-outline-primary {
+    color: #66c0f4 !important;
+    border-color: rgba(102, 192, 244, 0.4) !important;
+  }
+  .btn-outline-primary:hover,
+  .btn-outline-primary:focus-visible {
+    background: rgba(102, 192, 244, 0.12) !important;
+    border-color: #66c0f4 !important;
+    box-shadow: 0 4px 20px rgba(102, 192, 244, 0.25);
+  }
+
+  /* Gradient text in steam palette */
+  .gradient-text {
+    background: linear-gradient(135deg, #66c0f4, #4b9cd3) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+  .gradient-text-accent {
+    background: linear-gradient(135deg, #2dd4bf, #66c0f4) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+
+  /* Scroll-btn hover */
+  .trending-scroll-wrap .scroll-btn:hover {
+    background: #66c0f4;
+    border-color: #66c0f4;
+    box-shadow: 0 0 20px rgba(102, 192, 244, 0.3);
+  }
+
+  /* Chat bubble accent */
+  .cm-bubble { border-left-color: #66c0f4; }
+  .cm-user   { color: #66c0f4; }
+
+  /* Badge primary */
+  .badge.bg-primary { background: linear-gradient(135deg, #66c0f4, #4b9cd3) !important; }
+
+  /* Form focus glow */
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #66c0f4 !important;
+    box-shadow: 0 0 0 3px rgba(102, 192, 244, 0.35) !important;
+  }
+
+  /* Plexus canvas tint */
+  #plexus-canvas { background: #0b0e13; }
+
   /* Page-specific: dashboard overrides */
   body.loading {
     overflow: hidden;
