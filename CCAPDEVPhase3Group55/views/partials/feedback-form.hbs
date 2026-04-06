@@ -1,0 +1,177 @@
+<style>
+    .feedback-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 48px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .feedback-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .feedback-subtitle {
+        color: rgba(180, 200, 230, 0.6);
+        margin-bottom: 40px;
+        font-size: 1.1rem;
+    }
+
+    .fb-form-label {
+        color: #c8d8f0;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+
+    .fb-form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #fff;
+        padding: 12px 16px;
+        transition: all 0.3s ease;
+        display: block;
+        width: 100%;
+    }
+
+    .fb-form-control:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #5383e8;
+        box-shadow: 0 0 0 4px rgba(83, 131, 232, 0.15);
+        color: #fff;
+        outline: none;
+    }
+
+    .btn-submit-fb {
+        background: linear-gradient(135deg, #5383e8, #3b6fd4);
+        border: none;
+        color: white;
+        padding: 14px 0;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 20px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .btn-submit-fb:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(83, 131, 232, 0.4);
+        filter: brightness(1.1);
+    }
+
+    .success-message {
+        display: none;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        color: #2dd4bf;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="feedback-card" id="formContainer">
+            <h1 class="feedback-title">We'd love to hear from you</h1>
+            <p class="feedback-subtitle">Have a feature request, found a bug, or just want to say hi? Send us a message.</p>
+            
+            <form id="feedbackForm">
+                <div class="row g-3">
+                    <div class="col-md-6 text-start">
+                        <label class="fb-form-label">Name</label>
+                        <input type="text" id="fb-name" class="fb-form-control" placeholder="Your name" required {{#if user}}value="{{user.displayName}}"{{/if}}>
+                    </div>
+                    <div class="col-md-6 text-start">
+                        <label class="fb-form-label">Email</label>
+                        <input type="email" id="fb-email" class="fb-form-control" placeholder="email@example.com" required {{#if user}}value="{{user.email}}"{{/if}}>
+                    </div>
+                    <div class="col-12 text-start">
+                        <label class="fb-form-label">Subject</label>
+                        <input type="text" id="fb-subject" class="fb-form-control" placeholder="What's this about?" required>
+                    </div>
+                    <div class="col-12 text-start">
+                        <label class="fb-form-label">Message</label>
+                        <textarea id="fb-message" class="fb-form-control" rows="5" placeholder="Tell us more..." required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn-submit-fb" id="submitBtnFb">
+                            <span class="btn-text" id="btnTextFb">Send Message</span>
+                            <span class="spinner-border spinner-border-sm d-none" id="spinnerFb" role="status"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="feedback-card success-message" id="successMessage">
+            <div class="success-icon">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <h2 class="feedback-title">Message Sent!</h2>
+            <p class="feedback-subtitle">Thank you for your feedback. We'll get back to you as soon as possible.</p>
+            <button class="btn-submit-fb" style="display:inline-block; width:auto; padding: 12px 30px;" onclick="document.getElementById('successMessage').style.display='none'; document.getElementById('formContainer').style.display='block'; document.getElementById('feedbackForm').reset();">Send Another</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtnFb');
+    const btnText = document.getElementById('btnTextFb');
+    const spinner = document.getElementById('spinnerFb');
+    
+    submitBtn.disabled = true;
+    btnText.classList.add('d-none');
+    spinner.classList.remove('d-none');
+
+    const formData = {
+        name: document.getElementById('fb-name').value,
+        email: document.getElementById('fb-email').value,
+        subject: document.getElementById('fb-subject').value,
+        message: document.getElementById('fb-message').value
+    };
+
+    try {
+        const response = await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            document.getElementById('formContainer').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Something went wrong. Please try again.');
+        }
+    } catch (err) {
+        console.error('Feedback error:', err);
+        alert('Network error. Please check your connection.');
+    } finally {
+        submitBtn.disabled = false;
+        btnText.classList.remove('d-none');
+        spinner.classList.add('d-none');
+    }
+});
+</script>

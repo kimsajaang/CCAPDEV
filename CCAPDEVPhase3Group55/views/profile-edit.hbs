@@ -1,0 +1,1344 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+<style>
+        /* Page-specific: profile edit form, letterboxd-style settings */
+        body { background: #0e1217; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+        .settings-layout { display: flex; max-width: 1000px; margin: 40px auto; gap: 40px; padding: 0 20px; }
+        
+        /* Sidebar */
+        .settings-sidebar { width: 240px; flex-shrink: 0; }
+        .sidebar-header { text-transform: uppercase; font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 12px; padding: 0 16px; letter-spacing: 0.5px; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li { padding: 12px 16px; border-radius: 6px; cursor: pointer; color: #c9d1d9; transition: all 0.2s; margin-bottom: 4px; display: flex; flex-direction: column; }
+        .sidebar-nav li strong { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .sidebar-nav li span { font-size: 0.75rem; color: #8b949e; opacity: 0.8; }
+        .sidebar-nav li:hover { background: rgba(255,255,255,0.05); }
+        .sidebar-nav li.active { background: #1f232b; box-shadow: inset 4px 0 0 var(--primary); }
+        .sidebar-nav li.active strong { color: var(--primary); }
+        .sidebar-nav li.disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Main Content */
+        .settings-main { flex: 1; min-width: 0; background: transparent; }
+        .settings-section { display: none; animation: fadeIn 0.3s ease; }
+        .settings-section.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+        
+        .section-title { font-size: 1.5rem; font-weight: 600; color: #fff; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #30363d; }
+        
+        /* Form fields */
+        .field-group { margin-bottom: 24px; }
+        .field-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #c9d1d9; margin-bottom: 8px; }
+        .settings-input { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #c9d1d9; font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .settings-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(83, 131, 232, 0.3); }
+        textarea.settings-input { resize: vertical; min-height: 80px; }
+        .settings-select { width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #c9d1d9; font-size: 0.9rem; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; transition: border-color 0.2s; }
+        .settings-select:focus { outline: none; border-color: var(--primary); }
+        .field-hint { font-size: 0.75rem; color: #8b949e; margin-top: 6px; }
+        
+        /* Avatar & Cover */
+        .avatar-edit-box { display: flex; align-items: center; gap: 16px; }
+        .avatar-preview { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #161b22; border: 1px solid #30363d; }
+        
+        .wallpaper-preview-container { width: 100%; height: 140px; border-radius: 8px; border: 1px dashed #30363d; background: #161b22; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; cursor: pointer; }
+        .wallpaper-preview-container:hover { border-color: var(--primary); border-style: solid; }
+        .wallpaper-preview { width: 100%; height: 100%; object-fit: cover; background: #0e1217; }
+        .wallpaper-empty { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #8b949e; font-size: 0.85rem; pointer-events: none; }
+        .wallpaper-overlay { position: absolute; inset:0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+        .wallpaper-preview-container:hover .wallpaper-overlay { opacity: 1; }
+        .has-image + .wallpaper-empty { display: none; !important; }
+        
+        /* Grid / Layout */
+        .form-row { display: flex; gap: 20px; }
+        .form-row .field-group { flex: 1; min-width: 0; }
+        
+        /* Buttons */
+        .btn-change { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-change:hover { background: #30363d; border-color: #8b949e; color: #fff; }
+        .settings-save-btn { background: #238636; border: 1px solid rgba(240,246,252,0.1); color: #fff; padding: 6px 16px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .settings-save-btn:hover { background: #2ea043; }
+        
+        /* Fav Games Grid */
+        .favorite-games-selected { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+        .fav-game-slot { aspect-ratio: 3/4; border-radius: 6px; border: 1px dashed #30363d; display: flex; align-items: center; justify-content: center; position: relative; background: #161b22; }
+        .fav-game-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+        .fav-game-slot .remove-btn { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; background: #da3633; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; border: none; opacity: 0; transition: opacity 0.2s; padding: 0; z-index: 10; }
+        .fav-game-slot:hover .remove-btn { opacity: 1; }
+
+        /* Search Results */
+        .search-results-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #161b22; border: 1px solid #30363d; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 100; max-height: 250px; overflow-y: auto; display: none; margin-top: 4px; }
+        .search-result-item { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; transition: background 0.2s; color: #c9d1d9; }
+        .search-result-item:hover { background: #1f232b; }
+
+        @media (max-width: 768px) {
+            .settings-layout { flex-direction: column; }
+            .settings-sidebar { width: 100%; margin-bottom: 20px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .favorite-games-selected { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        /* Notifications & Alert */
+        .settings-alert { background: rgba(83, 131, 232, 0.1); border: 1px solid rgba(83, 131, 232, 0.2); border-radius: 6px; padding: 12px 16px; font-size: 0.85rem; color: #dbe7ff; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+        .settings-alert a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .settings-alert a:hover { text-decoration: underline; }
+        
+        /* Slide alerts */
+        .notification-container { position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none; }
+        .notification { background: #1f232b; color: #fff; padding: 16px 24px; border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; margin-bottom: 12px; animation: slideIn 0.4s ease forwards; pointer-events: all; border: 1px solid #30363d; }
+        .notification.error { border-left: 4px solid #da3633; }
+        .notification.success { border-left: 4px solid var(--primary); }
+        .notification-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .notification-content { display: flex; flex-direction: column; gap: 2px; }
+        .notification-title { font-weight: 700; font-size: 0.95rem; }
+        .notification-message { font-size: 0.85rem; opacity: 0.8; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(400px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(400px); } }
+    </style>{{> navbar-app activePage="profile"}}
+
+    <div class="settings-layout">
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+            <div class="sidebar-header">Settings</div>
+            <ul class="sidebar-nav">
+                <li class="active" onclick="switchTab('profile-sec', this)">
+                    <strong>Profile</strong>
+                    <span>Customize your avatar and profile</span>
+                </li>
+                <li onclick="switchTab('defaults-sec', this)">
+                    <strong>Defaults</strong>
+                    <span>Set your defaults across the site</span>
+                </li>
+                <li onclick="switchTab('notifications-sec', this)">
+                    <strong>Notifications</strong>
+                    <span>Customize how you're notified</span>
+                </li>
+                <li onclick="switchTab('integrations-sec', this)">
+                    <strong>Integrations</strong>
+                    <span>Hook into external sites / apps</span>
+                </li>
+                <li onclick="switchTab('account-sec', this)">
+                    <strong>Account</strong>
+                    <span>Update your email / password</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content (Form) -->
+        <div class="settings-main">
+            <form id="profileForm">
+                <!-- ================= PROFILE TAB ================= -->
+                <div id="profile-sec" class="settings-section active">
+                    <h2 class="section-title">Profile</h2>
+                    
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Username</label>
+                            <input type="text" class="settings-input" id="inputUsername" placeholder="@username">
+                            <div class="field-hint">You may change your username once every 30 days</div>
+                        </div>
+                        <div class="field-group">
+                            <label>Display Name</label>
+                            <input type="text" class="settings-input" id="inputName" placeholder="Your gaming name">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Avatar</label>
+                        <div class="avatar-edit-box">
+                            <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235383e8'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z'/%3E%3C/svg%3E" class="avatar-preview" alt="Avatar Preview">
+                            <button type="button" class="btn-change" id="uploadAvatarBtn">Change</button>
+                            <input type="file" id="avatarInput" accept="image/*" class="d-none">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="mb-0">Profile Cover</label>
+                            <span class="field-hint mb-0 mt-0" id="dragHint" style="display:none; color: var(--primary);"><i class="bi bi-arrows-expand"></i> Drag image to reposition</span>
+                        </div>
+                        <div class="wallpaper-preview-container wallpaper-upload-controls" id="wallpaperPreviewContainer">
+                            <img id="wallpaperPreview" class="wallpaper-preview" style="display: none; cursor: grab;" draggable="false">
+                            <div id="wallpaperEmptyState" class="wallpaper-empty" onclick="document.getElementById('wallpaperInput').click()" style="cursor: pointer; width: 100%; height: 100%;">
+                                <i class="bi bi-image fs-4"></i> Upload a wide image
+                            </div>
+                            <div class="wallpaper-overlay" id="wallpaperOverlay" style="pointer-events: none;">
+                                <button type="button" class="btn-change" onclick="document.getElementById('wallpaperInput').click()" style="pointer-events: auto; z-index: 10;">Change Cover</button>
+                            </div>
+                        </div>
+                        <input type="file" id="wallpaperInput" accept="image/*" class="d-none">
+                        
+                        <div class="wallpaper-position-control mt-2" id="wallpaperPositionControl" style="display:none; align-items:center; gap:12px;">
+                            <label class="mb-0 text-muted small">Y:</label>
+                            <input type="range" id="wallpaperPositionSlider" class="form-range" style="flex:1;" min="0" max="100" value="50">
+                            <label class="mb-0 text-muted small">X:</label>
+                            <input type="range" id="wallpaperPositionXSlider" class="form-range" style="flex:1;" min="0" max="100" value="50">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group" style="flex: 1.5;">
+                            <label>Biography</label>
+                            <textarea id="inputBio" class="settings-input" placeholder="Write a bio"></textarea>
+                        </div>
+                        <div class="field-group" style="flex: 1;">
+                            <label>Gaming Details</label>
+                            <select class="settings-select mb-2" id="inputIdentity">
+                                <option value="">Select your playstyle...</option>
+                                <option value="Completionist">Completionist</option>
+                                <option value="Casual">Casual</option>
+                                <option value="Speedrunner">Speedrunner</option>
+                                <option value="Explorer">Explorer</option>
+                                <option value="Competitive">Competitive</option>
+                                <option value="Story-Driven">Story-Driven</option>
+                            </select>
+                            <select class="settings-select" id="inputPlatform">
+                                <option value="">Select favorite platform...</option>
+                                <option value="PC">PC</option>
+                                <option value="PlayStation">PlayStation</option>
+                                <option value="Xbox">Xbox</option>
+                                <option value="Nintendo Switch">Nintendo Switch</option>
+                                <option value="Mobile">Mobile</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group mt-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label style="margin-bottom:0;" class="mb-0">Favorite games <span class="badge bg-secondary ms-1 fw-normal" id="gameCount" style="font-size:0.7rem;">0/5</span></label>
+                            <span class="field-hint mb-0" style="margin-top:0;">Reorder your favorites by dragging the covers (coming soon)</span>
+                        </div>
+                        
+                        <div class="position-relative">
+                            <input type="text" class="settings-input mb-1" id="favGameSearchInput" placeholder="Search a game to add..." autocomplete="off">
+                            <div id="favGameSearchResults" class="search-results-dropdown w-100"></div>
+                        </div>
+
+                        <div class="favorite-games-selected" id="favoriteGamesSelected">
+                            <!-- 5 slots total -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ================= DEFAULTS TAB ================= -->
+                <div id="defaults-sec" class="settings-section">
+                    <h2 class="section-title">Defaults</h2>
+                    <div class="field-hint mb-4">Set your default preferences across the Backlog Hero dashboard.</div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Community Visibility</div>
+                            <div class="field-hint mt-0">Allow other users to find your profile on the community feed</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="privacyToggle">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Library Sorting</div>
+                            <div class="field-hint mt-0">The default sorting method used when viewing your library</div>
+                        </div>
+                        <select class="settings-select" id="inputDefaultSort" style="width: auto;">
+                            <option value="date_added">Date Added</option>
+                            <option value="playtime">Playtime</option>
+                            <option value="rating">Rating</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ================= NOTIFICATIONS TAB ================= -->
+                <div id="notifications-sec" class="settings-section">
+                    <h2 class="section-title">Notifications</h2>
+                    <div class="field-hint mb-4">Choose what we can send you. Your email is kept private.</div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Friend Requests</div>
+                            <div class="field-hint mt-0">Get notified when someone wants to add you</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifFriendReq" checked>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Group Chats</div>
+                            <div class="field-hint mt-0">Get notified when you are added to a private group</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifChatMsg" checked>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #30363d !important;">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.95rem; color: #c9d1d9;">Marketing & Offers</div>
+                            <div class="field-hint mt-0">Receive platform updates, beta invites, and partner offers</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifMarketing">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ACCOUNT TAB ================= -->
+                <div id="account-sec" class="settings-section">
+                    <h2 class="section-title text-danger border-danger">Account Security</h2>
+                    <div class="field-hint mb-4">Manage your authentication methods and destructive actions.</div>
+
+                    <div class="field-group mb-4">
+                        <label>Linked Email Address</label>
+                        <input type="email" class="settings-input" id="inputEmail" placeholder="your@email.com" disabled>
+                        <div class="field-hint">Email address cannot be changed currently. Contact support for assistance.</div>
+                    </div>
+
+                    <!-- Password Change Section - Shown only for Backlog accounts -->
+                    <div id="passwordChangeSection" style="background: rgba(26, 31, 46, 0.5); padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 30px;">
+                        <h6 class="mb-3 text-white">Change Password</h6>
+                        <div class="field-group mb-3">
+                            <label>Current Password</label>
+                            <input type="password" class="settings-input" id="currentPassword" placeholder="Enter current password">
+                        </div>
+                        <div class="form-row mb-3">
+                            <div class="field-group">
+                                <label>New Password</label>
+                                <input type="password" class="settings-input" id="newPassword" placeholder="Create new password">
+                            </div>
+                            <div class="field-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" class="settings-input" id="confirmPassword" placeholder="Repeat new password">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-change" id="changePasswordBtn" style="background: var(--bg-secondary); border-color: var(--primary); color: #fff;">
+                            <i class="bi bi-shield-lock me-1"></i> Update Security
+                        </button>
+                    </div>
+
+                    <!-- Google Login Notice - Shown only for Google accounts -->
+                    <div id="googleLoginNotice" style="background: rgba(66, 133, 244, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(66, 133, 244, 0.3); margin-bottom: 30px; display: none;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <i class="bi bi-google" style="font-size: 1.5rem; color: #4285f4;"></i>
+                            <h6 class="mb-0 text-white">Google Account</h6>
+                        </div>
+                        <p class="mb-0" style="color: #a0aec0; font-size: 0.95rem;">
+                            Your account is connected via Google Sign-In. To change your password or authentication settings, please manage your account at <strong>myaccount.google.com</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Steam Login Notice - Shown only for Steam accounts -->
+                    <div id="steamLoginNotice" style="background: rgba(74, 183, 107, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(74, 183, 107, 0.3); margin-bottom: 30px; display: none;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <i class="bi bi-steam" style="font-size: 1.5rem; color: #4ab76b;"></i>
+                            <h6 class="mb-0 text-white">Steam Account</h6>
+                        </div>
+                        <p class="mb-0" style="color: #a0aec0; font-size: 0.95rem;">
+                            Your account is connected via Steam. To change your password or authentication settings, please manage your account at <strong>steampowered.com</strong>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ================= INTEGRATIONS TAB ================= -->
+                <div id="integrations-sec" class="settings-section">
+                    <h2 class="section-title">Integrations</h2>
+                    <div class="field-hint mb-4">Connect your external accounts to sync your gaming library and playtime automatically.</div>
+                    
+                    <!-- Steam Integration -->
+                    <div style="background: rgba(26, 31, 46, 0.5); border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 16px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#5b7fee'" onmouseout="this.style.borderColor='#30363d'">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #171a21, #0b0e14); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #c7d5e0; border: 1px solid #30363d;">
+                                <i class="bi bi-steam"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h6 class="mb-1 text-white" style="font-weight: 700;">Steam</h6>
+                                <div class="field-hint mt-0">Sync your games, playtime, and reviews directly from Valve.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <a href="/auth/steam" id="steamConnectAuthBtn" class="btn-change text-center" style="padding: 10px 24px; border-radius: 8px; flex: 1; background: rgba(91, 127, 238, 0.1); color: #5b7fee; border: 1px solid rgba(91, 127, 238, 0.2); text-decoration: none;">
+                                <i class="bi bi-steam me-1"></i> Link Steam
+                            </a>
+                            <button type="button" id="steamSyncBtn" class="btn-change" style="display: none; padding: 10px 24px; border-radius: 8px; flex: 1;"><i class="bi bi-arrow-repeat me-1"></i> Sync Library</button>
+                        </div>
+                        <div id="steamSyncResult" class="mt-2 small" style="display: none;"></div>
+                        <input type="hidden" id="inputSteamId">
+                    </div>
+
+                    <!-- PlayStation Integration -->
+                    <div style="background: rgba(26, 31, 46, 0.5); border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 16px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#00439c'" onmouseout="this.style.borderColor='#30363d'">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00439c, #00224d); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #fff; border: 1px solid #00439c;">
+                                <i class="bi bi-playstation"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h6 class="mb-1 text-white" style="font-weight: 700;">PlayStation Network</h6>
+                                <div class="field-hint mt-0">Enter your PSN ID to sync your game library from PlayStation.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <input type="text" class="settings-input" id="inputPsnId" placeholder="Your PSN ID (e.g. YourPSNHandle)" style="flex: 1; min-width: 0;">
+                            <button type="button" id="psnSyncBtn" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(0,67,156,0.2); border-color: #00439c; color: #60a5fa;">
+                                <i class="bi bi-link-45deg me-1"></i> Link PlayStation
+                            </button>
+                        </div>
+                        <div id="psnSyncResult" class="field-hint mt-0" style="display:none;"></div>
+                    </div>
+
+                    <!-- Xbox Integration -->
+                    <div style="background: rgba(26, 31, 46, 0.5); border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#107c10'" onmouseout="this.style.borderColor='#30363d'">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #107c10, #0b4a09); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #fff; border: 1px solid #107c10;">
+                                <i class="bi bi-xbox"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h6 class="mb-1 text-white" style="font-weight: 700;">Xbox Live</h6>
+                                <div class="field-hint mt-0">Enter your Gamertag to import your Xbox games into Backlog Hero.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <input type="text" class="settings-input" id="inputXboxGamertag" placeholder="Your Gamertag (e.g. MajorNelson)" style="flex: 1; min-width: 0;">
+                            <button type="button" id="xboxSyncBtn" class="btn-change" style="padding: 10px 20px; border-radius: 8px; flex-shrink: 0; background: rgba(16,124,16,0.2); border-color: #107c10; color: #4ade80;">
+                                <i class="bi bi-link-45deg me-1"></i> Link Xbox
+                            </button>
+                        </div>
+                        <div id="xboxSyncResult" class="field-hint mt-0" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <!-- Submit area (Shared) -->
+                <div class="mt-4 pt-3 d-flex gap-2">
+                    <button type="submit" class="settings-save-btn">Save Profile</button>
+                    <a href="/profile" class="btn-change bg-transparent" style="text-decoration: none; padding: 7px 16px;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+    <script>
+        let PROFILE_STORAGE_KEY = 'bh_profile_v1';
+        let LIBRARY_STORAGE_KEY = 'bh_library_v1';
+
+        const defaultProfile = {
+            displayName: 'Gamer',
+            username: 'gamer',
+            bio: '',
+            avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%235383e8"%3E%3Ccircle cx="12" cy="8" r="4"/%3E%3Cpath d="M12 14c-6 0-8 3-8 3v6h16v-6s-2-3-8-3z"/%3E%3C/svg%3E',
+            gamingIdentity: '',
+            favoritePlatform: '',
+            favoriteGames: [],
+            joinDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+        };
+
+        function loadProfile() {
+            const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : defaultProfile;
+        }
+
+        function loadLibrary() {
+            const stored = localStorage.getItem(LIBRARY_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveProfile(profile) {
+            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+        }
+
+        let selectedFavoriteGames = [];
+
+        function showNotification(title, message, type = 'success') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icon = type === 'success' ? '✓' : '!';
+            
+            notification.innerHTML = `
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.4s ease forwards';
+                setTimeout(() => notification.remove(), 400);
+            }, 4000);
+        }
+
+        let serverLibraryGames = []; // populated from server
+
+        async function initializeForm() {
+            // Fetch current user from server to get the latest avatar & profile data
+            let serverUser = null;
+            try {
+                const res = await fetch('/api/auth/current', { credentials: 'include' });
+                if (res.ok) {
+                    serverUser = await res.json();
+                    const uid = serverUser._id || serverUser.id;
+                    PROFILE_STORAGE_KEY = `prfl_v1_${uid}`;
+                    LIBRARY_STORAGE_KEY = `lib_v1_${uid}`;
+                }
+            } catch (e) { console.warn('Could not fetch server profile:', e); }
+
+            const localProfile = loadProfile();
+
+            // Fetch user's library from server for the favorite games picker
+            if (serverUser) {
+                try {
+                    const userId = serverUser._id || serverUser.id;
+                    const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
+                    if (libRes.ok) {
+                        const entries = await libRes.json();
+                        serverLibraryGames = entries
+                            .filter(e => e.gameId)
+                            .map(e => ({ id: e.gameId._id, name: e.gameId.name, coverUrl: e.gameId.coverUrl }));
+                    }
+                } catch (e) { console.warn('Could not fetch library:', e); }
+            }
+
+            // Merge: prefer server data for key fields, fall back to localStorage
+            const profile = {
+                ...localProfile,
+                displayName: (serverUser && serverUser.displayName) || localProfile.displayName,
+                username: (serverUser && serverUser.username) || localProfile.username,
+                bio: (serverUser && serverUser.bio && serverUser.bio !== 'No bio yet') ? serverUser.bio : localProfile.bio,
+                avatar: (serverUser && serverUser.avatar) || localProfile.avatar,
+                wallpaper: (serverUser && serverUser.wallpaper) || localProfile.wallpaper || '',
+                wallpaperPosition: (serverUser && serverUser.wallpaperPosition != null) ? serverUser.wallpaperPosition : (localProfile.wallpaperPosition != null ? localProfile.wallpaperPosition : 50),
+                wallpaperPositionX: (serverUser && serverUser.wallpaperPositionX != null) ? serverUser.wallpaperPositionX : (localProfile.wallpaperPositionX != null ? localProfile.wallpaperPositionX : 50),
+                steamId: (serverUser && serverUser.steamId) || localProfile.steamId || '',
+                favoriteGames: (serverUser && serverUser.favoriteGames && serverUser.favoriteGames.length > 0)
+                    ? serverUser.favoriteGames
+                    : localProfile.favoriteGames || [],
+            };
+
+            // favoriteGames are stored as game name strings on the server
+            selectedFavoriteGames = [...profile.favoriteGames];
+
+            // Populate form with merged profile data - safely with null checks
+            const inputName = document.getElementById('inputName');
+            if (inputName) inputName.value = profile.displayName;
+            
+            const inputUsername = document.getElementById('inputUsername');
+            if (inputUsername) inputUsername.value = profile.username;
+            
+            const inputBio = document.getElementById('inputBio');
+            if (inputBio) inputBio.value = profile.bio;
+            
+            const inputIdentity = document.getElementById('inputIdentity');
+            if (inputIdentity) inputIdentity.value = profile.gamingIdentity || '';
+            
+            const inputPlatform = document.getElementById('inputPlatform');
+            if (inputPlatform) inputPlatform.value = profile.favoritePlatform || '';
+            
+            const avatarPreview = document.getElementById('avatarPreview');
+            if (avatarPreview) avatarPreview.src = profile.avatar;
+            
+            const inputSteamId = document.getElementById('inputSteamId');
+            if (inputSteamId) inputSteamId.value = profile.steamId || '';
+            
+            // Update Steam connection button state
+            const steamAuthBtn = document.getElementById('steamConnectAuthBtn');
+            const steamBtn = document.getElementById('steamSyncBtn');
+            if (steamBtn && steamAuthBtn) {
+                if (profile.steamId) {
+                  steamBtn.style.display = 'block';
+                  steamAuthBtn.style.display = 'none';
+                } else {
+                  steamBtn.style.display = 'none';
+                  steamAuthBtn.style.display = 'block';
+                }
+            }
+            
+            if (serverUser) {
+                const inputXboxGamertag = document.getElementById('inputXboxGamertag');
+                if (inputXboxGamertag) inputXboxGamertag.value = serverUser.xboxGamertag || '';
+                
+                const inputPsnId = document.getElementById('inputPsnId');
+                if (inputPsnId) inputPsnId.value = serverUser.psnId || '';
+            }
+            
+            const editPageNameEl = document.getElementById('editPageName');
+            if (editPageNameEl) {
+                editPageNameEl.textContent = profile.displayName;
+            }
+
+            if (profile.wallpaper) {
+                const wallpaperPreview = document.getElementById('wallpaperPreview');
+                if (wallpaperPreview) {
+                    wallpaperPreview.src = profile.wallpaper;
+                    wallpaperPreview.style.display = 'block';
+                    wallpaperPreview.classList.add('has-image');
+                }
+                
+                const wallpaperEmptyState = document.getElementById('wallpaperEmptyState');
+                if (wallpaperEmptyState) wallpaperEmptyState.classList.add('d-none');
+                
+                const wallpaperPositionControl = document.getElementById('wallpaperPositionControl');
+                if (wallpaperPositionControl) wallpaperPositionControl.classList.add('visible');
+                
+                const dragHint = document.getElementById('dragHint');
+                if (dragHint) dragHint.style.display = 'inline-block';
+                
+                const wallpaperPositionSlider = document.getElementById('wallpaperPositionSlider');
+                const wallpaperPositionXSlider = document.getElementById('wallpaperPositionXSlider');
+                if (wallpaperPositionSlider) {
+                    const pos = profile.wallpaperPosition != null ? profile.wallpaperPosition : 50;
+                    const posX = profile.wallpaperPositionX != null ? profile.wallpaperPositionX : 50;
+                    wallpaperPositionSlider.value = pos;
+                    if (wallpaperPositionXSlider) wallpaperPositionXSlider.value = posX;
+                    if (wallpaperPreview) wallpaperPreview.style.objectPosition = `${posX}% ${pos}%`;
+                }
+            }
+
+            // Populate Additional Settings
+            if (serverUser) {
+                const inputEmail = document.getElementById('inputEmail');
+                if (inputEmail && serverUser.email) inputEmail.value = serverUser.email;
+                if (serverUser.settings) {
+                    const setts = serverUser.settings;
+                    if (setts.privacy) document.getElementById('privacyToggle').checked = (setts.privacy === 'public');
+                    if (setts.defaultSort) document.getElementById('inputDefaultSort').value = setts.defaultSort;
+                    if (setts.emailNotifs) {
+                        document.getElementById('notifFriendReq').checked = !!setts.emailNotifs.friendRequests;
+                        document.getElementById('notifChatMsg').checked = !!setts.emailNotifs.chatMessages;
+                        document.getElementById('notifMarketing').checked = !!setts.emailNotifs.marketing;
+                    }
+                }
+            }
+
+            // Show/Hide password change based on login method
+            const passwordSection = document.getElementById('passwordChangeSection');
+            const googleNotice = document.getElementById('googleLoginNotice');
+            const steamNotice = document.getElementById('steamLoginNotice');
+            
+            // Debug: log serverUser to check data
+            console.log('[Account Security] serverUser:', serverUser);
+            console.log('[Account Security] authProvider:', serverUser?.authProvider);
+            console.log('[Account Security] steamId:', serverUser?.steamId);
+            console.log('[Account Security] googleId:', serverUser?.googleId);
+            
+            // Use server-computed authProvider for reliable detection
+            const authProvider = serverUser?.authProvider || 'local';
+            
+            if (authProvider === 'steam') {
+                // User logged in via Steam
+                console.log('[Account Security] Detected: STEAM account');
+                passwordSection.style.display = 'none';
+                googleNotice.style.display = 'none';
+                steamNotice.style.display = 'block';
+            } else if (authProvider === 'google') {
+                // User logged in via Google
+                console.log('[Account Security] Detected: GOOGLE account');
+                passwordSection.style.display = 'none';
+                googleNotice.style.display = 'block';
+                steamNotice.style.display = 'none';
+            } else {
+                // User has local Backlog account
+                console.log('[Account Security] Detected: BACKLOG account');
+                passwordSection.style.display = 'block';
+                googleNotice.style.display = 'none';
+                steamNotice.style.display = 'none';
+            }
+
+            // Render existing favorite games
+            renderSelectedFavoriteGames();
+            
+            // Attach event listeners now that form is initialized
+            attachFormEventListeners();
+        }
+
+        // --- Favorite Games Search & Select ---
+        const favSearchInput = document.getElementById('favGameSearchInput');
+        const favSearchResults = document.getElementById('favGameSearchResults');
+        const favSelectedContainer = document.getElementById('favoriteGamesSelected');
+        let searchTimeoutId = null;
+
+        favSearchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeoutId);
+            const query = e.target.value.trim();
+            if (query.length < 2) {
+                favSearchResults.style.display = 'none';
+                return;
+            }
+            searchTimeoutId = setTimeout(() => performGameSearch(query), 500);
+        });
+
+        async function performGameSearch(query) {
+            favSearchResults.innerHTML = '<div class="p-3 text-center text-muted"><i class="spin-icon bi bi-arrow-repeat"></i> Searching...</div>';
+            favSearchResults.style.display = 'block';
+            try {
+                const res = await fetch('/api/games/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit: 10 })
+                });
+                if (!res.ok) throw new Error('Search failed');
+                const games = await res.json();
+                renderSearchResults(games);
+            } catch (err) {
+                favSearchResults.innerHTML = '<div class="p-3 text-center text-danger">Search failed</div>';
+            }
+        }
+
+        function renderSearchResults(games) {
+            if (!games || games.length === 0) {
+                favSearchResults.innerHTML = '<div class="p-3 text-center text-muted">No games found</div>';
+                return;
+            }
+            let html = '';
+            games.forEach(game => {
+                const coverUrl = game.cover && game.cover.url ? game.cover.url.replace('t_thumb', 't_cover_big') : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2290%22 height=%22120%22%3E%3Crect fill=%22%231c252e%22 width=%2290%22 height=%22120%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2210%22%3ENo Cover%3C/text%3E%3C/svg%3E';
+                const safeName = game.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                html += `
+                <div class="d-flex align-items-center p-2 border-bottom border-secondary cursor-pointer hover-bg-light" style="cursor: pointer;" onclick="addFavoriteGame('${game.id}', '${safeName}', '${coverUrl}')">
+                    <img src="${coverUrl}" alt="${safeName}" style="width: 40px; height: 55px; object-fit: cover; border-radius: 4px; margin-right: 12px;">
+                    <div class="fw-bold">${safeName}</div>
+                </div>`;
+            });
+            favSearchResults.innerHTML = html;
+        }
+
+        // Add a style rule for the hover effect dynamically since we used inline html
+        const styleHtml = document.createElement('style');
+        styleHtml.textContent = '.hover-bg-light:hover { background-color: rgba(255,255,255,0.05); }';
+        document.head.appendChild(styleHtml);
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!favSearchInput.contains(e.target) && !favSearchResults.contains(e.target)) {
+                favSearchResults.style.display = 'none';
+            }
+        });
+
+        function addFavoriteGame(id, name, cover) {
+            favSearchResults.style.display = 'none';
+            favSearchInput.value = '';
+            
+            // Allow storing object or string (string backwards compatibility)
+            // If already exists (checking by name)
+            if (selectedFavoriteGames.some(g => (typeof g === 'object' ? g.name === name : g === name))) {
+                return;
+            }
+            if (selectedFavoriteGames.length >= 5) {
+                alert('You can only select up to 5 favorite games.');
+                return;
+            }
+            // Push as object
+            selectedFavoriteGames.push({ id, name, cover });
+            renderSelectedFavoriteGames();
+        }
+
+        function removeFavoriteGame(index) {
+            selectedFavoriteGames.splice(index, 1);
+            renderSelectedFavoriteGames();
+        }
+
+        function renderSelectedFavoriteGames() {
+            updateGameCount();
+            let html = '';
+            for (let i = 0; i < 5; i++) {
+                if (i < selectedFavoriteGames.length) {
+                    const game = selectedFavoriteGames[i];
+                    const name = typeof game === 'object' ? game.name : game;
+                    const coverUrl = typeof game === 'object' && game.cover ? game.cover : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22130%22 height=%22180%22%3E%3Crect fill=%22%231c252e%22 width=%22130%22 height=%22180%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2212%22%3ENo Cover%3C/text%3E%3C/svg%3E';
+                    const safeName = name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    html += `
+                    <div class="fav-game-slot" title="${safeName}">
+                        <img src="${coverUrl}" alt="${safeName}">
+                        <button type="button" class="remove-btn" onclick="removeFavoriteGame(${i})" title="Remove"><i class="bi bi-x"></i></button>
+                    </div>`;
+                } else {
+                    html += `<div class="fav-game-slot"></div>`;
+                }
+            }
+            favSelectedContainer.innerHTML = html;
+        }
+
+        // Tab switching function
+        function switchTab(targetId, liElement) {
+            if (liElement.classList.contains('disabled')) return;
+            // Show unsaved changes warning if applicable
+            checkUnsavedChanges();
+            document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+            liElement.classList.add('active');
+            document.querySelectorAll('.settings-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
+        }
+
+        function updateGameCount() {
+            const gameCountEl = document.getElementById('gameCount');
+            if (gameCountEl) {
+                gameCountEl.textContent = `${selectedFavoriteGames.length}/5`;
+            }
+        }
+
+        // Track if there are unsaved changes
+        let hasUnsavedChanges = false;
+
+        function markUnsaved() {
+            hasUnsavedChanges = true;
+            const saveBtn = document.querySelector('.settings-save-btn');
+            if (saveBtn && !saveBtn.classList.contains('unsaved')) {
+                saveBtn.classList.add('unsaved');
+                saveBtn.textContent = '💾 Save Profile (unsaved changes)';
+            }
+        }
+
+        function checkUnsavedChanges() {
+            if (hasUnsavedChanges) {
+                const proceed = confirm('You have unsaved changes in this tab. Are you sure you want to leave?');
+                if (!proceed) return false;
+            }
+            return true;
+        }
+
+        // Add auto-save style
+        const autoSaveStyle = document.createElement('style');
+        autoSaveStyle.textContent = `
+            .settings-save-btn.unsaved { 
+                background: #c27803 !important; 
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+        `;
+        document.head.appendChild(autoSaveStyle);
+
+        // Function to attach all event listeners - call after form is initialized
+        function attachFormEventListeners() {
+            // Avatar upload handler
+            const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+            if (uploadAvatarBtn) {
+                uploadAvatarBtn.addEventListener('click', () => {
+                    document.getElementById('avatarInput').click();
+                });
+            }
+
+            const avatarInput = document.getElementById('avatarInput');
+            if (avatarInput) {
+                avatarInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                            showNotification('File Too Large', 'Avatar must be less than 5MB', 'error');
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            document.getElementById('avatarPreview').src = event.target.result;
+                            markUnsaved();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Add change listeners to notification/defaults toggles to mark unsaved
+            const privacyToggle = document.getElementById('privacyToggle');
+            if (privacyToggle) privacyToggle.addEventListener('change', markUnsaved);
+            
+            const inputDefaultSort = document.getElementById('inputDefaultSort');
+            if (inputDefaultSort) inputDefaultSort.addEventListener('change', markUnsaved);
+            
+            const notifFriendReq = document.getElementById('notifFriendReq');
+            if (notifFriendReq) notifFriendReq.addEventListener('change', markUnsaved);
+            
+            const notifChatMsg = document.getElementById('notifChatMsg');
+            if (notifChatMsg) notifChatMsg.addEventListener('change', markUnsaved);
+            
+            const notifMarketing = document.getElementById('notifMarketing');
+            if (notifMarketing) notifMarketing.addEventListener('change', markUnsaved);
+
+            // Wallpaper upload handler
+            const wallpaperInput = document.getElementById('wallpaperInput');
+            if (wallpaperInput) {
+                wallpaperInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 8 * 1024 * 1024) {
+                            showNotification('File Too Large', 'Wallpaper must be less than 8MB', 'error');
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            document.getElementById('wallpaperPreview').src = event.target.result;
+                            document.getElementById('wallpaperPreview').style.display = 'block';
+                            document.getElementById('wallpaperPreview').classList.add('has-image');
+                            document.getElementById('wallpaperEmptyState').classList.add('d-none');
+                            document.getElementById('wallpaperPositionControl').classList.add('visible');
+                            const dragHint = document.getElementById('dragHint');
+                            if (dragHint) dragHint.style.display = 'inline-block';
+                            document.getElementById('wallpaperPositionSlider').value = 50;
+                            const xSlide = document.getElementById('wallpaperPositionXSlider');
+                            if (xSlide) xSlide.value = 50;
+                            document.getElementById('wallpaperPreview').style.objectPosition = '50% 50%';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Wallpaper position slider and drag functionality - live preview
+            const wallpaperPositionSlider = document.getElementById('wallpaperPositionSlider');
+            const wallpaperPositionXSlider = document.getElementById('wallpaperPositionXSlider');
+            const wallpaperPreview = document.getElementById('wallpaperPreview');
+            const previewContainer = document.getElementById('wallpaperPreviewContainer');
+            if (wallpaperPositionSlider && wallpaperPreview && previewContainer) {
+                const updateObjectPosition = () => {
+                    const x = wallpaperPositionXSlider ? wallpaperPositionXSlider.value : 50;
+                    const y = wallpaperPositionSlider.value;
+                    wallpaperPreview.style.objectPosition = `${x}% ${y}%`;
+                };
+                wallpaperPositionSlider.addEventListener('input', updateObjectPosition);
+                if (wallpaperPositionXSlider) wallpaperPositionXSlider.addEventListener('input', updateObjectPosition);
+
+                let isDraggingWallpaper = false;
+                let startY = 0;
+                let startX = 0;
+                let initialPos = 50;
+                let initialPosX = 50;
+
+                wallpaperPreview.addEventListener('mousedown', (e) => {
+                    isDraggingWallpaper = true;
+                    startY = e.clientY;
+                    startX = e.clientX;
+                    initialPos = parseInt(wallpaperPositionSlider.value) || 50;
+                    initialPosX = wallpaperPositionXSlider ? (parseInt(wallpaperPositionXSlider.value) || 50) : 50;
+                    wallpaperPreview.style.cursor = 'grabbing';
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDraggingWallpaper) return;
+                    e.preventDefault();
+                    const deltaY = e.clientY - startY; // positive if mouse moved down
+                    const deltaX = e.clientX - startX; // positive if mouse moved right
+                    
+                    const containerHeight = previewContainer.offsetHeight;
+                    const containerWidth = previewContainer.offsetWidth;
+                    
+                    // Moving mouse UP (negative deltaY) moves image position DOWN (closer to 100%)
+                    const dragPercentageY = (deltaY / containerHeight) * 100;
+                    // Moving mouse LEFT (negative deltaX) should view right part of image (closer to 100%)
+                    const dragPercentageX = (deltaX / containerWidth) * 100;
+                    
+                    let newPositionY = initialPos - dragPercentageY;
+                    let newPositionX = initialPosX - dragPercentageX;
+                    
+                    if (newPositionY < 0) newPositionY = 0;
+                    if (newPositionY > 100) newPositionY = 100;
+                    
+                    if (newPositionX < 0) newPositionX = 0;
+                    if (newPositionX > 100) newPositionX = 100;
+
+                    wallpaperPositionSlider.value = newPositionY;
+                    if (wallpaperPositionXSlider) wallpaperPositionXSlider.value = newPositionX;
+                    wallpaperPreview.style.objectPosition = `${newPositionX}% ${newPositionY}%`;
+                });
+
+                window.addEventListener('mouseup', () => {
+                    if (isDraggingWallpaper) {
+                        isDraggingWallpaper = false;
+                        wallpaperPreview.style.cursor = 'grab';
+                        markUnsaved(); // Mark the form as unsaved when dragging is complete
+                    }
+                });
+            }
+
+            // Form submission
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const displayName = document.getElementById('inputName').value.trim();
+                    if (!displayName) {
+                        showNotification('Missing Information', 'Please enter a display name', 'error');
+                        return;
+                    }
+
+                    const username = document.getElementById('inputUsername').value.trim() || displayName.toLowerCase().replace(/\s+/g, '');
+                    if (username.length < 3) {
+                        showNotification('Invalid Username', 'Username must be at least 3 characters long', 'error');
+                        return;
+                    }
+
+                    const profile = {
+                        displayName: displayName,
+                        username: username,
+                        bio: document.getElementById('inputBio').value.trim(),
+                        avatar: document.getElementById('avatarPreview').src,
+                        wallpaper: document.getElementById('wallpaperPreview').src,
+                        wallpaperPosition: parseInt(document.getElementById('wallpaperPositionSlider').value) || 50,
+                        gamingIdentity: document.getElementById('inputIdentity').value,
+                        favoritePlatform: document.getElementById('inputPlatform').value,
+                        favoriteGames: selectedFavoriteGames
+                    };
+
+                    // Save all settings to the server DB
+                    try {
+                      const authRes = await fetch('/api/auth/current', { credentials: 'include' });
+                      if (authRes.ok) {
+                        const me = await authRes.json();
+                        const response = await fetch('/api/users/' + me._id, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({
+                            displayName: profile.displayName,
+                            username: profile.username,
+                            bio: profile.bio,
+                            avatar: profile.avatar,
+                            wallpaper: profile.wallpaper && profile.wallpaper !== window.location.href ? profile.wallpaper : '',
+                            wallpaperPosition: profile.wallpaperPosition,
+                            wallpaperPositionX: profile.wallpaperPositionX,
+                            gamingIdentity: profile.gamingIdentity,
+                            favoritePlatform: profile.favoritePlatform,
+                            steamId: document.getElementById('inputSteamId').value,
+                            xboxGamertag: document.getElementById('inputXboxGamertag').value.trim(),
+                            psnId: document.getElementById('inputPsnId').value.trim(),
+                            favoriteGames: selectedFavoriteGames,
+                            settings: {
+                                privacy: document.getElementById('privacyToggle').checked ? 'public' : 'private',
+                                defaultSort: document.getElementById('inputDefaultSort').value,
+                                emailNotifs: {
+                                    friendRequests: document.getElementById('notifFriendReq').checked,
+                                    chatMessages: document.getElementById('notifChatMsg').checked,
+                                    marketing: document.getElementById('notifMarketing').checked
+                                }
+                            }
+                          })
+                        });
+
+                        if (!response.ok) {
+                          const error = await response.json();
+                          throw new Error(error.error || 'Failed to save profile');
+                        }
+                      }
+                    } catch (e) { 
+                      showNotification('Save Error', e.message || 'Could not save profile to server', 'error');
+                      return;
+                    }
+
+                    hasUnsavedChanges = false;
+                    const saveBtn = document.querySelector('.settings-save-btn');
+                    if (saveBtn) {
+                        saveBtn.classList.remove('unsaved');
+                        saveBtn.textContent = '💾 Save Profile';
+                    }
+
+                    showNotification('Profile Updated', 'Your profile and settings have been saved successfully!', 'success');
+                    setTimeout(() => window.location.href = '/profile', 1500);
+                });
+            }
+
+            // Change Password logic
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            if (changePasswordBtn) {
+                changePasswordBtn.addEventListener('click', async () => {
+                    const currentPass = document.getElementById('currentPassword').value;
+                    const newPass = document.getElementById('newPassword').value;
+                    const confirmPass = document.getElementById('confirmPassword').value;
+
+                    if (!currentPass || !newPass || !confirmPass) {
+                        showNotification('Missing Fields', 'Please fill out all password fields', 'error');
+                        return;
+                    }
+                    if (newPass !== confirmPass) {
+                        showNotification('Mismatch', 'New passwords do not match', 'error');
+                        return;
+                    }
+                    if (newPass.length < 6) {
+                        showNotification('Too Short', 'New password must be at least 6 characters', 'error');
+                        return;
+                    }
+
+                    let userId = null;
+                    try {
+                        const me = await (await fetch('/api/auth/current', { credentials: 'include' })).json();
+                        userId = me._id || me.id;
+                    } catch (e) {
+                        showNotification('Error', 'Session expired', 'error');
+                        return;
+                    }
+
+                    const btn = document.getElementById('changePasswordBtn');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon"></i> Updating...';
+                    btn.disabled = true;
+
+                    try {
+                        const res = await fetch('/api/users/' + userId + '/security', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+                        });
+
+                        if (!res.ok) {
+                            const data = await res.json();
+                            throw new Error(data.error || 'Failed to update password');
+                        }
+
+                        showNotification('Security Updated', 'Password successfully changed', 'success');
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                    } catch (err) {
+                        showNotification('Error', err.message, 'error');
+                    } finally {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                });
+            }
+
+            // Steam Sync
+            const steamSyncBtn = document.getElementById('steamSyncBtn');
+            if (steamSyncBtn) {
+                steamSyncBtn.addEventListener('click', syncSteam);
+            }
+
+            // Xbox Sync
+            const xboxSyncBtn = document.getElementById('xboxSyncBtn');
+            if (xboxSyncBtn) {
+                xboxSyncBtn.addEventListener('click', syncXbox);
+            }
+
+            // PSN Sync
+            const psnSyncBtn = document.getElementById('psnSyncBtn');
+            if (psnSyncBtn) {
+                psnSyncBtn.addEventListener('click', syncPSN);
+            }
+        }
+
+        // ─── Steam Sync ───
+        async function syncSteam() {
+            const btn = document.getElementById('steamSyncBtn');
+            const result = document.getElementById('steamSyncResult');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon me-1"></i> Syncing...';
+            result.style.display = 'none';
+            try {
+                const res = await fetch('/api/steam/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Sync failed');
+                result.innerHTML = `✅ ${data.message}`;
+                result.style.color = '#4ade80';
+                showNotification('Steam Synced!', `Imported ${data.imported} games from Steam`, 'success');
+                result.style.display = 'block';
+            } catch (err) {
+                result.innerHTML = '❌ ' + err.message;
+                result.style.color = '#f87171';
+                result.style.display = 'block';
+                showNotification('Steam Sync Failed', err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Sync Library';
+            }
+        }
+
+        // ─── Xbox / PSN Sync ───
+        async function syncXbox() {
+            const gamertag = document.getElementById('inputXboxGamertag').value.trim();
+            if (!gamertag) { showNotification('Missing Gamertag', 'Please enter an Xbox Gamertag', 'error'); return; }
+            const btn = document.getElementById('xboxSyncBtn');
+            const result = document.getElementById('xboxSyncResult');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon me-1"></i> Syncing...';
+            result.style.display = 'none';
+            try {
+                const res = await fetch('/api/integrations/xbox/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ gamertag })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Sync failed');
+                if (data.demo) {
+                    result.innerHTML = '⚠️ Demo mode — no XBL_API_KEY configured. Games were not imported.';
+                    result.style.color = '#facc15';
+                } else {
+                    result.innerHTML = `✅ Synced! Imported <strong>${data.imported}</strong> new games, updated <strong>${data.updated}</strong> (${data.total} total).`;
+                    result.style.color = '#4ade80';
+                    showNotification('Xbox Synced!', `Imported ${data.imported} games from Xbox Live`, 'success');
+                }
+                result.style.display = 'block';
+            } catch (err) {
+                result.innerHTML = '❌ ' + err.message;
+                result.style.color = '#f87171';
+                result.style.display = 'block';
+                showNotification('Xbox Sync Failed', err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Sync Library';
+            }
+        }
+
+        async function syncPSN() {
+            const psnId = document.getElementById('inputPsnId').value.trim();
+            if (!psnId) { showNotification('Missing PSN ID', 'Please enter your PSN ID', 'error'); return; }
+            const btn = document.getElementById('psnSyncBtn');
+            const result = document.getElementById('psnSyncResult');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon me-1"></i> Syncing...';
+            result.style.display = 'none';
+            try {
+                const res = await fetch('/api/integrations/psn/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ psnId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Sync failed');
+                if (data.demo) {
+                    result.innerHTML = '⚠️ Demo mode — no PSN_NPSSO token configured. Games were not imported.';
+                    result.style.color = '#facc15';
+                } else {
+                    result.innerHTML = `✅ Synced! Imported <strong>${data.imported}</strong> new games (${data.total} total).`;
+                    result.style.color = '#60a5fa';
+                    showNotification('PSN Synced!', `Imported ${data.imported} games from PlayStation`, 'success');
+                }
+                result.style.display = 'block';
+            } catch (err) {
+                result.innerHTML = '❌ ' + err.message;
+                result.style.color = '#f87171';
+                result.style.display = 'block';
+                showNotification('PSN Sync Failed', err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Sync Library';
+            }
+        }
+
+        // Logout function
+        async function logout(event) {
+          event.preventDefault();
+          try {
+              await fetch('/api/auth/logout', {
+                  method: 'POST',
+                  credentials: 'include'
+              });
+              window.location.href = '/login';
+          } catch (err) {
+              console.error('Logout failed:', err);
+              window.location.href = '/login';
+          }
+        }
+
+        // Smart home navigation - if logged in go to dashboard, else go to index
+        async function smartHomeClick(e) {
+          e.preventDefault();
+          try {
+            const res = await fetch('/api/auth/current', { credentials: 'include' });
+            const dest = res.ok ? '/dashboard' : '/';
+            document.body.classList.add('page-exit');
+            setTimeout(() => window.location = dest, 300);
+          } catch (err) {
+            console.error('Auth check failed:', err);
+            window.location = '/';
+          }
+        }
+
+        // Auth check with enhanced retry logic
+        async function initProfileEdit() {
+          try {
+            console.log('[ProfileEdit] Fetching current user...');
+            let retries = 5;
+            
+            while (retries > 0) {
+              try {
+                // Use AbortController for proper timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                
+                const res = await fetch('/api/auth/current', {
+                  method: 'GET',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+
+                console.log('[ProfileEdit] Response status:', res.status);
+                
+                if (res.ok) {
+                  console.log('[ProfileEdit] User authenticated');
+                  initializeForm();
+                  return;
+                } else if (res.status === 401 || res.status === 403) {
+                  // Explicit auth failure - don't retry
+                  console.error('[ProfileEdit] Unauthorized (' + res.status + ') - redirecting to login');
+                  setTimeout(() => {
+                    window.location.href = '/login';
+                  }, 500);
+                  return;
+                }
+                // Other status codes (5xx, etc) - try again
+              } catch (fetchErr) {
+                console.warn('[ProfileEdit] Fetch attempt ' + (6 - retries) + ' failed:', fetchErr.message);
+                // Network errors are temporary - retry
+              }
+              retries--;
+              if (retries > 0) {
+                await new Promise(r => setTimeout(r, 500)); // Longer wait before retry
+              }
+            }
+            
+            // If all retries exhausted, redirect
+            console.error('[ProfileEdit] Auth check failed after all retries - redirecting');
+            window.location.href = '/login';
+            
+          } catch (err) {
+            console.error('[ProfileEdit] Failed to load:', err);
+            window.location.href = '/login';
+          }
+        }
+
+        // Page exit transition
+        document.querySelectorAll('a[href]').forEach(a => {
+          if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+            a.addEventListener('click', e => {
+              e.preventDefault();
+              const dest = a.href;
+              document.body.classList.add('page-exit');
+              setTimeout(() => window.location = dest, 300);
+            });
+          }
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', initProfileEdit);
+
+        // Navbar scroll shadow (passive, cached)
+        const _nav = document.querySelector('.navbar');
+        let _scrollTick = false;
+        window.addEventListener('scroll', () => {
+            if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
+        }, { passive: true });
+    </script>

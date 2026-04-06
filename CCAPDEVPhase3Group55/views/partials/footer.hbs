@@ -1,0 +1,82 @@
+<!-- Compact Footer with vertical separators -->
+<style>
+  @keyframes footerShine {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .footer-shine {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(
+      110deg,
+      #5383e8 0%,
+      #a78bfa 30%,
+      #ffffff 50%,
+      #a78bfa 70%,
+      #5383e8 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: footerShine 3s linear infinite;
+  }
+  .footer-sep {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.15);
+    display: inline-block;
+  }
+</style>
+
+<footer class="mt-auto py-3 w-100"
+    style="background: rgba(10, 14, 19, 0.98); border-top: 1px solid rgba(83, 131, 232, 0.15); position: relative; z-index: 5;">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap">
+
+            <!-- Tagline with shine -->
+            <span class="footer-shine">🎮 Your Gaming Companion</span>
+
+            <!-- Separator -->
+            <span class="footer-sep d-none d-md-inline-block"></span>
+
+            <!-- Socials -->
+            <div class="d-flex gap-3 align-items-center">
+                <a href="https://github.com" target="_blank" aria-label="Github"
+                    style="color: rgba(255,255,255,0.35); transition: color 0.2s;" onmouseover="this.style.color='#fff';"
+                    onmouseout="this.style.color='rgba(255,255,255,0.35)';">
+                    <i class="bi bi-github"></i>
+                </a>
+                <a href="https://twitter.com" target="_blank" aria-label="Twitter"
+                    style="color: rgba(255,255,255,0.35); transition: color 0.2s;"
+                    onmouseover="this.style.color='#1DA1F2';" onmouseout="this.style.color='rgba(255,255,255,0.35)';">
+                    <i class="bi bi-twitter-x"></i>
+                </a>
+                <a href="https://discord.com" target="_blank" aria-label="Discord"
+                    style="color: rgba(255,255,255,0.35); transition: color 0.2s;"
+                    onmouseover="this.style.color='#5865F2';" onmouseout="this.style.color='rgba(255,255,255,0.35)';">
+                    <i class="bi bi-discord"></i>
+                </a>
+            </div>
+
+            <!-- Separator -->
+            <span class="footer-sep d-none d-md-inline-block"></span>
+
+            <!-- About link -->
+            <a href="/about"
+               style="font-family:'Inter',sans-serif; color:rgba(255,255,255,0.35); font-size:0.78rem; text-decoration:none; transition:color 0.2s;"
+               onmouseover="this.style.color='#5383e8';" onmouseout="this.style.color='rgba(255,255,255,0.35)';">
+               <i class="bi bi-info-circle me-1"></i>About
+            </a>
+
+            <!-- Separator -->
+            <span class="footer-sep d-none d-md-inline-block"></span>
+
+            <!-- Copyright -->
+            <span style="font-family: 'Inter', sans-serif; color: rgba(255, 255, 255, 0.3); font-size: 0.75rem; letter-spacing: 0.02em;">&copy; 2026 Backlog Hero</span>
+
+        </div>
+    </div>
+</footer>

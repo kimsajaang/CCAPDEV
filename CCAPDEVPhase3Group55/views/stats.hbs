@@ -1,0 +1,1516 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+<style>
+    /* Page-specific: community / stats page */
+    .community-photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease); background: rgba(83, 131, 232, 0.05); }
+    .community-photo-upload-area:hover { border-color: var(--primary); background: rgba(83, 131, 232, 0.1); }
+    .community-photo-upload-area.has-photo { border: 1px solid var(--border); padding: 12px; background: rgba(13, 18, 23, 0.5); cursor: default; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .community-photo-preview-img { max-width: 100%; max-height: 300px; border-radius: var(--radius-sm); object-fit: cover; }
+    .community-photo-remove-btn { font-size: 0.78rem; padding: 6px 16px; border-radius: 6px; opacity: 0.8; transition: opacity 0.2s ease; }
+    .community-photo-remove-btn:hover { opacity: 1; }
+    .community-post-photo { width: 100%; max-height: 400px; border-radius: var(--radius-sm); object-fit: cover; margin: 12px 0; border: 1px solid var(--border); }
+    .comment-panel { background-color: var(--bg-input); border-color: var(--border); border-radius: var(--radius-md); }
+    .comment-item { background: var(--bg-base); border: 1px solid #1e2a34; border-radius: var(--radius-sm); padding: 12px 14px; transition: border-color var(--duration) var(--ease); }
+    .comment-item:hover { border-color: rgba(83, 131, 232, 0.4); }
+    .comment-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; color: #fff; }
+    .comment-author { font-weight: 600; font-size: 0.85rem; }
+    .comment-time { font-size: 0.72rem; color: var(--text-faint); }
+    .comment-text { font-size: 0.9rem; color: #c8d1db; line-height: 1.5; }
+    .comment-input-wrap { background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; transition: border-color var(--duration) var(--ease); }
+    .comment-input-wrap:focus-within { border-color: var(--primary); }
+    .comment-input-wrap input { border: none !important; background: transparent !important; box-shadow: none !important; padding: 0; font-size: 0.88rem; color: #ffffff !important; }
+    .comment-input-wrap .btn { border-radius: var(--radius-sm); font-size: 0.8rem; padding: 4px 14px; }
+    /* Vote button styles */
+    .vote-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .vote-btn:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.04); color: var(--text); }
+    .vote-btn.active.vote-up { color: #10b981; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.1); }
+    .vote-btn.active.vote-down { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); }
+    .vote-btn i { font-size: 1rem; transition: transform 0.2s ease; }
+    .vote-btn:hover i { transform: scale(1.15); }
+    .vote-btn .vote-count { min-width: 12px; text-align: center; }
+    .vote-separator { color: var(--text-faint); font-size: 0.8rem; user-select: none; }
+    /* Competitive community enhancements */
+    .card { animation: fadeInScale 0.5s ease both; }
+    @keyframes fadeInScale { from { opacity: 0; transform: scale(0.97) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  </style>{{> navbar-app activePage="stats"}}
+
+
+  <div class="container my-5">
+
+    <!-- Community header with sort dropdown, search bar, and new post button.
+         Uses d-flex with flex-wrap so it doesn't break on mobile -->
+    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-4">
+      <div>
+        <h2 class="mb-1">Community</h2>
+        <div class="text-muted small">Post updates, ask questions, share recommendations.</div>
+      </div>
+
+      <div class="d-flex gap-2 align-items-center flex-wrap" data-auth-required="true">
+        <select id="sortSelect" class="form-select form-select-sm" style="width: 140px;">
+          <option value="hot" selected>Hot</option>
+          <option value="new">New</option>
+          <option value="top">Top</option>
+        </select>
+
+        <input id="searchInput" class="form-control form-control-sm" style="width: 220px;" placeholder="Search posts"/>
+
+        <button id="newPostTopBtn" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal">
+          New Post
+        </button>
+      </div>
+
+      <div id="preview-banner" class="alert alert-info py-2 px-3 mb-0 w-100 d-flex align-items-center flex-wrap gap-2" style="display: {{#if isLoggedIn}}none !important{{else}}flex !important{{/if}};">
+        <span><strong>Preview only:</strong> <a href="/login" class="alert-link" style="color: #5383e8; text-decoration: underline;">Log in</a> or <a href="/register" class="alert-link" style="color: #5383e8; text-decoration: underline;">Sign up</a> to create posts and engage with the community!</span>
+        <a href="/" class="btn btn-outline-primary btn-sm ms-auto py-1 px-3 d-flex align-items-center"><i class="bi bi-arrow-left me-2"></i>Back to Home</a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Main feed column — posts get rendered here by JS -->
+      <div class="col-lg-8">
+        <div id="feed" class="d-grid gap-3"></div>
+
+        <div id="emptyState" class="card shadow-sm d-none">
+          <div class="card-body">
+            <div class="fw-semibold mb-1">No posts yet.</div>
+            <div class="text-muted small mb-3">Create the first post for your community.</div>
+            <button id="newPostEmptyBtn" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newPostModal" data-auth-required="true" style="display: none;">New Post</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar — community info, active members, stats -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <div class="fw-semibold mb-2">🛡️ Community Guidelines</div>
+            <ul class="small text-muted mb-0">
+              <li>Keep posts about games and backlogs.</li>
+              <li>Be respectful and constructive.</li>
+              <li>No spam or self-promotion.</li>
+              <li>Tag your posts with the right flair.</li>
+              <li>Have fun and help each other clear backlogs!</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="fw-semibold mb-2">📊 Community Stats</div>
+            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Posts</span><strong class="text-white" id="statTotalPosts">0</strong></div>
+            <div class="d-flex justify-content-between small text-muted mb-1"><span>Total Comments</span><strong class="text-white" id="statTotalComments">0</strong></div>
+            <div class="d-flex justify-content-between small text-muted"><span>Active Members</span><strong class="text-white" id="statActiveMembers">0</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- New Post Modal — opens when user clicks "New Post" button.
+       Uses modal-lg so users have room to type longer posts.
+       The form has title, body, flair, and optional game tag fields. -->
+  <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input id="postTitle" class="form-control" maxlength="120" placeholder="Example: Best 30-minute games for busy weeks"/>
+            <div class="form-text">Keep it short and clear.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Body</label>
+            <textarea id="postBody" class="form-control" rows="5" maxlength="2000" placeholder="Write your post..."></textarea>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Flair</label>
+              <select id="postFlair" class="form-select">
+                <option value="Discussion" selected>Discussion</option>
+                <option value="Recommendation">Recommendation</option>
+                <option value="Help">Help</option>
+                <option value="Progress">Progress</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Game (optional)</label>
+              <input id="postGame" class="form-control" maxlength="80" placeholder="Example: Hades, Balatro, Stardew Valley"/>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Add Media (Optional)</label>
+            <div id="communityPhotoUploadArea" class="community-photo-upload-area">
+              <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
+              <p class="mb-0 mt-2 small">Click to upload a screenshot, photo, or video clip (max 100MB)</p>
+              <input type="file" id="communityPhotoInput" accept="image/*,video/*" style="display: none;">
+            </div>
+            <div id="communityPhotoPreviewContainer" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div id="postError" style="display:none;border-radius:var(--radius-md);padding:12px 16px;margin:0 0 12px 0;"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="createPostBtn" type="button" class="btn btn-primary">Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Post Modal -->
+  <div class="modal fade" id="editPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input id="editPostTitle" class="form-control" maxlength="120" placeholder="Example: Best 30-minute games for busy weeks"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Body</label>
+            <textarea id="editPostBody" class="form-control" rows="5" maxlength="2000" placeholder="Write your post..."></textarea>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Flair</label>
+              <select id="editPostFlair" class="form-select">
+                <option value="Discussion" selected>Discussion</option>
+                <option value="Recommendation">Recommendation</option>
+                <option value="Help">Help</option>
+                <option value="Progress">Progress</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Game (optional)</label>
+              <input id="editPostGame" class="form-control" maxlength="80" placeholder="Example: Hades, Balatro, Stardew Valley"/>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Media (Optional)</label>
+            <div id="editPhotoUploadArea" class="community-photo-upload-area">
+              <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
+              <p class="mb-0 mt-2 small">Click to upload or replace media</p>
+              <input type="file" id="editPhotoInput" accept="image/*,video/*" style="display: none;">
+            </div>
+            <div id="editPhotoPreviewContainer" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="savePostEditBtn" type="button" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Post Confirmation Modal -->
+  <div class="modal fade" id="deletePostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-danger">
+        <div class="modal-header bg-danger bg-opacity-10 border-danger">
+          <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Delete Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4">
+          <p class="mb-0"><strong>Are you sure?</strong></p>
+          <p class="text-muted small mb-0">This action cannot be undone. The post will be permanently deleted.</p>
+        </div>
+        <div class="modal-footer border-top">
+          <input type="hidden" id="confirmDeletePostId" />
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn"><i class="bi bi-trash3 me-2"></i>Delete Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // IMMEDIATE AUTH CHECK - runs synchronously before anything else
+    // This controls the preview banner and runs FIRST
+    let bannerHidden = false;
+    
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/current', { credentials: 'include' });
+        const banner = document.getElementById('preview-banner');
+        
+        if (res.ok) {
+          // User IS logged in
+          if (banner) banner.style.setProperty('display', 'none', 'important');
+          bannerHidden = true;
+          console.log('[Immediate Auth] LOGGED IN - banner hidden');
+        } else {
+          // User is NOT logged in (401/403)
+          if (banner) banner.style.setProperty('display', 'flex', 'important');
+          console.log('[Immediate Auth] NOT logged in - banner shown');
+        }
+      } catch (e) {
+        // Network error - hide banner to not block user
+        const banner = document.getElementById('preview-banner');
+        if (banner) banner.style.setProperty('display', 'none', 'important');
+        console.error('[Immediate Auth] Error:', e.message);
+      }
+    })();
+
+    // ============================================================
+    // Every is stored in MongoDB via backend API
+    // ============================================================
+    window.addEventListener('load', () => {
+
+    // localStorage key — versioned so we can change the schema without breaking old data
+    const STORAGE_KEY = "bh_community_posts_v1";
+
+    // Track login status globally
+    let isUserLoggedIn = false;
+    let currentUsername = 'Gamer';
+    let currentUserId = null;
+    let currentUserAvatar = null;
+    let authCheckComplete = false;
+
+    // Single auth check - combines auth detection and community preview logic in one call
+    async function checkAuthAndShowContent(retries = 1) {
+      try {
+        const response = await fetch('/api/auth/current', {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          isUserLoggedIn = true;
+          const userData = await response.json();
+          currentUserId = userData._id;
+          currentUsername = userData.displayName || userData.username || 'Gamer';
+          currentUserAvatar = userData.avatar;
+          console.log('[Auth] SUCCESS - User logged in:', currentUsername);
+        } else if (response.status === 401 || response.status === 403) {
+          // Definitely not logged in
+          isUserLoggedIn = false;
+          window.limitCommunityPreview = true;
+          console.log('[Auth] User not logged in (401/403)');
+        } else {
+          console.warn('[Auth] Server error:', response.status, '- retrying...');
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            return checkAuthAndShowContent(retries - 1);
+          }
+          // After retry still failing — assume logged in to avoid false logouts
+          console.warn('[Auth] Server errors persisted, keeping current auth state');
+          return;
+        }
+
+        const protectedSections = document.querySelectorAll('[data-auth-required="true"]');
+        const previewSections = document.querySelectorAll('[data-preview-only="true"]');
+
+        if (isUserLoggedIn) {
+          protectedSections.forEach(el => el.style.display = '');
+          previewSections.forEach(el => el.style.display = 'none');
+          // Banner was already hidden by immediate check, don't override
+        } else {
+          protectedSections.forEach(el => el.style.display = 'none');
+          previewSections.forEach(el => el.style.display = '');
+          // Banner is controlled by immediate check only
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        // Network error — retry once
+        if (retries > 0) {
+          await new Promise(r => setTimeout(r, 2000));
+          return checkAuthAndShowContent(retries - 1);
+        }
+        // Don't change login state on persistent network errors
+      } finally {
+        authCheckComplete = true;
+      }
+    }
+
+    // Check auth immediately (no delay) and hide banner if logged in
+    checkAuthAndShowContent().then(() => {
+      console.log('[Auth] Check complete, isUserLoggedIn =', isUserLoggedIn);
+      // Explicitly hide banner for logged-in users
+      const previewBanner = document.getElementById('preview-banner');
+      if (previewBanner) {
+        if (isUserLoggedIn) {
+          previewBanner.style.setProperty('display', 'none', 'important');
+        } else {
+          previewBanner.style.setProperty('display', 'flex', 'important');
+        }
+      }
+    });
+
+    // Handle New Post button clicks - verify auth before opening modal
+    document.querySelectorAll('#newPostTopBtn, #newPostEmptyBtn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!isUserLoggedIn) {
+          e.preventDefault();
+          e.stopPropagation();
+          // Double-check auth before redirecting (in case initial check failed due to cold start)
+          try {
+            const res = await fetch('/api/auth/current', { credentials: 'include' });
+            if (res.ok) {
+              isUserLoggedIn = true;
+              const userData = await res.json();
+              currentUserId = userData._id;
+              currentUsername = userData.displayName || userData.username || 'Gamer';
+              currentUserAvatar = userData.avatar;
+              // Show protected elements and open modal
+              document.querySelectorAll('[data-auth-required="true"]').forEach(el => el.style.display = '');
+              document.querySelectorAll('[data-preview-only="true"]').forEach(el => el.style.display = 'none');
+              const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('newPostModal'));
+              modal.show();
+              return;
+            }
+          } catch (_) {}
+          // Truly not logged in
+          window.location.href = '/login';
+        }
+      });
+    });
+
+    const nowIso = () => new Date().toISOString();
+    const fmtTime = (iso) => {
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    };
+    const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
+
+    // --- Data layer: backend API calls ---
+    // --- CACHE & LAZY LOAD OPTIMIZATIONS ---
+    let cachedPosts = null;
+    let currentPage = 0;
+    let isLoadingMore = false;
+    let allPostsLoaded = false;
+    const photoCache = new Map();
+    const commentCache = new Map();
+
+    async function loadPosts(retries = 1) {
+      try {
+        const page = currentPage;
+        const res = await fetch(`/api/posts?page=${page}`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+        const newPosts = await res.json();
+        
+        if (newPosts.length < 20) allPostsLoaded = true;
+        
+        if (page === 0) {
+          cachedPosts = newPosts;
+        } else {
+          cachedPosts = [...(cachedPosts || []), ...newPosts];
+        }
+        
+        console.log(`[loadPosts] Loaded page ${page}: ${newPosts.length} posts`);
+        return newPosts;
+      } catch (e) {
+        console.error('Failed to load posts:', e);
+        if (retries > 0) {
+          console.log('[loadPosts] Retrying in 2s...');
+          await new Promise(r => setTimeout(r, 2000));
+          return loadPosts(retries - 1);
+        }
+        return [];
+      }
+    }
+
+    async function savePosts(postData) {
+      // No longer used for saving everything at once, handled by create/vote/comment endpoints
+    }
+
+    // Migration helper — makes sure every post has an id, comments array, and vote counts.
+    // Needed because early test data didn't have all fields and it was crashing
+    function ensureIds(posts) {
+      let changed = false;
+      for (const p of posts) {
+        if (!p.id) { p.id = crypto.randomUUID(); changed = true; }
+        if (!Array.isArray(p.comments)) { p.comments = []; changed = true; }
+        if (typeof p.up !== "number") { p.up = 0; changed = true; }
+        if (typeof p.down !== "number") { p.down = 0; changed = true; }
+      }
+      if (changed) savePosts(posts);
+      return posts;
+    }
+
+    function score(post) {
+      // Support both optimized (upvoteCount/downvoteCount numbers) and legacy (upvotes/downvotes arrays)
+      const up = typeof post.upvoteCount === 'number' ? post.upvoteCount
+               : Array.isArray(post.upvotes) ? post.upvotes.length
+               : (post.upvotes || 0);
+      const down = typeof post.downvoteCount === 'number' ? post.downvoteCount
+                 : Array.isArray(post.downvotes) ? post.downvotes.length
+                 : (post.downvotes || 0);
+      return up - down;
+    }
+
+    // Hot score algorithm — loosely based on Reddit's formula.
+    // Divides net votes by age^0.7 so newer posts with fewer votes can still rank high
+    function hotScore(post) {
+      const v = score(post);
+      const created = post.createdAt ? new Date(post.createdAt).getTime() : Date.now();
+      const ageHours = Math.max(1, (Date.now() - created) / 36e5);
+      return v / Math.pow(ageHours, 0.7);
+    }
+
+    function sortPosts(posts, mode) {
+      const list = [...posts];
+      if (mode === "new") {
+        list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (mode === "top") {
+        list.sort((a,b) => score(b) - score(a));
+      } else {
+        list.sort((a,b) => hotScore(b) - hotScore(a));
+      }
+      return list;
+    }
+
+    function matchesSearch(post, q) {
+      if (!q) return true;
+      const hay = (post.title + " " + (post.body||"") + " " + (post.game||"") + " " + (post.flair||"")).toLowerCase();
+      return hay.includes(q.toLowerCase());
+    }
+
+    const feedEl = document.getElementById("feed");
+    const emptyEl = document.getElementById("emptyState");
+    const sortSelect = document.getElementById("sortSelect");
+    const searchInput = document.getElementById("searchInput");
+
+    // --- OPTIMIZED RENDER WITH CACHING ---
+    async function render() {
+      console.log('[RENDER] Starting render...');
+      
+      // Use cached posts if available, otherwise load fresh
+      let posts = cachedPosts || (await loadPosts());
+      if (!posts) posts = [];
+      
+      const mode = sortSelect.value;
+      const q = searchInput.value.trim();
+
+      // Apply filtering & sorting
+      posts = sortPosts(posts, mode).filter(p => matchesSearch(p, q));
+
+      feedEl.innerHTML = "";
+      if (posts.length === 0) {
+        if (isUserLoggedIn) {
+          emptyEl.classList.remove("d-none");
+        } else {
+          emptyEl.classList.add("d-none");
+        }
+        return;
+      }
+      emptyEl.classList.add("d-none");
+
+      // Only render posts (don't load photos yet)
+      for (const post of posts) {
+        feedEl.appendChild(postCard(post));
+      }
+      
+      console.log('[RENDER] Render complete - ' + posts.length + ' posts');
+      
+      // Setup lazy loading for visible photos
+      if (!('IntersectionObserver' in window)) return;
+
+      const photoPlaceholders = document.querySelectorAll('[data-photo-id]');
+      const observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const postId = entry.target.dataset.photoId;
+            loadAndShowPhoto(postId, entry.target);
+            observer.unobserve(entry.target);
+          }
+        }
+      }, { rootMargin: '100px' });
+
+      photoPlaceholders.forEach(el => observer.observe(el));
+    }
+
+    // Load photo when visible
+    async function loadAndShowPhoto(postId, placeholder) {
+      if (photoCache.has(postId)) {
+        const photoUrl = photoCache.get(postId);
+        showPhotoInContainer(placeholder, photoUrl);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/photo`);
+        if (!res.ok) return;
+        const data = await res.json();
+        photoCache.set(postId, data.photo);
+        showPhotoInContainer(placeholder, data.photo);
+      } catch (err) {
+        console.warn('[Photo lazy load] Error for post ' + postId, err);
+      }
+    }
+
+    function showPhotoInContainer(container, photoUrl) {
+      const parent = container.parentElement;
+      const isVideo = photoUrl.startsWith('data:video/');
+      
+      if (isVideo) {
+        const typeMatch = photoUrl.match(/data:([^;]+)/);
+        const videoType = (typeMatch && typeMatch[1]) || 'video/mp4';
+        const videoEl = document.createElement('video');
+        videoEl.className = 'community-post-photo';
+        videoEl.controls = true;
+        videoEl.style.cssText = 'max-width:100%;width:100%;border-radius:8px;margin:12px 0;border:1px solid var(--border);';
+        videoEl.innerHTML = `<source src="${photoUrl}" type="${videoType}">Your browser does not support video.`;
+        container.replaceWith(videoEl);
+      } else {
+        container.src = photoUrl;
+        container.style.opacity = '1';
+        container.style.border = '1px solid var(--border)';
+      }
+    }
+
+    // Debounced render for search/sort
+    let renderTimeout;
+    function debouncedRender() {
+      clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        currentPage = 0;
+        render();
+      }, 200);
+    }
+
+    // Builds one post card with lazy-loaded photos and comments
+    function postCard(post) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "card shadow-sm";
+      wrapper.dataset.postId = post.id;
+
+      const pAuth = post.author || { username: 'deleted', displayName: 'Deleted User' };
+      const flairBadge = `<span class="badge bg-secondary">${escapeHtml(post.flair || "Discussion")}</span>`;
+      const gameTag = post.game ? `<span class="badge bg-info text-dark ms-2">${escapeHtml(post.game)}</span>` : "";
+      
+      // Placeholder for photo (lazy loaded later)
+      let mediaHtml = "";
+      if (post.hasPhoto) {
+        mediaHtml = `<img class="community-post-photo" data-photo-id="${post.id}" style="display:block;width:100%;min-height:50px;max-height:400px;border-radius:8px;margin:12px 0;opacity:0;transition:opacity 0.3s ease;" alt="" loading="lazy">`;
+      }
+
+      // Check if current user is the post author
+      const isAuthor = currentUserId && post.author && String(post.author._id) === String(currentUserId);
+
+      wrapper.innerHTML = `
+        <div class="card-body">
+          <div class="d-flex gap-3">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                ${flairBadge}
+                ${gameTag}
+                <span class="text-muted small d-flex align-items-center gap-1">
+                  ${pAuth.avatar ? `<img src="${pAuth.avatar}" class="comment-avatar" style="object-fit: cover; width:22px; height:22px; font-size:0.55rem;" alt="${escapeHtml(pAuth.displayName || pAuth.username)}">` : `<span class="comment-avatar" style="background:${getAuthorColor(pAuth.username)};color:${['#febc2e'].includes(getAuthorColor(pAuth.username)) ? '#0d1217' : '#fff'};width:22px;height:22px;font-size:0.55rem;">${getInitials(pAuth.displayName || pAuth.username)}</span>`}
+                  <strong class="text-white">${escapeHtml(pAuth.displayName || pAuth.username)}</strong> · ${fmtTime(post.createdAt)}
+                </span>
+              </div>
+
+              <h5 class="mt-2 mb-1">${escapeHtml(post.title)}</h5>
+
+              ${post.body ? `<div class="text-muted">${escapeHtml(post.body).replace(/\n/g, "<br/>")}</div>` : ""}
+
+              ${mediaHtml}
+
+              <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
+                <button class="vote-btn vote-up ${post.userVote === 'up' ? 'active' : ''}" data-act="up" title="Upvote">
+                  <i class="bi bi-hand-thumbs-up-fill"></i>
+                  <span class="vote-count" data-upcount>${post.upvoteCount || 0}</span>
+                </button>
+                <button class="vote-btn vote-down ${post.userVote === 'down' ? 'active' : ''}" data-act="down" title="Downvote">
+                  <i class="bi bi-hand-thumbs-down-fill"></i>
+                  <span class="vote-count" data-downcount>${post.downvoteCount || 0}</span>
+                </button>
+                <span class="vote-separator">|</span>
+                <button class="btn btn-outline-primary btn-sm" data-act="toggleComments" data-total-comments="${post.commentCount || 0}">
+                  Comments <span class="badge bg-light text-dark ms-1" data-commentcount>${post.commentCount || 0}</span>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" data-act="share">Copy Link</button>
+                ${isAuthor ? `
+                  <button class="btn btn-outline-warning btn-sm" data-act="edit">Edit</button>
+                  <button class="btn btn-outline-danger btn-sm" data-act="delete">Delete</button>
+                ` : ''}
+              </div>
+
+              <div class="mt-3 d-none" data-comments data-post-id="${post.id}" data-comments-loaded="false">
+                <div class="comment-panel p-3">
+                  ${isUserLoggedIn ? `
+                  <div class="comment-input-wrap d-flex align-items-center gap-2 mb-3">
+                    ${currentUserAvatar ? `<img src="${currentUserAvatar}" class="comment-avatar" style="object-fit: cover;" alt="${escapeHtml(currentUsername)}">` : `<div class="comment-avatar" style="background:#5383e8;">${getInitials(currentUsername)}</div>`}
+                    <input class="form-control flex-grow-1" maxlength="300" placeholder="Write a comment..."/>
+                    <button class="btn btn-primary" data-act="addComment" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">→</button>
+                  </div>
+                  ` : `
+                  <div class="text-center mb-3">
+                    <a href="/login" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-in-right me-1"></i>Login to comment</a>
+                  </div>
+                  `}
+
+                  <div class="d-grid gap-2" data-commentlist></div>
+                  <div class="text-muted small mt-2 text-center" data-nocomments style="display:none;">No comments yet. Be the first to reply.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      `;
+
+      const upBtn = wrapper.querySelector('[data-act="up"]');
+      if (upBtn) {
+        upBtn.addEventListener("click", () => {
+          if (!isUserLoggedIn) { window.location.href = '/login'; return; }
+          vote(post.id, +1);
+        });
+      }
+      
+      const downBtn = wrapper.querySelector('[data-act="down"]');
+      if (downBtn) {
+        downBtn.addEventListener("click", () => {
+          if (!isUserLoggedIn) { window.location.href = '/login'; return; }
+          vote(post.id, -1);
+        });
+      }
+      
+      const toggleBtn = wrapper.querySelector('[data-act="toggleComments"]');
+      if (toggleBtn) toggleBtn.addEventListener("click", () => {
+        if (!isUserLoggedIn) { window.location.href = '/login'; return; }
+        toggleComments(wrapper);
+      });
+      
+      const shareBtn = wrapper.querySelector('[data-act="share"]');
+      if (shareBtn) shareBtn.addEventListener("click", () => copyLink(post.id));
+
+      const editBtn = wrapper.querySelector('[data-act="edit"]');
+      if (editBtn) {
+        console.log('[EVENTS] Attached edit listener for post:', post.id, 'Author:', post.author?._id, 'Current user:', currentUserId);
+        editBtn.addEventListener("click", () => openEditModal(post));
+      }
+
+      const deleteBtn = wrapper.querySelector('[data-act="delete"]');
+      if (deleteBtn) {
+        console.log('[EVENTS] Attached delete listener for post:', post.id, 'Author:', post.author?._id, 'Current user:', currentUserId);
+        deleteBtn.addEventListener("click", () => deletePost(post.id));
+      } else {
+        console.log('[EVENTS] No delete button found for post:', post.id, '(user is not author. Author:', post.author?._id, 'Current user:', currentUserId, ')');
+      }
+
+      const addBtn = wrapper.querySelector('[data-act="addComment"]');
+      const commentInput = addBtn ? addBtn.parentElement.querySelector("input") : null;
+
+      function submitComment() {
+        const input = addBtn.parentElement.querySelector("input");
+        const text = input.value.trim();
+        if (!text) return;
+        
+        // Show comment instantly with proper styling
+        const commentList = wrapper.querySelector("[data-commentlist]");
+        const commentEl = document.createElement("div");
+        commentEl.className = "comment-item";
+        const initials = getInitials(currentUsername || "You");
+        const color = getAuthorColor(currentUsername || "Gamer");
+        const textColor = ["#febc2e"].includes(color) ? "#0d1217" : "#fff";
+        
+        commentEl.innerHTML = `
+          <div class="d-flex gap-2">
+            ${currentUserAvatar ? `<img src="${currentUserAvatar}" class="comment-avatar" style="object-fit: cover;" alt="${escapeHtml(currentUsername || 'You')}">` : `<div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>`}
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="comment-author" style="color:${color};">${escapeHtml(currentUsername || "You")}</span>
+                <span class="comment-time">now</span>
+              </div>
+              <div class="comment-text">${escapeHtml(text).replace(/\n/g, "<br/>")}</div>
+            </div>
+          </div>
+        `;
+        commentList.appendChild(commentEl);
+        input.value = "";
+        
+        // Post to server in background (don't wait)
+        addComment(post.id, text);
+      }
+
+      if (addBtn) {
+        addBtn.addEventListener("click", submitComment);
+      }
+
+      if (commentInput) {
+        commentInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitComment();
+          }
+        });
+      }
+
+      const commentList = wrapper.querySelector("[data-commentlist]");
+      const noComments = wrapper.querySelector("[data-nocomments]");
+      // Comments are lazy loaded when the toggle button is clicked (see loadCommentsForPost)
+      // So we don't render them here — just show the empty state placeholder
+
+      return wrapper;
+    }
+
+    // Author-to-color map for consistent avatar colors across the page
+    const authorColors = {
+      "Kane_Joshua": "#5383e8",
+      "Justin_Ice": "#2dd4bf",
+      "Seanne_C": "#e85383",
+      "MarcusRPG": "#febc2e",
+      "NightOwlAria": "#a78bfa"
+    };
+
+    function getInitials(name) {
+      if (!name) return "??";
+      return name.split(/[_\s]+/).map(w => w[0]).join("").toUpperCase().slice(0, 2);
+    }
+
+    function getAuthorColor(name) {
+      return authorColors[name] || "#5383e8";
+    }
+
+    function commentRow(postId, comment) {
+      const row = document.createElement("div");
+      row.className = "comment-item";
+      const authorName = comment.author.displayName || comment.author.username;
+      const initials = getInitials(authorName);
+      const color = getAuthorColor(comment.author.username);
+      const textColor = ["#febc2e"].includes(color) ? "#0d1217" : "#fff";
+      row.innerHTML = `
+        <div class="d-flex gap-2">
+          ${comment.author.avatar ? `<img src="${comment.author.avatar}" class="comment-avatar" style="object-fit: cover;" alt="${escapeHtml(authorName)}">` : `<div class="comment-avatar" style="background:${color};color:${textColor};">${initials}</div>`}
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="comment-author" style="color:${color};">${escapeHtml(authorName)}</span>
+              <span class="comment-time">${fmtTime(comment.createdAt)}</span>
+            </div>
+            <div class="comment-text">${escapeHtml(comment.text).replace(/\n/g, "<br/>")}</div>
+          </div>
+        </div>
+      `;
+
+      return row;
+    }
+
+    // --- Actions: vote, comment, delete, share ---
+    const votingInFlight = new Set(); // Prevent double-click race conditions
+    async function vote(postId, dir) {
+      // Lock: skip if a vote request is already in progress for this post
+      if (votingInFlight.has(postId)) return;
+      votingInFlight.add(postId);
+      try {
+        const res = await fetch(`/api/posts/${postId}/vote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ direction: dir > 0 ? 'up' : 'down' })
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        // Update local cache with counts
+        if (cachedPosts) {
+          const p = cachedPosts.find(x => x.id === postId || x._id === postId);
+          if (p) {
+            p.upvoteCount = data.upvotes;
+            p.downvoteCount = data.downvotes;
+          }
+        }
+        
+        // In-place DOM update — don't re-render the whole feed (preserves videos/photos)
+        const cardEl = document.querySelector(`[data-post-id="${postId}"]`);
+        if (cardEl) {
+          // Update individual vote counts
+          const upCountEl = cardEl.querySelector('[data-upcount]');
+          const downCountEl = cardEl.querySelector('[data-downcount]');
+          if (upCountEl) upCountEl.textContent = data.upvotes;
+          if (downCountEl) downCountEl.textContent = data.downvotes;
+          // Update active vote button styling
+          const upBtn = cardEl.querySelector('[data-act="up"]');
+          const downBtn = cardEl.querySelector('[data-act="down"]');
+          if (upBtn) upBtn.classList.toggle('active', data.userVote === 'up');
+          if (downBtn) downBtn.classList.toggle('active', data.userVote === 'down');
+          // Also update cached data for userVote so re-sorts work correctly
+          if (cachedPosts) {
+            const p = cachedPosts.find(x => x.id === postId || x._id === postId);
+            if (p) p.userVote = data.userVote;
+          }
+        } else {
+          // Fallback: full re-render if card not found
+          render();
+        }
+      } catch (err) {
+        console.error('Vote request error:', err);
+      } finally {
+        votingInFlight.delete(postId);
+      }
+    }
+
+    async function toggleComments(cardEl) {
+      const commentsWrap = cardEl.querySelector("[data-comments]");
+      const postId = commentsWrap.dataset.postId;
+      const isVisible = !commentsWrap.classList.contains("d-none");
+
+      // If hiding, just toggle
+      if (isVisible) {
+        commentsWrap.classList.add("d-none");
+        return;
+      }
+
+      // If showing and not yet loaded, load comments
+      if (commentsWrap.dataset.commentsLoaded === "false") {
+        await loadCommentsForPost(postId, cardEl);
+        commentsWrap.dataset.commentsLoaded = "true";
+      }
+      
+      commentsWrap.classList.remove("d-none");
+    }
+
+    // Load comments for a specific post from server
+    async function loadCommentsForPost(postId, cardEl) {
+      if (commentCache.has(postId)) {
+        const comments = commentCache.get(postId);
+        renderComments(cardEl, comments, postId);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/comments`);
+        if (!res.ok) throw new Error('Failed to load comments');
+        const data = await res.json();
+        const comments = data.comments || [];
+        commentCache.set(postId, comments);
+        renderComments(cardEl, comments, postId);
+      } catch (err) {
+        console.warn('[Comments lazy load] Error for post ' + postId, err);
+      }
+    }
+
+    // Render comments into the card
+    function renderComments(cardEl, comments, postId) {
+      const commentList = cardEl.querySelector("[data-commentlist]");
+      const noComments = cardEl.querySelector("[data-nocomments]");
+      
+      commentList.innerHTML = ""; // Clear placeholder
+      
+      if (comments.length === 0) {
+        noComments.style.display = "block";
+      } else {
+        noComments.style.display = "none";
+        for (const c of comments.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))) {
+          commentList.appendChild(commentRow(postId, c));
+        }
+      }
+    }
+
+    async function addComment(postId, text) {
+      try {
+        const res = await fetch(`/api/posts/${postId}/comment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ text })
+        });
+        if (!res.ok) throw new Error('Comment failed');
+        // Comment already shown optimistically, just silently confirm with server
+      } catch (err) {
+        console.error('Comment submission error:', err);
+        // In case of error, a simple alert could be added, but for now errors are silent
+      }
+    }
+
+    function copyLink(postId) {
+      const url = new URL(window.location.href);
+      url.hash = "post-" + postId;
+      (navigator.clipboard?.writeText(url.toString()) || Promise.reject()).then(() => {
+        const card = document.querySelector(`[data-post-id="${postId}"]`);
+        const btn = card ? card.querySelector('[data-act="share"]') : null;
+        if (!btn) return;
+        const old = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(() => btn.textContent = old, 900);
+      }).catch(() => {
+        alert("Copy failed. You can manually copy the URL from the address bar.");
+      });
+    }
+
+    // Edit modal state
+    let editingPostId = null;
+    let editSelectedPhoto = null;
+
+    function openEditModal(post) {
+      editingPostId = post.id;
+      editSelectedPhoto = post.hasPhoto ? post.id : null;  // Store photo ID if post has one
+      
+      document.getElementById("editPostTitle").value = post.title || "";
+      document.getElementById("editPostBody").value = post.body || "";
+      document.getElementById("editPostFlair").value = post.flair || "Discussion";
+      document.getElementById("editPostGame").value = post.game || "";
+      
+      // Reset photo UI
+      document.getElementById("editPhotoPreviewContainer").style.display = "none";
+      document.getElementById("editPhotoUploadArea").style.display = "block";
+      document.getElementById("editPhotoInput").value = "";
+      
+      // If post has photo, show option to replace/remove
+      if (post.hasPhoto) {
+        editSelectedPhoto = post.id;
+        // Show that there's an existing photo
+        console.log('[EDIT] Post has existing photo, user can replace or remove it');
+      }
+      
+      const editModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("editPostModal"));
+      editModal.show();
+    }
+
+    async function deletePost(postId) {
+      console.log('[DELETE] Opening delete confirmation for post:', postId);
+      document.getElementById("confirmDeletePostId").value = postId;
+      const deleteModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("deletePostModal"));
+      deleteModal.show();
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+      const postId = document.getElementById("confirmDeletePostId").value;
+      console.log('[DELETE] User confirmed deletion of post:', postId);
+      
+      if (!postId) {
+        console.error('[DELETE] No post ID provided');
+        alert("Error: No post selected for deletion");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${postId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        
+        console.log('[DELETE] Server response:', res.status, res.statusText);
+        
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('[DELETE] Server error:', errData);
+          throw new Error(errData.error || `Delete failed with status ${res.status}`);
+        }
+        
+        console.log('[DELETE] Post deleted successfully');
+        const deleteModal = bootstrap.Modal.getInstance(document.getElementById("deletePostModal"));
+        deleteModal.hide();
+        
+        if (cachedPosts) {
+          cachedPosts = cachedPosts.filter(p => p.id !== postId && p._id !== postId);
+        }
+        
+        render();
+      } catch (err) {
+        console.error('[DELETE] Error:', err.message);
+        alert("Failed to delete post: " + err.message);
+      }
+    });
+
+    async function savePostEdit() {
+      const title = document.getElementById("editPostTitle").value.trim();
+      const body = document.getElementById("editPostBody").value.trim();
+      const flair = document.getElementById("editPostFlair").value;
+      const game = document.getElementById("editPostGame").value.trim();
+
+      if (!title) {
+        alert("Title is required");
+        return;
+      }
+
+      try {
+        const updateData = { 
+          title, 
+          body, 
+          flair, 
+          game: game || undefined,
+          photo: editSelectedPhoto || undefined  // null to remove photo, or new data URL to replace
+        };
+        
+        const res = await fetch(`/api/posts/${editingPostId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(updateData)
+        });
+        if (!res.ok) throw new Error('Update failed');
+        
+        if (cachedPosts) {
+          const p = cachedPosts.find(x => x.id === editingPostId || x._id === editingPostId);
+          if (p) {
+            p.title = title;
+            p.body = body;
+            p.flair = flair;
+            p.game = game;
+            if (editSelectedPhoto === null) {
+              p.photo = null;
+              p.hasPhoto = false;
+            } else if (editSelectedPhoto !== p.id) { // not just the id, actually new data Url
+              p.photo = editSelectedPhoto;
+              p.hasPhoto = true;
+            }
+          }
+        }
+        
+        const editModal = bootstrap.Modal.getInstance(document.getElementById("editPostModal"));
+        editModal.hide();
+        render();
+      } catch (err) {
+        console.error('Edit error:', err);
+        alert("Failed to update post");
+      }
+    }
+
+    const postTitle = document.getElementById("postTitle");
+    const postBody = document.getElementById("postBody");
+    const postFlair = document.getElementById("postFlair");
+    const postGame = document.getElementById("postGame");
+    const postError = document.getElementById("postError");
+    const createPostBtn = document.getElementById("createPostBtn");
+    const newPostModalEl = document.getElementById("newPostModal");
+    const newPostModal = bootstrap.Modal.getOrCreateInstance(newPostModalEl);
+
+    // Photo upload handling for community posts
+    let communitySelectedPhoto = null;
+    const communityPhotoUploadArea = document.getElementById("communityPhotoUploadArea");
+    const communityPhotoInput = document.getElementById("communityPhotoInput");
+    const communityPhotoPreviewContainer = document.getElementById("communityPhotoPreviewContainer");
+
+    function resetPhotoUpload() {
+      communitySelectedPhoto = null;
+      communityPhotoInput.value = "";
+      communityPhotoUploadArea.classList.remove("has-photo");
+      communityPhotoUploadArea.innerHTML = "";
+      const icon = document.createElement("i");
+      icon.className = "bi bi-image";
+      icon.style.cssText = "font-size: 1.5rem; color: #5383e8;";
+      const p = document.createElement("p");
+      p.className = "mb-0 mt-2 small";
+      p.textContent = "Click to upload a screenshot or photo";
+      communityPhotoUploadArea.appendChild(icon);
+      communityPhotoUploadArea.appendChild(p);
+      communityPhotoUploadArea.appendChild(communityPhotoInput);
+    }
+
+    communityPhotoUploadArea.addEventListener("click", (e) => {
+      if (e.target.closest(".community-photo-remove-btn")) return;
+      if (!communitySelectedPhoto) communityPhotoInput.click();
+    });
+
+    // Helper: compress an image file to fit within maxWidth and quality constraints
+    function compressImage(file, maxWidth = 800, quality = 0.65) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const scale = Math.min(1, maxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = url;
+      });
+    }
+
+    // Helper: show the media preview with a nice Remove button below
+    function showMediaPreview(dataUrl, isVideo) {
+      communitySelectedPhoto = dataUrl;
+      communityPhotoUploadArea.classList.add("has-photo");
+      communityPhotoUploadArea.innerHTML = "";
+      
+      if (isVideo) {
+        const video = document.createElement("video");
+        video.src = dataUrl;
+        video.className = "community-photo-preview-img";
+        video.controls = true;
+        video.style.cssText = "max-width:100%;max-height:300px;background:#000;border-radius:8px;";
+        communityPhotoUploadArea.appendChild(video);
+      } else {
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.className = "community-photo-preview-img";
+        img.alt = "Preview";
+        communityPhotoUploadArea.appendChild(img);
+      }
+      
+      communityPhotoUploadArea.appendChild(communityPhotoInput);
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn";
+      removeBtn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Remove Media';
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        resetPhotoUpload();
+      });
+      communityPhotoUploadArea.appendChild(removeBtn);
+      postError.style.display = "none";
+    }
+
+    // Edit photo handling functions
+    function showEditMediaPreview(dataUrl, isVideo) {
+      editSelectedPhoto = dataUrl;
+      const uploadArea = document.getElementById("editPhotoUploadArea");
+      const previewContainer = document.getElementById("editPhotoPreviewContainer");
+      
+      uploadArea.style.display = "none";
+      previewContainer.style.display = "block";
+      previewContainer.innerHTML = "";
+      
+      if (isVideo) {
+        const video = document.createElement("video");
+        video.src = dataUrl;
+        video.className = "community-photo-preview-img";
+        video.controls = true;
+        video.style.cssText = "max-width:100%;max-height:300px;background:#000;border-radius:8px;";
+        previewContainer.appendChild(video);
+      } else {
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.className = "community-photo-preview-img";
+        img.alt = "Preview";
+        previewContainer.appendChild(img);
+      }
+      
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-sm btn-outline-danger community-photo-remove-btn mt-2";
+      removeBtn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Remove Media';
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editSelectedPhoto = null;
+        document.getElementById("editPhotoPreviewContainer").style.display = "none";
+        document.getElementById("editPhotoUploadArea").style.display = "block";
+        document.getElementById("editPhotoInput").value = "";
+      });
+      previewContainer.appendChild(removeBtn);
+    }
+
+    const editPhotoInput = document.getElementById("editPhotoInput");
+    const editPhotoUploadArea = document.getElementById("editPhotoUploadArea");
+    
+    editPhotoUploadArea.addEventListener("click", () => editPhotoInput.click());
+    
+    editPhotoInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = 10 * 1024 * 1024; // 10MB
+
+      if (isVideo && file.size > maxSize) {
+        alert(`Video too large! Maximum is ${maxSize / (1024 * 1024).toFixed(0)}MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+        return;
+      }
+
+      if (isVideo) {
+        const reader = new FileReader();
+        reader.onload = (event) => showEditMediaPreview(event.target.result, true);
+        reader.readAsDataURL(file);
+      } else {
+        try {
+          const compressed = await compressImage(file, 1200, 0.8);
+          showEditMediaPreview(compressed, false);
+        } catch (err) {
+          const reader = new FileReader();
+          reader.onload = (event) => showEditMediaPreview(event.target.result, false);
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+
+    communityPhotoInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? 10 * 1024 * 1024 : 10 * 1024 * 1024; // 10MB for both after compression
+
+      if (isVideo && file.size > maxSize) {
+        postError.style.display = "block";
+        postError.className = "alert alert-danger alert-dismissible fade show mb-0";
+        postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i><strong>Video too large!</strong> Maximum video size is 10MB. Your video is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Try a shorter clip or compress it first.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        return;
+      }
+
+      if (isVideo) {
+        // Read video as-is (already size-checked above)
+        const reader = new FileReader();
+        reader.onload = (event) => showMediaPreview(event.target.result, true);
+        reader.readAsDataURL(file);
+      } else {
+        // Compress image client-side to reduce payload
+        try {
+          const compressed = await compressImage(file, 1200, 0.8);
+          showMediaPreview(compressed, false);
+        } catch (err) {
+          // Fallback: read original file
+          const reader = new FileReader();
+          reader.onload = (event) => showMediaPreview(event.target.result, false);
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+
+    createPostBtn.addEventListener("click", () => {
+      const title = postTitle.value.trim();
+      const body = postBody.value.trim();
+      const flair = postFlair.value;
+      const game = postGame.value.trim();
+
+      if (title.length < 3) {
+        postError.style.display = "block";
+        postError.textContent = "Title must be at least 3 characters.";
+        return;
+      }
+
+      // Check payload size before sending — Render free tier & MongoDB have limits
+      const postPayload = {
+        title,
+        body,
+        flair,
+        game,
+        photo: communitySelectedPhoto
+      };
+      const payloadStr = JSON.stringify(postPayload);
+      const payloadSizeMB = payloadStr.length / (1024 * 1024);
+      
+      if (payloadSizeMB > 15) {
+        postError.style.display = "block";
+        postError.className = "alert alert-danger alert-dismissible fade show mb-0";
+        postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i><strong>Media too large for upload!</strong> Total post size is ${payloadSizeMB.toFixed(1)}MB (max ~15MB). Try a smaller image or shorter video clip.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        return;
+      }
+
+      // Disable button while posting
+      createPostBtn.disabled = true;
+      createPostBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Posting...';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+      console.log('[COMMUNITY POST] Sending request:', { title, flair, game, hasPhoto: !!communitySelectedPhoto });
+
+      fetch('/api/posts', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: payloadStr,
+        signal: controller.signal
+      })
+      .then(res => {
+        clearTimeout(timeoutId);
+        console.log('[COMMUNITY POST] Response received:', res.status, res.statusText);
+        if (!res.ok) {
+          return res.json().then(err => {
+            console.error('[COMMUNITY POST] Server error response:', err);
+            return Promise.reject(err || { error: `Server error (${res.status})` });
+          }).catch(parseErr => {
+            console.error('[COMMUNITY POST] Could not parse error response:', parseErr);
+            return Promise.reject({ error: `Server error (${res.status}). Check console for details.` });
+          });
+        }
+        return res.json();
+      })
+      .then(post => {
+        console.log('[COMMUNITY POST] Post created successfully:', post.id);
+        postTitle.value = "";
+        postBody.value = "";
+        postGame.value = "";
+        postFlair.value = "Discussion";
+        postError.style.display = "none";
+        postError.textContent = "";
+        resetPhotoUpload();
+        newPostModal.hide();
+        location.hash = "post-" + post.id;
+        
+        // Update local cache to reflect changes instantly without manual refresh
+        if (cachedPosts) {
+          cachedPosts.unshift(post);
+        } else {
+          cachedPosts = [post];
+        }
+        
+        render();
+        
+        // Immediately load photo for newly created post (don't wait for lazy loading)
+        setTimeout(() => {
+          const newPostCard = document.querySelector(`[data-post-id="${post.id}"]`);
+          if (newPostCard) {
+            const photoPlaceholder = newPostCard.querySelector('[data-photo-id]');
+            if (photoPlaceholder) {
+              console.log('[NEW POST] Loading photo immediately for new post:', post.id);
+              loadAndShowPhoto(post.id, photoPlaceholder);
+            }
+          }
+          updateSidebarStats();
+        }, 100);
+      })
+      .catch(err => {
+        clearTimeout(timeoutId);
+        console.error('[COMMUNITY POST] Error:', err);
+        postError.style.display = "block";
+        postError.className = "alert alert-danger alert-dismissible fade show mb-0";
+        let errMsg = err.error || err.message || 'Failed to create post.';
+        
+        // Check for specific error types
+        if (err.name === 'AbortError') {
+          errMsg = 'Request timeout (30s) — the server did not respond. Check if the server is running.';
+        } else if (errMsg.includes('Unauthorized')) {
+          errMsg = 'Not logged in. Please log in again.';
+        } else if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
+          errMsg = 'Network error. Check if the server is running.';
+        }
+        postError.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i>${errMsg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+      })
+      .finally(() => {
+        createPostBtn.disabled = false;
+        createPostBtn.innerHTML = 'Post';
+      });
+    });
+
+    document.getElementById("savePostEditBtn").addEventListener("click", savePostEdit);
+
+    sortSelect.addEventListener("change", render);
+    searchInput.addEventListener("input", () => {
+      clearTimeout(window.__bhSearchT);
+      window.__bhSearchT = setTimeout(render, 350);
+    });
+
+    // --- Auto-seed: pre-made sample posts seeded on first visit ---
+    function seedDefaultPosts() {
+      // Backend handles seeding or starts empty. 
+    }
+
+    seedDefaultPosts();
+
+    // Update sidebar stats using lightweight stats endpoint
+    async function updateSidebarStats() {
+      try {
+        const res = await fetch('/api/posts/stats', { credentials: 'include' });
+        if (!res.ok) throw new Error('Stats fetch failed');
+        const stats = await res.json();
+        document.getElementById('statTotalPosts').textContent = stats.totalPosts || 0;
+        document.getElementById('statTotalComments').textContent = stats.totalComments || 0;
+        document.getElementById('statActiveMembers').textContent = stats.activeMembers || 0;
+      } catch (e) {
+        console.error('Failed to load stats:', e);
+        // Fallback: compute from already-loaded feed posts
+        const feedCards = document.querySelectorAll('[data-post-id]');
+        document.getElementById('statTotalPosts').textContent = feedCards.length;
+      }
+    }
+
+    // Deep-link handler — if URL has #post-<id>, scroll to that post and open its comments.
+    // Used by the "Copy Link" share feature
+    function openCommentsForHash() {
+      if (!location.hash.startsWith("#post-")) return;
+      const id = location.hash.replace("#post-", "");
+      const card = document.querySelector(`[data-post-id="${id}"]`);
+      if (!card) return;
+
+      const commentsWrap = card.querySelector("[data-comments]");
+      if (commentsWrap) commentsWrap.classList.remove("d-none");
+
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // Wait for auth check, then fire posts + stats in parallel for fastest initial load
+    (async () => {
+      // Wait for auth to be checked before rendering posts
+      let waitCount = 0;
+      while (!authCheckComplete && waitCount < 100) {
+        await new Promise(r => setTimeout(r, 50));
+        waitCount++;
+      }
+      console.log('[RENDER] Auth complete after', waitCount * 50, 'ms. isUserLoggedIn =', isUserLoggedIn);
+      
+      // Render with correct auth status
+      await Promise.all([render(), updateSidebarStats()]);
+      setTimeout(() => openCommentsForHash(), 150);
+    })();
+
+    // Logout function
+    async function logout(event) {
+      event.preventDefault();
+      try {
+          await fetch('/api/auth/logout', {
+              method: 'POST',
+              credentials: 'include'
+          });
+          window.location.href = '/login';
+      } catch (err) {
+          console.error('Logout failed:', err);
+          window.location.href = '/login';
+      }
+    }
+
+    // Smart home navigation - if logged in go to dashboard, else go to index
+    async function smartHomeClick(e) {
+      e.preventDefault();
+      try {
+        const res = await fetch('/api/auth/current', { credentials: 'include' });
+        const dest = res.ok ? '/dashboard' : '/';
+        document.body.classList.add('page-exit');
+        setTimeout(() => window.location = dest, 300);
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location = '/';
+      }
+    }
+
+    // Page exit transition
+    document.querySelectorAll('a[href]').forEach(a => {
+      if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          const dest = a.href;
+          document.body.classList.add('page-exit');
+          setTimeout(() => window.location = dest, 300);
+        });
+      }
+    });
+
+    // Navbar scroll shadow (passive, cached)
+    const _nav = document.querySelector('.navbar');
+    let _scrollTick = false;
+    window.addEventListener('scroll', () => {
+      if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
+    }, { passive: true });
+
+    // Loader is now hidden by render().then() above — no need for a separate timer
+    }); // End of window load
+  </script>

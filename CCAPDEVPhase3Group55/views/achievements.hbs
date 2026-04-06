@@ -1,0 +1,663 @@
+<!-- Achievements Guide Page -->
+
+<style>
+  :root {
+    --bg-deep: #0b0e14;
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #242d3d;
+    --accent: #5383e8;
+    --accent-glow: rgba(83, 131, 232, 0.3);
+    --blue-accent: #2dd4bf;
+    --text-primary: #e4e6eb;
+    --text-secondary: #9ca3af;
+    --text-tertiary: #6b7280;
+    --border: rgba(255, 255, 255, 0.08);
+    --success: #34d399;
+  }
+
+  body {
+    background-color: var(--bg-deep) !important;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  .back-btn-container {
+    max-width: 1200px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(83, 131, 232, 0.1);
+    border: 1px solid rgba(83, 131, 232, 0.3);
+    border-radius: 6px;
+    color: #5383e8;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover {
+    background: rgba(83, 131, 232, 0.2);
+    border-color: rgba(83, 131, 232, 0.5);
+  }
+
+  .achievements-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .achievements-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .achievements-header h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff 0%, #c9c9ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .achievements-header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 28px;
+  }
+
+  .achievement-card {
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(83, 131, 232, 0.3);
+    border-radius: 16px;
+    padding: 30px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .achievement-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .achievement-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 20px 50px rgba(83, 131, 232, 0.25);
+  }
+
+  .achievement-card:hover::before {
+    opacity: 1;
+  }
+
+  .achievement-icon-wrapper {
+    font-size: 3rem;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: inline-block;
+  }
+
+  .achievement-badge {
+    background: rgba(83, 131, 232, 0.2);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+
+  .achievement-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+
+  .achievement-requirement {
+    background: rgba(83, 131, 232, 0.1);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .achievement-requirement-label {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .achievement-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .achievement-tips {
+    background: rgba(45, 212, 191, 0.08);
+    border-left: 3px solid #2dd4bf;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #2dd4bf;
+  }
+
+  .achievement-tips strong {
+    color: #fff;
+  }
+
+  .tier-section {
+    margin-bottom: 50px;
+  }
+
+  .tier-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid rgba(83, 131, 232, 0.3);
+    display: inline-block;
+  }
+
+  .tier-bronze .tier-title {
+    color: #cd7f32;
+  }
+
+  .tier-silver .tier-title {
+    color: #c0c0c0;
+  }
+
+  .tier-gold .tier-title {
+    color: #ffd700;
+  }
+
+  .tier-diamond .tier-title {
+    color: #2dd4bf;
+  }
+
+  .tier-bronze .achievement-card {
+    border-color: rgba(205, 127, 50, 0.3);
+  }
+
+  .tier-bronze .achievement-icon-wrapper {
+    color: #cd7f32;
+  }
+
+  .tier-silver .achievement-card {
+    border-color: rgba(192, 192, 192, 0.3);
+  }
+
+  .tier-silver .achievement-icon-wrapper {
+    color: #c0c0c0;
+  }
+
+  .tier-gold .achievement-card {
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+
+  .tier-gold .achievement-icon-wrapper {
+    color: #ffd700;
+  }
+
+  .tier-diamond .achievement-card {
+    border-color: rgba(45, 212, 191, 0.3);
+  }
+
+  .tier-diamond .achievement-icon-wrapper {
+    color: #2dd4bf;
+  }
+
+  .xp-reward-badge {
+    background: linear-gradient(135deg, #5383e8, #2dd4bf);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  @media (max-width: 768px) {
+    .achievements-header h1 {
+      font-size: 2rem;
+    }
+
+    .achievements-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tier-title {
+      font-size: 1.4rem;
+    }
+  }
+</style>
+
+<div class="back-btn-container">
+  <a href="/profile" class="back-btn">
+    <span>←</span>
+    <span>Back to Profile</span>
+  </a>
+</div>
+
+<div class="achievements-container">
+  <!-- Header -->
+  <div class="achievements-header">
+    <h1><i class="bi bi-controller text-info"></i> Achievements Unlocked</h1>
+    <p>Master your gaming journey and unlock exclusive achievements. Earn XP and climb the ranks!</p>
+  </div>
+
+  <!-- Bronze Tier -->
+  <div class="tier-section tier-bronze">
+    <h2 class="tier-title">🥉 Bronze Tier</h2>
+
+    <div class="achievements-grid">
+      <!-- First Step -->
+      <div class="achievement-card">
+        <div class="achievement-badge">BRONZE</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-controller text-info"></i></div>
+        <h3 class="achievement-title">First Step</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 1 or more games to your library
+        </div>
+        <p class="achievement-description">
+          Start your gaming adventure! Add your first game to your library and begin tracking your gaming journey.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Head to the library and click "Add Game" to get started!
+        </div>
+      </div>
+
+      <!-- Collector -->
+      <div class="achievement-card">
+        <div class="achievement-badge">BRONZE</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-collection text-info"></i></div>
+        <h3 class="achievement-title">Collector</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 10 games to your library
+        </div>
+        <p class="achievement-description">
+          You're building quite the collection! Gather 10 games in your library to prove your gaming passion.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Browse the search and add games from different genres to speed things up!
+        </div>
+      </div>
+
+      <!-- Weekend Warrior -->
+      <div class="achievement-card">
+        <div class="achievement-badge">BRONZE</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-clock-history text-info"></i></div>
+        <h3 class="achievement-title">Weekend Warrior</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Accumulate 10 hours of playtime
+        </div>
+        <p class="achievement-description">
+          Put some serious hours into your games! Log 10 hours of playtime across your library.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Update playtime in your library entries to track your sessions!
+        </div>
+      </div>
+
+      <!-- Social Butterfly -->
+      <div class="achievement-card">
+        <div class="achievement-badge">BRONZE</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-people-fill text-info"></i></div>
+        <h3 class="achievement-title">Social Butterfly</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 5 friends
+        </div>
+        <p class="achievement-description">
+          Connect with other gamers! Build your friend list with 5 fellow gaming enthusiasts.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Search for friends and send them friend requests on the Friends page!
+        </div>
+      </div>
+
+      <!-- Critic -->
+      <div class="achievement-card">
+        <div class="achievement-badge">BRONZE</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-star-fill text-info"></i></div>
+        <h3 class="achievement-title">Critic</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Rate 5 games
+        </div>
+        <p class="achievement-description">
+          Share your gaming opinions! Rate 5 games from your library and help others find great titles.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Rate games on your profile's Game Ratings section!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Silver Tier -->
+  <div class="tier-section tier-silver">
+    <h2 class="tier-title">🥈 Silver Tier</h2>
+
+    <div class="achievements-grid">
+      <!-- Completionist -->
+      <div class="achievement-card">
+        <div class="achievement-badge">SILVER</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-trophy-fill text-warning"></i></div>
+        <h3 class="achievement-title">Completionist</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Complete 5 games
+        </div>
+        <p class="achievement-description">
+          You're finishing what you start! Mark 5 games as completed in your library. Shows commitment!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Update game status to "Completed" when you finish playing!
+        </div>
+      </div>
+
+      <!-- Devoted -->
+      <div class="achievement-card">
+        <div class="achievement-badge">SILVER</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-moon-stars-fill text-warning"></i></div>
+        <h3 class="achievement-title">Devoted</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Accumulate 100 hours of playtime
+        </div>
+        <p class="achievement-description">
+          You're seriously dedicated! Rack up 100 hours of gaming. That's a serious commitment to gaming!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Keep updating playtime regularly to track your progress!
+        </div>
+      </div>
+
+      <!-- Game Connoisseur -->
+      <div class="achievement-card">
+        <div class="achievement-badge">SILVER</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-bullseye text-warning"></i></div>
+        <h3 class="achievement-title">Game Connoisseur</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 30 games to your library
+        </div>
+        <p class="achievement-description">
+          Your collection is growing! Curate 30 games in your library. You're a true gaming enthusiast!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Explore different genres to find hidden gems!
+        </div>
+      </div>
+
+      <!-- Influencer -->
+      <div class="achievement-card">
+        <div class="achievement-badge">SILVER</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-megaphone-fill text-warning"></i></div>
+        <h3 class="achievement-title">Influencer</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Rate 20 games
+        </div>
+        <p class="achievement-description">
+          Your reviews matter! Rate 20 games to establish yourself as a gaming critic and influencer.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Rate different games and write thoughtful reviews in feedback!
+        </div>
+      </div>
+
+      <!-- Network Master -->
+      <div class="achievement-card">
+        <div class="achievement-badge">SILVER</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-globe2 text-warning"></i></div>
+        <h3 class="achievement-title">Network Master</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 20 friends
+        </div>
+        <p class="achievement-description">
+          Build a gaming empire! Connect with 20 friends and establish yourself as a social gamer.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Engage with the community and make new gaming friends!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gold Tier -->
+  <div class="tier-section tier-gold">
+    <h2 class="tier-title">🥇 Gold Tier</h2>
+
+    <div class="achievements-grid">
+      <!-- Gaming Legend -->
+      <div class="achievement-card">
+        <div class="achievement-badge">GOLD</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-award-fill text-warning"></i></div>
+        <h3 class="achievement-title">Gaming Legend</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Complete 15 games
+        </div>
+        <p class="achievement-description">
+          You are a true gaming legend! Complete 15 games and prove your mastery and dedication to gaming.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Mix up your game choices - single-player, multiplayer, different genres!
+        </div>
+      </div>
+
+      <!-- Marathon Runner -->
+      <div class="achievement-card">
+        <div class="achievement-badge">GOLD</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-person-walking text-warning"></i></div>
+        <h3 class="achievement-title">Marathon Runner</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Accumulate 300 hours of playtime
+        </div>
+        <p class="achievement-description">
+          You're an absolute gaming machine! Log 300 hours and join the elite club of dedicated gamers.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Play consistently and enjoy games you love - the hours will add up!
+        </div>
+      </div>
+
+      <!-- Master Collector -->
+      <div class="achievement-card">
+        <div class="achievement-badge">GOLD</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-shop text-warning"></i></div>
+        <h3 class="achievement-title">Master Collector</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 60 games to your library
+        </div>
+        <p class="achievement-description">
+          Your library is massive! Collect 60 games and establish yourself as a true gaming aficionado.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Add games from Steam, Epic, PlayStation, Xbox, and more!
+        </div>
+      </div>
+
+      <!-- Critical Acclaim -->
+      <div class="achievement-card">
+        <div class="achievement-badge">GOLD</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-bar-chart-line-fill text-warning"></i></div>
+        <h3 class="achievement-title">Critical Acclaim</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Rate 50 games
+        </div>
+        <p class="achievement-description">
+          Your reviews are legendary! Rate 50 games and become a respected voice in the gaming community.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Rate consistently and give honest, thoughtful reviews!
+        </div>
+      </div>
+
+      <!-- Global Community Leader -->
+      <div class="achievement-card">
+        <div class="achievement-badge">GOLD</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-globe-americas text-warning"></i></div>
+        <h3 class="achievement-title">Community Leader</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 50 friends
+        </div>
+        <p class="achievement-description">
+          You're a community pillar! Build a network of 50 friends and become a social gaming icon.
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Help new players, share recommendations, and engage in game discussions!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diamond Tier -->
+  <div class="tier-section tier-diamond">
+    <h2 class="tier-title">💎 Diamond Tier</h2>
+
+    <div class="achievements-grid">
+      <!-- Gaming God -->
+      <div class="achievement-card">
+        <div class="achievement-badge">DIAMOND</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-lightning-charge-fill text-info"></i></div>
+        <h3 class="achievement-title">Gaming God</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Complete 30 games
+        </div>
+        <p class="achievement-description">
+          You've transcended to godhood! Complete 30 games and become a legendary gaming deity. This is elite status!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Take on challenging games and diverse titles to reach this pinnacle!
+        </div>
+      </div>
+
+      <!-- Time Master -->
+      <div class="achievement-card">
+        <div class="achievement-badge">DIAMOND</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-stopwatch-fill text-info"></i></div>
+        <h3 class="achievement-title">Time Master</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Accumulate 500 hours of playtime
+        </div>
+        <p class="achievement-description">
+          You've spent 500 hours gaming! You've mastered the art of dedication. This is the elite tier of commitment!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Take your time, enjoy games deeply - the hours will follow!
+        </div>
+      </div>
+
+      <!-- Legendary Collection -->
+      <div class="achievement-card">
+        <div class="achievement-badge">DIAMOND</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-stars text-info"></i></div>
+        <h3 class="achievement-title">Legendary Collection</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 100 games to your library
+        </div>
+        <p class="achievement-description">
+          Your library is the stuff of legend! Collect 100 games and become a true gaming encyclopedia!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Explore every platform, genre, and era of gaming!
+        </div>
+      </div>
+
+      <!-- Gaming Prodigy -->
+      <div class="achievement-card">
+        <div class="achievement-badge">DIAMOND</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-lightbulb-fill text-info"></i></div>
+        <h3 class="achievement-title">Gaming Prodigy</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Rate 100+ games
+        </div>
+        <p class="achievement-description">
+          You've rated 100+ games! Your expertise and opinions are invaluable to the gaming community. You're a prodigy!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Your reviews help shape the gaming community - make them count!
+        </div>
+      </div>
+
+      <!-- Apex Network -->
+      <div class="achievement-card">
+        <div class="achievement-badge">DIAMOND</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-fire text-info"></i></div>
+        <h3 class="achievement-title">Apex Network</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Add 100 friends
+        </div>
+        <p class="achievement-description">
+          You've assembled a network of 100 friends! You're the apex of social gaming. A true community icon!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> Be friendly, helpful, and engage with everyone in the community!
+        </div>
+      </div>
+
+      <!-- Ultimate Gamer -->
+      <div class="achievement-card">
+        <div class="achievement-badge">DIAMOND</div>
+        <div class="achievement-icon-wrapper"><i class="bi bi-star-fill text-info"></i></div>
+        <h3 class="achievement-title">Ultimate Gamer</h3>
+        <div class="achievement-requirement">
+          <div class="achievement-requirement-label">Requirement:</div>
+          Unlock all achievements
+        </div>
+        <p class="achievement-description">
+          You've reached gaming perfection! Unlock every achievement and earn the title of Ultimate Gamer. You are a legend!
+        </p>
+        <div class="achievement-tips">
+          <strong>💡 Tip:</strong> This is the ultimate challenge - can you complete it all?
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

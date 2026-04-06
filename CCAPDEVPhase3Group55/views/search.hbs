@@ -1,0 +1,1031 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+
+<!-- search.html — Game search & discovery page.
+     Users can search through the game catalog and add titles to their library.
+     The "Based on your library" recommendations are hardcoded for now. -->
+
+<style>
+    /* Page-specific: search overrides */
+    .card-title {
+      color: #dbe7ff;
+    }
+
+    .search-container {
+      background: linear-gradient(180deg, rgba(20, 28, 36, 0.6) 0%, transparent 100%);
+      padding: 50px 0 40px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .search-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(83, 131, 232, 0.12), transparent 70%);
+      pointer-events: none;
+    }
+
+    .game-cover {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      transition: transform 0.4s var(--ease);
+    }
+
+    .card:hover .game-cover {
+      transform: scale(1.06);
+    }
+
+    .card .card-img-top-wrap {
+      overflow: hidden;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .animate-card {
+      opacity: 0;
+      animation: fadeInUp 0.5s var(--ease-out) forwards;
+    }
+
+    .animate-card:nth-child(1) {
+      animation-delay: 0.02s;
+    }
+
+    .animate-card:nth-child(2) {
+      animation-delay: 0.04s;
+    }
+
+    .animate-card:nth-child(3) {
+      animation-delay: 0.06s;
+    }
+
+    .animate-card:nth-child(4) {
+      animation-delay: 0.08s;
+    }
+
+    .animate-card:nth-child(5) {
+      animation-delay: 0.1s;
+    }
+
+    .animate-card:nth-child(6) {
+      animation-delay: 0.12s;
+    }
+
+    .animate-card:nth-child(7) {
+      animation-delay: 0.14s;
+    }
+
+    .animate-card:nth-child(8) {
+      animation-delay: 0.16s;
+    }
+
+    .animate-card:nth-child(9) {
+      animation-delay: 0.18s;
+    }
+
+    .animate-card:nth-child(10) {
+      animation-delay: 0.2s;
+    }
+
+    .search-input-wrap {
+      position: relative;
+    }
+
+    .search-input-wrap .form-control {
+      border-radius: var(--radius-lg);
+      padding: 14px 20px 14px 48px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      background: var(--bg-input) !important;
+      transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+    }
+
+    .search-input-wrap .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-glow), 0 0 40px rgba(83, 131, 232, 0.1);
+    }
+
+    .search-input-wrap .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-faint);
+      font-size: 1.1rem;
+      transition: color 0.2s;
+      z-index: 5;
+    }
+
+    .search-input-wrap:focus-within .search-icon {
+      color: var(--primary);
+    }
+
+    .search-btn-hero {
+      border-radius: var(--radius-lg);
+      padding: 0 24px;
+    }
+
+    /* Card hover glow */
+    .card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gradient-primary);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover::after {
+      opacity: 1;
+    }
+
+    .results-count {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Skeleton Loading Animation - Search Games */
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+
+    .skeleton-loader {
+      background: linear-gradient(90deg, #1a1f2e 25%, #242d3d 50%, #1a1f2e 75%);
+      background-size: 1000px 100%;
+      animation: shimmer 2s infinite;
+      border-radius: 8px;
+    }
+
+    .search-loading {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      padding: 20px;
+      opacity: 0.6;
+    }
+
+    .search-loading .skeleton-card {
+      height: 280px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .search-loading .skeleton-cover {
+      height: 200px;
+      margin-bottom: 12px;
+    }
+
+    .search-loading .skeleton-title {
+      height: 16px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+
+    .search-loading .skeleton-text {
+      height: 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+  </style>
+
+{{> navbar-app activePage="search"}}
+
+<!-- Loading Screen for Search Games -->
+<div id="page-loader" class="loader" aria-label="Loading">
+  <div class="loader-card">
+    <div class="loader-icon-wrap">
+      <i class="bi bi-search"></i>
+      <div class="loader-glow"></div>
+    </div>
+    <div>
+      <div class="loader-text">Search Games<span class="loading-dots"></span></div>
+      <div class="loader-sub">Searching the game database</div>
+    </div>
+  </div>
+</div>
+
+<!-- Search bar section — centered large input with search button.
+         Uses input-group-lg so it feels prominent.
+         The placeholder text "400,000+ games" is just flavor text for now. -->
+  <header class="search-container text-center">
+    <div class="container">
+      <h2 class="mb-2" style="font-weight:900;">Find your next <span class="gradient-text">adventure</span></h2>
+      <p class="text-muted mb-4">Discover from 400,000+ games across every platform</p>
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="search-input-wrap" style="position: relative;">
+            <i class="bi bi-search search-icon"></i>
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control" placeholder="Search games..." autocomplete="off" style="flex: 1;">
+              <button class="btn btn-primary search-btn-hero" type="button">Search</button>
+            </div>
+            <!-- Autocomplete dropdown -->
+            <div id="autocompleteDropdown"
+              style="position: absolute; top: 100%; left: 0; right: 90px; background: #1c252e; border: 1px solid #2a3843; border-top: none; max-height: 300px; overflow-y: auto; display: none; z-index: 1000; border-radius: 0 0 0.25rem 0.25rem;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Results grid — dynamically populated by search -->
+  <div class="container my-5">
+    <h4 class="mb-4 text-muted">Search for games above to get started</h4>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4"></div>
+  </div>
+
+  <!-- Toast -->
+  <div style="position:fixed;bottom:20px;right:20px;z-index:1080">
+    <div class="toast align-items-center border-0" id="searchToast" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="searchToastMsg"></div><button type="button"
+          class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Detail Modal -->
+  <div class="modal fade" id="gameDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content" style="background-color: #1c252e; border: 1px solid #2a3843;">
+        <div class="modal-header" style="border-bottom: 1px solid #2a3843;">
+          <h5 class="modal-title" id="gameTitle" style="color: #dbe7ff;"></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Game Cover & Key Info -->
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <img id="gameCover" src="" alt="Game Cover"
+                style="width: 100%; border-radius: 0.5rem; border: 1px solid #2a3843;">
+            </div>
+            <div class="col-md-8">
+              <div class="mb-3">
+                <h6 class="text-muted mb-2">Rating</h6>
+                <div id="gameRating" style="font-size: 1.5rem; color: #febc2e;">★★★★★ 96/100</div>
+              </div>
+              <div class="mb-3">
+                <h6 class="text-muted mb-2">Release Date</h6>
+                <p id="gameReleaseDate" class="mb-0">-</p>
+              </div>
+              <div class="mb-3">
+                <h6 class="text-muted mb-2">Genres</h6>
+                <p id="gameGenres" class="mb-0">-</p>
+              </div>
+              <div class="mb-3">
+                <h6 class="text-muted mb-2">Platforms</h6>
+                <p id="gamePlatforms" class="mb-0">-</p>
+              </div>
+              <button class="btn btn-primary w-100" id="addFromDetailBtn">+ Add to Library</button>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="mb-4">
+            <h6 class="text-muted mb-2">About</h6>
+            <p id="gameSummary" style="color: #a8c0e0; line-height: 1.6;">-</p>
+          </div>
+
+          <!-- Screenshots -->
+          <div class="mb-4" id="screenshotsSection" style="display: none;">
+            <h6 class="text-muted mb-3">Screenshots</h6>
+            <div class="row g-2" id="gameScreenshots"></div>
+          </div>
+
+          <!-- Companies/Developers -->
+          <div id="companiesSection" style="display: none;">
+            <h6 class="text-muted mb-2">Developer</h6>
+            <p id="gameDeveloper" class="mb-0">-</p>
+          </div>
+
+          <!-- Community Reviews -->
+          <div class="mb-4">
+            <h6 class="text-muted mb-3">
+              <i class="bi bi-chat-left-quote me-2"></i>Community Reviews
+            </h6>
+            <div id="communityReviewsContainer" style="max-height: 400px; overflow-y: auto;">
+              <p class="text-muted text-center small" id="noReviewsMsg">Loading reviews...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IGDB search integration script with autocomplete.
+         Calls our Express proxy at /api/games/search.
+         The proxy handles Twitch auth + IGDB API so we don't expose keys in the browser. -->
+  <script>
+    const searchInput = document.querySelector('.search-container input');
+    const searchBtn = document.querySelector('.search-container .btn-primary');
+    const resultsGrid = document.querySelector('.container.my-5 .row');
+    const sectionTitle = document.querySelector('.container.my-5 h4');
+    const autocompleteDropdown = document.getElementById('autocompleteDropdown');
+    let detailModal;
+
+    let autocompleteCache = new Map();
+    let autocompleteTimeout;
+    let currentGameDetail = null;
+    let isLoggedIn = false;
+    let searchUserId = null;
+    let searchUserLibrary = [];
+
+    // Check authentication status
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/current', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        isLoggedIn = response.ok;
+
+        if (isLoggedIn) {
+          const userData = await response.json();
+          searchUserId = userData._id || userData.id;
+          // Fetch server library for "already added" checks
+          try {
+            const libRes = await fetch('/api/library/' + searchUserId, { credentials: 'include' });
+            if (libRes.ok) {
+              searchUserLibrary = await libRes.json();
+              console.log('[SEARCH] Library entries loaded:', searchUserLibrary);
+              if (searchUserLibrary.length > 0) {
+                console.log('[SEARCH] Sample entry:', searchUserLibrary[0]);
+              }
+            }
+          } catch (e) { /* ignore */ }
+        }
+      } catch (err) {
+        isLoggedIn = false;
+      }
+    }
+
+    // Initialize auth check
+    window.addEventListener('load', async () => {
+      await checkAuth();
+
+      const storedQuery = localStorage.getItem('bh_search_query');
+      if (storedQuery) {
+        searchInput.value = storedQuery;
+        localStorage.removeItem('bh_search_query');
+        // Auto-search after page loads
+        setTimeout(() => searchGames(storedQuery), 300);
+      } else {
+        loadTrendingGames();
+      }
+    });
+
+    async function getAutocompleteSuggestions(query) {
+      if (!query || query.length < 2) {
+        autocompleteDropdown.style.display = 'none';
+        return;
+      }
+
+      // Check cache first
+      if (autocompleteCache.has(query)) {
+        displayAutocompleteSuggestions(autocompleteCache.get(query), query);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/games/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: query.trim(), limit: 8 })
+        });
+
+        if (!res.ok) return;
+        const games = await res.json();
+
+        // Cache the results
+        autocompleteCache.set(query, games);
+        displayAutocompleteSuggestions(games, query);
+      } catch (err) {
+        console.error('Autocomplete failed:', err);
+      }
+    }
+
+    function displayAutocompleteSuggestions(games, query) {
+      if (!games || games.length === 0) {
+        autocompleteDropdown.style.display = 'none';
+        return;
+      }
+
+      const html = games.map(game => `
+          <div class="dropdown-item" style="cursor: pointer; padding: 10px 15px; border-bottom: 1px solid #2a3843; color: #9e9e9e; transition: background-color 0.15s, color 0.15s;" onmouseover="this.style.backgroundColor='#2a3843'; this.style.color='#ffffff';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#9e9e9e';" onclick="selectGame('${game.name}')" data-name="${game.name}">
+            <span>${game.name}</span>
+            ${game.first_release_date ? `<span style="margin-left: 8px; font-size: 0.8rem; color: #6b7b8d;">(${new Date(game.first_release_date * 1000).getFullYear()})</span>` : ''}
+          </div>
+        `).join('');
+
+      autocompleteDropdown.innerHTML = html;
+      autocompleteDropdown.style.display = 'block';
+    }
+
+    function selectGame(gameName) {
+      searchInput.value = gameName;
+      autocompleteDropdown.style.display = 'none';
+      searchGames(gameName);
+    }
+
+    // Fetch and display game details
+    async function openGameDetail(game) {
+      currentGameDetail = game;
+      console.log(`[OPEN DETAIL] Game object:`, game);
+      console.log(`[OPEN DETAIL] Game ID (IGDB):`, game.id);
+
+      try {
+        // Fetch full game details from IGDB
+        const res = await fetch('/api/games/igdb/' + game.id, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (res.ok) {
+          const fullGame = await res.json();
+
+          // Populate modal
+          document.getElementById('gameTitle').textContent = game.name;
+
+          // Cover image
+          const coverUrl = game.cover
+            ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
+            : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22264%22 height=%22352%22%3E%3Crect fill=%22%231c252e%22 width=%22264%22 height=%22352%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2216%22%3ENo Cover%3C/text%3E%3C/svg%3E';
+          document.getElementById('gameCover').src = coverUrl;
+
+          // Rating (IGDB's rating is 0-100)
+          const rating = game.rating ? Math.round(game.rating) : 0;
+          const stars = Math.round(rating / 20);
+          document.getElementById('gameRating').innerHTML = `${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} ${rating}/100`;
+
+          // Release date
+          if (game.first_release_date) {
+            const date = new Date(game.first_release_date * 1000);
+            document.getElementById('gameReleaseDate').textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          }
+
+          // Genres
+          if (game.genres) {
+            document.getElementById('gameGenres').textContent = game.genres.map(g => g.name).join(', ');
+          }
+
+          // Platforms
+          if (fullGame.platforms) {
+            document.getElementById('gamePlatforms').textContent = fullGame.platforms.map(p => p.name).join(', ');
+          }
+
+          // Summary
+          if (game.summary) {
+            document.getElementById('gameSummary').textContent = game.summary;
+          } else {
+            document.getElementById('gameSummary').textContent = 'No description available.';
+          }
+
+          // Screenshots
+          if (fullGame.screenshots && fullGame.screenshots.length > 0) {
+            const screenshotsHtml = fullGame.screenshots.slice(0, 4).map(ss => `
+                <div class="col-6">
+                  <img src="https:${ss.url.replace('t_thumb', 't_screenshot_big')}" alt="Screenshot" style="width: 100%; border-radius: 0.5rem; border: 1px solid #2a3843; cursor: pointer;" onclick="window.open(this.src, '_blank')">
+                </div>
+              `).join('');
+            document.getElementById('gameScreenshots').innerHTML = screenshotsHtml;
+            document.getElementById('screenshotsSection').style.display = 'block';
+          } else {
+            document.getElementById('screenshotsSection').style.display = 'none';
+          }
+
+          // Developer
+          if (fullGame.involved_companies) {
+            const developers = fullGame.involved_companies
+              .filter(c => c.developer)
+              .map(c => c.company.name)
+              .join(', ');
+            if (developers) {
+              document.getElementById('gameDeveloper').textContent = developers;
+              document.getElementById('companiesSection').style.display = 'block';
+            }
+          }
+
+          if (!detailModal) detailModal = new bootstrap.Modal(document.getElementById('gameDetailModal'));
+          detailModal.show();
+          
+          // Load community reviews for this game
+          loadCommunityReviews(game.id, game.name);
+        }
+      } catch (err) {
+        console.error('Failed to fetch game details:', err);
+        if (!detailModal) detailModal = new bootstrap.Modal(document.getElementById('gameDetailModal'));
+        detailModal.show();
+      }
+    }
+
+    // Load community reviews for a game
+    async function loadCommunityReviews(igdbId, gameName) {
+      try {
+        const container = document.getElementById('communityReviewsContainer');
+        container.innerHTML = '<p class="text-muted text-center small">Loading reviews...</p>';
+
+        const queryParams = new URLSearchParams();
+        if (igdbId) queryParams.append('igdbId', igdbId);
+        if (gameName) queryParams.append('name', gameName);
+
+        const response = await fetch('/api/reviews/game?' + queryParams.toString(), {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          container.innerHTML = '<p class="text-muted text-center small">No reviews yet</p>';
+          return;
+        }
+
+        const reviews = await response.json();
+
+        if (!reviews || reviews.length === 0) {
+          container.innerHTML = '<p class="text-muted text-center small">No reviews yet. Be the first to review!</p>';
+          return;
+        }
+
+        const reviewsHtml = reviews.map(review => {
+          const date = new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+          const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+          
+          // Helper to get initials from username
+          const getInitials = (name) => {
+            if (!name) return '?';
+            return name.split(/[_\s]+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+          };
+          
+          // Helper to get color based on username
+          const getAvatarColor = (name) => {
+            const colors = ['#5383e8', '#2dd4bf', '#e85383', '#febc2e', '#a78bfa'];
+            let hash = 0;
+            if (!name) return colors[0];
+            for (let i = 0; i < name.length; i++) {
+              hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+          };
+          
+          const profileImg = review.profileImage 
+            ? `<img src="${review.profileImage}" alt="${review.username}" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #2a3843; margin-right: 8px;">`
+            : `<div style="width: 32px; height: 32px; border-radius: 50%; background: ${getAvatarColor(review.username)}; border: 1px solid #2a3843; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: white;">${getInitials(review.username)}</div>`;
+
+          return `
+            <div style="padding: 12px; margin-bottom: 12px; border-left: 3px solid #febc2e; background: rgba(42, 56, 67, 0.5); border-radius: 4px;">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                ${profileImg}
+                <div>
+                  <strong style="color: #dbe7ff;">${review.username}</strong>
+                  <div style="font-size: 0.85rem; color: #a8c0e0;">${stars} · ${date}</div>
+                </div>
+              </div>
+              <p style="color: #a8c0e0; margin: 0; line-height: 1.5; word-break: break-word;">${review.notes}</p>
+            </div>
+          `;
+        }).join('');
+
+        container.innerHTML = reviewsHtml;
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+        document.getElementById('communityReviewsContainer').innerHTML = '<p class="text-muted text-center small">Failed to load reviews</p>';
+      }
+    }
+
+    // Autocomplete on input
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(autocompleteTimeout);
+      autocompleteTimeout = setTimeout(() => {
+        getAutocompleteSuggestions(e.target.value);
+      }, 300);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-container')) {
+        autocompleteDropdown.style.display = 'none';
+      }
+    });
+
+    async function searchGames(query) {
+      if (!query.trim()) {
+        sectionTitle.textContent = 'Search for games above to get started';
+        resultsGrid.innerHTML = '';
+        autocompleteDropdown.style.display = 'none';
+        return;
+      }
+
+      // show loading state
+      sectionTitle.textContent = `Searching for "${query}"...`;
+      resultsGrid.innerHTML = Array(20).fill(`
+        <div class="col">
+          <div class="card h-100 shadow-sm disabled" aria-hidden="true">
+             <div class="card-img-top placeholder-glow d-flex align-items-center justify-content-center bg-secondary" style="aspect-ratio: 3/4">
+               <span class="spinner-border text-light" role="status"></span>
+             </div>
+             <div class="card-body">
+               <h6 class="card-title placeholder-glow"><span class="placeholder col-8"></span></h6>
+               <p class="card-text small placeholder-glow"><span class="placeholder col-6"></span> <span class="placeholder col-4"></span></p>
+               <button class="btn btn-sm btn-outline-primary disabled placeholder w-100" aria-disabled="true"></button>
+             </div>
+          </div>
+        </div>
+      `).join('');
+      autocompleteDropdown.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/games/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: query.trim(), limit: 20 })
+        });
+
+        if (!res.ok) throw new Error('Server error');
+        let games = await res.json();
+
+        // Sort by relevance — exact matches first
+        const queryLower = query.trim().toLowerCase();
+        games.sort((a, b) => {
+          const aName = a.name.toLowerCase();
+          const bName = b.name.toLowerCase();
+
+          // Exact match has highest priority
+          if (aName === queryLower) return -1;
+          if (bName === queryLower) return 1;
+
+          // Starts with query has second priority
+          if (aName.startsWith(queryLower) && !bName.startsWith(queryLower)) return -1;
+          if (bName.startsWith(queryLower) && !aName.startsWith(queryLower)) return 1;
+
+          // Rating (higher rated games first)
+          if (a.rating !== b.rating) {
+            return (b.rating || 0) - (a.rating || 0);
+          }
+
+          return 0;
+        });
+
+        if (games.length === 0) {
+          sectionTitle.textContent = `No results for "${query}"`;
+          resultsGrid.innerHTML = `
+              <div class="col-12 text-center py-5">
+                <p class="text-muted">No games found. Try a different search term.</p>
+              </div>
+            `;
+          return;
+        }
+
+        sectionTitle.textContent = `Results for "${query}" (${games.length} found)`;
+
+        resultsGrid.innerHTML = renderGameGrid(games);
+
+      } catch (err) {
+        console.error('Search failed:', err);
+        sectionTitle.textContent = 'Search unavailable';
+        resultsGrid.innerHTML = `
+            <div class="col-12 text-center py-5">
+              <p class="text-muted">Could not connect to the game database.</p>
+              <p class="text-muted small">Make sure the server is running: <code>npm start</code></p>
+            </div>
+          `;
+      }
+    }
+    function renderGameGrid(games) {
+      return games.map(game => {
+        const coverUrl = game.cover
+          ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
+          : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22264%22 height=%22352%22%3E%3Crect fill=%22%231c252e%22 width=%22264%22 height=%22352%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2216%22%3ENo Cover%3C/text%3E%3C/svg%3E';
+
+        const year = game.first_release_date
+          ? new Date(game.first_release_date * 1000).getFullYear()
+          : 'TBA';
+
+        const genres = game.genres
+          ? game.genres.map(g => g.name).slice(0, 2).join(' • ')
+          : 'Game';
+
+        const rating = game.rating
+          ? Math.round(game.rating) + '/100'
+          : '';
+
+        const alreadyAdded = searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
+        
+        // Debug logging for duplicate-named games
+        if (game.name.toLowerCase().includes('cairn')) {
+          console.log(`[SEARCH] Checking "${game.name}" (ID: ${game.id})`);
+          console.log('[SEARCH] Library igdbIds:', searchUserLibrary.map(e => e.gameId?.igdbId).filter(Boolean));
+          console.log(`[SEARCH] Match found: ${alreadyAdded}`);
+        }
+
+        return `
+            <div class="col">
+              <div class="card h-100 shadow-sm game-result-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" data-game='${JSON.stringify(game).replace(/'/g, "&#39;")}'>
+                <div class="card-img-top-wrap position-relative" style="overflow: hidden;">
+                  <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
+                       onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                  <div class="cover-placeholder" style="display: none; height: 100%;">
+                    <i class="bi bi-controller" style="font-size: 2.5rem; color: var(--primary);"></i>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h6 class="card-title">${game.name}</h6>
+                  <p class="card-text small text-muted">${genres} • ${year} ${rating ? '• ' + rating : ''}</p>
+                  <button class="btn btn-sm ${alreadyAdded ? 'btn-success disabled' : 'btn-outline-primary'} w-100 add-lib-btn"
+                          data-name="${game.name}"
+                          data-genre="${genres}"
+                          data-year="${year}"
+                          data-cover="${coverUrl}"
+                          data-igdbid="${game.id}"
+                          ${alreadyAdded ? 'disabled' : ''}>${alreadyAdded ? '✓ Already in Library' : '+ Add to Library'}</button>
+                </div>
+              </div>
+            </div>
+          `;
+      }).join('');
+    }
+
+    async function loadTrendingGames() {
+      sectionTitle.textContent = `Trending Games`;
+      resultsGrid.innerHTML = Array(20).fill(`
+        <div class="col">
+          <div class="card h-100 shadow-sm disabled" aria-hidden="true">
+             <div class="card-img-top placeholder-glow d-flex align-items-center justify-content-center bg-secondary" style="aspect-ratio: 3/4">
+               <span class="spinner-border text-light" role="status"></span>
+             </div>
+             <div class="card-body">
+               <h6 class="card-title placeholder-glow"><span class="placeholder col-8"></span></h6>
+               <p class="card-text small placeholder-glow"><span class="placeholder col-6"></span> <span class="placeholder col-4"></span></p>
+               <button class="btn btn-sm btn-outline-primary disabled placeholder w-100" aria-disabled="true"></button>
+             </div>
+          </div>
+        </div>
+      `).join('');
+
+      try {
+        const res = await fetch('/api/games/trending');
+        if (!res.ok) throw new Error('Server error');
+        let games = await res.json();
+        
+        // Remove games already in the user's library to avoid showing "Already in Library" cards
+        games = games.filter(game => {
+          return !searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
+        });
+        
+        if (games.length === 0) {
+          resultsGrid.innerHTML = '<div class="col-12 text-center py-5"><p class="text-muted">No trending games found.</p></div>';
+          return;
+        }
+
+        resultsGrid.innerHTML = renderGameGrid(games);
+      } catch (err) {
+        console.error('Failed to load trending games:', err);
+        resultsGrid.innerHTML = '<div class="col-12 text-center py-5"><p class="text-muted">Could not connect to the game database.</p></div>';
+      }
+    }
+
+    // Search on button click
+    searchBtn.addEventListener('click', () => searchGames(searchInput.value));
+
+    // Search on Enter key
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        searchGames(searchInput.value);
+        autocompleteDropdown.style.display = 'none';
+      }
+    });
+
+    /* ---- Add to Library integration (server API) ---- */
+    async function addGameToServer(name, genres, year, coverUrl, igdbId) {
+      const genresArr = genres ? genres.split(' \u2022 ').map(g => g.trim()) : [];
+      const yearNum = parseInt(year) || 0;
+      const releaseDate = yearNum ? new Date(yearNum, 0, 1).toISOString() : null;
+
+      console.log(`[ADD GAME] Adding "${name}" with IGDB ID: ${igdbId}`);
+
+      // Create Game document
+      const gameRes = await fetch('/api/games', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, coverUrl: coverUrl || '', genres: genresArr, releaseDate, igdbId: igdbId || null })
+      });
+      if (!gameRes.ok) throw new Error('Failed to create game');
+      const { game } = await gameRes.json();
+
+      console.log(`[ADD GAME] Game created/updated:`, game);
+
+      // Add to library
+      const libRes = await fetch('/api/library', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: searchUserId, gameId: game._id, status: 'backlog' })
+      });
+      if (!libRes.ok) throw new Error('Failed to add to library');
+
+      // Refresh the cached library
+      try {
+        const lr = await fetch('/api/library/' + searchUserId, { credentials: 'include' });
+        if (lr.ok) searchUserLibrary = await lr.json();
+      } catch (e) { /* ignore */ }
+    }
+
+    function searchToast(msg, bg) {
+      const el = document.getElementById('searchToast');
+      el.className = 'toast align-items-center border-0 text-white ' + bg;
+      document.getElementById('searchToastMsg').textContent = msg;
+      bootstrap.Toast.getOrCreateInstance(el, { delay: 2500 }).show();
+    }
+
+    // Add from detail modal
+    document.getElementById('addFromDetailBtn').addEventListener('click', async () => {
+      if (!isLoggedIn) {
+        searchToast('Redirecting to login...', 'bg-info');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 800);
+        return;
+      }
+
+      if (!currentGameDetail) return;
+
+      const name = currentGameDetail.name;
+      const genres = currentGameDetail.genres
+        ? currentGameDetail.genres.map(g => g.name).slice(0, 2).join(' • ')
+        : 'Game';
+      const year = currentGameDetail.first_release_date
+        ? new Date(currentGameDetail.first_release_date * 1000).getFullYear()
+        : 0;
+      const cover = currentGameDetail.cover
+        ? 'https:' + currentGameDetail.cover.url.replace('t_thumb', 't_cover_big_2x')
+        : '';
+
+      if (searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(currentGameDetail.id))) {
+        searchToast(`"${name}" is already in your library!`, 'bg-warning');
+        return;
+      }
+
+      try {
+        await addGameToServer(name, genres, String(year), cover, currentGameDetail.id);
+        document.getElementById('addFromDetailBtn').textContent = '✓ Added';
+        document.getElementById('addFromDetailBtn').classList.add('btn-success', 'disabled');
+        document.getElementById('addFromDetailBtn').classList.remove('btn-primary');
+        document.getElementById('addFromDetailBtn').disabled = true;
+        searchToast(`${name} added to Backlog!`, 'bg-success');
+      } catch (err) {
+        console.error('[Search] Add error:', err);
+        searchToast('Failed to add game', 'bg-danger');
+      }
+    });
+
+    document.addEventListener('click', async e => {
+      // Handle Add to Library button
+      const btn = e.target.closest('.add-lib-btn');
+      if (btn) {
+        e.stopPropagation();
+
+        if (!isLoggedIn) {
+          searchToast('Redirecting to login...', 'bg-info');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 800);
+          return;
+        }
+
+        const name = btn.dataset.name;
+        const gameId = btn.dataset.igdbid;
+        if (searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(gameId))) {
+          searchToast(`"${name}" is already in your library!`, 'bg-warning');
+          return;
+        }
+        try {
+          // Add to Library logic
+          await addGameToServer(name, btn.dataset.genre || '', btn.dataset.year || '0', btn.dataset.cover || '', btn.dataset.igdbid || null);
+          searchToast(`${name} added to Backlog!`, 'bg-success');
+          
+          const colElement = btn.closest('.col');
+          if (colElement) {
+            // Show placeholder in place of the added game
+            colElement.innerHTML = `
+              <div class="card h-100 shadow-sm disabled" aria-hidden="true">
+                 <div class="card-img-top placeholder-glow d-flex align-items-center justify-content-center bg-secondary" style="aspect-ratio: 3/4">
+                   <span class="spinner-border text-light" role="status"></span>
+                 </div>
+                 <div class="card-body">
+                   <h6 class="card-title placeholder-glow"><span class="placeholder col-8"></span></h6>
+                   <p class="card-text small placeholder-glow"><span class="placeholder col-6"></span> <span class="placeholder col-4"></span></p>
+                   <button class="btn btn-sm btn-outline-primary disabled placeholder w-100" aria-disabled="true"></button>
+                 </div>
+              </div>
+            `;
+            
+            try {
+              // Fetch trending games to pick a random replacement
+              const res = await fetch('/api/games/trending');
+              if (res.ok) {
+                const trendingGames = await res.json();
+                
+                // Get all game IDs currently visible on the page
+                const visibleIgdbIds = Array.from(document.querySelectorAll('.add-lib-btn'))
+                  .map(b => String(b.dataset.igdbid))
+                  .filter(id => id && id !== "undefined");
+                  
+                // Find a game that isn't in library and isn't already visible
+                const availableGames = trendingGames.filter(game => {
+                  const inLibrary = searchUserLibrary.some(e => e.gameId && e.gameId.igdbId && String(e.gameId.igdbId) === String(game.id));
+                  const isVisible = visibleIgdbIds.includes(String(game.id));
+                  return !inLibrary && !isVisible;
+                });
+                
+                if (availableGames.length > 0) {
+                  // Pick a random game
+                  const randomGame = availableGames[Math.floor(Math.random() * availableGames.length)];
+                  
+                  // Need to create the HTML. renderGameGrid returns a string wrapped in <div class="col">
+                  const renderedColHtml = renderGameGrid([randomGame]);
+                  colElement.outerHTML = renderedColHtml;
+                } else {
+                  // If we run out of unique recommendations, just remove the card entirely
+                  colElement.remove();
+                }
+              } else {
+                colElement.remove();
+              }
+            } catch (err) {
+              console.error('Failed to load replacement game:', err);
+              colElement.remove();
+            }
+          }
+        } catch (err) {
+          console.error('[Search] Add error:', err);
+          searchToast('Failed to add game', 'bg-danger');
+        }
+        return;
+      }
+
+      // Handle card click to open game detail
+      const card = e.target.closest('.game-result-card');
+      if (card) {
+        try {
+          const game = JSON.parse(card.dataset.game);
+          openGameDetail(game);
+        } catch (err) {
+          console.error('Failed to parse game data:', err);
+        }
+      }
+    });
+
+    // Page exit transition
+    document.querySelectorAll('a[href]').forEach(a => {
+      if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          const dest = a.href;
+          document.body.classList.add('page-exit');
+          setTimeout(() => window.location = dest, 300);
+        });
+      }
+    });
+
+    // Reset modal button when closing
+    document.getElementById('gameDetailModal').addEventListener('hidden.bs.modal', () => {
+      const btn = document.getElementById('addFromDetailBtn');
+      btn.textContent = '+ Add to Library';
+      btn.classList.remove('btn-success', 'disabled');
+      btn.classList.add('btn-primary');
+      btn.disabled = false;
+    });
+
+    // Hide loader when page fully loads (with minimum 1.5s animation)
+    const loaderStartTime = Date.now();
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('page-loader');
+      if (loader) {
+        const elapsed = Date.now() - loaderStartTime;
+        const minDelay = 1500;
+        const remainingDelay = Math.max(0, minDelay - elapsed);
+        console.log(`[LOAD TIMING] Page loaded in: ${elapsed}ms (animation: ${Math.min(elapsed, 1500)}ms, showing for: ${minDelay}ms total)`);
+        setTimeout(() => {
+          console.log('[LOAD TIMING] Hiding loader');
+          loader.classList.add('hidden');
+        }, remainingDelay);
+      }
+    });
+  </script>

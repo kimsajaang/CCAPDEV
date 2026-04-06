@@ -1,0 +1,407 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+{{> navbar-app activePage="about"}}
+
+<style>
+  /* --- Steam Atmosphere Tokens --- */
+  :root {
+    --steam-blue: #1b2838;
+    --steam-gradient: linear-gradient(180deg, #1b2838 0%, #171a21 100%);
+    --steam-accent: #66c0f4;
+    --steam-glow: rgba(102, 192, 244, 0.25);
+    --bg-deep: #0b0e13;
+    --bg-card: rgba(22, 32, 45, 0.85);
+    --border: rgba(255, 255, 255, 0.08);
+  }
+
+  body {
+    background-color: var(--bg-deep);
+    background-image:
+      radial-gradient(at 0% 0%, rgba(30, 45, 60, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(20, 30, 40, 0.3) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: #c6d4df;
+  }
+
+  /* --- Premium About Hero --- */
+  .about-hero {
+    position: relative;
+    padding: 6rem 0 4rem;
+    text-align: center;
+    background: radial-gradient(circle at center, rgba(102, 192, 244, 0.08) 0%, transparent 70%);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+
+  .about-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--steam-accent), transparent);
+    opacity: 0.3;
+  }
+
+  .about-hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px var(--steam-glow);
+  }
+
+  .about-hero .lead {
+    color: #acb2b8;
+    font-size: 1.15rem;
+    max-width: 700px;
+    margin: 0 auto;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  /* --- Section cards --- */
+  .about-section {
+    background: rgba(22, 32, 45, 0.95);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .about-section h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--steam-accent);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgba(102, 192, 244, 0.2);
+    padding-bottom: 0.75rem;
+  }
+
+  /* --- Package table --- */
+  .pkg-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px;
+  }
+
+  .pkg-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #556772;
+    padding: 0.5rem 1rem;
+  }
+
+  .pkg-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    background: rgba(255, 255, 255, 0.03);
+    border-top: 1px solid rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    font-size: 0.92rem;
+  }
+
+  .pkg-table tr:hover td {
+    background: rgba(102, 192, 244, 0.08);
+    color: #fff;
+  }
+
+  .pkg-name {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--steam-accent);
+  }
+
+  .badge-category {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.3em 0.8em;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .cat-backend {
+    background: rgba(83, 131, 232, 0.25);
+    color: #8eb3f5;
+  }
+
+  .cat-auth {
+    background: rgba(167, 139, 250, 0.25);
+    color: #c084fc;
+  }
+
+  .cat-db {
+    background: rgba(45, 212, 191, 0.25);
+    color: #5eead4;
+  }
+
+  .cat-frontend {
+    background: rgba(254, 188, 46, 0.25);
+    color: #fbbf24;
+  }
+
+  .cat-api {
+    background: rgba(40, 200, 64, 0.25);
+    color: #4ade80;
+  }
+
+  /* --- Team cards --- */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .team-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .team-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--steam-accent);
+    background: rgba(102, 192, 244, 0.05);
+  }
+
+  .team-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .team-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .info-pill {
+    background: rgba(102, 192, 244, 0.1);
+    border: 1px solid rgba(102, 192, 244, 0.2);
+    color: var(--steam-accent);
+    padding: 0.25rem 0.75rem;
+    border-radius: 2px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+</style>
+
+<div class="about-hero">
+  <div class="container">
+    <div class="mb-3">
+    </div>
+    <h1>About This Project</h1>
+    <p class="lead">
+      Backlog Hero — A definitive game management platform built for CCAPDEV.<br>
+      Explore the technologies and the team behind the experience.
+    </p>
+    <div class="mt-4 d-flex flex-wrap justify-content-center gap-2">
+      <span class="info-pill"><i class="bi bi-cpu-fill"></i> Node 20.x</span>
+      <span class="info-pill"><i class="bi bi-hdd-network-fill"></i> MongoDB Atlas</span>
+      <span class="info-pill"><i class="bi bi-shield-lock-fill"></i> Passport SSO</span>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+
+  <!-- ── Development Team ── -->
+  <div class="about-section">
+    <h2><i class="bi bi-people-fill"></i> Development Team</h2>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar d-flex align-items-center justify-content-center"
+          style="background: #5383e8; font-size: 2rem; color: #fff; font-weight: 800;">KJ</div>
+        <div class="team-name">Ibanez, Kane Joshua</div>
+        <div class="info-pill mb-2">Lead Developer</div>
+        <div class="info-pill mb-2">Backend Developer</div>
+        <div class="info-pill mb-2">Frontend Developer</div>
+        <div class="text-muted small mt-auto">ID: 1234654 · S13</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar d-flex align-items-center justify-content-center"
+          style="background: #50d6b4; font-size: 2rem; color: #fff; font-weight: 800;">JI</div>
+        <div class="team-name">David, Justin Ice</div>
+        <div class="info-pill mb-2">Backend Developer</div>
+        <div class="text-muted small mt-auto">ID: 12411574 · S13</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar d-flex align-items-center justify-content-center"
+          style="background: #e85383; font-size: 2rem; color: #fff; font-weight: 800;">SF</div>
+        <div class="team-name">Fortea, Seanne Clarence</div>
+        <div class="info-pill mb-2">Frontend Developer</div>
+        <div class="text-muted small mt-auto">ID: 12410969 · S22</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NPM Packages ── -->
+  <div class="about-section">
+    <h2><i class="bi bi-box-seam"></i> Technical Stack & Dependencies</h2>
+
+    <div class="table-responsive">
+      <table class="pkg-table">
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th class="text-end">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pkg-name">express</span></td>
+            <td><span class="badge-category cat-backend">Server</span></td>
+            <td class="text-muted small">Standard web framework for Node.js routing and middleware.</td>
+            <td class="text-end"><span class="text-success small"><i class="bi bi-check-circle-fill"></i>
+                Integrated</span></td>
+          </tr>
+          <tr>
+            <td><span class="pkg-name">mongoose</span></td>
+            <td><span class="badge-category cat-db">Database</span></td>
+            <td class="text-muted small">Elegant mongodb object modeling for node.js.</td>
+            <td class="text-end"><span class="text-success small"><i class="bi bi-check-circle-fill"></i>
+                Integrated</span></td>
+          </tr>
+          <tr>
+            <td><span class="pkg-name">passport</span></td>
+            <td><span class="badge-category cat-auth">Security</span></td>
+            <td class="text-muted small">Authentication middleware supporting Steam and Google OAuth 2.0.</td>
+            <td class="text-end"><span class="text-success small"><i class="bi bi-check-circle-fill"></i>
+                Integrated</span></td>
+          </tr>
+          <tr>
+            <td><span class="pkg-name">bcryptjs</span></td>
+            <td><span class="badge-category cat-auth">Security</span></td>
+            <td class="text-muted small">Optimized password hashing for secure user data storage.</td>
+            <td class="text-end"><span class="text-success small"><i class="bi bi-check-circle-fill"></i>
+                Integrated</span></td>
+          </tr>
+          <tr>
+            <td><span class="pkg-name">express-handlebars</span></td>
+            <td><span class="badge-category cat-frontend">UI Engine</span></td>
+            <td class="text-muted small">View engine for dynamic server-side template rendering.</td>
+            <td class="text-end"><span class="text-success small"><i class="bi bi-check-circle-fill"></i>
+                Integrated</span></td>
+          </tr>
+          <tr>
+            <td><span class="pkg-name">axios / node-fetch</span></td>
+            <td><span class="badge-category cat-api">Networking</span></td>
+            <td class="text-muted small">Handles communication with Steam and IGDB external APIs.</td>
+            <td class="text-end"><span class="text-success small"><i class="bi bi-check-circle-fill"></i>
+                Integrated</span></td>
+          </tr>
+          <tr>
+            <td><span class="pkg-name">connect-mongo</span></td>
+            <td><span class="badge-category cat-db">Session</span></td>
+            <td class="text-muted small">Persistent session store using MongoDB for reliable user state.</td>
+            <td class="text-end"><span class="text-success small"><i class="bi bi-check-circle-fill"></i>
+                Integrated</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── External Services ── -->
+  <div class="about-section">
+    <h2><i class="bi bi-cloud-check"></i> Connected Services</h2>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="team-card p-3" style="text-align: left; align-items: flex-start;">
+          <div class="pkg-name mb-1">Steam Web API</div>
+          <div class="text-muted extra-small mb-2">Game Library & Social Status</div>
+          <span class="badge bg-success" style="font-size:0.6rem;">LIVE</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="team-card p-3" style="text-align: left; align-items: flex-start;">
+          <div class="pkg-name mb-1">IGDB API (v4)</div>
+          <div class="text-muted extra-small mb-2">Global Metadata & Media</div>
+          <span class="badge bg-success" style="font-size:0.6rem;">LIVE</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="team-card p-3" style="text-align: left; align-items: flex-start;">
+          <div class="pkg-name mb-1">MongoDB Atlas</div>
+          <div class="text-muted extra-small mb-2">Cloud Database Cluster</div>
+          <span class="badge bg-success" style="font-size:0.6rem;">DEPLOYED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Academic Information ── -->
+  <div class="about-section">
+    <h2><i class="bi bi-mortarboard"></i> Academic Course Info</h2>
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">Course & Section</div>
+        <div class="text-white fw-bold">CCAPDEV — S13/S22</div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">University</div>
+        <div class="text-white fw-bold">De La Salle University</div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">Project Phase</div>
+        <div class="text-white fw-bold">Phase 3 (Integrated Deployment)</div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small mb-1">Submission Date</div>
+        <div class="text-white fw-bold">Academic Year 2025–2026</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Page transition animation
+  document.querySelectorAll('a[href]').forEach(a => {
+    if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const dest = a.href;
+        document.body.classList.add('page-exit');
+        setTimeout(() => window.location = dest, 300);
+      });
+    }
+  });
+</script>

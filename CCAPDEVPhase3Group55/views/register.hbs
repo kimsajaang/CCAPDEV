@@ -1,0 +1,345 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+<style>
+	body {
+		background: radial-gradient(circle at 20% 20%, rgba(83, 131, 232, 0.15), transparent 30%), radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.1), transparent 25%), radial-gradient(circle at 60% 90%, rgba(45, 212, 191, 0.06), transparent 30%), var(--bg-base);
+	}
+
+	.link-accent {
+		color: var(--primary);
+		text-decoration: none;
+	}
+
+	.link-accent:hover {
+		color: var(--accent);
+	}
+
+	.badge-accent {
+		background: linear-gradient(120deg, var(--accent), var(--primary));
+		color: #0d1217;
+	}
+
+	.strength-bar {
+		height: 6px;
+		border-radius: var(--radius-full);
+		background: var(--border);
+		overflow: hidden;
+	}
+
+	.strength-fill {
+		height: 100%;
+		width: 0%;
+		background: linear-gradient(90deg, #ff6b6b, #ffd166, #50d6b4, #5383e8);
+		transition: width 0.25s var(--ease);
+	}
+
+	/* Competitive auth card enhancements */
+	.auth-card {
+		animation: fadeInScale 0.6s ease both;
+	}
+
+	@keyframes fadeInScale {
+		from {
+			opacity: 0;
+			transform: scale(0.96) translateY(16px);
+		}
+
+		to {
+			opacity: 1;
+			transform: scale(1) translateY(0);
+		}
+	}
+
+	.auth-card h3 {
+		background: var(--gradient-primary);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	.auth-btn {
+		transition: all 0.3s ease;
+		border-radius: 8px;
+	}
+
+	.auth-btn:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 15px rgba(83, 131, 232, 0.3);
+	}
+
+	.provider-btn {
+		transition: all 0.2s ease;
+	}
+
+	.provider-btn:hover {
+		background: rgba(255, 255, 255, 0.05);
+		border-color: rgba(255, 255, 255, 0.3) !important;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.provider-btn svg {
+		transition: transform 0.2s ease;
+	}
+
+	.provider-btn:hover svg {
+		transform: scale(1.1);
+	}
+
+	.letter-spacing-1 {
+		letter-spacing: 1px;
+	}
+</style>{{> navbar-auth activePage="register"}}
+
+<div class="auth-wrapper">
+	<div class="container">
+		<div class="row justify-content-center">
+			<!-- Registration card — wider than login (col-lg-6) to fit the 2-column form layout.
+				     The "Free" badge is just a visual touch -->
+			<div class="col-md-8 col-lg-6">
+				<div class="auth-card p-4 p-md-5">
+					<div class="d-flex align-items-start justify-content-between mb-4">
+						<div>
+							<p class="text-uppercase text-muted small mb-1">Create your space</p>
+							<h3 class="fw-bold mb-1">Join Backlog Hero</h3>
+							<p class="text-muted small mb-0">Track, prioritize, and finish your games.</p>
+						</div>
+						<div class="text-end d-none d-sm-block">
+
+
+							</span>
+						</div>
+					</div>
+
+					<!-- Registration form — connects to backend API.
+					     2-column grid layout for better UX -->
+					<form id="registerForm" onsubmit="return false;">
+						<div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+						<div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+
+						<div class="row g-4">
+							<div class="col-md-6">
+								<label class="form-label mb-1">Username</label>
+								<input type="text" class="form-control" id="username" placeholder="gaminglead" required>
+								<div class="form-text text-muted mt-2" style="font-size: 0.8rem; opacity: 0.8;">
+									3+ characters, letters/numbers only</div>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label mb-1">Email</label>
+								<input type="email" class="form-control" id="email" placeholder="you@example.com"
+									required>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label mb-1">Password</label>
+								<input id="password" type="password" class="form-control"
+									placeholder="Create a strong password" required>
+								<div class="strength-bar mt-2 mb-1">
+									<div id="strengthFill" class="strength-fill"></div>
+								</div>
+								<div class="form-text text-muted" style="font-size: 0.8rem; opacity: 0.8;">Use
+									10+ characters with numbers and symbols.</div>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label mb-1">Confirm Password</label>
+								<input id="confirm" type="password" class="form-control" placeholder="Repeat password"
+									required>
+							</div>
+							<div class="col-md-12">
+								<label class="form-label mb-1">Display Name (Optional)</label>
+								<input type="text" class="form-control" id="displayName" placeholder="Your Full Name">
+							</div>
+						</div>
+
+						<!-- Terms checkbox — required before submitting -->
+						<div class="form-check d-flex align-items-center mt-4 mb-4 gap-2">
+							<input class="form-check-input m-0" type="checkbox" value="" id="terms" required
+								style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
+							<label class="form-check-label text-muted" for="terms"
+								style="font-size: 0.95rem; cursor: pointer;">
+								I agree to the <span class="text-white">Backlog Hero</span> terms and privacy.
+							</label>
+						</div>
+
+						<div class="d-grid mb-2">
+							<button type="submit" class="btn btn-primary py-2 w-100 fw-bold auth-btn" id="registerBtn"
+								style="font-size: 1.05rem;">Create Account</button>
+						</div>
+
+						<!-- Separator -->
+						<div class="d-flex align-items-center my-4">
+							<hr class="flex-grow-1 border-secondary" style="opacity: 0.3;">
+							<span class="mx-3 text-muted small fw-bold text-uppercase letter-spacing-1">Or sign up
+								with</span>
+							<hr class="flex-grow-1 border-secondary" style="opacity: 0.3;">
+						</div>
+
+						<!-- SSO provider buttons -->
+						<div class="d-grid gap-3 mb-4">
+							<button type="button"
+								class="btn btn-outline-light border-secondary py-2 provider-btn d-flex align-items-center justify-content-center gap-3 transition-all"
+								id="googleRegisterBtn" style="border-radius: 8px;">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48">
+									<path fill="#FFC107"
+										d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
+									<path fill="#FF3D00"
+										d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
+									<path fill="#4CAF50"
+										d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+									<path fill="#1976D2"
+										d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
+								</svg>
+								<span class="fw-semibold">Sign up with Google</span>
+							</button>
+						</div>
+						<p class="text-center text-muted mb-0 mt-4">Already have an account? <a
+								class="link-accent fw-semibold ms-1" href="/login">Log in</a></p>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Password validation and registration API script -->
+<script>
+	// Get references to form elements
+	const passwordInput = document.getElementById('password');
+	const confirmInput = document.getElementById('confirm');
+	const strengthFill = document.getElementById('strengthFill');
+	const registerForm = document.getElementById('registerForm');
+
+	// Function to calculate password strength based on criteria
+	function updateStrength(value) {
+		let score = 0;
+		if (value.length >= 10) score += 25;
+		if (/[A-Z]/.test(value)) score += 25;
+		if (/[0-9]/.test(value)) score += 25;
+		if (/[^A-Za-z0-9]/.test(value)) score += 25;
+		strengthFill.style.width = `${score}%`;
+	}
+
+	// Update strength meter in real-time
+	if (passwordInput) {
+		passwordInput.addEventListener('input', (e) => updateStrength(e.target.value));
+	}
+
+	// Password confirmation validation
+	if (confirmInput && passwordInput) {
+		confirmInput.addEventListener('input', () => {
+			const match = confirmInput.value === passwordInput.value;
+			confirmInput.classList.toggle('is-valid', match && confirmInput.value.length > 0);
+			confirmInput.classList.toggle('is-invalid', !match && confirmInput.value.length > 0);
+		});
+	}
+
+	// Register form submission to backend
+	if (registerForm) {
+		registerForm.addEventListener('submit', async (e) => {
+			e.preventDefault();
+
+			const username = document.getElementById('username').value;
+			const email = document.getElementById('email').value;
+			const password = document.getElementById('password').value;
+			const confirm = document.getElementById('confirm').value;
+			const displayName = document.getElementById('displayName').value || username;
+			const registerBtn = document.getElementById('registerBtn');
+			const errorAlert = document.getElementById('errorAlert');
+			const successAlert = document.getElementById('successAlert');
+
+			// Reset alerts
+			errorAlert.classList.add('d-none');
+			successAlert.classList.add('d-none');
+
+			// Validate password match
+			if (password !== confirm) {
+				errorAlert.textContent = '✗ Passwords do not match';
+				errorAlert.classList.remove('d-none');
+				return;
+			}
+
+			// Disable button during submission
+			registerBtn.disabled = true;
+			registerBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating account...';
+
+			try {
+				console.log('[Register] Submitting registration...');
+				const response = await fetch('/api/users/register', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					body: JSON.stringify({ username, email, password, displayName })
+				});
+
+				console.log('[Register] Response status:', response.status);
+
+				const data = await response.json();
+
+				if (!response.ok) {
+					throw new Error(data.error || 'Registration failed');
+				}
+
+				console.log('[Register] Account created successfully:', data.displayName);
+
+				// Show success message
+				successAlert.innerHTML = '✓ Account created! Redirecting to dashboard...';
+				successAlert.classList.remove('d-none');
+
+				// Redirect to dashboard
+				setTimeout(() => {
+					window.location.href = '/dashboard';
+				}, 1500);
+
+			} catch (err) {
+				errorAlert.textContent = '✗ ' + err.message;
+				errorAlert.classList.remove('d-none');
+				
+				// If email already exists, suggest login
+				if (err.message.includes('Email already exists')) {
+					setTimeout(() => {
+						errorAlert.innerHTML = '✗ ' + err.message + ' <a href="/login" class="link-accent ms-2" style="text-decoration: underline;">Log in instead</a>';
+					}, 500);
+				}
+				
+				registerBtn.disabled = false;
+				registerBtn.innerHTML = 'Create Account';
+			}
+		});
+	}
+
+	// SSO provider button handler
+	if (document.getElementById('googleRegisterBtn')) {
+		document.getElementById('googleRegisterBtn').addEventListener('click', () => {
+			window.location.href = '/auth/google/register';
+		});
+	}
+</script>
+<script>
+	// Page transition animation
+	document.querySelectorAll('a[href]').forEach(a => {
+		if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+			a.addEventListener('click', e => {
+				e.preventDefault();
+				const dest = a.href;
+				document.body.classList.add('page-exit');
+				setTimeout(() => window.location = dest, 300);
+			});
+		}
+	});
+
+	// Navbar scroll shadow (passive, cached)
+	const _nav = document.querySelector('.navbar');
+	let _scrollTick = false;
+	window.addEventListener('scroll', () => {
+		if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
+	}, { passive: true });
+</script>

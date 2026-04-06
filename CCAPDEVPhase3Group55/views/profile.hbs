@@ -1,0 +1,1792 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Ibanez, Kane Joshua> - <1234654> - <S13>
+<David, Justin Ice> - <12411574> - <S13>
+<Fortea, Seanne Clarence> - <12410969> - <S22>
+****************************************************************************** -->
+
+<!-- Profile Page - Gaming Dashboard -->
+{{> navbar-app activePage="profile"}}
+
+<!-- Loading Screen for Profile -->
+<div id="page-loader" class="loader" aria-label="Loading">
+  <div class="loader-card">
+    <div class="loader-icon-wrap">
+      <i class="bi bi-person"></i>
+      <div class="loader-glow"></div>
+    </div>
+    <div>
+      <div class="loader-text">Profile<span class="loading-dots"></span></div>
+      <div class="loader-sub">Loading your profile</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root {
+    --bg-deep: #0b0e14;
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #242d3d;
+    --accent: #5383e8;
+    --accent-glow: rgba(83, 131, 232, 0.3);
+    --blue-accent: #2dd4bf;
+    --text-primary: #e4e6eb;
+    --text-secondary: #9ca3af;
+    --text-tertiary: #6b7280;
+    --border: rgba(255, 255, 255, 0.08);
+    --card-border: rgba(255, 255, 255, 0.03);
+    --success: #34d399;
+  }
+
+  body {
+    background-color: var(--bg-deep) !important;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  .profile-dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ── Layout ── */
+  .pg-wrap {
+    display: flex;
+    gap: 24px;
+    min-height: calc(100vh - 100px);
+  }
+
+  .pg-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ── Hero Banner ── */
+  .hero-banner {
+    position: relative;
+    background: linear-gradient(135deg, #1a1628 0%, #0f1419 50%, #1a1f2e 100%),
+      rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    padding: 50px;
+    margin-bottom: 40px;
+    box-shadow: 0 0 60px rgba(83, 131, 232, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    backdrop-filter: blur(10px);
+    overflow: visible;
+    z-index: 10;
+  }
+
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(83, 131, 232, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(83, 131, 232, 0.1);
+  }
+
+  .hero-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 16px;
+    border: 3px solid var(--accent);
+    object-fit: cover;
+    box-shadow: 0 8px 32px rgba(83, 131, 232, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  }
+
+  .hero-top:hover .hero-avatar {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 12px 40px rgba(83, 131, 232, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .hero-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+
+  .hero-handle {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .hero-bio {
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    color: #fff;
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(135deg, #fff 0%, #c9c9ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 30px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 25px;
+  }
+
+  .hero-stats strong {
+    color: #fff;
+    font-weight: 800;
+    margin-right: 6px;
+  }
+
+  .hero-stats > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: slideInUp 0.6s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .hero-meta {
+    margin-left: auto;
+    display: flex;
+    gap: 24px;
+    padding-left: 24px;
+    flex-direction: row;
+  }
+
+  .hero-meta div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .hero-meta i {
+    color: var(--accent);
+    font-size: 1rem;
+  }
+
+  /* ── Level Progress ── */
+  .lvl-progress-wrap {
+    position: relative;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-top: 35px;
+    max-width: 800px;
+    border: 1px solid rgba(83, 131, 232, 0.1);
+    overflow: hidden;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .lvl-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #5383e8, #2dd4bf, #5383e8);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(83, 131, 232, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: width 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+    position: relative;
+  }
+
+  .lvl-progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progress-shimmer 2s infinite;
+  }
+
+  @keyframes progress-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .lvl-star {
+    position: absolute;
+    right: -20px;
+    top: -14px;
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    box-shadow: 0 0 25px rgba(83, 131, 232, 0.7);
+    animation: star-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes star-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(83, 131, 232, 0.7); }
+    50% { transform: scale(1.1); box-shadow: 0 0 35px rgba(83, 131, 232, 1); }
+  }
+
+  /* ── Grid Sections ── */
+  .sec-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-tertiary);
+    font-weight: 800;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(83, 131, 232, 0.2);
+  }
+
+  .sec-title i {
+    color: var(--accent);
+    font-size: 1.1rem;
+  }
+
+  .acc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 45px;
+    animation: slideInUp 0.6s ease-out 0.1s both;
+  }
+
+  .acc-card {
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .acc-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .acc-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 12px 35px rgba(83, 131, 232, 0.25);
+  }
+
+  .acc-card:hover::before {
+    opacity: 1;
+  }
+
+  .acc-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--bg-tertiary), rgba(83, 131, 232, 0.1));
+    flex-shrink: 0;
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    box-shadow: 0 4px 15px rgba(83, 131, 232, 0.15);
+  }
+
+  .acc-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .acc-info h6 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .acc-info small {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+  }
+
+  /* ── Friend Request Card ── */
+  .friend-request-card {
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+  }
+
+  .friend-request-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 12px 35px rgba(83, 131, 232, 0.25);
+  }
+
+  .friend-request-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .friend-request-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    flex-shrink: 0;
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    box-shadow: 0 4px 12px rgba(83, 131, 232, 0.15);
+  }
+
+  .friend-request-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .friend-request-details h6 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .friend-request-details small {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+  }
+
+  .friend-request-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .friend-request-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Community Scores ── */
+  .community-score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+  }
+
+  .community-score-item:hover {
+    transform: translateX(4px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 8px 20px rgba(83, 131, 232, 0.2);
+  }
+
+  .community-score-name {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    text-truncate;
+    flex: 1;
+    font-weight: 600;
+  }
+
+  .community-score-rating {
+    font-size: 1rem;
+    color: #fbbf24;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-left: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .split-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 45px;
+  }
+
+  .split-col {
+    min-width: 0;
+  }
+
+  .split-col #achievementsContainer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar-track {
+    background: rgba(83, 131, 232, 0.05);
+    border-radius: 10px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar-thumb {
+    background: rgba(83, 131, 232, 0.3);
+    border-radius: 10px;
+  }
+
+  .split-col #achievementsContainer::-webkit-scrollbar-thumb:hover {
+    background: rgba(83, 131, 232, 0.5);
+  }
+
+  .ach-item {
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .ach-item:hover {
+    transform: translateX(6px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 8px 20px rgba(83, 131, 232, 0.2);
+  }
+
+  .ach-icon-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin-right: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(83, 131, 232, 0.12);
+    border-radius: 10px;
+    border: 1px solid rgba(83, 131, 232, 0.2);
+  }
+
+  .ach-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #e4e6eb;
+    flex: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    min-width: 0;
+  }
+
+  .ach-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--success);
+    background: rgba(16, 185, 129, 0.15);
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .ach-prog-val {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(83, 131, 232, 0.15);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .act-item {
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.08) 0%, rgba(91, 127, 238, 0.08) 100%);
+    border: 1px solid rgba(83, 131, 232, 0.2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+  }
+
+  .act-item:hover {
+    transform: translateX(4px);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.15) 0%, rgba(91, 127, 238, 0.15) 100%);
+    box-shadow: 0 8px 20px rgba(83, 131, 232, 0.2);
+  }
+
+  .act-status {
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 800;
+    text-transform: uppercase;
+    background: rgba(83, 131, 232, 0.15);
+    padding: 5px 9px;
+    border-radius: 4px;
+    width: 85px;
+    flex-shrink: 0;
+  }
+
+  .act-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .act-game-name {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+  }
+
+  .act-game-meta {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+  }
+
+  .act-cover {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+    margin-left: 15px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── XP Tooltip ── */
+  .xp-tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+    z-index: 10001;
+  }
+
+  .xp-tooltip {
+    visibility: hidden;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1a1f2e 0%, #242d3d 100%);
+    border: 2px solid rgba(83, 131, 232, 0.6);
+    color: #fff;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    width: 280px;
+    top: 140%;
+    z-index: 10002;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(83, 131, 232, 0.3);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    white-space: normal;
+  }
+
+  .xp-tooltip.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .xp-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-bottom-color: #242d3d;
+  }
+
+  .xp-tooltip-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    color: #5383e8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 2px solid rgba(83, 131, 232, 0.3);
+    padding-bottom: 8px;
+  }
+
+  .xp-tooltip-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+    gap: 10px;
+  }
+
+  .xp-tooltip-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .xp-tooltip-label {
+    color: #d1d5db;
+    flex: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+
+  .xp-tooltip-value {
+    color: #5383e8;
+    font-weight: 700;
+    text-align: right;
+    margin-left: 0;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  /* ── Sidebar Chat ── */
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-header h6 {
+    margin: 0;
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .group-select {
+    font-family: inherit;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .group-select option {
+    font-family: inherit;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 500;
+    padding: 5px;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .cm-bubble {
+    background: transparent;
+  }
+
+  .cm-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-bottom: 4px;
+  }
+
+  .cm-user {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .cm-text {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .cm-system {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 4px 10px;
+    border-radius: 10px;
+    align-self: center;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-tertiary);
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, rgba(83, 131, 232, 0.05) 0%, rgba(91, 127, 238, 0.05) 100%);
+    border: 1px dashed rgba(83, 131, 232, 0.2);
+    border-radius: 12px;
+  }
+
+  /* ── Shared/Edit Buttons ── */
+  .prof-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.87rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--blue-accent));
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(83, 131, 232, 0.4);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(83, 131, 232, 0.6);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid rgba(83, 131, 232, 0.4);
+    color: var(--text-secondary);
+    box-shadow: none;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: #fff;
+    background: rgba(83, 131, 232, 0.08);
+    box-shadow: 0 4px 15px rgba(83, 131, 232, 0.2);
+  }
+
+  .friend-request-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+  }
+
+  .friend-request-accept {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .friend-request-accept:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  }
+
+  .friend-request-reject {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .friend-request-reject:hover {
+    background: rgba(255, 99, 71, 0.12);
+    border-color: rgba(255, 99, 71, 0.4);
+    color: #ff6347;
+  }
+
+  /* ── Modal ── */
+  .custom-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .custom-modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 420px;
+    padding: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-title {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  /* ── Global Animations ── */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .profile-dashboard {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  /* ── Loading State ── */
+  .loading-skeleton {
+    background: linear-gradient(90deg, rgba(83, 131, 232, 0.1) 25%, rgba(83, 131, 232, 0.2) 50%, rgba(83, 131, 232, 0.1) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Edit Button ── */
+  .edit-prof-btn {
+    width: 38px;
+    height: 38px;
+    background: rgba(83, 131, 232, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-decoration: none;
+    border: 1px solid rgba(83, 131, 232, 0.3);
+    box-shadow: 0 4px 12px rgba(83, 131, 232, 0.1);
+  }
+
+  .edit-prof-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(83, 131, 232, 0.4);
+    transform: scale(1.1);
+  }
+
+  @media (max-width: 768px) {
+    .split-row {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-bio {
+      font-size: 1.6rem;
+      margin-bottom: 18px;
+    }
+
+    .hero-top {
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .hero-avatar {
+      width: 75px;
+      height: 75px;
+    }
+
+    .hero-stats {
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    .hero-meta {
+      margin-left: 0;
+      border-left: none;
+      padding-left: 0;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .xp-tooltip {
+      width: 240px;
+      bottom: 110%;
+    }
+
+    .hero-banner {
+      padding: 35px 20px;
+      margin-bottom: 30px;
+    }
+
+    .hero-banner::before {
+      display: none;
+    }
+
+    .acc-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .acc-card {
+      padding: 16px;
+    }
+
+    .sec-title {
+      font-size: 0.75rem;
+      margin-bottom: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-stats {
+      font-size: 0.85rem;
+    }
+
+    .hero-bio {
+      font-size: 1.5rem;
+    }
+
+    .xp-tooltip {
+      width: 220px;
+      left: -50%;
+      margin-left: -10%
+    }
+
+    .lvl-star {
+      width: 28px;
+      height: 28px;
+      font-size: 0.75rem;
+      right: -12px;
+      top: -10px;
+    }
+  }
+
+  /* Skeleton Loading Animation */
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  .skeleton-loader {
+    background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 8px;
+  }
+
+  .profile-loading {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    opacity: 0.6;
+  }
+
+  .profile-loading .skeleton-loader {
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .profile-loading .avatar-skeleton {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 16px;
+  }
+</style>
+
+<div class="profile-dashboard">
+  <div class="pg-wrap">
+
+    <!-- MAIN CONTENT -->
+    <div class="pg-main">
+
+      <!-- HERO BANNER -->
+      <div class="hero-banner" id="heroBanner">
+        <div class="hero-top">
+          <img id="profileAvatar" src="" class="hero-avatar" onerror="this.onerror=null;this.src=AVATAR_FALLBACK">
+          <div>
+            <h6 class="hero-name" id="profileDisplayName">Loading...</h6>
+            <div class="hero-handle" id="profileHandle">@username</div>
+          </div>
+          <a href="/profile-edit" class="edit-prof-btn ms-2" id="editProfileBtn" style="display:none;"
+            title="Edit Profile">
+            <i class="bi bi-pencil-fill" style="font-size:0.75rem;"></i>
+          </a>
+          <button class="prof-btn btn-outline ms-auto" id="shareProfileBtn"><i class="bi bi-share"></i> Share</button>
+          <div id="friendBtnContainer" class="ms-2"></div>
+        </div>
+
+        <h1 class="hero-bio" id="userBio">Your gaming legacy starts here.</h1>
+
+        <div class="hero-stats">
+          <div><strong id="totalGamesCount">0</strong> games played</div>
+          <div style="width:1px; height:12px; background:rgba(255,255,255,0.1);"></div>
+          <div class="xp-tooltip-wrapper" id="xpTooltipWrapper" onmouseenter="showXpTooltip()" onmouseleave="hideXpTooltip()">
+            <div>
+              <strong id="totalExp">0</strong> exp earned
+              <i class="bi bi-info-circle-fill" style="font-size:0.75rem; color:var(--accent); margin-left:6px; opacity:0.7; cursor:help;"></i>
+            </div>
+            <div class="xp-tooltip" id="xpTooltip">
+              <div class="xp-tooltip-title">How to Gain XP</div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Games in Library</span>
+                <span class="xp-tooltip-value">+150 XP each</span>
+              </div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Hours Played</span>
+                <span class="xp-tooltip-value">+25 XP/hour</span>
+              </div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Game Completed</span>
+                <span class="xp-tooltip-value">+500 XP</span>
+              </div>
+              <div class="xp-tooltip-item">
+                <span class="xp-tooltip-label">Level Requirement</span>
+                <span class="xp-tooltip-value">1,500 XP/level</span>
+              </div>
+            </div>
+          </div>
+          <div style="width:1px; height:12px; background:rgba(255,255,255,0.1);"></div>
+          <div><strong id="completedCount">0</strong> completed</div>
+
+          <div class="hero-meta">
+            <div><i class="bi bi-geo-alt"></i> <span id="userLocation">Global</span></div>
+            <div><i class="bi bi-calendar3"></i> <span id="memberSince">Member for 0 months</span></div>
+          </div>
+        </div>
+
+        <div class="lvl-progress-wrap">
+          <div class="lvl-progress-bar" id="lvlProgressBar">
+            <div class="lvl-star" id="userLevel">1</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FEATURED GAMES SECTION -->
+      <div class="sec-title"><i class="bi bi-star-fill"></i> Featured Games</div>
+      <div class="acc-grid" id="accGrid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- NOTIFICATIONS / FRIEND REQUESTS SECTION -->
+      <div class="sec-title" id="notificationsTitleContainer" style="display:none;"><i class="bi bi-bell-fill"></i> Friend Requests <span class="ms-auto" id="friendRequestCount" style="color:var(--accent); font-weight:800; font-size:0.7rem;">0</span></div>
+      <div id="friendRequestsContainer" class="acc-grid" style="display:none; grid-template-columns: 1fr;">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="split-row">
+        <!-- ACHIEVEMENTS -->
+        <div class="split-col">
+          <div class="sec-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%;"><i class="bi bi-stars"></i> Achievements <span class="ms-auto" id="achProgBadge"
+              style="color:var(--accent); font-weight:800; font-size:0.7rem;">0/0</span></div>
+          <a href="/achievements" style="display: inline-block; margin-bottom: 16px; font-size: 0.85rem; color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(83, 131, 232, 0.5); padding-bottom: 4px; transition: all 0.2s;">
+            <i class="bi bi-arrow-right" style="margin-right: 4px;"></i>View All Achievements
+          </a>
+          <div id="achievementsContainer">
+            <div class="empty-state">No achievements earned yet.</div>
+          </div>
+        </div>
+
+        <!-- USER'S GAME RATINGS -->
+        <div class="split-col">
+          <div class="sec-title"><i class="bi bi-star-fill"></i> Game Ratings</div>
+          <div id="communityScoresContainer">
+            <div class="empty-state">No rated games yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split-row">
+        <!-- RECENT ACTIVITY -->
+        <div class="split-col">
+          <div class="sec-title"><i class="bi bi-clock-history"></i> Recent Activity</div>
+          <div id="activityContainer">
+            <div class="empty-state">No recent activity detected.</div>
+          </div>
+        </div>
+
+        <!-- Empty col for layout -->
+        <div class="split-col"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ── Constants ── */
+  const AVATAR_FALLBACK = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%231a1f2e%22/%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2216%22 fill=%22%235383e8%22/%3E%3Cellipse cx=%2240%22 cy=%2272%22 rx=%2228%22 ry=%2220%22 fill=%22%235383e8%22/%3E%3C/svg%3E";
+
+  const ACHIEVEMENTS_DEF = [
+    // Bronze Tier
+    { id: 'first_game', name: 'First Step', emoji: '<i class="bi bi-controller text-info"></i>', max: 1, tier: 'Bronze' },
+    { id: 'collector', name: 'Collector', emoji: '📦', max: 10, tier: 'Bronze' },
+    { id: 'weekend_warrior', name: 'Weekend Warrior', emoji: '⏳', max: 10, tier: 'Bronze' },
+    { id: 'social_butterfly', name: 'Social Butterfly', emoji: '<i class="bi bi-people-fill text-info"></i>', max: 5, tier: 'Bronze' },
+    { id: 'critic', name: 'Critic', emoji: '<i class="bi bi-star-fill text-info"></i>', max: 5, tier: 'Bronze' },
+    
+    // Silver Tier
+    { id: 'completionist_badge', name: 'Completionist', emoji: '<i class="bi bi-trophy-fill text-warning"></i>', max: 5, tier: 'Silver' },
+    { id: 'devoted', name: 'Devoted', emoji: '<i class="bi bi-moon-stars-fill text-warning"></i>', max: 100, tier: 'Silver' },
+    { id: 'game_connoisseur', name: 'Game Connoisseur', emoji: '💎', max: 30, tier: 'Silver' },
+    { id: 'influencer', name: 'Influencer', emoji: '📢', max: 20, tier: 'Silver' },
+    { id: 'network_master', name: 'Network Master', emoji: '🔗', max: 20, tier: 'Silver' },
+    
+    // Gold Tier
+    { id: 'gaming_legend', name: 'Gaming Legend', emoji: '<i class="bi bi-award-fill text-warning"></i>', max: 15, tier: 'Gold' },
+    { id: 'marathon_runner', name: 'Marathon Runner', emoji: '🔥', max: 300, tier: 'Gold' },
+    { id: 'master_collector', name: 'Master Collector', emoji: '<i class="bi bi-collection text-info"></i>', max: 60, tier: 'Gold' },
+    { id: 'critical_acclaim', name: 'Critical Acclaim', emoji: '<i class="bi bi-bar-chart-line-fill text-warning"></i>', max: 50, tier: 'Gold' },
+    { id: 'community_leader', name: 'Community Leader', emoji: '<i class="bi bi-globe-americas text-warning"></i>', max: 50, tier: 'Gold' },
+    
+    // Diamond Tier
+    { id: 'gaming_god', name: 'Gaming God', emoji: '<i class="bi bi-lightning-charge-fill text-info"></i>', max: 30, tier: 'Diamond' },
+    { id: 'time_master', name: 'Time Master', emoji: '🕐', max: 500, tier: 'Diamond' },
+    { id: 'legendary_collection', name: 'Legendary Collection', emoji: '<i class="bi bi-star-fill text-info"></i>', max: 100, tier: 'Diamond' },
+    { id: 'gaming_prodigy', name: 'Gaming Prodigy', emoji: '💡', max: 100, tier: 'Diamond' },
+    { id: 'apex_network', name: 'Apex Network', emoji: '🕸️', max: 100, tier: 'Diamond' },
+    { id: 'ultimate_gamer', name: 'Ultimate Gamer', emoji: '💖', max: 1, tier: 'Diamond' }
+  ];
+
+  /* ── State ── */
+  let currentUser = null;
+  let profileUser = null;
+  let isOwnProfile = true;
+  let _profileStorageKey, _libraryStorageKey, _achievementsStorageKey;
+
+  /* ── Initialization ── */
+  async function initProfile() {
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('user');
+
+    const dashboard = document.querySelector('.profile-dashboard');
+
+    try {
+      const authRes = await fetch('/api/auth/current', { credentials: 'include' });
+      if (!authRes.ok) { window.location.href = '/login'; return; }
+      currentUser = await authRes.json();
+
+      if (targetId && targetId !== currentUser._id) {
+        isOwnProfile = false;
+        const uRes = await fetch('/api/users/' + targetId);
+        if (uRes.ok) profileUser = await uRes.json();
+        else { 
+          dashboard.innerHTML = '<h4 class="text-center mt-5">User not found</h4>';
+          return; 
+        }
+      } else {
+        isOwnProfile = true;
+        profileUser = currentUser;
+      }
+
+      initializeKeys(profileUser._id);
+      const loader = document.getElementById('page-loader');
+      if (loader) loader.classList.add('hidden');
+      renderProfileView();
+      await fetchStatsAndActivity();
+    } catch (e) { 
+      console.error("Init failed", e);
+      const loader = document.getElementById('page-loader');
+      if (loader) loader.classList.add('hidden');
+      dashboard.innerHTML = '<h4 class="text-center mt-5">Error loading profile. Please refresh the page.</h4>';
+    }
+  }
+
+  function initializeKeys(uid) {
+    _profileStorageKey = `prfl_v1_${uid}`;
+    _libraryStorageKey = `lib_v1_${uid}`;
+    _achievementsStorageKey = `ach_v1_${uid}`;
+  }
+
+  /* ── UI Rendering ── */
+  function renderProfileView() {
+    const p = profileUser;
+    document.getElementById('profileDisplayName').textContent = p.displayName || p.username;
+    document.getElementById('profileHandle').textContent = `@${p.username}`;
+    // Fix avatar: only use if it's a non-empty string
+    const avatarSrc = (p.avatar && typeof p.avatar === 'string' && p.avatar.trim()) ? p.avatar : AVATAR_FALLBACK;
+    document.getElementById('profileAvatar').src = avatarSrc;
+
+    if (p.wallpaper) {
+      document.getElementById('heroBanner').style.backgroundImage = `linear-gradient(110deg, rgba(11,14,20,1) 30%, rgba(11,14,20,0.65) 100%), url('${p.wallpaper}')`;
+      document.getElementById('heroBanner').style.backgroundSize = 'cover';
+      const pos = p.wallpaperPosition != null ? p.wallpaperPosition : 50;
+      document.getElementById('heroBanner').style.backgroundPosition = `center ${pos}%`;
+    }
+
+    const bio = (p.bio && p.bio !== 'No bio yet') ? p.bio : (isOwnProfile ? "" : "Player has not set a bio yet.");
+    document.getElementById('userBio').textContent = bio;
+
+    if (isOwnProfile) document.getElementById('editProfileBtn').style.display = 'flex';
+    else renderFriendButton(p._id);
+
+    const createdDate = new Date(p.createdAt || Date.now());
+    const monthDiff = Math.max(1, Math.floor((Date.now() - createdDate) / (1000 * 60 * 60 * 24 * 30)));
+    document.getElementById('memberSince').textContent = `Member for ${monthDiff} month${monthDiff !== 1 ? 's' : ''}`;
+    if (p.favoritePlatform) document.getElementById('userLocation').textContent = p.favoritePlatform;
+  }
+
+  // Calculate XP from stats - used for real-time updates
+  function updateXPDisplay(stats) {
+    const baseXP = stats.total * 150;                    // 150 XP per game in library
+    const hoursXP = Math.round(stats.totalHours * 25);  // 25 XP per hour
+    const completedXP = stats.completed * 500;          // 500 XP per completed game
+    const exp = baseXP + hoursXP + completedXP;
+    
+    document.getElementById('totalExp').textContent = exp.toLocaleString();
+    const level = Math.floor(exp / 1500) + 1;
+    const progress = Math.min((exp % 1500) / 1500 * 100, 100);
+    document.getElementById('userLevel').textContent = level;
+    document.getElementById('lvlProgressBar').style.width = Math.max(5, progress) + '%';
+  }
+
+  // Expose function globally for real-time updates from other pages
+  window.refreshProfileXP = async function() {
+    if (!profileUser) return;
+    const uid = profileUser._id;
+    try {
+      const res = await fetch('/api/library/' + uid);
+      if (res.ok) {
+        const entries = await res.json();
+        const stats = {
+          total: entries.length,
+          completed: entries.filter(e => e.status === 'completed').length,
+          totalHours: entries.reduce((s, e) => s + (e.playtime || 0), 0)
+        };
+        document.getElementById('totalGamesCount').textContent = stats.total;
+        document.getElementById('completedCount').textContent = stats.completed;
+        updateXPDisplay(stats);
+      }
+    } catch (e) { console.error('Error refreshing XP:', e); }
+  };
+
+  // Refresh achievements (can be called from other pages after rating/friend changes)
+  window.refreshProfileAchievements = async function() {
+    if (!profileUser) return;
+    await fetchStatsAndActivity();
+  };
+
+  async function fetchStatsAndActivity() {
+    const uid = profileUser._id;
+    let stats = { total: 0, completed: 0, totalHours: 0, games: [], ratedCount: 0, friendCount: 0 };
+
+    try {
+      const res = await fetch('/api/library/' + uid);
+      if (res.ok) {
+        const entries = await res.json();
+        stats.games = entries;
+        stats.total = entries.length;
+        stats.completed = entries.filter(e => e.status === 'completed').length;
+        stats.totalHours = entries.reduce((s, e) => s + (e.playtime || 0), 0);
+        stats.ratedCount = entries.filter(e => e.rating && e.rating > 0).length;
+        
+        // Debug logging
+        console.log('[Profile] Total entries:', entries.length);
+        console.log('[Profile] Completed:', stats.completed);
+        console.log('[Profile] Rated count:', stats.ratedCount);
+        if (entries.length > 0) {
+          console.log('[Profile] Sample entry:', entries[0]);
+          console.log('[Profile] All ratings:', entries.map(e => ({ gameId: e.gameId, rating: e.rating })));
+        }
+      }
+    } catch (e) { console.error('[Profile] Library fetch error:', e); }
+
+    // Refetch user data to get latest friend count
+    try {
+      let userRes;
+      if (isOwnProfile) {
+        // For own profile, use current auth
+        userRes = await fetch('/api/auth/current', { credentials: 'include' });
+      } else {
+        // For other users, fetch their public profile
+        userRes = await fetch('/api/users/' + uid);
+      }
+      
+      if (userRes.ok) {
+        const freshUser = await userRes.json();
+        // API returns friendsCount, not friends array
+        stats.friendCount = freshUser.friendsCount || 0;
+        console.log('[Profile] API response for', uid, ':', freshUser);
+        console.log('[Profile] Friend count extracted:', stats.friendCount);
+      }
+    } catch (e) { 
+      console.error('[Profile] User fetch error:', e);
+      stats.friendCount = 0;
+    }
+
+    // Local Achievements
+    const unlockedIds = JSON.parse(localStorage.getItem(_achievementsStorageKey) || '[]');
+
+    // Render Stats
+    document.getElementById('totalGamesCount').textContent = stats.total;
+    document.getElementById('completedCount').textContent = stats.completed;
+
+    // Calculate XP with more rewarding system
+    updateXPDisplay(stats);
+
+    renderAccGid(profileUser, stats.games);
+    renderAchievementsList(unlockedIds, stats);
+    renderActivityList(stats.games);
+    loadCommunityScores(stats.games);
+    loadFriendRequests(); // Load friend requests for own profile
+  }
+
+  function renderAccGid(user, games) {
+    const container = document.getElementById('accGrid');
+    const favs = (user.favoriteGames || []).map(g => ({ name: g.name || g, cover: g.cover || g.coverUrl || '' }));
+
+    const items = favs.slice(0, 5);
+    if (!items.length) { container.innerHTML = '<div class="empty-state">No featured games yet. Edit your profile to feature your favorite games!</div>'; return; }
+
+    container.innerHTML = items.map((i, idx) => `
+    <div class="acc-card" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">
+      <div class="acc-icon"><img src="${i.cover}" alt="icon" onerror="this.src='/img/placeholder.jpg'"></div>
+      <div class="acc-info"><h6>${i.name}</h6><small>Showcased Title</small></div>
+    </div>
+  `).join('');
+  }
+
+  function renderAchievementsList(unlockedIds, stats) {
+    const container = document.getElementById('achievementsContainer');
+    const badge = document.getElementById('achProgBadge');
+
+    let earnedCount = 0;
+    const html = ACHIEVEMENTS_DEF.map((a, idx) => {
+      let current = 0;
+      
+      // Map achievement IDs to stat logic
+      if (a.id === 'first_game' || a.id === 'collector' || a.id === 'game_connoisseur' || a.id === 'master_collector' || a.id === 'legendary_collection') {
+        current = stats.total;
+      }
+      if (a.id === 'completionist_badge' || a.id === 'gaming_legend' || a.id === 'gaming_god') {
+        current = stats.completed;
+      }
+      if (a.id === 'devoted' || a.id === 'weekend_warrior' || a.id === 'marathon_runner' || a.id === 'time_master') {
+        current = stats.totalHours;
+      }
+      
+      // Rating-based achievements
+      if (a.id === 'critic' || a.id === 'influencer' || a.id === 'critical_acclaim' || a.id === 'gaming_prodigy') {
+        current = stats.ratedCount;
+      }
+      
+      // Friend-based achievements
+      if (a.id === 'social_butterfly' || a.id === 'network_master' || a.id === 'community_leader' || a.id === 'apex_network') {
+        current = stats.friendCount;
+      }
+      
+      const isDone = current >= a.max || unlockedIds.includes(a.id);
+      if (isDone) earnedCount++;
+
+      return `
+      <div class="ach-item" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both; opacity: ${isDone ? 1 : 0.6}">
+        <div class="ach-icon-box">${a.emoji}</div>
+        <div class="ach-name">${a.name}</div>
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 0.75rem; color: var(--text-tertiary); background: rgba(83, 131, 232, 0.1); padding: 3px 8px; border-radius: 3px;">${a.tier}</span>
+          ${isDone ? '<div class="ach-status">ACHIEVED</div>' : `<div class="ach-prog-val">${Math.min(current, a.max)}/${a.max}</div>`}
+        </div>
+      </div>
+    `;
+    }).join('');
+
+    container.innerHTML = html;
+    badge.textContent = `${earnedCount}/${ACHIEVEMENTS_DEF.length}`;
+  }
+
+  function renderActivityList(games) {
+    const container = document.getElementById('activityContainer');
+    // Only show completed games, filter out "playing" status entirely
+    const sorted = games.filter(g => g.gameId && g.status === 'completed').sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0)).slice(0, 5);
+
+    if (!sorted.length) { container.innerHTML = '<div class="empty-state">Nothing lately.</div>'; return; }
+
+    container.innerHTML = sorted.map((g, idx) => {
+      const status = 'Completed';
+      return `
+      <div class="act-item" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">
+        <div class="act-status">${status}</div>
+        <div class="act-info">
+          <span class="act-game-name">${g.gameId.name}</span>
+          <span class="act-game-meta">${new Date(g.addedAt).toLocaleDateString()} • ${g.playtime}h played</span>
+        </div>
+        ${g.gameId.coverUrl ? `<img src="${g.gameId.coverUrl}" class="act-cover">` : ''}
+      </div>
+    `;
+    }).join('');
+  }
+
+  // Load friend requests (only for own profile)
+  async function loadFriendRequests() {
+    if (!isOwnProfile) return;
+
+    try {
+      const res = await fetch('/api/friends/requests', { credentials: 'include' });
+      if (!res.ok) return;
+
+      const requests = await res.json();
+      const container = document.getElementById('friendRequestsContainer');
+      const titleContainer = document.getElementById('notificationsTitleContainer');
+      const countBadge = document.getElementById('friendRequestCount');
+
+      if (!requests.length) {
+        container.style.display = 'none';
+        titleContainer.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'grid';
+      titleContainer.style.display = 'flex';
+      countBadge.textContent = requests.length;
+
+      container.innerHTML = requests.map((req, idx) => {
+        const from = req.from;
+        const avatar = from.avatar || AVATAR_FALLBACK;
+        const displayName = from.displayName || from.username;
+        const requestId = req._id;
+
+        return `
+          <div class="friend-request-card" style="animation: slideInUp 0.5s ease-out ${idx * 0.08}s both;">
+            <div class="friend-request-info">
+              <div class="friend-request-avatar">
+                <img src="${avatar && typeof avatar === 'string' && avatar.trim() ? avatar : AVATAR_FALLBACK}" alt="${displayName}" onerror="this.src='${AVATAR_FALLBACK}'">>
+              </div>
+              <div class="friend-request-details">
+                <h6>${displayName}</h6>
+                <small>Want to be friends</small>
+              </div>
+            </div>
+            <div class="friend-request-actions">
+              <button class="friend-request-btn friend-request-accept" onclick="acceptFriendRequest('${requestId}')">
+                <i class="bi bi-check-lg"></i> Accept
+              </button>
+              <button class="friend-request-btn friend-request-reject" onclick="rejectFriendRequest('${requestId}')">
+                <i class="bi bi-x-lg"></i> Reject
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('[Friend Requests] Load failed:', err);
+    }
+  }
+
+  // Accept friend request
+  async function acceptFriendRequest(requestId) {
+    try {
+      const res = await fetch('/api/friends/accept/' + requestId, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        loadFriendRequests(); // Refresh the list
+        await fetchStatsAndActivity(); // Update achievements
+      }
+    } catch (err) {
+      console.error('[Accept Friend] Error:', err);
+    }
+  }
+
+  // Reject friend request
+  async function rejectFriendRequest(requestId) {
+    try {
+      const res = await fetch('/api/friends/reject/' + requestId, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        loadFriendRequests(); // Refresh the list
+        await fetchStatsAndActivity(); // Update achievements
+      }
+    } catch (err) {
+      console.error('[Reject Friend] Error:', err);
+    }
+  }
+
+  // Load user's game ratings
+  function loadCommunityScores(games) {
+    const container = document.getElementById('communityScoresContainer');
+    
+    try {
+      // Filter games that have ratings
+      const ratedGames = games.filter(g => g.rating && g.rating > 0 && g.gameId)
+        .sort((a, b) => b.rating - a.rating);
+
+      if (!ratedGames || ratedGames.length === 0) {
+        container.innerHTML = '<div class="empty-state">No rated games yet.</div>';
+        return;
+      }
+
+      let html = '';
+      ratedGames.forEach((entry, idx) => {
+        const rating = Math.floor(entry.rating);
+        const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        const gameName = entry.gameId.name || entry.gameId;
+
+        html += `<div style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+          <div style="flex: 1; min-width: 0;">
+            <div class="text-truncate fw-500" title="${gameName}" style="word-break: break-word;">${gameName}</div>
+            <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">Personal rating</div>
+          </div>
+          <div style="font-weight: bold; white-space: nowrap; font-size: 1rem; color: #fbbf24; flex-shrink: 0;">${stars}</div>
+        </div>`;
+      });
+
+      container.innerHTML = html;
+    } catch (err) {
+      console.error('[Game Ratings] Error:', err);
+      container.innerHTML = '<div class="empty-state">Could not load ratings.</div>';
+    }
+  }
+
+  /* Modals */
+  /* (Group chat modals removed) */
+
+  /* ── XP Tooltip Functions ── */
+  let tooltipHideTimeout;
+
+  // Smart tooltip positioning: default to bottom, always visible in viewport
+  function showXpTooltip() {
+    clearTimeout(tooltipHideTimeout);
+    const tooltip = document.getElementById('xpTooltip');
+    const wrapper = document.getElementById('xpTooltipWrapper');
+    const OFFSET = 8; // Minimal offset for overlapping effect
+    if (tooltip && wrapper) {
+      tooltip.classList.remove('xp-tooltip-below');
+      tooltip.style.top = '';
+      tooltip.style.bottom = '';
+      // Get bounding rects
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const tooltipHeight = tooltip.offsetHeight;
+      const spaceAbove = wrapperRect.top;
+      const spaceBelow = window.innerHeight - wrapperRect.bottom;
+      // Default: show below
+      let showBelow = true;
+      if (spaceBelow < tooltipHeight + OFFSET && spaceAbove > spaceBelow) {
+        showBelow = false;
+      }
+      if (showBelow) {
+        tooltip.classList.add('xp-tooltip-below');
+        tooltip.style.top = (wrapper.offsetHeight + OFFSET) + 'px';
+        tooltip.style.bottom = 'auto';
+      } else {
+        tooltip.classList.remove('xp-tooltip-below');
+        tooltip.style.bottom = (wrapper.offsetHeight + OFFSET) + 'px';
+        tooltip.style.top = 'auto';
+      }
+      tooltip.classList.add('show');
+    }
+  }
+
+  function hideXpTooltip() {
+    tooltipHideTimeout = setTimeout(() => {
+      const tooltip = document.getElementById('xpTooltip');
+      if (tooltip) {
+        tooltip.classList.remove('show');
+      }
+    }, 200);
+  }
+
+  /* ── Friend Interactions ── */
+  async function renderFriendButton(tid) {
+    const container = document.getElementById('friendBtnContainer');
+    try {
+      const res = await fetch('/api/friends/status/' + tid);
+      const d = await res.json();
+      if (d.status === 'friends') container.innerHTML = '<button class="prof-btn btn-outline" disabled><i class="bi bi-person-check"></i> Friends</button>';
+      else if (d.status === 'pending_sent') container.innerHTML = '<button class="prof-btn btn-outline" disabled><i class="bi bi-clock"></i> Sent</button>';
+      else container.innerHTML = `<button class="prof-btn btn-primary" onclick="sendRequest('${tid}')"><i class="bi bi-person-plus"></i> Add Friend</button>`;
+    } catch (e) { }
+  }
+
+  async function sendRequest(uid) {
+    try {
+      const res = await fetch('/api/friends/request/' + uid, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed to send friend request');
+      }
+    } catch (e) {
+      alert('Error sending friend request');
+    }
+  }
+
+  /* ── Initialization Entry ── */
+  document.addEventListener('DOMContentLoaded', function() {
+    initProfile();
+    
+    // Add share button click handler
+    const shareBtn = document.getElementById('shareProfileBtn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function() {
+        const profileUrl = `${window.location.origin}/profile?user=${profileUser._id}`;
+        
+        // Try modern Web Share API first
+        if (navigator.share) {
+          navigator.share({
+            title: `${profileUser.displayName}'s Profile`,
+            text: `Check out ${profileUser.displayName}'s gaming profile on Backlog Hero!`,
+            url: profileUrl
+          }).catch(err => {
+            if (err.name !== 'AbortError') {
+              console.error('Share failed:', err);
+              fallbackShare(profileUrl);
+            }
+          });
+        } else {
+          // Fallback: copy to clipboard and show alert
+          fallbackShare(profileUrl);
+        }
+      });
+    }
+    
+    function fallbackShare(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Profile link copied to clipboard!\n' + url);
+      }).catch(() => {
+        // Last resort: show prompt
+        prompt('Copy this profile link:', url);
+      });
+    }
+  });
+
+  // Nav Exit Transition
+  document.querySelectorAll('a[href]').forEach(link => {
+    if (link.hostname === window.location.hostname && !link.hash && !link.getAttribute('href').startsWith('#')) {
+      link.addEventListener('click', () => { document.body.classList.add('page-exit'); });
+    }
+  });
+
+  // Hide loader when page fully loads (with minimum 1.5s animation)
+  const loaderStartTime = Date.now();
+  window.addEventListener('load', () => {
+    const loader = document.getElementById('page-loader');
+    if (loader && !loader.classList.contains('hidden')) {
+      const elapsed = Date.now() - loaderStartTime;
+      const minDelay = 1500;
+      const remainingDelay = Math.max(0, minDelay - elapsed);
+      console.log(`[LOAD TIMING] Page loaded in: ${elapsed}ms (animation: ${Math.min(elapsed, 1500)}ms, showing for: ${minDelay}ms total)`);
+      setTimeout(() => {
+        console.log('[LOAD TIMING] Hiding loader');
+        loader.classList.add('hidden');
+      }, remainingDelay);
+    }
+  });
+</script>

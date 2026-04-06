@@ -8,136 +8,78 @@ plagiarized the work of other students and/or persons.
 <Your Full Name> - <ID Number> - <Section>
     <Ibanez, Kane Joshua> - <1234654> - <S13>
     <David, Justin Ice> - <12411574> - <S13>
-    <Fortea, Seanne Clarence - <12410969> -<S22>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
 ****************************************************************************** -->
-<!-- library.html — User's personal game collection page.
-     Fully interactive: add games, change status, filter by tab, localStorage persistence. -->
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Library | Backlog Hero</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        html { overflow-y: scroll; }
-        body { background-color: #0f1519; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background-color: #1c252e; border-bottom: 1px solid #2a3843; }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.02em; }
-        .navbar-nav .nav-link {
-            color: #9e9e9e !important;
-            transition: color 0.2s ease, transform 0.2s ease;
-            padding: 0.5rem 1rem !important;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-        }
-        .navbar-nav .nav-link:hover { color: #ffffff !important; transform: translateY(-3px); }
-        .navbar-nav .nav-link.active { color: #5383e8 !important; }
-
-        @keyframes pageSlideIn { from { opacity: 0; } to { opacity: 1; } }
-        body { animation: pageSlideIn 0.4s ease both; }
-        body.page-exit { opacity: 0; transition: opacity 0.3s ease; }
-
-        /* Cards */
-        .card { background-color: #1c252e; border: 1px solid #2a3843; transition: transform 0.2s, border-color 0.2s; }
-        .card-title { color: #dbe7ff; font-weight: 600; }
-        .card:hover { transform: translateY(-5px); border-color: #5383e8; }
-        .game-cover { height: 280px; object-fit: cover; border-bottom: 1px solid #2a3843; }
-        .cover-placeholder { height: 280px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1c252e, #0f1519); border-bottom: 1px solid #2a3843; }
-        .cover-placeholder i { font-size: 3rem; color: #2a3843; }
+<style>
+        /* Page-specific: library overrides */
+        .card-title { color: #dbe7ff; }
+        .cover-placeholder i { font-size: 3rem; color: var(--primary); }
         .status-badge { position: absolute; top: 10px; right: 10px; z-index: 2; }
-
-        /* Remove button */
-        .remove-btn { position: absolute; top: 10px; left: 10px; z-index: 2; width: 28px; height: 28px; border-radius: 50%; background: rgba(220,53,69,0.85); border: none; color: #fff; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; }
-        .card:hover .remove-btn { opacity: 1; }
-        .remove-btn:hover { background: #dc3545; }
-
+        .remove-btn { position: absolute; top: 10px; left: 10px; z-index: 2; opacity: 0.55; transition: opacity 0.2s var(--ease), background 0.2s var(--ease), transform 0.2s; background: rgba(220,53,69,0.18); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #dc3545; font-size: 1.1rem; line-height: 1; cursor: pointer; }
+        .remove-btn:hover { opacity: 1; background: rgba(220,53,69,0.75); color: #fff; transform: scale(1.1); }
         /* Tabs */
-        .nav-pills .nav-link { color: #9e9e9e; transition: all 0.2s ease; }
-        .nav-pills .nav-link:hover { color: #ffffff; }
-        .nav-pills .nav-link.active { background-color: #5383e8; color: white; }
+        .nav-pills .nav-link { color: var(--text-muted); transition: color 0.25s var(--ease), background 0.25s var(--ease), box-shadow 0.25s var(--ease); border-radius: var(--radius-full); padding: 6px 16px; }
+        .nav-pills .nav-link:hover { color: var(--text); background: rgba(83,131,232,0.08); }
+        .nav-pills .nav-link.active { background: var(--gradient-primary); color: white; box-shadow: 0 4px 16px rgba(83,131,232,0.25); }
         .tab-count { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 0 7px; font-size: 0.7rem; margin-left: 6px; }
         .nav-pills .nav-link.active .tab-count { background: rgba(255,255,255,0.25); }
-
-        /* Buttons & forms */
-        .btn-outline-primary { color: #5383e8; border-color: #5383e8; transition: all 0.2s ease; }
-        .btn-outline-primary:hover { background-color: #5383e8; color: #ffffff; }
-        .btn-primary { background-color: #5383e8; border-color: #5383e8; }
-        .btn-primary:hover { background-color: #4572d4; border-color: #4572d4; }
-        .text-muted { color: #a8c0e0 !important; }
-        .form-control, .form-select {
-            background-color: #141b21; border-color: #2a3843; color: #ffffff;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #5383e8; box-shadow: 0 0 0 0.2rem rgba(83,131,232,0.25);
-            color: #ffffff; background-color: #141b21;
-        }
-
-        /* Status dropdown on card */
-        .status-select { background-color: #141b21; border-color: #2a3843; color: #9e9e9e; font-size: 0.78rem; padding: 4px 8px; cursor: pointer; }
-        .status-select:focus { border-color: #5383e8; box-shadow: 0 0 0 0.15rem rgba(83,131,232,0.25); color: #fff; background-color: #141b21; }
-
-        /* Rating stars */
+        /* Star rating */
         .star-rating { display: inline-flex; gap: 2px; }
-        .star-rating i { cursor: pointer; font-size: 1rem; color: #2a3843; transition: color 0.15s; }
-        .star-rating i.active { color: #febc2e; }
-        .star-rating i:hover, .star-rating i:hover ~ i { color: #febc2e; }
-
+        .star-rating i { cursor: pointer; font-size: 1rem; color: var(--border); transition: color 0.15s, transform 0.15s; }
+        .star-rating i.active { color: var(--warning); }
+        .star-rating i:hover, .star-rating i:hover ~ i { color: var(--warning); }
+        .star-rating i:hover { transform: scale(1.2); }
         /* Card animation */
-        @keyframes cardFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .game-card-anim { animation: cardFadeIn 0.4s ease both; }
-
+        @keyframes cardFadeIn { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .game-card-anim { animation: cardFadeIn 0.5s var(--ease-out) both; }
+        /* Cover hover zoom */
+        .card .game-cover, .card .cover-placeholder { transition: transform 0.4s var(--ease); }
+        .card:hover .game-cover, .card:hover .cover-placeholder { transform: scale(1.06); }
+        .card .card-img-top-wrap { overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
         /* Empty state */
         .empty-state { text-align: center; padding: 80px 20px; }
-        .empty-state i { font-size: 4rem; color: #2a3843; margin-bottom: 1rem; }
+        .empty-state i { font-size: 4rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem; }
         .empty-state h5 { color: #a8c0e0; }
-        .empty-state p { color: #6b7b8d; }
-
+        .empty-state p { color: var(--text-faint); }
         /* Toast */
         .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1080; }
-
-        /* Modal dark theme */
-        .modal-content { background-color: #1c252e; border: 1px solid #2a3843; color: #ffffff; }
-        .modal-header { border-bottom: 1px solid #2a3843; }
-        .modal-footer { border-top: 1px solid #2a3843; }
-        .btn-close { filter: invert(1); }
-
         /* Add game button */
-        .add-game-btn { border: 2px dashed #2a3843; background: transparent; color: #5383e8; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-        .add-game-btn:hover { border-color: #5383e8; background: rgba(83,131,232,0.05); }
+        .add-game-btn { border: 2px dashed var(--border); background: transparent; color: var(--primary); border-radius: var(--radius-lg); transition: border-color 0.3s var(--ease), background 0.3s var(--ease), transform 0.3s var(--ease), box-shadow 0.3s var(--ease); cursor: pointer; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        .add-game-btn:hover { border-color: rgba(83,131,232,0.5); background: rgba(83,131,232,0.06); transform: translateY(-3px); box-shadow: 0 0 30px rgba(83,131,232,0.08); }
         .add-game-btn i { font-size: 2.5rem; }
+        /* Library header */
+        .library-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+        .library-header h2 { font-weight: 900; letter-spacing: -0.02em; margin: 0; }
+        /* Card hover glow line */
+        .card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease; }
+        .card:hover::after { opacity: 1; }
     </style>
-</head>
-<body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container py-2">
-            <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="library.html">My Library</a></li>
-                    <li class="nav-item"><a class="nav-link" href="search.html">Search Games</a></li>
-                    <li class="nav-item"><a class="nav-link" href="stats.html">Community</a></li>
-                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-danger ms-lg-2 px-3 py-1" id="logoutBtn" href="#" onclick="logout(event)">Logout</a></li>
-                </ul>
-            </div>
+{{> navbar-app activePage="library"}}
+
+    <!-- Loading Screen for My Library -->
+    <div id="page-loader" class="loader" aria-label="Loading">
+      <div class="loader-card">
+        <div class="loader-icon-wrap">
+          <i class="bi bi-collection"></i>
+          <div class="loader-glow"></div>
         </div>
-    </nav>
+        <div>
+          <div class="loader-text">My Library<span class="loading-dots"></span></div>
+          <div class="loader-sub">Loading your game collection</div>
+        </div>
+      </div>
+    </div>
 
     <div class="container my-5">
         <!-- Header: title + filter tabs + search -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-            <h2 class="mb-0">My Collection</h2>
+        <div class="library-header">
+            <h2><i class="bi bi-collection me-2" style="color:var(--primary);"></i>My <span class="gradient-text">Collection</span></h2>
             <div style="flex: 1; max-width: 250px;">
-                <input type="text" class="form-control form-control-sm" id="librarySearch" placeholder="Search your library..." style="background-color: #141b21; border-color: #2a3843; color: #ffffff;">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:var(--text-faint);font-size:0.8rem;"></i>
+                    <input type="text" class="form-control form-control-sm" id="librarySearch" placeholder="Search your library..." style="padding-left:32px;">
+                </div>
             </div>
             <ul class="nav nav-pills" id="libraryTabs">
                 <li class="nav-item"><a class="nav-link active" href="#" data-filter="all">All Games <span class="tab-count" id="count-all">0</span></a></li>
@@ -200,7 +142,7 @@ plagiarized the work of other students and/or persons.
     <!-- Confirm Remove Modal -->
     <div class="modal fade" id="removeGameModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content text-center" style="border-color:#dc3545;">
+            <div class="modal-content text-center" style="border-color:#dc3545; margin: auto;">
                 <div class="modal-body pt-4 pb-2">
                     <div style="width:56px;height:56px;border-radius:50%;background:rgba(220,53,69,0.12);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
                         <i class="bi bi-trash3" style="font-size:1.5rem;color:#dc3545;"></i>
@@ -226,7 +168,30 @@ plagiarized the work of other students and/or persons.
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-chat-left-text me-2"></i>Write Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3" id="reviewGameTitle">Game Title</p>
+                    <div class="mb-3">
+                        <label class="form-label small">Your Review</label>
+                        <textarea id="reviewText" class="form-control bg-dark text-white border-secondary" rows="5" placeholder="What did you think about this game? (0-500 characters)" maxlength="500" style="resize: none;"></textarea>
+                        <small class="text-muted" id="reviewCharCount">0/500</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveReview()">Save Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     /* ======================================================================
        AUTH & PAGE INITIALIZATION
@@ -262,7 +227,7 @@ plagiarized the work of other students and/or persons.
               // Explicit auth failure - don't retry
               console.error('[Library] Unauthorized (' + res.status + ') - redirecting to login');
               setTimeout(() => {
-                window.location.href = 'login.html';
+                window.location.href = 'login';
               }, 500);
               return false;
             }
@@ -279,13 +244,13 @@ plagiarized the work of other students and/or persons.
         
         console.error('[Library] Auth check failed after all retries - redirecting');
         setTimeout(() => {
-          window.location.href = 'login.html';
+          window.location.href = 'login';
         }, 500);
         return false;
       } catch (err) {
         console.error('[Library] Failed to initialize:', err);
         setTimeout(() => {
-          window.location.href = 'login.html';
+          window.location.href = 'login';
         }, 500);
         return false;
       }
@@ -299,8 +264,9 @@ plagiarized the work of other students and/or persons.
         pageInitComplete = true;
         const authOk = await initializePage();
         if (authOk) {
+          ACHIEVEMENTS_STORAGE_KEY = `ach_v1_${currentUserId}`;
           await fetchLibrary();
-          render();
+          render(true);  // First load: show staggered animations
           checkAchievements();
         }
       }
@@ -310,7 +276,7 @@ plagiarized the work of other students and/or persons.
        Library — localStorage-backed game collection with full CRUD
        Key: bh_library_v1
     ====================================================================== */
-    const ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
+    let ACHIEVEMENTS_STORAGE_KEY = 'bh_achievements_v1';
     let libraryCache = [];
     const grid = document.getElementById('libraryGrid');
     const searchInput = document.getElementById('librarySearch');
@@ -341,8 +307,16 @@ plagiarized the work of other students and/or persons.
             { id: 'hoarder', condition: games.length >= 25 },
             { id: 'completionist_badge', condition: games.filter(g => g.status === 'completed').length >= 5 },
             { id: 'platinum', condition: games.filter(g => g.status === 'completed').length >= 10 },
+            { id: 'grandmaster', condition: games.filter(g => g.status === 'completed').length >= 50 },
             { id: 'backlog_master', condition: games.filter(g => g.status === 'backlog').length >= 20 },
+            { id: 'indecisive', condition: games.filter(g => g.status === 'backlog').length >= 50 },
             { id: 'multitasker', condition: games.filter(g => g.status === 'playing').length >= 5 },
+            { id: 'reviewer', condition: games.filter(g => g.status === 'completed' && g.rating > 0).length >= 5 },
+            { id: 'ultimate_critic', condition: games.filter(g => g.status === 'completed' && g.rating > 0).length >= 50 },
+            { id: 'hybrid', condition: games.filter(g => g.status === 'backlog').length > 0 && games.filter(g => g.status === 'playing').length > 0 && games.filter(g => g.status === 'completed').length > 0 },
+            { id: 'legendary', condition: games.filter(g => g.status === 'completed' && g.rating === 5).length >= 20 },
+            { id: 'no_life', condition: games.reduce((acc, g) => acc + (g.playtime || 0), 0) >= 1000 },
+            { id: 'retro_appreciator', condition: games.filter(g => g.year && g.year < 2010).length >= 10 }
         ];
 
         conditions.forEach(ach => {
@@ -378,6 +352,14 @@ plagiarized the work of other students and/or persons.
             if (!res.ok) return libraryCache;
             const entries = await res.json();
             libraryCache = entries.filter(e => e.gameId).map(mapEntry);
+            // Deduplicate by game name (safety net)
+            const seen = new Set();
+            libraryCache = libraryCache.filter(g => {
+                const key = g.name.toLowerCase();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
         } catch (err) {
             console.error('[Library] Fetch failed:', err);
         }
@@ -407,7 +389,8 @@ plagiarized the work of other students and/or persons.
     }
 
     /* ---------- render grid ---------- */
-    function render() {
+    let isInitialRender = true;
+    function render(isFirstLoad = false) {
         const games = loadLibrary();
         
         // Filter by status
@@ -433,7 +416,7 @@ plagiarized the work of other students and/or persons.
             suggestedGrid.innerHTML = suggestSuggestions.slice(0, 5).map(game => {
                 const coverUrl = game.cover
                     ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big')
-                    : 'https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover';
+                    : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22264%22 height=%22352%22%3E%3Crect fill=%22%231c252e%22 width=%22264%22 height=%22352%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2216%22%3ENo Cover%3C/text%3E%3C/svg%3E';
 
                 const year = game.first_release_date
                     ? new Date(game.first_release_date * 1000).getFullYear()
@@ -450,7 +433,7 @@ plagiarized the work of other students and/or persons.
                   <div class="col">
                     <div class="card h-100 shadow-sm" style="border-color: #5383e8; border-width: 2px;">
                       <img src="${coverUrl}" class="card-img-top game-cover" alt="${game.name}" loading="lazy"
-                           onerror="this.src='https://via.placeholder.com/264x352/1c252e/9e9e9e?text=No+Cover'">
+                           onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22264%22 height=%22352%22%3E%3Crect fill=%22%231c252e%22 width=%22264%22 height=%22352%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239e9e9e%22 font-family=%22sans-serif%22 font-size=%2216%22%3ENo Cover%3C/text%3E%3C/svg%3E'">
                       <div class="card-body">
                         <h6 class="card-title">${game.name}</h6>
                         <p class="card-text small text-muted">${genres} • ${year}</p>
@@ -480,30 +463,72 @@ plagiarized the work of other students and/or persons.
                 <div class="col-12 empty-state">
                     <i class="bi bi-controller d-block"></i>
                     <h5>No games in your ${filterName}</h5>
-                    <p>Click the <strong>+ Add Game</strong> card or add games from the <a href="search.html" class="text-decoration-none" style="color:#5383e8">Search</a> page.</p>
+                    <p>Click the <strong>+ Add Game</strong> card or add games from the <a href="search" class="text-decoration-none" style="color:#5383e8">Search</a> page.</p>
                 </div>`;
             // still add the "add game" card
             grid.innerHTML += addGameCard();
             return;
         }
 
+        let activeSessionId = null;
+        try {
+            const activeStr = localStorage.getItem('bh_active_session_game');
+            if (activeStr) {
+                const s = JSON.parse(activeStr);
+                activeSessionId = String(s.id);
+            }
+        } catch(e) {}
+
         let html = '';
         filtered.forEach((game, i) => {
             const displayName = game.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const isActiveSession = activeSessionId === String(game.id);
             const coverHtml = game.cover
-                ? `<img src="${game.cover}" class="card-img-top game-cover" alt="${displayName}" onerror="this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<div class=cover-placeholder><i class=bi bi-controller></i></div>')">`
-                : `<div class="cover-placeholder"><i class="bi bi-controller"></i></div>`;
+                ? `<div class="card-img-top-wrap position-relative" style="aspect-ratio:3/4; overflow:hidden;">
+                     <img src="${game.cover}" class="card-img-top game-cover" alt="${displayName}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                     <div class="cover-placeholder" style="display:none; height:100%; width:100%; align-items:center; justify-content:center; background:#1c252e;">
+                        <i class="bi bi-controller" style="font-size: 3rem; color: var(--primary);"></i>
+                     </div>
+                   </div>`
+                : `<div class="cover-placeholder" style="aspect-ratio:3/4; display:flex; align-items:center; justify-content:center; background:#1c252e;"><i class="bi bi-controller" style="font-size: 3rem; color: var(--primary);"></i></div>`;
 
+            // Only apply staggered animation delay on initial load; skip for pagination
+            const animDelay = isFirstLoad ? `animation-delay:${i * 0.06}s` : 'animation-delay:0s';
+            
             html += `
-            <div class="col game-card-anim" style="animation-delay:${i * 0.06}s" data-id="${game.id}">
+            <div class="col game-card-anim" style="${animDelay}" data-id="${game.id}">
                 <div class="card h-100 position-relative">
                     <button class="remove-btn lib-remove-btn" data-entry-id="${game.id}" onclick="removeGame('${game.id}')" title="Remove from library">&times;</button>
                     <span class="badge ${statusBg[game.status]} status-badge">${statusLabel[game.status]}</span>
                     ${coverHtml}
                     <div class="card-body d-flex flex-column">
-                        <h6 class="card-title mb-1 lib-game-link" data-game-name="${displayName}" style="cursor: pointer; color: #5383e8; transition: all 0.2s;">${displayName}</h6>
+                        <h6 class="card-title mb-1 lib-game-link" data-game-name="${displayName}" style="cursor: pointer; color: #5383e8; transition: color 0.2s;">${displayName}</h6>
                         <p class="text-muted small mb-2">${game.genre || 'Game'}${game.year ? ' • ' + game.year : ''}</p>
-                        ${game.status === 'completed' && game.rating ? `<div class="mb-2">${renderStars(game.rating)}</div>` : ''}
+                        <!-- Rating stars for all games -->
+                        <div class="mb-2 d-flex gap-2 align-items-center">
+                          <div class="star-rating" data-entry-id="${game.id}">
+                            ${[1, 2, 3, 4, 5].map(i => `<i class="bi bi-star-fill ${i <= (game.rating || 0) ? 'active' : ''}" data-rating="${i}" style="cursor: pointer; font-size: 0.95rem; color: ${i <= (game.rating || 0) ? '#febc2e' : '#2a3843'}; transition: color 0.15s, transform 0.15s;" onmouseover="this.parentElement.querySelectorAll('i').forEach((s, idx) => s.style.color = idx < ${i} ? '#febc2e' : '#2a3843')" onmouseout="this.parentElement.querySelectorAll('i').forEach((s, idx) => s.style.color = s.classList.contains('active') ? '#febc2e' : '#2a3843')" onclick="setRating('${game.id}', ${i})"></i>`).join('')}
+                          </div>
+                        </div>
+                        <!-- Review button -->
+                        <div class="mb-2">
+                          <button class="btn btn-sm btn-outline-primary w-100" onclick="openReviewModal('${game.id}', '${displayName.replace(/'/g, "\\'")}', '${game.notes ? game.notes.replace(/'/g, "\\'") : ''}')" style="font-size: 0.8rem;">
+                            <i class="bi bi-chat-left-text me-1"></i>${game.notes ? 'Edit Review' : 'Write Review'}
+                          </button>
+                        </div>
+                        <!-- Session Timer Controls -->
+                        <div class="mb-2 d-flex gap-2">
+                          <button class="btn btn-sm btn-outline-success flex-grow-1 start-session-btn" data-entry-id="${game.id}" onclick="startSession('${game.id}', event)" style="font-size: 0.8rem; display: ${isActiveSession ? 'none' : 'block'};">
+                            <i class="bi bi-play-fill me-1"></i>Play
+                          </button>
+                          <button class="btn btn-sm btn-outline-danger flex-grow-1 stop-session-btn" data-entry-id="${game.id}" onclick="stopSession('${game.id}', event)" style="font-size: 0.8rem; display: ${isActiveSession ? 'block' : 'none'};">
+                            <i class="bi bi-stop-fill me-1"></i>Stop
+                          </button>
+                        </div>
+                        <!-- Session Timer Display -->
+                        <div class="text-center mb-2 session-display" data-entry-id="${game.id}" style="font-size: 0.75rem; color: #a8c0e0; display: ${isActiveSession ? 'block' : 'none'};">
+                          <small><i class="bi bi-hourglass-split" style="color: #2dd4bf;"></i> <span class="session-time">0:00:00</span></small>
+                        </div>
                         <div class="mt-auto">
                             <select class="form-select form-select-sm status-select lib-status-select" data-entry-id="${game.id}">
                                 <option value="backlog" ${game.status === 'backlog' ? 'selected' : ''}>Backlog</option>
@@ -517,14 +542,18 @@ plagiarized the work of other students and/or persons.
         });
 
         // "Add Game" card at the end
-        html += addGameCard();
+        html += addGameCard(isFirstLoad);
         grid.innerHTML = html;
+        
+        // Only animate staggered on initial load; subsequent renders skip animation for speed
+        isInitialRender = false;
     }
 
-    function addGameCard() {
+    function addGameCard(isFirstLoad = false) {
+        // No animation delay for the add button since it's always added last
         return `
         <div class="col game-card-anim" style="animation-delay:0s">
-            <div class="add-game-btn h-100" onclick="window.location.href='search.html'">
+            <div class="add-game-btn h-100" onclick="window.location.href='search'">
                 <i class="bi bi-plus-circle"></i>
                 <span class="fw-semibold">Add Game</span>
             </div>
@@ -540,13 +569,79 @@ plagiarized the work of other students and/or persons.
         new bootstrap.Modal(document.getElementById('addGameModal')).show();
     }
 
+    /* ---------- set rating ---------- */
+    async function setRating(entryId, rating) {
+        const game = libraryCache.find(g => g.id === entryId);
+        if (!game) return;
+        try {
+            const res = await fetch('/api/library/' + entryId, {
+                method: 'PUT', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating })
+            });
+            if (!res.ok) throw new Error('Rating update failed');
+            await fetchLibrary();
+            checkAchievements();
+            showToast(`${game.name} rated ${rating}/5 ★`, 'bg-warning');
+            render();
+        } catch (err) {
+            console.error('[Library] Rating update error:', err);
+            showToast('Failed to update rating', 'bg-danger');
+        }
+    }
+
+    /* ---------- review system ---------- */
+    let currentReviewEntryId = null;
+
+    function openReviewModal(entryId, gameName, existingReview) {
+        currentReviewEntryId = entryId;
+        document.getElementById('reviewGameTitle').textContent = gameName;
+        document.getElementById('reviewText').value = existingReview || '';
+        updateReviewCharCount();
+        new bootstrap.Modal(document.getElementById('reviewModal')).show();
+    }
+
+    function updateReviewCharCount() {
+        const text = document.getElementById('reviewText');
+        const count = document.getElementById('reviewCharCount');
+        count.textContent = `${text.value.length}/500`;
+    }
+
+    document.getElementById('reviewText')?.addEventListener('input', updateReviewCharCount);
+
+    async function saveReview() {
+        if (!currentReviewEntryId) return;
+        const reviewText = document.getElementById('reviewText').value.trim();
+        const game = libraryCache.find(g => g.id === currentReviewEntryId);
+        if (!game) return;
+
+        try {
+            const res = await fetch('/api/library/' + currentReviewEntryId, {
+                method: 'PUT', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: reviewText })
+            });
+            if (!res.ok) throw new Error('Review save failed');
+            await fetchLibrary();
+            showToast(`${game.name} review saved!`, 'bg-success');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
+            modal?.hide();
+            render();
+        } catch (err) {
+            console.error('[Library] Review save error:', err);
+            showToast('Failed to save review', 'bg-danger');
+        }
+    }
+
     /* ---------- change status ---------- */
     async function changeStatus(id, newStatus) {
         const game = libraryCache.find(g => g.id === id);
         if (!game) return;
         const body = { status: newStatus };
+        // Preserve existing rating, or assign default when completing
         if (newStatus === 'completed' && !game.rating) body.rating = 4;
-        if (newStatus !== 'completed') body.rating = 0;
         try {
             const res = await fetch('/api/library/' + id, {
                 method: 'PUT', credentials: 'include',
@@ -558,6 +653,8 @@ plagiarized the work of other students and/or persons.
             checkAchievements();
             showToast(`${game.name} moved to ${statusLabel[newStatus]}`, 'bg-primary');
             render();
+            // Update profile XP in real-time if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] Status update error:', err);
             showToast('Failed to update status', 'bg-danger');
@@ -610,6 +707,8 @@ plagiarized the work of other students and/or persons.
             removeModal().hide();
             showToast(`${name} removed`, 'bg-danger');
             render();
+            // Update profile XP in real-time if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] Remove error:', err);
             showToast('Failed to remove game', 'bg-danger');
@@ -664,7 +763,7 @@ plagiarized the work of other students and/or persons.
     /* ---------- redirect to search with game name ---------- */
     function goToSearch(gameName) {
         localStorage.setItem('bh_search_query', gameName);
-        window.location.href = 'search.html';
+        window.location.href = 'search';
     }
 
     /* ---------- add game modal ---------- */
@@ -729,6 +828,8 @@ plagiarized the work of other students and/or persons.
             bootstrap.Modal.getInstance(document.getElementById('addGameModal')).hide();
             showToast(`${name} added to ${statusLabel[status]}!`, 'bg-success');
             render();
+            // Update profile XP in real-time if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] Add game error:', err);
             showToast('Failed to add game', 'bg-danger');
@@ -794,6 +895,8 @@ plagiarized the work of other students and/or persons.
         
         showToast(`${name} added to Backlog!`, 'bg-success');
         render();
+        // Update profile XP in real-time if profile page is open
+        if (window.refreshProfileXP) window.refreshProfileXP();
         } catch (err) {
             console.error('[Library] IGDB add error:', err);
             showToast('Failed to add game', 'bg-danger');
@@ -808,10 +911,10 @@ plagiarized the work of other students and/or persons.
                 method: 'POST',
                 credentials: 'include'
             });
-            window.location.href = 'login.html';
+            window.location.href = 'login';
         } catch (err) {
             console.error('Logout failed:', err);
-            window.location.href = 'login.html';
+            window.location.href = 'login';
         }
     }
 
@@ -820,12 +923,111 @@ plagiarized the work of other students and/or persons.
         e.preventDefault();
         try {
             const res = await fetch('/api/auth/current', { credentials: 'include' });
-            const dest = res.ok ? 'dashboard.html' : 'index.html';
+            const dest = res.ok ? 'dashboard' : 'index';
             document.body.classList.add('page-exit');
             setTimeout(() => window.location = dest, 300);
         } catch (err) {
             console.error('Auth check failed:', err);
-            window.location = 'index.html';
+            window.location = 'index';
+        }
+    }
+
+    /* ---------- session timer for playtime tracking ---------- */
+    // Global interval to automatically update timers for any active localStorage sessions
+    setInterval(() => {
+        const activeLocalStr = localStorage.getItem('bh_active_session_game');
+        if (!activeLocalStr) return;
+        try {
+            const session = JSON.parse(activeLocalStr);
+            const display = document.querySelector(`[data-entry-id="${session.id}"].session-display`);
+            if (display && display.style.display !== 'none') {
+                const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
+                const hours = Math.floor(elapsed / 3600);
+                const minutes = Math.floor((elapsed % 3600) / 60);
+                const seconds = elapsed % 60;
+                const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                display.querySelector('.session-time').textContent = timeStr;
+            }
+        } catch(e) {}
+    }, 1000);
+
+    function startSession(entryId, event) {
+        if (event) event.preventDefault();
+        
+        const existingSession = localStorage.getItem('bh_active_session_game');
+        if (existingSession) {
+            showToast('A session is already running for a game', 'bg-warning');
+            return;
+        }
+
+        const game = libraryCache.find(g => String(g.id) === String(entryId));
+        if (game) {
+            localStorage.setItem('bh_active_session_game', JSON.stringify({
+                id: entryId,
+                userId: currentUserId,
+                name: game.name,
+                cover: game.cover,
+                startTime: Date.now()
+            }));
+            
+            // Re-render to update the display buttons immediately
+            render();
+            showToast('Playing started!', 'bg-primary');
+        }
+    }
+
+    async function stopSession(entryId, event) {
+        if (event) event.preventDefault();
+        
+        const activeVar = localStorage.getItem('bh_active_session_game');
+        if (!activeVar) {
+            showToast('No active session', 'bg-warning');
+            return;
+        }
+        
+        const session = JSON.parse(activeVar);
+        if (String(session.id) !== String(entryId)) {
+            showToast('This session is not currently active here!', 'bg-warning');
+            return;
+        }
+
+        const elapsed = Math.floor((Date.now() - session.startTime) / 1000);
+        const elapsedHours = elapsed / 3600;  // Convert to decimal hours
+
+        // Clear active session entirely
+        localStorage.removeItem('bh_active_session_game');
+        
+        // Re-render immediately to restore the original button state locally
+        render();
+
+        // render() has already updated the DOM
+
+        // Get current game playtime
+        const game = libraryCache.find(g => g.id === entryId);
+        if (!game) return;
+
+        const newPlaytime = (game.playtime || 0) + elapsedHours;
+
+        try {
+            const res = await fetch('/api/library/' + entryId, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playtime: newPlaytime })
+            });
+            if (!res.ok) throw new Error('Playtime update failed');
+
+            await fetchLibrary();
+            render();
+
+            const hoursLogged = elapsedHours.toFixed(2);
+            showToast(`${hoursLogged}h logged! Total: ${newPlaytime.toFixed(2)}h`, 'bg-success');
+
+            // Trigger XP refresh if profile page is open
+            if (window.refreshProfileXP) window.refreshProfileXP();
+        } catch (err) {
+            console.error('[Library] Failed to save playtime:', err);
+            showToast('Failed to save playtime', 'bg-danger');
         }
     }
 
@@ -840,6 +1042,20 @@ plagiarized the work of other students and/or persons.
             setTimeout(() => window.location = dest, 300);
         }
     });
+
+    // Hide loader when page fully loads (with minimum 1.5s animation)
+    const loaderStartTime = Date.now();
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('page-loader');
+      if (loader) {
+        const elapsed = Date.now() - loaderStartTime;
+        const minDelay = 1500;
+        const remainingDelay = Math.max(0, minDelay - elapsed);
+        console.log(`[LOAD TIMING] Page loaded in: ${elapsed}ms (animation: ${Math.min(elapsed, 1500)}ms, showing for: ${minDelay}ms total)`);
+        setTimeout(() => {
+          console.log('[LOAD TIMING] Hiding loader');
+          loader.classList.add('hidden');
+        }, remainingDelay);
+      }
+    });
     </script>
-</body>
-</html>

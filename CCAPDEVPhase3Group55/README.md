@@ -1,4 +1,4 @@
-# Backlog Hero - Phase 2
+# Backlog Hero - Phase 3
 
 A game collection tracker web application built with Node.js, Express, and MongoDB. Users can search for games, manage their personal game library, and track their gaming progress.
 
@@ -15,8 +15,10 @@ CCAPDEV-Phase2-Group#55/
 │   ├── db.js                  # MongoDB connection setup
 │   ├── User.js                # User schema & model
 │   ├── Game.js                # Game schema & model
+│   ├── Post.js                # Post & Comment schema & model
 │   ├── LibraryEntry.js        # Library entry schema & model
-│   └── seed.js                # Sample data seeder
+│   ├── seed.js                # Sample data seeder (Users, Games)
+│   └── seed-posts.js          # Sample data seeder (Posts, Comments)
 ├── server.js                  # Express server & API routes
 ├── package.json               # Dependencies
 ├── .env                       # Environment configuration
@@ -131,7 +133,9 @@ Users can log in with sample accounts:
 
 ##  Authentication
 
-**Note**: Session management and password hashing are implemented for Phase 2. Full OAuth integration (Steam/Google SSO) is planned for future phases.
+Session-based authentication with two login methods:
+- **Email/Password** — bcryptjs password hashing, express-session for session management
+- **Steam OpenID** — passport-steam for Steam login, auto-imports game library on first sign-in
 
 ### Login Example
 
@@ -199,22 +203,40 @@ Response:
 
 ## Features
 
-✅ User registration and login with password hashing
-✅ Personal game library management
-✅ Track game status (Backlog, Playing, Completed)
-✅ Rate games (1-5 stars)
-✅ Search for games via IGDB API
-✅ View community stats and popular games
-✅ Customizable user profiles
-✅ Responsive dark-themed UI
+### Core
+- **User Authentication** — Registration and login with password hashing (bcryptjs)
+- **Library Management** — Personal game library to track backlog, playing, and completed games
+- **Ratings & Playtime** — Rate games (1–5 stars) and log custom playtime
+- **Game Discovery** — Search for games via IGDB API with HD cover art, and view trending games and trailers on your dashboard
+- **Profile Customization** — Customizable user profiles (avatar, bio, display name) including a dynamic top 5 favorite games showcase
+- **Responsive & Dynamic UI** — Responsive dark-themed UI (Bootstrap 5 / Handlebars) featuring an animated interactive Plexus background
 
+### Steam Integration
+- **Steam Login** — Sign in with your Steam account via OpenID (passport-steam)
+- **Auto-Import Library** — All owned Steam games are imported with playtime and cover art
+- **Auto-Sync Playtime** — Every dashboard visit syncs latest playtime from Steam automatically
+- **IGDB Cover Art** — Game covers are fetched from IGDB for high-quality images; falls back to Steam CDN
 
-- **Frontend**: HTML5, Bootstrap 5, JavaScript
+### Activity & Gamification
+- **Activity Feed** — Dashboard shows recent library activity with game covers, status badges, ratings, and playtime
+- **Community Quality Scores** — Average ratings from your library displayed on dashboard
+
+### Community
+- **Community Posts** — Create posts with title, body, flair tags, game tags, and photo uploads
+- **Voting System** — Upvote/downvote posts with hot/new/top sorting
+- **Comments** — Threaded comments on posts with user avatars
+- **Post Search** — Filter community posts by keywords
+- **Active Members Sidebar** — Dynamically shows users who contribute posts and comments
+
+## Tech Stack
+
+- **Frontend**: HTML5, Bootstrap 5, JavaScript, Handlebars
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB with Mongoose ODM
-- **Authentication**: bcryptjs for password hashing
-- **External API**: IGDB (via Twitch OAuth)
+- **Authentication**: bcryptjs (password hashing), express-session, passport-steam (Steam OpenID)
+- **External APIs**: IGDB (via Twitch OAuth), Steam Web API
 
+## Environment Setup
 
 Create a `.env` file in the root directory:
 
@@ -222,9 +244,13 @@ Create a `.env` file in the root directory:
 # MongoDB
 MONGODB_URI=mongodb://localhost:27017/backlog-hero
 
-# Twitch/IGDB API (optional)
+# Twitch/IGDB API (optional — needed for game search)
 TWITCH_CLIENT_ID=your_id_here
 TWITCH_CLIENT_SECRET=your_secret_here
+
+# Steam API (optional — needed for Steam login & library sync)
+STEAM_API_KEY=your_steam_api_key
+SESSION_SECRET=your_session_secret
 
 # Server
 PORT=3000
@@ -275,9 +301,11 @@ All pages are accessible from the main navbar:
 
 ##  Notes
 
-- Form validation is implemented on the frontend (Phase 2 requirement: validation not yet implemented on backend)
-- Session management implemented with bcryptjs
+- Form validation is implemented on the frontend
+- Session management with express-session and bcryptjs for password hashing
+- Steam login via passport-steam with automatic game library import and playtime sync
 - Database uses MongoDB with Mongoose for schema validation
+- Community posts are stored in MongoDB (database-backed)
 - All routes follow RESTful API conventions
 - Comprehensive error handling with appropriate HTTP status codes
 
@@ -301,8 +329,8 @@ All pages are accessible from the main navbar:
 
 ##  License
 
-CCAPDEV Machine Project - Phase 2
+CCAPDEV Machine Project - Phase 3
 
 ---
 
-**Last Updated**: February 2026
+**Last Updated**: April 2026

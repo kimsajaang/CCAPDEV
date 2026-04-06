@@ -6,7 +6,7 @@ These sample profiles are created when you run `npm run seed`. They are defined 
 
 | Username | Email | Password | Display Name |
 |----------|-------|----------|--------------|
-| gaminglead | joshua@backlogo-hero.local | password123 | Kane Joshua |
+| gaminglead | joshua@backlog-hero.local | password123 | Kane Joshua |
 | speedrunner99 | justin@backlog-hero.local | password123 | Justin Ice |
 | casualplayer | seanne@backlog-hero.local | password123 | Seanne Fortea |
 | indiegames | alex@backlog-hero.local | password123 | Alex Chen |

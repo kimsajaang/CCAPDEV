@@ -1,0 +1,2676 @@
+<!-- ******************************************************************************
+This is to certify that this project is my own work, based on my personal
+ efforts in studying and applying the concepts learned. I have constructed
+the functions and their respective algorithms and corresponding code by
+myself. The program was run, tested, and debugged by my own efforts. I
+further certify that I have not copied in part or whole or otherwise
+plagiarized the work of other students and/or persons.
+<Your Full Name> - <ID Number> - <Section>
+    <Ibanez, Kane Joshua> - <1234654> - <S13>
+    <David, Justin Ice> - <12411574> - <S13>
+      <Fortea, Seanne Clarence - <12410969> -<S22>
+****************************************************************************** -->
+<style>
+  /* ─── Steam Atmosphere Color Override (matches About page) ─── */
+  :root {
+    --primary:        #66c0f4;
+    --primary-hover:  #4fa3d4;
+    --primary-glow:   rgba(102, 192, 244, 0.35);
+    --primary-subtle: rgba(102, 192, 244, 0.08);
+    --accent:         #2dd4bf;
+    --accent-glow:    rgba(45, 212, 191, 0.2);
+
+    --bg-base:        #0b0e13;
+    --bg-card:        rgba(22, 32, 45, 0.85);
+    --bg-card-hover:  rgba(30, 42, 58, 0.9);
+    --bg-input:       #0f1923;
+    --bg-elevated:    rgba(22, 32, 45, 0.92);
+    --bg-glass:       rgba(22, 32, 45, 0.6);
+
+    --border:         rgba(255, 255, 255, 0.08);
+    --border-hover:   rgba(255, 255, 255, 0.15);
+
+    --text:           #c6d4df;
+    --text-secondary: #acb2b8;
+    --text-muted:     #556772;
+    --text-faint:     #3d4f5f;
+
+    --gradient-primary: linear-gradient(135deg, #66c0f4, #4b9cd3);
+    --gradient-accent:  linear-gradient(135deg, #2dd4bf, #66c0f4);
+    --gradient-card:    linear-gradient(145deg, rgba(22, 32, 45, 0.95), rgba(11, 14, 19, 0.98));
+
+    --shadow-sm:   0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md:   0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-lg:   0 16px 48px rgba(0, 0, 0, 0.5);
+    --shadow-xl:   0 24px 64px rgba(0, 0, 0, 0.55);
+    --shadow-glow: 0 0 30px rgba(102, 192, 244, 0.25);
+  }
+
+  body {
+    background-color: #0b0e13;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(30, 45, 60, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(20, 30, 40, 0.3) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Steam-blue navbar tint */
+  .navbar {
+    background: rgba(27, 40, 56, 0.97) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Card hover glow uses steam accent */
+  .card:hover {
+    border-color: rgba(102, 192, 244, 0.3) !important;
+    box-shadow: var(--shadow-md), 0 0 40px rgba(102, 192, 244, 0.06);
+  }
+
+  /* Hero mesh overlay in steam colors */
+  .hero::before {
+    background:
+      radial-gradient(circle at 0% 0%, rgba(102, 192, 244, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(45, 212, 191, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(102, 192, 244, 0.04) 0%, transparent 50%);
+  }
+
+  /* List-group hover in steam blue */
+  .list-group-item:hover {
+    border-color: rgba(102, 192, 244, 0.2) !important;
+    box-shadow: -4px 0 20px rgba(102, 192, 244, 0.06);
+  }
+
+  /* Buttons: steam blue glow */
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    box-shadow: 0 4px 16px rgba(102, 192, 244, 0.3);
+  }
+  .btn-outline-primary {
+    color: #66c0f4 !important;
+    border-color: rgba(102, 192, 244, 0.4) !important;
+  }
+  .btn-outline-primary:hover,
+  .btn-outline-primary:focus-visible {
+    background: rgba(102, 192, 244, 0.12) !important;
+    border-color: #66c0f4 !important;
+    box-shadow: 0 4px 20px rgba(102, 192, 244, 0.25);
+  }
+
+  /* Gradient text in steam palette */
+  .gradient-text {
+    background: linear-gradient(135deg, #66c0f4, #4b9cd3) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+  .gradient-text-accent {
+    background: linear-gradient(135deg, #2dd4bf, #66c0f4) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+
+  /* Scroll-btn hover */
+  .trending-scroll-wrap .scroll-btn:hover {
+    background: #66c0f4;
+    border-color: #66c0f4;
+    box-shadow: 0 0 20px rgba(102, 192, 244, 0.3);
+  }
+
+  /* Chat bubble accent */
+  .cm-bubble { border-left-color: #66c0f4; }
+  .cm-user   { color: #66c0f4; }
+
+  /* Badge primary */
+  .badge.bg-primary { background: linear-gradient(135deg, #66c0f4, #4b9cd3) !important; }
+
+  /* Form focus glow */
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #66c0f4 !important;
+    box-shadow: 0 0 0 3px rgba(102, 192, 244, 0.35) !important;
+  }
+
+  /* Plexus canvas tint */
+  #plexus-canvas { background: #0b0e13; }
+
+  /* Page-specific: dashboard overrides */
+  body.loading {
+    overflow: hidden;
+  }
+
+
+  .user-post-item {
+    border-left: 4px solid var(--primary) !important;
+  }
+
+  .photo-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease);
+    background: rgba(83, 131, 232, 0.05);
+  }
+
+  .photo-upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(83, 131, 232, 0.1);
+  }
+
+  .photo-upload-area.has-photo {
+    border: 1px solid var(--border);
+    padding: 8px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .photo-preview-img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    max-height: 300px;
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+    margin-bottom: 0;
+  }
+
+  .photo-remove-btn {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .feed-photo {
+    width: 100%;
+    max-height: 400px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    margin: 10px 0;
+    border: 1px solid var(--border);
+  }
+
+
+  /* Trending section */
+  .trending-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-3);
+  }
+
+  .trending-header h5 {
+    margin: 0;
+  }
+
+  .trending-date {
+    opacity: 0.55;
+    white-space: nowrap;
+  }
+
+  .trending-header .btn {
+    margin-left: auto;
+  }
+
+  .trending-scroll-wrap {
+    position: relative;
+  }
+
+  .trending-scroll-wrap .scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    background: rgba(10, 14, 19, 0.95);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .trending-scroll-wrap .scroll-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(83, 131, 232, 0.3);
+  }
+
+  .trending-scroll-wrap .scroll-left {
+    left: -12px;
+  }
+
+  .trending-scroll-wrap .scroll-right {
+    right: -12px;
+  }
+
+  /* Top 50 modal */
+  .top50-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .top50-card {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .top50-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .top50-card img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    display: block;
+  }
+
+  .top50-card .top50-rank {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+  }
+
+  .top50-card .top50-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 8px 8px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+  }
+
+  .top50-card .top50-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .top50-card .top50-rating {
+    font-size: 0.7rem;
+    color: #fb923c;
+  }
+
+  /* Trailers section */
+  .trailers-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border) !important;
+  }
+
+  .trailers-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
+
+  .trailers-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .trailers-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  .trailer-item {
+    flex: 0 0 280px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .trailer-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .trailer-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display: block;
+  }
+
+  .trailer-play-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .trailer-item:hover .trailer-play-icon {
+    opacity: 1;
+  }
+
+  .trailer-play-icon i {
+    font-size: 2.4rem;
+    color: #fff;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  }
+
+  /* --- Game Suggestion Highlight --- */
+  .highlight {
+    animation: highlightGlow 1.2s ease-out;
+  }
+
+  @keyframes highlightGlow {
+    0% {
+      background: rgba(83, 131, 232, 0);
+      box-shadow: 0 0 0 rgba(83, 131, 232, 0);
+    }
+    15% {
+      background: rgba(83, 131, 232, 0.15);
+      box-shadow: 0 0 30px rgba(83, 131, 232, 0.3);
+      transform: scale(1.02);
+    }
+    100% {
+      background: rgba(83, 131, 232, 0);
+      box-shadow: 0 0 0 rgba(83, 131, 232, 0);
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .trailer-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 10px 8px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Trailer modal */
+  .trailer-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .trailer-modal.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .trailer-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+  }
+
+  .trailer-modal-content {
+    position: relative;
+    width: 90vw;
+    max-width: 900px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #0a0e13;
+    border: 1px solid var(--border);
+    transform: scale(0.92);
+    transition: transform 0.3s ease;
+  }
+
+  .trailer-modal.active .trailer-modal-content {
+    transform: scale(1);
+  }
+
+  .trailer-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .trailer-modal-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .trailer-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
+  }
+
+  .trailer-modal-close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .trailer-modal-body {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+  }
+
+  .trailer-modal-body iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Completion ring */
+  .completion-ring {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-4);
+    background: rgba(10, 14, 19, 0.4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .completion-ring-text {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .completion-ring-text strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .suggestion-item {
+    transition: background 0.2s ease, transform 0.2s ease;
+    border-radius: var(--radius-md);
+    padding: 8px;
+    margin: -8px; /* Offset the padding for the container */
+  }
+
+  .suggestion-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+  }
+
+  .suggest-result.highlight {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 20px rgba(83, 131, 232, 0.2);
+  }
+
+  /* Chat System Styles */
+  .cm-bubble {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--primary);
+  }
+
+  .cm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+  }
+
+  .cm-user {
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .cm-time {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+
+  .cm-text {
+    color: var(--text);
+    font-size: 0.85rem;
+    line-height: 1.35;
+    word-wrap: break-word;
+  }
+
+  /* Chat Input Focus State */
+  #chatInput:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 10px rgba(83, 131, 232, 0.2);
+  }
+
+  /* Chat Group Select Focus State */
+  #chatGroupSelect:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 10px rgba(83, 131, 232, 0.2);
+  }
+
+  /* Modal Styles for Chat */
+  #createGroupModal, #inviteFriendsModal {
+    animation: fadeInScale 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+</style>
+
+
+<!-- Fake loading screen -->
+<div id="page-loader" class="loader" aria-label="Loading">
+  <div class="loader-card">
+    <div class="loader-icon-wrap">
+      <i class="bi bi-controller"></i>
+      <div class="loader-glow"></div>
+    </div>
+    <div>
+      <div class="loader-text">Loading Dashboard<span class="loading-dots"></span></div>
+      <div class="loader-sub">Warming up your friend activity feed</div>
+    </div>
+  </div>
+</div>{{> navbar-app activePage="dashboard"}}
+
+<div class="container my-5">
+  <!-- Welcome hero card with user stats -->
+  <div class="hero hero-compact mb-4 reveal">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <h2 class="mb-2" id="welcomeTitle"
+          style="font-size:clamp(1.8rem, 4vw, 2.8rem); font-weight:900; letter-spacing:-0.03em; line-height:1.1;">
+          Play smarter, <span class="gradient-text">finish more.</span>
+        </h2>
+        <p class="hero-sub mb-4 opacity-75" style="font-size: 1.1rem;">Your personal command center for game tracking
+          and discovery.</p>
+
+        <div class="d-flex flex-wrap gap-3">
+          <a class="btn btn-premium" href="/search">
+            <i class="bi bi-search me-2"></i>Find Games
+          </a>
+          <a class="btn btn-premium-outline" href="/library">
+            <i class="bi bi-collection-play me-2"></i>My Library
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-6 d-flex gap-4 justify-content-lg-end align-items-center mt-4 mt-lg-0">
+        
+        <div class="hero-stats justify-content-lg-end">
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-check-circle-fill"></i>Completed</div>
+            <div class="hero-stat-value counter-animate" id="statCompleted">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-controller"></i>Collection</div>
+            <div class="hero-stat-value counter-animate" id="statTotal">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-hourglass-split"></i>Backlog</div>
+            <div class="hero-stat-value counter-animate" id="statBacklog">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-play-fill"></i>Playing</div>
+            <div class="hero-stat-value counter-animate" id="statPlaying">0</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label"><i class="bi bi-clock-history"></i>Hours</div>
+            <div class="hero-stat-value counter-animate" id="statHours">0</div>
+          </div>
+        </div>
+
+        <div id="steamLiveCard" style="display:none; width: 160px; flex-shrink: 0; animation: fadeInScale 0.4s ease forwards;">
+            <div style="font-size: 0.8rem; color: #4ab76b; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                <span class="dot-live" style="width:7px; height:7px; background:#4ab76b; border-radius:50%; box-shadow: 0 0 10px #4ab76b; animation: pulseLive 2s infinite; display: inline-block;"></span>
+                Playing
+            </div>
+            <div class="game-card" style="border-radius: 12px; overflow: hidden; position: relative; border: 1px solid rgba(74, 183, 107, 0.4); box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 20px rgba(74, 183, 107, 0.2); cursor: pointer;" onclick="window.location.href='/library'">
+                <img id="steamLiveGameCover" src="" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block;" alt="Game Cover" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22400%22%3E%3Crect fill=%22%231a2634%22 width=%22300%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%235383e8%22 font-family=%22sans-serif%22 font-size=%2218%22%3EPlaying%3C/text%3E%3C/svg%3E';">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); padding: 30px 10px 10px;">
+                    <span id="steamLiveGameNameCard" style="font-size: 0.95rem; font-weight: 800; color: #fff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,0.9);">Game Name</span>
+                </div>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Trending Games -->
+  <div class="trending-section mb-4 reveal">
+    <div class="trending-header">
+      <h5><i class="bi bi-fire me-2" style="color:#fb923c;"></i>Trending <span class="gradient-text">Right Now</span>
+      </h5>
+
+      <button class="btn btn-sm btn-outline-primary" id="seeAllBtn">See All</button>
+    </div>
+    <div class="trending-scroll-wrap">
+      <button class="scroll-btn scroll-left"
+        onclick="document.getElementById('trendingScroll').scrollBy({left:-340,behavior:'smooth'})"><i
+          class="bi bi-chevron-left"></i></button>
+      <div class="trending-scroll" id="trendingScroll">
+        <div class="text-muted small p-3">Loading trending games...</div>
+      </div>
+      <button class="scroll-btn scroll-right"
+        onclick="document.getElementById('trendingScroll').scrollBy({left:340,behavior:'smooth'})"><i
+          class="bi bi-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="row g-4 reveal">
+    <div class="col-md-3">
+      <!-- Backlog suggestion tool — user enters available minutes, gets a game pick. -->
+      <div class="card mb-4 reveal">
+        <div class="card-body" style="padding: 16px;">
+          <h5 class="card-title mb-2" style="font-size: 1.1rem;"><i class="bi bi-lightning me-2" style="color: var(--primary);"></i>What's the Plan?</h5>
+          <p class="text-muted mb-3" style="font-size: 0.85rem;">Pick a source and enter your time.</p>
+          
+          <!-- Source Selection -->
+          <div class="mb-3">
+            <div class="btn-group w-100 plan-source-group" role="group" style="gap: 6px; height: 40px;">
+              <input type="radio" class="btn-check" name="planSource" id="planSourceLibrary" value="library" checked>
+              <label class="btn btn-sm" for="planSourceLibrary" style="flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-weight: 500; transition: all 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;">
+                <i class="bi bi-collection me-1"></i><span>My Library</span>
+              </label>
+              <input type="radio" class="btn-check" name="planSource" id="planSourceNew" value="new">
+              <label class="btn btn-sm" for="planSourceNew" style="flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-weight: 500; transition: all 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;">
+                <i class="bi bi-sparkles me-1"></i><span>Try New</span>
+              </label>
+            </div>
+            <style>
+              .plan-source-group .btn-check:checked + .btn {
+                background: var(--primary-subtle) !important;
+                border-color: var(--primary) !important;
+                color: var(--primary) !important;
+              }
+            </style>
+          </div>
+
+          <!-- Time Input -->
+          <div class="mb-3">
+            <div class="input-group" style="gap: 6px; height: 40px;">
+              <input id="planHours" type="number" min="0" inputmode="numeric" class="form-control bg-dark text-white border-secondary" placeholder="Hours" style="border-radius: 6px; font-size: 0.85rem;">
+              <input id="planMinutes" type="number" min="0" max="59" inputmode="numeric" class="form-control bg-dark text-white border-secondary" placeholder="Minutes" style="border-radius: 6px; font-size: 0.85rem;">
+            </div>
+          </div>
+
+          <!-- Suggest Button -->
+          <button id="planSuggestBtn" class="btn btn-primary w-100 mb-3" type="button" style="border-radius: 6px; font-weight: 600; font-size: 0.9rem; padding: 8px; height: 40px;">
+            <i class="bi bi-arrow-right me-1"></i>Get Suggestion
+          </button>
+
+          <!-- Result Area -->
+          <div id="planResult" class="suggest-result p-2 rounded border border-secondary bg-dark" style="border-radius: 6px;">
+            <p class="mb-0 small text-muted text-center" style="font-size: 0.8rem;">
+              <i class="bi bi-info-circle me-1"></i>Enter time
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Latest Game Trailers -->
+      <div class="card border-0 mb-4 reveal trailers-card">
+        <div class="card-body p-3">
+          <h6 class="mb-3"><i class="bi bi-play-circle me-1" style="color:var(--accent)"></i>Latest Trailers</h6>
+          <div class="trailers-scroll" id="trailersScroll">
+            <div class="text-muted small p-2">Loading trailers...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Community ratings sidebar -->
+      <div class="card reveal" style="min-height: 400px; display: flex; flex-direction: column;">
+        <div class="card-body" style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
+          <h6 class="mb-4" style="font-size: 1.1rem;">Community Quality Scores</h6>
+          <div id="communityScores" style="flex: 1; overflow-y: auto; padding-right: 8px;">
+            <p class="text-muted small mb-0">Loading scores...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <!-- Friend Activity Feed -->
+      <div class="d-flex justify-content-between align-items-center mb-4 reveal">
+        <h4><i class="bi bi-broadcast me-2" style="color:var(--accent);"></i>Friend Activity <span
+            class="gradient-text-accent">Feed</span></h4>
+      </div>
+
+      <!-- Filters & Sorting -->
+      <div class="card bg-section border-0 shadow-sm mb-3 reveal">
+        <div class="card-body p-3">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold mb-1">Type</label>
+              <select id="activityTypeFilter" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="applyActivityFilters()">
+                <option value="all">All Activity</option>
+                <option value="review">Reviews Only</option>
+                <option value="achievement">Achievements Only</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold mb-1">Sort By</label>
+              <select id="activitySortFilter" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="applyActivityFilters()">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="highest">Highest Rated</option>
+                <option value="lowest">Lowest Rated</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-2">
+            <label class="form-label small fw-bold mb-1">Rating Filter</label>
+            <div>
+              <label class="form-check form-check-inline">
+                <input type="checkbox" id="ratingPositive" class="form-check-input" checked onchange="applyActivityFilters()">
+                <span class="form-check-label" style="font-size: 0.9rem; color: #10b981;">Positive (4-5★)</span>
+              </label>
+              <label class="form-check form-check-inline">
+                <input type="checkbox" id="ratingNegative" class="form-check-input" checked onchange="applyActivityFilters()">
+                <span class="form-check-label" style="font-size: 0.9rem; color: #ef4444;">Negative (1-2★)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-group shadow-sm" id="activityFeed">
+        <div class="list-group-item p-3 text-center text-muted">Loading activity feed...</div>
+      </div>
+    </div>
+
+    <!-- CHAT SIDEBAR -->
+    <div class="col-md-3">
+      <div class="card" style="position: sticky; top: 80px; height: calc(100vh - 120px); display: flex; flex-direction: column; overflow: hidden;">
+        <div class="card-header d-flex align-items-center justify-content-between py-2 px-3" style="border-bottom: 1px solid var(--border);">
+          <h6 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-people-fill" style="color:var(--accent);"></i>
+            <select id="chatGroupSelect" onchange="switchChatGroup(this.value)" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; font-size: 0.82rem; font-family: inherit;">
+              <!-- Populated via JS -->
+            </select>
+          </h6>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-link p-1" id="addMemberBtn" onclick="openInviteModal()" style="color:var(--text-muted); display:none;" title="Invite Members"><i class="bi bi-person-plus-fill"></i></button>
+            <button class="btn btn-sm btn-link p-1" id="groupSettingsBtn" onclick="openGroupSettingsModal()" style="color:var(--text-muted); display:none;" title="Group Settings"><i class="bi bi-gear-fill"></i></button>
+            <button class="btn btn-sm btn-link p-1" onclick="openCreateGroupModal()" style="color:var(--accent);" title="Create Group"><i class="bi bi-plus-circle-fill"></i></button>
+          </div>
+        </div>
+        <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 12px;">
+          <div class="text-center text-muted small py-5"><i class="bi bi-chat-dots" style="font-size:2rem; display:block; margin-bottom:10px; opacity:0.15;"></i>Loading chat...</div>
+        </div>
+        <div class="card-footer p-2" style="border-top: 1px solid var(--border);">
+          <input type="text" id="chatInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Send a message..." onkeypress="handleChatInput(event)" style="font-size: 0.85rem;">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Feedback Button -->
+<a href="/feedback" class="btn btn-primary rounded-pill shadow-lg d-flex align-items-center gap-2" 
+   style="position: fixed; bottom: 22px; left: 22px; z-index: 1050; padding: 12px 22px; transition: transform 0.2s, box-shadow 0.2s;"
+   onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(83,131,232,0.5)'"
+   onmouseout="this.style.transform='none'; this.style.boxShadow='0 .5rem 1rem rgba(0,0,0,.15)'">
+  <i class="bi bi-chat-left-text-fill fs-5"></i>
+  <span class="fw-bold">Feedback</span>
+</a>
+
+<!-- Post Update Modal -->
+<div class="modal fade" id="postUpdateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Post Update</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label small">What type of update?</label>
+          <select id="updateType" class="form-select">
+            <option value="session">Question</option>
+            <option value="session">Logged a session</option>
+            <option value="review">Reviewed a game</option>
+            <option value="completed">Completed a game</option>
+            <option value="playing">Started playing</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">Game</label>
+          <select id="updateGame" class="form-select">
+            <option value="">Loading games...</option>
+          </select>
+        </div>
+        <div class="mb-3" id="ratingGroup" style="display:none;">
+          <label class="form-label small">Rating</label>
+          <select id="updateRating" class="form-select">
+            <option value="5">★★★★★</option>
+            <option value="4">★★★★☆</option>
+            <option value="3">★★★☆☆</option>
+            <option value="2">★★☆☆☆</option>
+            <option value="1">★☆☆☆☆</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">Comment</label>
+          <textarea id="updateComment" class="form-control" rows="3" maxlength="300"
+            placeholder="What happened in your session?"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">Add Photo (Optional)</label>
+          <div id="photoUploadArea" class="photo-upload-area">
+            <i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i>
+            <p class="mb-0 mt-2 small">Click to upload a screenshot</p>
+            <input type="file" id="photoInput" accept="image/*" style="display: none;">
+          </div>
+          <div id="photoPreviewContainer" style="display: none;"></div>
+        </div>
+        <div id="updateError" class="small text-danger" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="submitUpdateBtn" type="button" class="btn btn-primary">Post</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trending Game Modal -->
+<div class="modal fade" id="trendingGameModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="trendingGameModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="trendingGameModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Review Comment Modal -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-chat-dots me-2"></i>Add a Comment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="commentGameId">
+        <input type="hidden" id="commentFriendId">
+        <textarea id="commentText" class="form-control" rows="4" placeholder="Share your thoughts on this review..." maxlength="500"></textarea>
+        <small class="text-muted d-block mt-2">Max 500 characters</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitReviewComment()">Post Comment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS bundle (includes Popper) for navbar toggle and other components -->
+<!-- Page scripts:
+     1) Fake loader — hides after 1.2s timeout
+     2) Scroll reveal — uses IntersectionObserver to fade in cards as they enter viewport
+     The threshold 0.12 means the animation triggers when 12% of the card is visible -->
+<script>
+  // Track when animation starts to show actual load timing
+  const animationStartTime = Date.now();
+  
+  window.addEventListener("load", () => {
+    const actualLoadTime = Date.now() - animationStartTime;
+    console.log(`[LOAD TIMING] Page content loaded in: ${actualLoadTime}ms (animation running: ${Math.min(actualLoadTime, 1500)}ms)`);
+    
+    const loader = document.getElementById("page-loader");
+    setTimeout(() => {
+      console.log(`[LOAD TIMING] Hiding loader after 1500ms total`);
+      loader.classList.add("hidden");
+      document.body.classList.remove("loading");
+    }, 1500);
+  });
+  const revealItems = document.querySelectorAll(".reveal");
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12 }
+  );
+  revealItems.forEach((item) => observer.observe(item));
+
+  // ============================================================
+  // What's the Plan — backlog suggestion engine
+  // ============================================================
+  const discoverGames = [
+    { name: "Black Myth: Wukong", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5wex.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 30, avgSession: 60, note: "Boss fights require focus" },
+    { name: "Red Dead Redemption 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg", genre: "Open World", genreTags: ["open world", "action"], minSession: 45, avgSession: 90, note: "Great for long sessions" },
+    { name: "Far Cry 5", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1nic.jpg", genre: "Action", genreTags: ["action"], minSession: 20, avgSession: 45, note: "Quick outpost runs" },
+    { name: "Valorant", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg", genre: "Tactical Shooter", genreTags: ["shooter", "action"], minSession: 15, avgSession: 35, note: "One comp match ~30 min" },
+    { name: "League of Legends", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg", genre: "MOBA", genreTags: ["moba", "action"], minSession: 25, avgSession: 40, note: "ARAM for quick games" },
+    { name: "Hades", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2qx5.jpg", genre: "Roguelike", genreTags: ["roguelike", "action"], minSession: 15, avgSession: 25, note: "Perfect for short runs" },
+    { name: "Stardew Valley", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/xrpmydnu9rpxvxfjkiu7.jpg", genre: "Farming Sim", genreTags: ["sim", "simulation", "farming"], minSession: 15, avgSession: 30, note: "Relaxed pace, save anytime" },
+    { name: "Balatro", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co7kaq.jpg", genre: "Roguelike Deckbuilder", genreTags: ["roguelike", "puzzle"], minSession: 10, avgSession: 20, note: "One run = one sitting" },
+    { name: "Hollow Knight", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.jpg", genre: "Metroidvania", genreTags: ["platformer", "action"], minSession: 20, avgSession: 45, note: "Bench saves are frequent" },
+    { name: "Slay the Spire", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1iyf.jpg", genre: "Deckbuilder", genreTags: ["puzzle", "roguelike"], minSession: 15, avgSession: 30, note: "Turn-based, pause anytime" },
+    { name: "Celeste", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co3byy.jpg", genre: "Platformer", genreTags: ["platformer", "action"], minSession: 15, avgSession: 30, note: "Short chapters, tight controls" },
+    { name: "Persona 5 Royal", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2t97.jpg", genre: "JRPG", genreTags: ["rpg", "jrpg"], minSession: 45, avgSession: 90, note: "Story-heavy, plan long sessions" },
+    { name: "Elden Ring", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 30, avgSession: 60, note: "Open world exploration" },
+    { name: "Portal 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg", genre: "Puzzle", genreTags: ["puzzle"], minSession: 20, avgSession: 40, note: "Clever puzzles, quick chapters" },
+    { name: "Disco Elysium", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.jpg", genre: "RPG", genreTags: ["rpg"], minSession: 30, avgSession: 60, note: "Dialogue-heavy detective RPG" },
+    { name: "The Witcher 3", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 40, avgSession: 80, note: "Incredible world-building" },
+    { name: "Cyberpunk 2077", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mdf.jpg", genre: "Action RPG", genreTags: ["action", "rpg", "action rpg"], minSession: 30, avgSession: 60, note: "Futuristic open world" },
+    { name: "Minecraft", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg", genre: "Sandbox", genreTags: ["sim", "simulation"], minSession: 10, avgSession: 40, note: "Infinite possibilities" },
+    { name: "Grand Theft Auto V", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1qx8.jpg", genre: "Action", genreTags: ["action"], minSession: 30, avgSession: 60, note: "Los Santos awaits" },
+    { name: "God of War", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r8h.jpg", genre: "Action", genreTags: ["action"], minSession: 30, avgSession: 60, note: "Cinematic combat" },
+    { name: "Resident Evil 4", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5v96.jpg", genre: "Horror", genreTags: ["action"], minSession: 20, avgSession: 45, note: "Survival horror at its best" },
+    { name: "Dota 2", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1n00.jpg", genre: "MOBA", genreTags: ["moba", "action"], minSession: 35, avgSession: 50, note: "Intense team battles" },
+    { name: "Among Us", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2nl0.jpg", genre: "Social Deduction", genreTags: ["puzzle"], minSession: 5, avgSession: 15, note: "Find the imposter" },
+    { name: "Apex Legends", img: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2v6i.jpg", genre: "Battle Royale", genreTags: ["shooter", "action"], minSession: 15, avgSession: 30, note: "Fast-paced hero shooter" }
+  ];
+
+  let dashboardLibraryCache = null;
+
+  async function getMyLibrary() {
+    if (dashboardLibraryCache) return dashboardLibraryCache;
+    try {
+      const userId = currentUser && (currentUser._id || currentUser.id);
+      if (!userId) return [];
+      const res = await fetch('/api/library/' + userId, { credentials: 'include' });
+      if (!res.ok) return [];
+      const entries = await res.json();
+      dashboardLibraryCache = entries.filter(e => e.gameId).map(e => ({
+        name: e.gameId.name || 'Unknown',
+        genre: (e.gameId.genres || []).join(' • ') || 'Game',
+        cover: e.gameId.coverUrl || '',
+        status: e.status,
+        rating: e.rating || 0
+      }));
+      return dashboardLibraryCache;
+    } catch (err) {
+      console.error('[Dashboard] Library fetch error:', err);
+      return [];
+    }
+  }
+
+  async function getLibraryGames(totalMins) {
+    const lib = await getMyLibrary();
+    const playable = lib.filter(g => g.status === 'backlog' || g.status === 'playing');
+    if (playable.length === 0) return null;
+    return playable.map(g => ({
+      name: g.name,
+      img: g.cover || '',
+      genre: g.genre || 'Game',
+      avgSession: 30,
+      minSession: 15,
+      note: g.status === 'playing' ? 'Continue where you left off' : 'Sitting in your backlog',
+      fromLibrary: true
+    }));
+  }
+
+  async function getNewGames(totalMins) {
+    const lib = await getMyLibrary();
+    const libNames = lib.map(g => g.name.toLowerCase());
+    return discoverGames.filter(g => !libNames.includes(g.name.toLowerCase()));
+  }
+
+  const planInput = document.getElementById("planMinutes");
+  const planBtn = document.getElementById("planSuggestBtn");
+  const planResult = document.getElementById("planResult");
+  const planHours = document.getElementById("planHours");
+
+  planBtn.addEventListener("click", suggestGame);
+  planInput.addEventListener("keydown", (e) => { if (e.key === "Enter") suggestGame(); });
+  planHours.addEventListener("keydown", (e) => { if (e.key === "Enter") suggestGame(); });
+
+  async function suggestGame() {
+    const hours = parseInt(planHours.value) || 0;
+    const mins = parseInt(planInput.value) || 0;
+    const totalMins = (hours * 60) + mins;
+    const source = document.querySelector('input[name="planSource"]:checked').value;
+
+    if (totalMins < 1) {
+      planResult.innerHTML = `<p class="mb-0 small text-warning">Please enter at least 1 minute of available time.</p>`;
+      return;
+    }
+
+    let pool;
+    if (source === 'library') {
+      pool = await getLibraryGames(totalMins);
+      if (!pool || pool.length === 0) {
+        planResult.innerHTML = `<p class="mb-0 small text-warning">Your library is empty! Add some games first, or try "Try Something New".</p>`;
+        return;
+      }
+    } else {
+      pool = await getNewGames(totalMins);
+      if (pool.length === 0) {
+        planResult.innerHTML = `<p class="mb-0 small text-info">You already have all our suggestions! Nice collection.</p>`;
+        return;
+      }
+    }
+
+    // Filter games that fit within the available time
+    const fits = pool.filter(g => g.minSession <= totalMins);
+    if (fits.length === 0) {
+      planResult.innerHTML = `<p class="mb-0 small text-warning">No games fit in ${hours}h ${mins}m. Try adding more time!</p>`;
+      return;
+    }
+
+    // Fisher-Yates Shuffle for true randomness
+    const shuffle = (array) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+
+    const shuffled = shuffle([...fits]);
+    const selected = shuffled.slice(0, 3);
+    
+    let html = '';
+    selected.forEach((pick, index) => {
+      const sessions = Math.max(1, Math.floor(totalMins / pick.avgSession));
+      const imgTag = pick.img
+        ? `<img src="${pick.img}" style="width:60px;height:85px;border-radius:4px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);flex-shrink:0;" alt="${pick.name}" loading="lazy">`
+        : `<div style="width:60px;height:85px;border-radius:4px;background:#2a3843;display:flex;align-items:center;justify-content:center;color:#6f7d8a;flex-shrink:0;"><i class="bi bi-controller"></i></div>`;
+
+      const sourceLabel = pick.fromLibrary
+        ? '<span class="badge bg-primary" style="font-size:0.55rem; padding: 2px 6px;">Lib</span>'
+        : '<span class="badge bg-success" style="font-size:0.55rem; padding: 2px 6px;">New</span>';
+
+      html += `
+        <div class="suggestion-item" style="animation: fadeInScale 0.3s ease forwards ${index * 0.1}s; opacity:0; transform:scale(0.95);">
+          ${imgTag}
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+            <div style="min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <p style="font-size: 0.8rem; font-weight: 700; color: var(--text); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${pick.name}</p>
+                ${sourceLabel}
+              </div>
+              <small class="text-info" style="font-size:0.7rem; font-weight:600; display: block;">~${pick.avgSession}m · ${sessions > 1 ? sessions + 'x' : '1x'}</small>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    planResult.innerHTML = html;
+
+    // Highlight animation
+    planResult.classList.add("highlight");
+    setTimeout(() => planResult.classList.remove("highlight"), 1200);
+  }
+
+  // ============================================================
+  // Post Update — adds new feed items to the activity feed
+  // ============================================================
+
+  let currentUser = null;
+
+  const typeLabels = {
+    "session": "logged a session",
+    "review": "reviewed a game",
+    "completed": "completed a game",
+    "playing": "started playing"
+  };
+
+  const updateType = document.getElementById("updateType");
+  const ratingGroup = document.getElementById("ratingGroup");
+
+  // Photo upload handling
+  let selectedPhoto = null;
+  const photoUploadArea = document.getElementById("photoUploadArea");
+  const photoInput = document.getElementById("photoInput");
+  const photoPreviewContainer = document.getElementById("photoPreviewContainer");
+
+  photoUploadArea.addEventListener("click", () => photoInput.click());
+  photoInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Photo must be less than 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        selectedPhoto = event.target.result;
+        photoUploadArea.classList.add("has-photo");
+        photoUploadArea.innerHTML = `<img src="${selectedPhoto}" class="photo-preview-img" alt="Preview" loading="lazy">`;
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn btn-sm btn-outline-danger photo-remove-btn";
+        removeBtn.textContent = "Remove Photo";
+        removeBtn.style.alignSelf = "flex-end";
+        removeBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          selectedPhoto = null;
+          photoInput.value = "";
+          photoUploadArea.classList.remove("has-photo");
+          photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
+        });
+        photoUploadArea.appendChild(removeBtn);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Show/hide rating when type changes
+  updateType.addEventListener("change", () => {
+    ratingGroup.style.display = updateType.value === "review" ? "block" : "none";
+  });
+
+  document.getElementById("submitUpdateBtn").addEventListener("click", async () => {
+    const type = updateType.value;
+    const game = document.getElementById("updateGame").value;
+    const comment = document.getElementById("updateComment").value.trim();
+    const rating = document.getElementById("updateRating").value;
+    const errorEl = document.getElementById("updateError");
+    const submitBtn = document.getElementById("submitUpdateBtn");
+
+    if (!comment) {
+      errorEl.textContent = "Please write a comment.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    errorEl.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
+    
+    // Warn if photo is very large
+    if (selectedPhoto && selectedPhoto.length > 10 * 1024 * 1024) {
+      console.warn('Warning: Photo is very large (' + (selectedPhoto.length / 1024 / 1024).toFixed(2) + 'MB) - upload may take a while');
+    }
+    
+    // Save to backend first
+    try {
+      const controller = new AbortController();
+      const uploadTimeout = selectedPhoto ? 60000 : 15000; // 60s for photos, 15s for text
+      const timeoutId = setTimeout(() => controller.abort(), uploadTimeout);
+      
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        signal: controller.signal,
+        body: JSON.stringify({
+          title: `Logged a session${type === 'review' ? ' - Review' : type === 'completed' ? ' - Completed' : type === 'playing' ? ' - Now Playing' : ''}`,
+          body: comment,
+          game: game,
+          flair: 'Progress',
+          rating: type === 'review' ? parseInt(rating) : null,
+          photo: selectedPhoto || null
+        })
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error('Failed to save post');
+      }
+
+      // Close modal and reset form
+      const modal = bootstrap.Modal.getInstance(document.getElementById("postUpdateModal"));
+      modal.hide();
+      document.getElementById("updateComment").value = "";
+      updateType.value = "session";
+      ratingGroup.style.display = "none";
+
+      // Reset photo
+      selectedPhoto = null;
+      photoInput.value = "";
+      photoUploadArea.classList.remove("has-photo");
+      photoUploadArea.innerHTML = `<i class="bi bi-image" style="font-size: 1.5rem; color: #5383e8;"></i><p class="mb-0 mt-2 small">Click to upload a screenshot</p>`;
+
+      // Reload activity feed
+      await loadActivityFeed(currentUserData);
+
+      // Show success toast
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px;
+        background: #10b981; color: white; padding: 12px 20px;
+        border-radius: 8px; z-index: 10000; animation: slideIn 0.3s ease;
+        font-weight: 600; font-size: 0.95rem;
+      `;
+      toast.textContent = 'Update posted!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+      
+      // Restore button state
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Post Update';
+    } catch (err) {
+      console.error('Error posting update:', err);
+      errorEl.textContent = "Failed to post update. Please try again.";
+      errorEl.style.display = "block";
+      
+      // Restore button state on error
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Post Update';
+    }
+  });
+</script>
+<!-- Floating CTA button — always visible in bottom-right corner -->
+<a class="sticky-cta" href="/search">Find Games</a>
+<script>
+  // Logout function
+  async function logout(event) {
+    event.preventDefault();
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = 'login';
+    } catch (err) {
+      console.error('Logout failed:', err);
+      window.location.href = 'login';
+    }
+  }
+
+  // Steam sync function
+
+  // Check if user is logged in and fetch data
+  async function initDashboard() {
+    try {
+      console.log('[Dashboard] Fetching current user...');
+      // Fetch current user data with retry logic - more lenient
+      let retries = 2;
+      let currentUserData = null;
+
+      while (retries > 0) {
+        try {
+          const userRes = await fetch('/api/auth/current', {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          console.log('[Dashboard] Auth response:', userRes.status);
+
+          if (userRes.ok) {
+            currentUserData = await userRes.json();
+            console.log('[Dashboard] User logged in:', currentUserData.displayName);
+            currentUser = currentUserData;
+            document.getElementById('welcomeTitle').innerHTML = `Welcome back, <span class="gradient-text">${currentUser.displayName}!</span>`;
+
+            // Fetch user stats without blocking the rest of the dashboard
+            fetch('/api/auth/stats', { credentials: 'include' })
+              .then(res => res.json())
+              .then(stats => {
+                animateCounter('statCompleted', stats.completed || 0);
+                animateCounter('statTotal', stats.total || 0);
+                animateCounter('statBacklog', stats.backlog || 0);
+                animateCounter('statPlaying', stats.playing || 0);
+                animateCounter('statHours', Math.round(stats.totalHours || 0));
+              })
+              .catch(statsErr => console.warn('[Dashboard] Could not fetch stats:', statsErr));
+
+            // Show Steam sync button if user has a Steam ID
+            if (currentUserData.steamId) {
+              const syncBtn = document.getElementById('steamSyncBtn');
+              if (syncBtn) syncBtn.style.display = '';
+            }
+
+            // Check if playing a local game session first (verify it belongs to this user)
+            let localPlaying = false;
+            try {
+              const localSessionStr = localStorage.getItem('bh_active_session_game');
+              if (localSessionStr) {
+                const localData = JSON.parse(localSessionStr);
+                const currentId = currentUserData._id || currentUserData.id;
+                if (localData && localData.name && localData.userId === currentId) {
+                  localPlaying = true;
+                  const gameNameEl = document.getElementById('steamLiveGameNameCard');
+                  const coverEl = document.getElementById('steamLiveGameCover');
+                  const statusEl = document.getElementById('steamLiveCard');
+                  
+                  if (gameNameEl) gameNameEl.textContent = localData.name;
+                  if (coverEl && localData.cover) coverEl.src = localData.cover;
+                  if (statusEl) statusEl.style.display = 'block';
+                } else if (localData && localData.userId && localData.userId !== currentId) {
+                  // Stale session from a different user — clean it up
+                  localStorage.removeItem('bh_active_session_game');
+                }
+              }
+            } catch (err) {}
+
+
+            // If not playing locally, check Steam status if they have a Steam ID 
+            if (!localPlaying && currentUserData.steamId) {
+              fetch('/api/auth/steam-status', { credentials: 'include' })
+                .then(res => res.json())
+                .then(steamData => {
+                  if (steamData.playing && steamData.gameName && !steamData.isFallback) {
+                    const gameNameEl = document.getElementById('steamLiveGameNameCard');
+                    const coverEl = document.getElementById('steamLiveGameCover');
+                    const statusEl = document.getElementById('steamLiveCard');
+                    
+                    if (gameNameEl) gameNameEl.textContent = steamData.gameName;
+                    if (coverEl && steamData.coverUrl) coverEl.src = steamData.coverUrl;
+                    if (statusEl) statusEl.style.display = 'block';
+                  }
+                })
+                .catch(steamErr => console.warn('[Dashboard] Could not fetch live Steam status:', steamErr));
+            }
+
+            // Load critical content immediately
+            loadActivityFeed(currentUserData);
+            loadGameDropdown(currentUserData);
+            loadPendingBadge();
+            // Pre-fetch trending data once, then both sections use it
+            fetchTrendingGames();
+            loadTrendingGames();
+
+            // Defer non-critical content (community scores, trailers, chat) to load after page is interactive
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                  loadCommunityScores(currentUserData);
+                  loadTrailers();
+                  initChat(currentUserData);
+                }, 500);
+              });
+            } else {
+              setTimeout(() => {
+                loadCommunityScores(currentUserData);
+                loadTrailers();
+                initChat(currentUserData);
+              }, 500);
+            }
+
+            return; // Success - exit function
+          }
+          // Retry on any non-200 status
+        } catch (fetchErr) {
+          console.warn('[Dashboard] Fetch attempt ' + (3 - retries) + ' failed:', fetchErr.message);
+          // Network errors are temporary - retry
+        }
+        retries--;
+        if (retries > 0) {
+          await new Promise(r => setTimeout(r, 300)); // Brief wait before retry
+        }
+      }
+
+      // If all retries exhausted, do one final redirect attempt
+      console.error('[Dashboard] Auth check failed after all retries - redirecting');
+      setTimeout(() => {
+        window.location.href = 'login';
+      }, 500);
+
+    } catch (err) {
+      console.error('[Dashboard] Failed to load dashboard:', err);
+      setTimeout(() => {
+        window.location.href = 'login';
+      }, 500);
+    }
+  }
+
+  // Hide loader after DOM is ready to avoid hanging on slow images/iframes
+  // Minimum 1.5s loading animation to give users time to see the loader
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('[LOAD TIMING] DOM Ready - content is visible and interactive');
+    initDashboard();
+  });
+
+  // Smart home navigation - if logged in go to dashboard, else go to index
+  async function smartHomeClick(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/auth/current', { credentials: 'include', cache: 'no-store' });
+      const dest = res.ok ? 'dashboard' : '/';
+      document.body.classList.add('page-exit');
+      setTimeout(() => window.location = dest, 300);
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      window.location = '/';
+    }
+  }
+
+  // --- Dynamic Activity Feed (combines own + friends activity) ---
+  let allActivityFeedItems = []; // Store all feed items for filtering
+  
+  async function loadActivityFeed(user) {
+    const feedEl = document.getElementById('activityFeed');
+    try {
+      // Fetch friend achievements and game reviews
+      const res = await fetch('/api/friends/activity', { credentials: 'include' });
+      if (!res.ok) {
+        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load friend activity.</div>';
+        return;
+      }
+
+      const feedItems = await res.json();
+      allActivityFeedItems = feedItems || []; // Store for filtering
+
+      if (!feedItems || feedItems.length === 0) {
+        feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No friend activity yet. Add some friends to see their achievements and reviews!</div>';
+        return;
+      }
+
+      // Render the feed with default filters
+      applyActivityFilters();
+    } catch (err) {
+      console.warn('[Dashboard] Friend activity error:', err);
+      feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">Could not load friend activity.</div>';
+    }
+  }
+
+  function applyActivityFilters() {
+    const feedEl = document.getElementById('activityFeed');
+    const typeFilter = document.getElementById('activityTypeFilter').value;
+    const sortFilter = document.getElementById('activitySortFilter').value;
+    const positiveCbx = document.getElementById('ratingPositive').checked;
+    const negativeCbx = document.getElementById('ratingNegative').checked;
+
+    // Filter items
+    let filtered = allActivityFeedItems.filter(item => {
+      // Type filter
+      if (typeFilter === 'review' && item.type !== 'review') return false;
+      if (typeFilter === 'achievement' && item.type !== 'achievement') return false;
+
+      // Rating filter (only applies to reviews)
+      if (item.type === 'review') {
+        const isPositive = item.rating >= 4;  // 4-5 stars = positive
+        const isNegative = item.rating <= 2;  // 1-2 stars = negative (neutral 3 excluded)
+        const shouldShow = (isPositive && positiveCbx) || (isNegative && negativeCbx);
+        if (!shouldShow) return false;
+      }
+
+      return true;
+    });
+
+    // Sort items
+    if (sortFilter === 'oldest') {
+      filtered = filtered.reverse();
+    } else if (sortFilter === 'highest') {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (sortFilter === 'lowest') {
+      filtered.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+    }
+
+    // Render filtered items
+    let html = '';
+    if (filtered.length === 0) {
+      feedEl.innerHTML = '<div class="list-group-item p-3 text-center text-muted">No activity matches your filters.</div>';
+      return;
+    }
+
+    for (const item of filtered) {
+      if (item.type === 'achievement') {
+        const iconMap = {
+          'completion': '🏁',
+          'playtime': '⏱️',
+          'rating': '⭐'
+        };
+        const icon = iconMap[item.subtype] || '🎮';
+        
+        html += `
+          <div class="list-group-item p-3 border-start border-primary border-4 reveal is-visible" style="background: rgba(83, 131, 232, 0.05);">
+            <div class="d-flex align-items-start gap-2">
+              <div style="font-size: 1.5rem; flex-shrink: 0;">${icon}</div>
+              <div style="flex: 1; min-width: 0;">
+                <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
+                <p class="mb-1 small" style="color: var(--text-secondary);">${item.message}</p>
+                <div class="badge bg-primary" style="font-size: 0.75rem;">📈 ${item.count}</div>
+              </div>
+            </div>
+          </div>`;
+      } else if (item.type === 'post') {
+        html += `
+          <div class="list-group-item p-3 border-start border-warning border-4 reveal is-visible" style="background: rgba(251, 191, 36, 0.03);">
+            <div class="d-flex align-items-start gap-3">
+              <div style="flex-shrink: 0; font-size: 1.5rem;">📝</div>
+              <div style="flex: 1; min-width: 0;">
+                <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
+                <p class="mb-1 small fw-500" style="color: var(--text-primary);">${item.title || 'Logged a session'}</p>
+                ${item.game ? `<p class="mb-2 small" style="color: var(--text-secondary);">🎮 ${item.game}</p>` : ''}
+                ${item.body ? `<p class="mb-0 small" style="color: var(--text-secondary);">"${item.body}"</p>` : ''}
+              </div>
+            </div>
+          </div>`;
+      } else if (item.type === 'review') {
+        const coverUrl = item.coverUrl ? `style="width: 50px; height: 70px; object-fit: cover; border-radius: 4px;"` : '';
+        const gameImage = item.coverUrl 
+          ? `<img src="${item.coverUrl}" alt="${item.game}" ${coverUrl}>`
+          : `<div style="width: 50px; height: 70px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-muted); text-align: center; padding: 4px;">No Cover</div>`;
+        
+        const ratingColor = item.rating >= 4 ? '#fbbf24' : item.rating >= 3 ? '#60a5fa' : '#ef4444';
+        const gameDataStr = JSON.stringify({ gameId: item.gameId, friendId: item.friendId, gameName: item.game, coverUrl: item.coverUrl, friendName: item.friendName, rating: item.rating, stars: item.stars, message: item.message }).replace(/"/g, '&quot;');
+        
+        // Build comments section if they exist
+        let commentsHtml = '';
+        if (item.comments && item.comments.length > 0) {
+          commentsHtml = `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+              <small style="color: var(--text-muted); display: block; margin-bottom: 8px;"><i class="bi bi-chat-dots me-1"></i>Comments:</small>`;
+          item.comments.forEach(comment => {
+            commentsHtml += `
+              <div style="background: rgba(83, 131, 232, 0.05); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;">
+                <p class="mb-1 small" style="color: var(--accent); font-weight: 600;">${comment.userName}</p>
+                <p class="mb-0 small" style="color: var(--text-secondary);">"${comment.text}"</p>
+              </div>`;
+          });
+          commentsHtml += `</div>`;
+        }
+        
+        html += `
+          <div class="list-group-item p-3 border-start border-4 reveal is-visible" style="border-color: ${ratingColor}; background: rgba(251, 191, 36, 0.03); transition: all 0.2s ease;">
+            <div class="d-flex align-items-start gap-3">
+              <div style="flex-shrink: 0; cursor: pointer;" onclick="viewFriendReview('${gameDataStr}')">
+                ${gameImage}
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <h6 class="mb-1 small fw-bold" style="color: var(--accent);">${item.friendName}</h6>
+                <p class="mb-2 small fw-500 cursor-pointer" style="color: var(--text-primary);" onclick="viewFriendReview('${gameDataStr}')">${item.game}</p>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span style="font-size: 0.9rem; color: ${ratingColor};">${item.stars}</span>
+                  <span class="small" style="color: var(--text-secondary);">${item.message}</span>
+                </div>
+                ${commentsHtml}
+                <small style="color: var(--text-muted); cursor: pointer; margin-top: 8px; display: inline-block;" onclick="viewFriendReview('${gameDataStr}')">Click to view full review</small>
+              </div>
+            </div>
+          </div>`;
+      }
+    }
+
+    feedEl.innerHTML = html;
+  }
+
+  // Reaction system
+  async function addReaction(gameId, friendId, reaction) {
+    try {
+      const res = await fetch(`/api/reviews/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ gameId, friendId, reaction })
+      });
+      if (res.ok) {
+        // Show brief feedback
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed; bottom: 20px; right: 20px;
+          background: var(--primary); color: white; padding: 12px 20px;
+          border-radius: 8px; z-index: 10000; animation: slideIn 0.3s ease;
+          font-weight: 600; font-size: 0.95rem;
+        `;
+        toast.textContent = `Added reaction ${reaction}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+      } else {
+        alert('Failed to add reaction');
+      }
+    } catch (err) {
+      console.error('Error adding reaction:', err);
+    }
+  }
+
+  // Keep old function for backwards compatibility
+  async function likeReview(gameId, friendId) {
+    return addReaction(gameId, friendId, '👍');
+  }
+
+  function addReviewComment(gameId, friendId) {
+    // Store the IDs in data attributes for the modal
+    document.getElementById('commentGameId').value = gameId;
+    document.getElementById('commentFriendId').value = friendId;
+    document.getElementById('commentText').value = '';
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+    modal.show();
+  }
+
+  async function submitReviewComment() {
+    const gameId = document.getElementById('commentGameId').value;
+    const friendId = document.getElementById('commentFriendId').value;
+    const comment = document.getElementById('commentText').value.trim();
+
+    if (!comment) {
+      alert('Please enter a comment');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/reviews/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ gameId, friendId, comment })
+      });
+      if (res.ok) {
+        // Close the modal
+        bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
+        
+        // Reload the activity feed
+        await loadActivityFeed(currentUserData);
+        
+        // Show success
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed; bottom: 20px; right: 20px;
+          background: #10b981; color: white; padding: 12px 20px;
+          border-radius: 8px; z-index: 10000; animation: slideIn 0.3s ease;
+          font-weight: 600; font-size: 0.95rem;
+        `;
+        toast.textContent = 'Comment added!';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+      } else {
+        alert('Failed to add comment');
+      }
+    } catch (err) {
+      console.error('Error adding comment:', err);
+      alert('Error adding comment');
+    }
+  }
+
+  // --- Dynamic Community Scores ---
+  async function loadCommunityScores(user) {
+    const scoresEl = document.getElementById('communityScores');
+    try {
+      // Fetch aggregated community-wide scores from all users
+      const res = await fetch('/api/community/quality-scores', { credentials: 'include' });
+      if (!res.ok) {
+        scoresEl.innerHTML = '<p class="text-muted small mb-0">Could not load community scores.</p>';
+        return;
+      }
+
+      const communityGames = await res.json();
+
+      if (!communityGames || communityGames.length === 0) {
+        scoresEl.innerHTML = '<p class="text-muted small mb-0">No community ratings yet. Be the first to rate a game!</p>';
+        return;
+      }
+
+      let html = '';
+      communityGames.forEach((game, idx) => {
+        // Generate stars based on actual average rating
+        const avgRating = parseFloat(game.averageRating);
+        const fullStars = Math.floor(avgRating);
+        const hasHalfStar = (avgRating % 1) >= 0.5;
+        const emptyStars = 5 - Math.ceil(avgRating);
+
+        let stars = '★'.repeat(fullStars);
+        if (hasHalfStar && fullStars < 5) stars += '½';
+        stars += '☆'.repeat(emptyStars);
+
+        html += `<div style="animation: fadeInUp 0.4s ease ${idx * 0.05}s both; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+          <div style="flex: 1; min-width: 0;">
+            <div class="text-truncate fw-500" title="${game.name}" style="word-break: break-word;">${game.name}</div>
+            <div class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">${game.ratingCount} ${game.ratingCount === 1 ? 'rating' : 'ratings'}</div>
+          </div>
+          <div style="font-weight: bold; white-space: nowrap; font-size: 1rem; color: #fbbf24; flex-shrink: 0;">${stars}</div>
+        </div>`;
+      });
+
+      scoresEl.innerHTML = html;
+    } catch (err) {
+      console.warn('[Dashboard] Community scores error:', err);
+      scoresEl.innerHTML = '<p class="text-muted small mb-0">Could not load scores.</p>';
+    }
+  }
+
+  // --- Dynamic Game Dropdown for Post Update ---
+  async function loadGameDropdown(user) {
+    const sel = document.getElementById('updateGame');
+    try {
+      const userId = user._id || user.id;
+      const libRes = await fetch('/api/library/' + userId, { credentials: 'include' });
+      if (!libRes.ok) { sel.innerHTML = '<option value="">No games in library</option>'; return; }
+      const entries = await libRes.json();
+      const games = entries.filter(e => e.gameId).map(e => e.gameId.name).filter(Boolean);
+      if (games.length === 0) {
+        sel.innerHTML = '<option value="">No games in library</option>';
+        return;
+      }
+      sel.innerHTML = games.map(name => `<option value="${name}">${name}</option>`).join('');
+    } catch (err) {
+      sel.innerHTML = '<option value="">Could not load games</option>';
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // CHAT FUNCTIONALITY - General & Group Chats
+  // ════════════════════════════════════════════════════════════════
+
+  let activeGroupId = 'general';
+  let allGroups = [];
+  let messageRefreshInterval = null;
+
+  async function initChat(user) {
+    try {
+      currentUser = user;
+      // Don't block - load groups asynchronously
+      loadChatGroups().catch(err => console.warn('[Chat] Error loading groups:', err));
+      
+      // Initialize with general chat, but don't await it
+      // Use a very short delay to avoid blocking the main dashboard render
+      setTimeout(() => {
+        refreshChatMessages()
+          .then(() => {
+            // Only set up refresh interval after first message fetch succeeds
+            if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+            messageRefreshInterval = setInterval(() => {
+              if (activeGroupId && document.getElementById('chatMessages')) {
+                refreshChatMessages().catch(err => {
+                  if (err.message.includes('Failed to fetch')) {
+                    console.warn('[Chat] Network error during refresh, will retry next cycle');
+                  }
+                });
+              }
+            }, 5000);
+          })
+          .catch(err => {
+            console.warn('[Chat] Failed to load initial messages:', err.message);
+            // Even if initial load fails, set up the refresh interval to retry
+            if (messageRefreshInterval) clearInterval(messageRefreshInterval);
+            messageRefreshInterval = setInterval(() => {
+              refreshChatMessages().catch(() => {});
+            }, 5000);
+          });
+      }, 50); // Very short delay
+    } catch (err) {
+      console.warn('[Chat] Init error:', err.message);
+    }
+  }
+
+  async function loadChatGroups() {
+    try {
+      const res = await fetch('/api/chat/groups', { credentials: 'include' });
+      if (!res.ok) {
+        console.warn('[Chat] Failed to load groups, status:', res.status);
+        return;
+      }
+      allGroups = await res.json();
+      renderChatGroupSelect();
+    } catch (err) {
+      console.warn('[Chat] Failed to load groups:', err.message);
+    }
+  }
+
+  function renderChatGroupSelect() {
+    const select = document.getElementById('chatGroupSelect');
+    // General chat + user's groups
+    const options = [
+      { id: 'general', name: '🌍 General Chat' },
+      ...allGroups.map(g => ({ id: g._id, name: `${g.icon ? g.icon : '👥'} ${g.name}` }))
+    ];
+    select.innerHTML = options.map(opt => 
+      `<option value="${opt.id}" ${activeGroupId === opt.id ? 'selected' : ''}>${opt.name}</option>`
+    ).join('');
+  }
+
+  async function switchToChat(groupId) {
+    activeGroupId = groupId;
+    
+    // Show/hide the "Add Member" and "Group Settings" buttons
+    const addMemberBtn = document.getElementById('addMemberBtn');
+    const groupSettingsBtn = document.getElementById('groupSettingsBtn');
+    if (groupId === 'general') {
+      addMemberBtn.style.display = 'none';
+      groupSettingsBtn.style.display = 'none';
+    } else {
+      addMemberBtn.style.display = 'inline-block';
+      groupSettingsBtn.style.display = 'inline-block';
+    }
+
+    renderChatGroupSelect();
+    await refreshChatMessages();
+  }
+
+  function switchChatGroup(groupId) {
+    switchToChat(groupId).catch(err => console.warn('[Chat] Failed to switch group:', err.message));
+  }
+
+  async function refreshChatMessages() {
+    try {
+      const container = document.getElementById('chatMessages');
+      if (!container) return;
+
+      let messages = [];
+      if (activeGroupId === 'general') {
+        const res = await fetch('/api/chat/general?limit=50', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch general chat');
+        messages = await res.json();
+      } else {
+        const res = await fetch(`/api/chat/group/${activeGroupId}?limit=50`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch group chat');
+        messages = await res.json();
+      }
+
+      if (!messages || !messages.length) {
+        container.innerHTML = `
+          <div class="text-center text-muted small py-5">
+            <i class="bi bi-chat-dots" style="font-size:2rem; display:block; margin-bottom:10px; opacity:0.15;"></i>
+            No messages yet.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = messages.map(m => `
+        <div class="cm-bubble">
+          <div class="cm-header">
+            <span class="cm-user">${m.senderName || 'Anonymous'}</span>
+            <span class="cm-time">${new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div class="cm-text">${escapeHtml(m.text)}</div>
+        </div>
+      `).join('');
+
+      container.scrollTop = container.scrollHeight;
+    } catch (err) {
+      console.warn('[Chat] Refresh failed:', err.message);
+    }
+  }
+
+  async function handleChatInput(e) {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      const text = e.target.value.trim();
+      e.target.value = ''; // Clear immediately for UX
+      try {
+        const res = await fetch('/api/chat/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ text, chatRoom: activeGroupId })
+        });
+        if (!res.ok) {
+          console.warn('[Chat] Failed to send, status:', res.status);
+          return;
+        }
+        // Refresh after sending
+        setTimeout(() => refreshChatMessages().catch(err => console.warn('[Chat] Refresh after send failed:', err)), 300);
+      } catch (err) {
+        console.warn('[Chat] Send error:', err.message);
+      }
+    }
+  }
+
+  async function openCreateGroupModal() {
+    const modal = `
+      <div id="createGroupModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:400px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+          <h5 style="margin-bottom:16px; color:#fff;">Create Group Chat</h5>
+          <input type="text" id="newGroupNameInput" class="form-control form-control-sm bg-dark text-white border-secondary mb-3" placeholder="Group name..." maxlength="50" style="color: #fff !important; border-color: var(--border) !important;">
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-primary" onclick="confirmCreateGroup()" style="flex:1;">Create</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="this.closest('#createGroupModal').remove()" style="flex:1;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+    document.getElementById('newGroupNameInput').focus();
+  }
+
+  async function confirmCreateGroup() {
+    const nameInput = document.getElementById('newGroupNameInput');
+    if (!nameInput.value.trim()) {
+      alert('Group name is required');
+      return;
+    }
+
+    if (nameInput.value.trim().length > 50) {
+      alert('Group name must be 50 characters or less');
+      return;
+    }
+
+    const submitBtn = document.querySelector('#createGroupModal .btn-primary');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+
+    try {
+      const res = await fetch('/api/chat/group', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: nameInput.value.trim() })
+      });
+      if (res.ok) {
+        const group = await res.json();
+        const modal = document.getElementById('createGroupModal');
+        if (modal) modal.remove();
+        await loadChatGroups();
+        await switchToChat(group._id);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || 'Failed to create group');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Group';
+      }
+    } catch (err) {
+      console.error('[Chat] Failed to create group:', err);
+      alert('Error creating group. Please check your connection.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Group';
+    }
+  }
+
+  async function openInviteModal() {
+    console.log('[INVITE] Opening invite modal, activeGroupId:', activeGroupId, 'allGroups:', allGroups);
+    
+    // Validate group exists first
+    if (!activeGroupId || activeGroupId === 'general') {
+      alert('Cannot invite members to general channel');
+      return;
+    }
+
+    const currentGroup = allGroups.find(g => g._id === activeGroupId);
+    console.log('[INVITE] Current group:', currentGroup, 'currentUser:', currentUser);
+    
+    if (!currentGroup) {
+      alert('Group not found. Please refresh and try again.');
+      return;
+    }
+
+    // Check if user is owner or member
+    const ownerId = String(currentGroup.owner?._id || currentGroup.owner);
+    const userId = String(currentUser?._id || '');
+    const isOwner = ownerId === userId;
+    const isMember = currentGroup.members?.some(m => String(m._id || m) === userId);
+    
+    if (currentGroup.isPrivate && !isOwner) {
+      console.warn('[INVITE] Group is private and user is not owner.');
+      alert('This is a private group. Only the owner can invite new members.');
+      return;
+    }
+    if (!isOwner && !isMember) {
+      alert('You must be a member of the group to invite others.');
+      return;
+    }
+
+    // Get friends
+    let friends = [];
+    try {
+      const res = await fetch('/api/friends', { credentials: 'include' });
+      if (!res.ok) {
+        throw new Error('Failed to load friends list');
+      }
+      friends = await res.json();
+      console.log('[INVITE] Loaded friends:', friends);
+    } catch (err) {
+      console.error('[Chat] Failed to load friends:', err);
+      alert('Could not load friends list. Please try again.');
+      return;
+    }
+
+    // Filter out members already in group
+    const existingMemberIds = currentGroup.members?.map(m => m._id || m) || [];
+    console.log('[INVITE] existingMemberIds:', existingMemberIds);
+    const availableFriends = friends.filter(f => !existingMemberIds.includes(f._id));
+    console.log('[INVITE] availableFriends:', availableFriends);
+
+    const modal = `
+      <div id="inviteFriendsModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.5); max-height:80vh; overflow-y:auto;">
+          <h5 style="margin-bottom:16px; color:#fff;">Invite Friends to ${escapeHtml(currentGroup.name)}</h5>
+          <div id="inviteFriendsList">
+            ${availableFriends.length === 0 ? `<div class="text-center py-4 text-muted">${friends.length === 0 ? 'You have no friends to invite!' : 'All friends are already in this group!'}</div>` : 
+              availableFriends.map(f => `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:12px; background:rgba(255,255,255,0.02); border-radius:8px;" class="friend-invite-item" data-friend-id="${f._id}">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${f.avatar || 'https://ui-avatars.com/api/?name=User'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                    <span style="font-weight:600; color:#fff;">${escapeHtml(f.displayName || f.username)}</span>
+                  </div>
+                  <button class="btn btn-sm btn-primary add-friend-btn" style="font-size:0.75rem;">Add</button>
+                </div>
+              `).join('')
+            }
+          </div>
+          <button class="btn btn-sm btn-outline-secondary mt-3" onclick="this.closest('#inviteFriendsModal')?.remove()" style="width:100%;">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+
+    // Attach event listeners to the Add buttons
+    document.querySelectorAll('#inviteFriendsModal .add-friend-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const item = e.target.closest('.friend-invite-item');
+        const friendId = item.dataset.friendId;
+        const friendName = item.querySelector('span').textContent;
+        await addFriendToGroup(friendId, friendName, btn);
+      });
+    });
+  }
+
+  async function addFriendToGroup(friendId, friendName, btn) {
+    if (!btn) btn = event?.target;
+    if (!btn) return;
+
+    console.log('[ADD_MEMBER] Adding friend to group, friendId:', friendId, 'activeGroupId:', activeGroupId);
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Adding...';
+
+    try {
+      const res = await fetch(`/api/chat/group/${activeGroupId}/member`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId: friendId })
+      });
+
+      console.log('[ADD_MEMBER] Response status:', res.status);
+
+      if (res.ok) {
+        console.log('[ADD_MEMBER] Successfully added member');
+        btn.textContent = '✓ Added';
+        btn.style.background = '#10b981';
+        await loadChatGroups();
+        setTimeout(() => {
+          const modal = document.getElementById('inviteFriendsModal');
+          if (modal) modal.remove();
+        }, 1000);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        const errorMsg = errData.error || `Failed to add friend (${res.status})`;
+        console.error('[ADD_MEMBER] Error:', errorMsg, errData);
+        
+        if (res.status === 403) {
+          alert('Only the group owner can add members');
+        } else if (res.status === 409) {
+          alert(errorMsg); // Already a member
+        } else {
+          alert(errorMsg);
+        }
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    } catch (err) {
+      console.error('[Chat] Failed to add friend:', err);
+      alert('Error connecting to server. Please check your connection and try again.');
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
+
+  async function openGroupSettingsModal() {
+    if (!activeGroupId || activeGroupId === 'general') return;
+    const currentGroup = allGroups.find(g => g._id === activeGroupId);
+    if (!currentGroup) return;
+
+    const ownerId = String(currentGroup.owner?._id || currentGroup.owner);
+    const userId = String(currentUser?._id || '');
+    if (ownerId !== userId) {
+      alert("Only the group owner can modify settings.");
+      return;
+    }
+
+    const membersHtml = (currentGroup.members || []).map(m => {
+      const isOwner = String(m._id || m) === ownerId;
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:4px;">
+          <span style="color:#fff;">${escapeHtml(m.displayName || m.username)} ${isOwner ? '<span class="badge bg-secondary ms-1">Owner</span>' : ''}</span>
+          ${!isOwner ? `<button class="btn btn-sm btn-danger py-0" onclick="removeMemberFromGroup('${m._id || m}')">Remove</button>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const modal = `
+      <div id="groupSettingsModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1a1f2e; border-radius:12px; padding:24px; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.5); max-height:80vh; overflow-y:auto;">
+          <h5 style="margin-bottom:16px; color:#fff;">Group Settings</h5>
+          
+          <div class="mb-3">
+            <label class="form-label text-white small">Group Name</label>
+            <input type="text" id="editGroupName" class="form-control bg-dark text-white border-secondary" value="${escapeHtml(currentGroup.name)}" maxlength="50">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label text-white small">Group Icon / Emoji (optional)</label>
+            <input type="text" id="editGroupIcon" class="form-control bg-dark text-white border-secondary" value="${escapeHtml(currentGroup.icon || '')}" placeholder="e.g. 🎮 or ⚔️">
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="editGroupPrivate" ${currentGroup.isPrivate ? 'checked' : ''}>
+            <label class="form-check-label text-white small" for="editGroupPrivate">Private Group (Only owner can invite)</label>
+          </div>
+
+          <button class="btn btn-primary w-100 mb-4" onclick="updateGroupSettings()">Save Settings</button>
+
+          <h6 class="text-white mb-2">Manage Members</h6>
+          <div style="max-height:150px; overflow-y:auto; display:flex; flex-direction:column;">
+            ${membersHtml.length ? membersHtml : '<div class="text-muted small">No other members</div>'}
+          </div>
+
+          <button class="btn btn-sm btn-outline-secondary mt-4 w-100" onclick="this.closest('#groupSettingsModal').remove()">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+  }
+
+  async function updateGroupSettings() {
+    const name = document.getElementById('editGroupName').value.trim();
+    const icon = document.getElementById('editGroupIcon').value.trim();
+    const isPrivate = document.getElementById('editGroupPrivate').checked;
+
+    if (!name) return alert('Group name is required');
+
+    try {
+      const res = await fetch('/api/chat/group/' + activeGroupId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, icon, isPrivate })
+      });
+      if (res.ok) {
+        document.getElementById('groupSettingsModal').remove();
+        await loadChatGroups();
+      } else {
+        const err = await res.json().catch(()=>({}));
+        alert(err.error || 'Failed to update settings');
+      }
+    } catch (e) {
+      alert('Error connecting to server. Please check your connection.');
+    }
+  }
+
+  async function removeMemberFromGroup(userId) {
+    if (!confirm("Are you sure you want to remove this member?")) return;
+    try {
+      const res = await fetch('/api/chat/group/' + activeGroupId + '/member/' + userId, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        document.getElementById('groupSettingsModal').remove();
+        await loadChatGroups();
+        openGroupSettingsModal(); // Reopen to refresh list
+      } else {
+        const err = await res.json().catch(()=>({}));
+        alert(err.error || 'Failed to remove member');
+      }
+    } catch (e) {
+      alert('Error removing member.');
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // --- Pending Friend Requests Badge ---
+  async function loadPendingBadge() {
+    try {
+      const res = await fetch('/api/friends/requests', { credentials: 'include' });
+      if (!res.ok) return;
+      const requests = await res.json();
+      if (requests.length > 0) {
+        const profileLink = document.querySelector('a.nav-link[href="profile"]');
+        if (profileLink) {
+          profileLink.innerHTML = `Profile <span style="display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;margin-left:4px;">${requests.length}</span>`;
+        }
+      }
+    } catch (e) { /* silent */ }
+  }
+
+  // Page exit transition
+  document.querySelectorAll('a[href]').forEach(a => {
+    if (a.hostname === location.hostname && !a.hash && !a.getAttribute('href').startsWith('#') && a.target !== '_blank') {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const dest = a.href;
+        document.body.classList.add('page-exit');
+        setTimeout(() => window.location = dest, 300);
+      });
+    }
+  });
+
+  // ============================================================
+  // Animated Counter
+  // ============================================================
+  function animateCounter(elementId, target) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const duration = 1200;
+    const start = performance.now();
+    const from = 0;
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(from + (target - from) * eased);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  // ============================================================
+  // Latest Trailers — pulled from trending games' IGDB videos
+  // ============================================================
+  let _trendingGamesPromise = null;
+  function fetchTrendingGames() {
+    if (!_trendingGamesPromise) {
+      _trendingGamesPromise = fetch('/api/games/popular', { credentials: 'include' })
+        .then(r => r.ok ? r.json() : [])
+        .catch(() => []);
+    }
+    return _trendingGamesPromise;
+  }
+
+  async function loadTrailers() {
+    const container = document.getElementById('trailersScroll');
+    if (!container) return;
+    try {
+      const games = await fetchTrendingGames();
+      // Extract trailers — max 1 per game for diversity
+      const trailers = [];
+      for (const game of games) {
+        if (!game.videos || game.videos.length === 0) continue;
+        trailers.push({ gameName: game.name, videoId: game.videos[0].video_id });
+        if (trailers.length >= 12) break;
+      }
+      if (trailers.length === 0) {
+        container.innerHTML = '<div class="text-muted small p-2">No trailers available for current trending games.</div>';
+        return;
+      }
+      container.innerHTML = '';
+      trailers.slice(0, 12).forEach((t, idx) => {
+        const thumb = `https://img.youtube.com/vi/${t.videoId}/mqdefault.jpg`;
+        const item = document.createElement('div');
+        item.className = 'trailer-item';
+        item.style.animation = `fadeInUp 0.4s ease ${idx * 0.07}s both`;
+        item.innerHTML = `
+              <img class="trailer-thumb" src="${thumb}" alt="${t.gameName}" loading="lazy">
+              <div class="trailer-play-icon"><i class="bi bi-play-fill"></i></div>
+              <div class="trailer-name">${t.gameName}</div>
+            `;
+        item.addEventListener('click', () => openTrailerPlayer(t.videoId, t.gameName));
+        container.appendChild(item);
+      });
+    } catch (err) {
+      console.warn('[Dashboard] Trailers load error:', err);
+      container.innerHTML = '<div class="text-muted small p-2">Could not load trailers.</div>';
+    }
+  }
+
+  // Inline YouTube player modal
+  function openTrailerPlayer(videoId, gameName) {
+    // Remove existing modal if any
+    let existing = document.getElementById('trailerModal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'trailerModal';
+    modal.className = 'trailer-modal';
+    modal.innerHTML = `
+          <div class="trailer-modal-backdrop"></div>
+          <div class="trailer-modal-content">
+            <div class="trailer-modal-header">
+              <span class="trailer-modal-title">${gameName}</span>
+              <button class="trailer-modal-close" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="trailer-modal-body">
+              <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" 
+                      allow="autoplay; encrypted-media; fullscreen" 
+                      allowfullscreen 
+                      frameborder="0"></iframe>
+            </div>
+          </div>
+        `;
+    document.body.appendChild(modal);
+    // Animate in
+    requestAnimationFrame(() => modal.classList.add('active'));
+    // Close handlers
+    const close = () => { modal.classList.remove('active'); setTimeout(() => modal.remove(), 300); };
+    modal.querySelector('.trailer-modal-backdrop').addEventListener('click', close);
+    modal.querySelector('.trailer-modal-close').addEventListener('click', close);
+    document.addEventListener('keydown', function escHandler(e) {
+      if (e.key === 'Escape') { close(); document.removeEventListener('keydown', escHandler); }
+    });
+  }
+
+  // ============================================================
+  // Trending Games (IGDB via server)
+  // ============================================================
+  async function loadTrendingGames() {
+    const container = document.getElementById('trendingScroll');
+    if (!container) return;
+    // Show current date range
+    const dateEl = document.getElementById('trendingDate');
+    if (dateEl) {
+      const now = new Date();
+      const thirtyAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      dateEl.textContent = fmt(thirtyAgo) + ' — ' + fmt(now);
+    }
+
+    // ── Build the single global hover panel (created once, reused per card) ──
+    let ghPanel = document.getElementById('ghp-panel');
+    if (!ghPanel) {
+      ghPanel = document.createElement('div');
+      ghPanel.id = 'ghp-panel';
+      ghPanel.className = 'ghp-panel';
+      ghPanel.innerHTML = `
+        <div class="ghp-media">
+          <iframe class="ghp-iframe" frameborder="0"
+            allow="autoplay; encrypted-media; fullscreen"
+            allowfullscreen></iframe>
+          <div class="ghp-screenshot" style="display:none;"></div>
+          <div class="ghp-no-media" style="display:none;"><i class="bi bi-controller"></i></div>
+        </div>
+        <div class="ghp-body">
+          <div class="ghp-title"></div>
+          <div class="ghp-release"></div>
+          <div class="ghp-reviews"></div>
+          <div class="ghp-description"></div>
+          <div class="ghp-tags"></div>
+        </div>
+      `;
+      document.body.appendChild(ghPanel);
+
+      // Prevent scroll inside panel from leaking to page
+      ghPanel.addEventListener('wheel', e => e.stopPropagation(), { passive: true });
+    }
+
+    const ghpIframe     = ghPanel.querySelector('.ghp-iframe');
+    const ghpScreenshot = ghPanel.querySelector('.ghp-screenshot');
+    const ghpNoMedia    = ghPanel.querySelector('.ghp-no-media');
+    let   ghpHideTimer  = null;
+
+    const openPanel = (gameData, cardEl) => {
+      clearTimeout(ghpHideTimer);
+      const { name, videoId, screenshot, releaseDate, rating, reviewStatus, reviewClass, summary, tagsHtml, totalRatingCount } = gameData;
+
+      // Media
+      if (videoId) {
+        ghpIframe.src  = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&loop=1&playlist=${videoId}&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0`;
+        ghpIframe.style.display    = 'block';
+        ghpScreenshot.style.display = 'none';
+        ghpNoMedia.style.display   = 'none';
+      } else if (screenshot) {
+        ghpIframe.src  = 'about:blank';
+        ghpIframe.style.display    = 'none';
+        ghpScreenshot.style.backgroundImage = `url('${screenshot}')`;
+        ghpScreenshot.style.display = 'block';
+        ghpNoMedia.style.display   = 'none';
+      } else {
+        ghpIframe.src  = 'about:blank';
+        ghpIframe.style.display    = 'none';
+        ghpScreenshot.style.display = 'none';
+        ghpNoMedia.style.display   = 'flex';
+      }
+
+      // Text content
+      ghPanel.querySelector('.ghp-title').textContent   = name;
+      ghPanel.querySelector('.ghp-release').textContent = `Released: ${releaseDate}`;
+      ghPanel.querySelector('.ghp-reviews').innerHTML   = rating > 0
+        ? `<div class="steam-review-label">Overall Reviews:</div>
+           <div class="steam-review-status ${reviewClass}">${reviewStatus} (${Math.floor(totalRatingCount || 100).toLocaleString()})</div>`
+        : '';
+      ghPanel.querySelector('.ghp-description').textContent = summary;
+      ghPanel.querySelector('.ghp-tags').innerHTML = tagsHtml;
+      ghPanel.scrollTop = 0;
+
+      // Position the panel above the hovered card (or below if not enough room)
+      const PANEL_W = 320;
+      const GAP = 10;
+      const rect = cardEl.getBoundingClientRect();
+
+      // Temporarily show at 0,0 to measure height
+      ghPanel.style.visibility = 'hidden';
+      ghPanel.style.display    = 'flex';
+      ghPanel.style.flexDirection = 'column';
+      const panelH = Math.min(ghPanel.scrollHeight, 520);
+
+      // Horizontal: center panel on card, clamp to viewport
+      let left = rect.left + rect.width / 2 - PANEL_W / 2;
+      if (left < 8) left = 8;
+      if (left + PANEL_W > window.innerWidth - 8) left = window.innerWidth - PANEL_W - 8;
+
+      // Vertical: prefer above; fall back to below
+      let top = rect.top - panelH - GAP;
+      if (top < 8) top = rect.bottom + GAP;
+
+      ghPanel.style.left = left + 'px';
+      ghPanel.style.top  = top  + 'px';
+      ghPanel.style.visibility = '';
+      ghPanel.style.display    = '';
+
+      ghPanel.classList.add('active');
+    };
+
+    const closePanel = () => {
+      ghpHideTimer = setTimeout(() => {
+        ghPanel.classList.remove('active');
+        ghpIframe.src = 'about:blank';
+      }, 150);
+    };
+
+    // Keep panel alive when mouse moves into it
+    ghPanel.addEventListener('mouseenter', () => clearTimeout(ghpHideTimer));
+    ghPanel.addEventListener('mouseleave', closePanel);
+
+    try {
+      let games = await fetchTrendingGames();
+      // Fallback to hardcoded popular games if API fails
+      if (!games || games.length === 0) {
+        games = discoverGames.map((g, i) => ({
+          name: g.name,
+          coverUrl: g.img,
+          rating: 80 + Math.floor(Math.random() * 15),
+          summary: g.note || '',
+          _fallback: true
+        }));
+      }
+      // Take top 15
+      const top = games.slice(0, 15);
+      container.innerHTML = '';
+      top.forEach((game, idx) => {
+        const name = game.name || 'Unknown';
+        let cover = game.coverUrl || game.cover?.url || '';
+        if (cover.includes('t_thumb')) cover = cover.replace('t_thumb', 't_cover_big');
+        if (cover.includes('t_micro')) cover = cover.replace('t_micro', 't_cover_big');
+        const rating = (game.total_rating || game.rating) ? Math.round(game.total_rating || game.rating) : 0;
+
+        let reviewStatus = 'No User Reviews', reviewClass = '';
+        if (rating >= 95)      { reviewStatus = 'Overwhelmingly Positive'; reviewClass = 'positive'; }
+        else if (rating >= 85) { reviewStatus = 'Very Positive';           reviewClass = 'positive'; }
+        else if (rating >= 70) { reviewStatus = 'Mostly Positive';         reviewClass = 'positive'; }
+        else if (rating >= 40) { reviewStatus = 'Mixed';                   reviewClass = 'mixed';    }
+        else if (rating >  0)  { reviewStatus = 'Mostly Negative';         reviewClass = 'negative'; }
+
+        const summary     = game.summary || game.note || '';
+        const releaseDate = game.first_release_date
+          ? new Date(game.first_release_date * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+          : 'TBA';
+        const tagsHtml    = (game.genres || []).slice(0, 6).map(g => `<span class="steam-tag">${g.name}</span>`).join('');
+        const videoId     = (game.videos && game.videos.length > 0) ? game.videos[0].video_id : null;
+
+        let screenshot = '';
+        if (!videoId && game.screenshots && game.screenshots.length > 0) {
+          screenshot = game.screenshots[0].url || '';
+          if (screenshot.startsWith('//')) screenshot = 'https:' + screenshot;
+          screenshot = screenshot.replace('t_thumb', 't_screenshot_med');
+        }
+
+        const coverImg = cover
+          ? `<img src="${cover.startsWith('//') ? 'https:' + cover : cover}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 160 220%22 fill=%22%231e2d3a%22%3E%3Crect width=%22160%22 height=%22220%22/%3E%3Ctext x=%2280%22 y=%22110%22 fill=%22%235a6a7a%22 text-anchor=%22middle%22 font-size=%2222%22%3E🎮%3C/text%3E%3C/svg%3E'">`
+          : `<div style="width:100%;height:220px;background:#1e2d3a;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎮</div>`;
+
+        const card = document.createElement('div');
+        card.className = 'trending-card';
+        card.style.animation = `fadeInUp 0.5s ease ${idx * 0.06}s both`;
+        card.innerHTML = `
+          <div class="trending-card-inner">
+            <span class="trending-rank">#${idx + 1}</span>
+            ${coverImg}
+            <div class="trending-overlay">
+              <div class="trending-name">${name}</div>
+              ${rating ? `<div class="trending-rating">★ ${rating}%</div>` : ''}
+            </div>
+          </div>
+        `;
+
+        // Click → search
+        card.addEventListener('click', () => {
+          window.location.href = '/search?q=' + encodeURIComponent(name);
+        });
+
+        // Hover → populate + show global panel near this card
+        const gameData = { name, videoId, screenshot, releaseDate, rating, reviewStatus, reviewClass, summary, tagsHtml, totalRatingCount: game.total_rating_count };
+        card.addEventListener('mouseenter', () => openPanel(gameData, card));
+        card.addEventListener('mouseleave', closePanel);
+
+        container.appendChild(card);
+      });
+    } catch (err) {
+      console.warn('[Dashboard] Trending games load error:', err);
+      container.innerHTML = '<div class="text-muted small p-3">Could not load trending games.</div>';
+    }
+  }
+
+  // ============================================================
+  // Top 50 Modal
+  // ============================================================
+  document.getElementById('seeAllBtn')?.addEventListener('click', async () => {
+    const modal = new bootstrap.Modal(document.getElementById('top50Modal'));
+    const grid = document.getElementById('top50Grid');
+    grid.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading top games...</div>';
+    modal.show();
+    try {
+      const res = await fetch('/api/games/top', { credentials: 'include' });
+      const games = res.ok ? await res.json() : [];
+      if (!games.length) { grid.innerHTML = '<div class="text-muted text-center py-4">No games found.</div>'; return; }
+      grid.innerHTML = '';
+      games.forEach((game, idx) => {
+        let cover = game.cover?.url || '';
+        if (cover) {
+          cover = cover.replace('t_thumb', 't_cover_big');
+          if (!cover.startsWith('http')) cover = 'https:' + cover;
+        }
+        const rating = game.total_rating ? Math.round(game.total_rating) : '';
+        const name = game.name || 'Unknown';
+        const card = document.createElement('div');
+        card.className = 'top50-card';
+        card.innerHTML = `
+              ${cover ? `<img src="${cover}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.style.display='none'">` : '<div style="width:100%;aspect-ratio:3/4;background:#1e2d3a;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🎮</div>'}
+              <span class="top50-rank">#${idx + 1}</span>
+              <div class="top50-info">
+                <div class="top50-name">${name}</div>
+                ${rating ? `<div class="top50-rating">★ ${rating}%</div>` : ''}
+              </div>
+            `;
+        card.addEventListener('click', () => { window.location.href = '/search?q=' + encodeURIComponent(name); });
+        grid.appendChild(card);
+      });
+    } catch (err) {
+      grid.innerHTML = '<div class="text-muted text-center py-4">Failed to load games.</div>';
+    }
+  });
+
+  // ============================================================
+  // Navbar scroll effect
+  // ============================================================
+  // Navbar scroll shadow (passive, cached)
+  const _nav = document.querySelector('.navbar');
+  let _scrollTick = false;
+  window.addEventListener('scroll', () => {
+    if (!_scrollTick) { _scrollTick = true; requestAnimationFrame(() => { _nav?.classList.toggle('scrolled', window.scrollY > 20); _scrollTick = false; }); }
+  }, { passive: true });
+
+  // --- View Friend Review ---
+  async function viewFriendReview(gameDataStr) {
+    try {
+      const gameData = JSON.parse(gameDataStr);
+      // Redirect to search page with the game name, just like clicking a game in the library
+      localStorage.setItem('bh_search_query', gameData.gameName);
+      window.location.href = 'search';
+    } catch (err) {
+      console.error('Error viewing friend review:', err);
+    }
+  }
+</script>
+
+<!-- Top 50 Games Modal -->
+<div class="modal fade" id="top50Modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-trophy me-2" style="color:#fb923c;"></i>Top 50 Games of All Time</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="top50-grid" id="top50Grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+
+</html>

@@ -20,7 +20,7 @@ const seedDatabase = async () => {
     const users = await User.create([
       {
         username: 'gaminglead',
-        email: 'joshua@backlogo-hero.local',
+        email: 'joshua@backlog-hero.local',
         password: 'password123',
         displayName: 'Kane Joshua',
         bio: 'Hardcore RPG enthusiast. Always chasing 100% completion.',
@@ -70,7 +70,7 @@ const seedDatabase = async () => {
     const games = await Game.create([
       {
         name: 'Elden Ring',
-        coverUrl: 'https://via.placeholder.com/300x400?text=Elden+Ring',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg',
         rating: 96,
         genres: ['Action RPG', 'Fantasy'],
         platforms: ['PlayStation 5', 'Xbox Series X', 'PC'],
@@ -79,7 +79,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Baldurs Gate 3',
-        coverUrl: 'https://via.placeholder.com/300x400?text=BG3',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co670h.jpg',
         rating: 96,
         genres: ['RPG', 'Fantasy'],
         platforms: ['PlayStation 5', 'PC'],
@@ -88,7 +88,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'The Legend of Zelda: Breath of the Wild',
-        coverUrl: 'https://via.placeholder.com/300x400?text=BOTW',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3p2d.jpg',
         rating: 97,
         genres: ['Action Adventure', 'Open World'],
         platforms: ['Nintendo Switch', 'Wii U'],
@@ -97,7 +97,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Dark Souls 3',
-        coverUrl: 'https://via.placeholder.com/300x400?text=DS3',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vcf.jpg',
         rating: 89,
         genres: ['Action RPG', 'Fantasy'],
         platforms: ['PlayStation 4', 'Xbox One', 'PC'],
@@ -106,7 +106,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Hollow Knight',
-        coverUrl: 'https://via.placeholder.com/300x400?text=Hollow+Knight',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.jpg',
         rating: 88,
         genres: ['Metroidvania', 'Indie'],
         platforms: ['Nintendo Switch', 'PC', 'PlayStation 4', 'Xbox One'],
@@ -115,7 +115,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Celeste',
-        coverUrl: 'https://via.placeholder.com/300x400?text=Celeste',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3byy.jpg',
         rating: 87,
         genres: ['Platformer', 'Indie'],
         platforms: ['Nintendo Switch', 'PC', 'PlayStation 4', 'Xbox One'],
@@ -124,7 +124,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Portal 2',
-        coverUrl: 'https://via.placeholder.com/300x400?text=Portal2',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg',
         rating: 95,
         genres: ['Puzzle', 'First-Person'],
         platforms: ['PC', 'PlayStation 3', 'Xbox 360'],
@@ -133,7 +133,7 @@ const seedDatabase = async () => {
       },
       {
         name: 'Stardew Valley',
-        coverUrl: 'https://via.placeholder.com/300x400?text=Stardew+Valley',
+        coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/xrpmydnu9rpxvxfjkiu7.jpg',
         rating: 92,
         genres: ['Simulation', 'Indie', 'RPG'],
         platforms: ['PC', 'Nintendo Switch', 'PlayStation 4', 'Xbox One', 'Mobile'],
@@ -234,10 +234,126 @@ const seedDatabase = async () => {
         rating: 5,
         playtime: 150,
       },
+      // Add more entries to generate achievements for friends
+      // Justin (speedrunner) - add more games for completion milestone
+      {
+        userId: users[1]._id,
+        gameId: games[2]._id, // BOTW
+        status: 'completed',
+        rating: 5,
+        playtime: 95,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[1]._id, // BG3
+        status: 'completed',
+        rating: 5,
+        playtime: 110,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[3]._id, // DS3
+        status: 'completed',
+        rating: 5,
+        playtime: 115,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[4]._id, // Hollow Knight
+        status: 'completed',
+        rating: 5,
+        playtime: 32,
+      },
+      {
+        userId: users[1]._id,
+        gameId: games[5]._id, // Celeste
+        status: 'completed',
+        rating: 5,
+        playtime: 8,
+      },
+      // Seanne (casualplayer) - add more for achievements
+      {
+        userId: users[2]._id,
+        gameId: games[6]._id, // Portal 2
+        status: 'completed',
+        rating: 5,
+        playtime: 12,
+      },
+      {
+        userId: users[2]._id,
+        gameId: games[5]._id, // Celeste
+        status: 'completed',
+        rating: 4,
+        playtime: 36,
+      },
+      {
+        userId: users[2]._id,
+        gameId: games[0]._id, // Elden Ring
+        status: 'playing',
+        rating: 4,
+        playtime: 95,
+      },
+      // Alex (indiegames) - add for high playtime
+      {
+        userId: users[3]._id,
+        gameId: games[0]._id, // Elden Ring
+        status: 'completed',
+        rating: 5,
+        playtime: 175,
+      },
+      {
+        userId: users[3]._id,
+        gameId: games[2]._id, // BOTW
+        status: 'playing',
+        rating: 5,
+        playtime: 110,
+      },
+      {
+        userId: users[3]._id,
+        gameId: games[6]._id, // Portal 2
+        status: 'completed',
+        rating: 5,
+        playtime: 38,
+      },
+      // Mike (competitiveking) - add more completions
+      {
+        userId: users[4]._id,
+        gameId: games[6]._id, // Portal 2
+        status: 'completed',
+        rating: 5,
+        playtime: 40,
+      },
+      {
+        userId: users[4]._id,
+        gameId: games[3]._id, // DS3
+        status: 'completed',
+        rating: 5,
+        playtime: 130,
+      },
+      {
+        userId: users[4]._id,
+        gameId: games[1]._id, // BG3
+        status: 'playing',
+        rating: 4,
+        playtime: 85,
+      },
     ]);
     console.log(`✓ Created ${libraryEntries.length} sample library entries`);
 
+    // ===== ADD FRIEND RELATIONSHIPS =====
+    // Make user[0] (gaminglead/Kane) friends with everyone else
+    await User.findByIdAndUpdate(
+      users[0]._id,
+      {
+        $set: {
+          friends: [users[1]._id, users[2]._id, users[3]._id, users[4]._id],
+        },
+      }
+    );
+    console.log(`✓ Added friends to ${users[0].displayName}`);
+
     console.log('\n✓ Database seeded successfully!');
+    console.log('Sample user: gaminglead (joshua@backlog-hero.local) / password123');
     process.exit(0);
   } catch (err) {
     console.error('✗ Seed error:', err);

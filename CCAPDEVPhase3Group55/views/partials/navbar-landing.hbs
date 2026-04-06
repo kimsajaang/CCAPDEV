@@ -1,0 +1,65 @@
+<!-- Landing Navbar — used on index and intro pages, shows conditional auth/preview links -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container py-2">
+        <a class="navbar-brand fw-bold" href="#" onclick="smartHomeClick(event)">🛡️ Backlog Hero</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto text-uppercase small fw-bold">
+                <li class="nav-item d-none" id="nav-dashboard"><a class="nav-link" href="/Dashboard">Dashboard</a></li>
+                <li class="nav-item d-none" id="nav-library"><a class="nav-link" href="/library">My Library</a></li>
+                <li class="nav-item"><a class="nav-link" href="/search">Search Games</a></li>
+                <li class="nav-item"><a class="nav-link" href="/stats">Community</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                <li class="nav-item d-none" id="nav-profile"><a class="nav-link" href="/profile">Profile</a></li>
+                <li class="nav-item" id="nav-login"><a class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1"
+                        href="/login">Login</a></li>
+                <li class="nav-item d-none" id="nav-logout"><a
+                        class="nav-link btn btn-outline-primary ms-lg-2 px-3 py-1" href="#" id="logoutBtn"
+                        onclick="handleLogout(event)">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<script>
+    function smartHomeClick(e) {
+        e.preventDefault();
+        fetch('/api/auth/current', { credentials: 'include', cache: 'no-store' })
+            .then(r => { window.location.href = r.ok ? '/Dashboard' : '/'; })
+            .catch(() => { window.location.href = '/'; });
+    }
+
+    // Show/hide nav items based on authentication
+    fetch('/api/auth/current', { credentials: 'include', cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .then(user => {
+            if (user) {
+                document.getElementById('nav-dashboard').classList.remove('d-none');
+                document.getElementById('nav-library').classList.remove('d-none');
+                document.getElementById('nav-profile').classList.remove('d-none');
+                document.getElementById('nav-logout').classList.remove('d-none');
+                document.getElementById('nav-login').classList.add('d-none');
+            } else {
+                document.getElementById('nav-dashboard').classList.add('d-none');
+                document.getElementById('nav-library').classList.add('d-none');
+                document.getElementById('nav-profile').classList.add('d-none');
+                document.getElementById('nav-logout').classList.add('d-none');
+                document.getElementById('nav-login').classList.remove('d-none');
+            }
+        });
+
+    // Logout handler
+    async function handleLogout(e) {
+        e.preventDefault();
+        try {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch (err) {
+            console.error('Logout failed:', err);
+        }
+        // Clear cached user data to prevent stale Steam status on next login
+        sessionStorage.removeItem('bh_user');
+        localStorage.removeItem('bh_active_session_game');
+        window.location.href = '/login';
+    }
+</script>

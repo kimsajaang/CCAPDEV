@@ -1,7 +1,7 @@
 {
   "name": "backlog-hero",
   "version": "2.0.0",
-  "description": "CCAPDEV Phase 2 - Backlog Hero game tracker with MongoDB backend",
+  "description": "CCAPDEV Phase 3 - Backlog Hero game tracker with MongoDB backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,15 +9,19 @@
     "seed": "node model/seed.js"
   },
   "dependencies": {
+    "axios": "^1.13.6",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-session": "^1.17.3",
-    "mongodb": "^7.1.0",
+    "compression": "^1.8.1",
+    "connect-mongo": "^5.0.0",
     "mongoose": "^7.0.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-handlebars": "^8.0.6",
+    "express-session": "^1.17.3",
     "node-fetch": "^2.7.0",
     "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "passport-steam": "^1.0.18"
   }
 }
